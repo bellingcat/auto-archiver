@@ -27,6 +27,8 @@ for i in range(2, len(values)+1):
     v = values[i-1]
 
     if v[2] == "":
+        print(v[0])
+
         try:
             info = ydl.extract_info(v[0], download=True)
             filename = ydl.prepare_filename(info)
@@ -50,12 +52,8 @@ for i in range(2, len(values)+1):
             }]
 
             wks.batch_update(update)
-        except youtube_dl.utils.DownloadError:
+        except:
             t, value, traceback = sys.exc_info()
-
-            # value is the error that we can update in the sheet
-            wks.update('C' + str(i), str(value))
-            wks.update('B' + str(i), datetime.datetime.now().isoformat())
 
             update = [{
                 'range': 'C' + str(i),
@@ -66,4 +64,3 @@ for i in range(2, len(values)+1):
             }]
 
             wks.batch_update(update)
-
