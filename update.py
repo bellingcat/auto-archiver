@@ -6,6 +6,7 @@ import datetime
 import boto3
 import os
 from dotenv import load_dotenv
+from botocore.errorfactory import ClientError
 
 load_dotenv()
 
@@ -30,28 +31,47 @@ for i in range(2, len(values)+1):
         print(v[0])
 
         try:
-            info = ydl.extract_info(v[0], download=True)
+            info = ydl.extract_info(v[0], download=False)
             filename = ydl.prepare_filename(info)
             key = filename.split('/')[1]
-
-            with open(filename, 'rb') as f:
-                s3_client.upload_fileobj(f, Bucket=os.getenv('DO_BUCKET'), Key=key, ExtraArgs={'ACL': 'public-read'})
-
-            os.remove(filename)
             cdn_url = 'https://{}.{}.cdn.digitaloceanspaces.com/{}'.format(os.getenv('DO_BUCKET'), os.getenv('DO_SPACES_REGION'), key)
 
-            update = [{
-                'range': 'C' + str(i),
-                'values': [['successful']]
-            }, {
-                'range': 'B' + str(i),
-                'values': [[datetime.datetime.now().isoformat()]]
-            }, {
-                'range': 'D' + str(i),
-                'values': [[cdn_url]]
-            }]
+            try:
+                s3_client.head_object(Bucket=os.getenv('DO_BUCKET'), Key=key)
 
-            wks.batch_update(update)
+                # file exists
+
+                update = [{
+                    'range': 'C' + str(i),
+                    'values': [['already archived']]
+                }, {
+                    'range': 'D' + str(i),
+                    'values': [[cdn_url]]
+                }]
+
+                wks.batch_update(update)
+
+            except ClientError:
+                # Not found
+                ydl.extract_info(v[0], download=True)
+
+                with open(filename, 'rb') as f:
+                    s3_client.upload_fileobj(f, Bucket=os.getenv('DO_BUCKET'), Key=key, ExtraArgs={'ACL': 'public-read'})
+
+                os.remove(filename)
+
+                update = [{
+                    'range': 'C' + str(i),
+                    'values': [['successful']]
+                }, {
+                    'range': 'B' + str(i),
+                    'values': [[datetime.datetime.now().isoformat()]]
+                }, {
+                    'range': 'D' + str(i),
+                    'values': [[cdn_url]]
+                }]
+
+                wks.batch_update(update)
         except:
             t, value, traceback = sys.exc_info()
 
