@@ -15,7 +15,7 @@ sh = gc.open("Bellingcat media archiver")
 wks = sh.sheet1
 values = wks.get_all_values()
 
-ydl_opts = {'outtmpl': 'tmp/%(id)s.%(ext)s', 'quiet': True}
+ydl_opts = {'outtmpl': 'tmp/%(id)s.%(ext)s', 'quiet': False}
 ydl = youtube_dl.YoutubeDL(ydl_opts)
 
 s3_client = boto3.client('s3',
@@ -32,7 +32,16 @@ for i in range(2, len(values)+1):
 
         try:
             info = ydl.extract_info(v[0], download=False)
-            filename = ydl.prepare_filename(info)
+
+            if 'entries' in info:
+                if len(info['entries']) > 1:
+                    raise Exception('ERROR: Cannot archive channels or pages with multiple videos')
+
+                filename = ydl.prepare_filename(info['entries'][0])
+            else:
+                filename = ydl.prepare_filename(info)
+            
+            print(filename)
             key = filename.split('/')[1]
             cdn_url = 'https://{}.{}.cdn.digitaloceanspaces.com/{}'.format(os.getenv('DO_BUCKET'), os.getenv('DO_SPACES_REGION'), key)
 
@@ -56,18 +65,23 @@ for i in range(2, len(values)+1):
 
                 # sometimes this results in a different filename, so do this again
                 info = ydl.extract_info(v[0], download=True)
-                filename = ydl.prepare_filename(info)
+                if 'entries' in info:
+                    filename = ydl.prepare_filename(info['entries'][0])
+                else:
+                    filename = ydl.prepare_filename(info)
+
+                print(filename)
                 key = filename.split('/')[1]
                 cdn_url = 'https://{}.{}.cdn.digitaloceanspaces.com/{}'.format(os.getenv('DO_BUCKET'), os.getenv('DO_SPACES_REGION'), key)
 
-                with open(filename, 'rb') as f:
-                    s3_client.upload_fileobj(f, Bucket=os.getenv('DO_BUCKET'), Key=key, ExtraArgs={'ACL': 'public-read'})
+                # with open(filename, 'rb') as f:
+                #     s3_client.upload_fileobj(f, Bucket=os.getenv('DO_BUCKET'), Key=key, ExtraArgs={'ACL': 'public-read'})
 
                 os.remove(filename)
 
                 update = [{
                     'range': 'C' + str(i),
-                    'values': [['successful']]
+                    'values': [['successful-desktop']]
                 }, {
                     'range': 'B' + str(i),
                     'values': [[datetime.datetime.now().isoformat()]]
