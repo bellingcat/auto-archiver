@@ -53,7 +53,12 @@ for i in range(2, len(values)+1):
 
             except ClientError:
                 # Not found
-                ydl.extract_info(v[0], download=True)
+
+                # sometimes this results in a different filename, so do this again
+                info = ydl.extract_info(v[0], download=True)
+                filename = ydl.prepare_filename(info)
+                key = filename.split('/')[1]
+                cdn_url = 'https://{}.{}.cdn.digitaloceanspaces.com/{}'.format(os.getenv('DO_BUCKET'), os.getenv('DO_SPACES_REGION'), key)
 
                 with open(filename, 'rb') as f:
                     s3_client.upload_fileobj(f, Bucket=os.getenv('DO_BUCKET'), Key=key, ExtraArgs={'ACL': 'public-read'})
