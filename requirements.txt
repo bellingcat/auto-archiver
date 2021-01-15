@@ -1,0 +1,5 @@
+gspread
+youtube_dl
+boto3
+python-dotenv
+
