@@ -1,0 +1,16 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+gspread = "*"
+boto3 = "*"
+python-dotenv = "*"
+youtube_dl = "*"
+argparse = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.9"
