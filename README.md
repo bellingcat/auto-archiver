@@ -35,6 +35,8 @@ The Youtube link is downloaded and archived, and the spreadsheet is updated to t
 
 By default, the archiver will skip over live streaming content. However, with the `--streaming` flag, it will skip over non-real time content and archive livestreams. This is blocking, and each execution of the archiver will start downloading only a single livestreamed video. This is so that it can be used in combination with a non-streaming archiver, as detailed below.
 
+Note that the first row is skipped, as it is assumed to be a header row. Rows with an empty URL column, or a non-empty archive column are also skipped.
+
 Finally, by default only the first worksheet in a Google Sheet is checked. To check all use the `--all-worksheets` flag. These worksheets must use the same column locations.
 
 ## Automating
