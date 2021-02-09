@@ -1,10 +1,12 @@
 # auto-archiver
 
+This Python script will look for links to Youtube, Twitter, etc,. in a specified column of a Google Sheet, uses YoutubeDL to download the media, stores the result in a Digital Ocean space, and updates the Google Sheet with the archive location, status, and date. It can be run manually or on an automated basis.
+
 ## Setup
 
 If you are using `pipenv` (recommended), `pipenv install` is sufficient to install Python prerequisites.
 
-A Google Service account is necessary for use with `gspread`. These credentials should be stored in `~/.config/gspread/service_account.json`. =
+[A Google Service account is necessary for use with `gspread`.](https://gspread.readthedocs.io/en/latest/oauth2.html#for-bots-using-service-account) Credentials for this account should be stored in `~/.config/gspread/service_account.json`.
 
 A `.env` file is required for saving content to a Digital Ocean space. This file should contain the following variables:
 
