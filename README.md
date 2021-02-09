@@ -29,7 +29,7 @@ For example, for use with this spreadsheet:
 
 The Youtube link is downloaded and archived, and the spreadsheet is updated to the following:
 
-![A screenshot of a Google Spreadsheet with the same Youtube URL in column A, and additional archival information in B, C, and D](docs/before.png)
+![A screenshot of a Google Spreadsheet with the same Youtube URL in column A, and additional archival information in B, C, and D](docs/after.png)
 
 By default, the archiver will skip over live streaming content. However, with the `--streaming` flag, it will skip over non-real time content and archive livestreams. This is blocking, and each execution of the archiver will start downloading only a single livestreamed video. This is so that it can be used in combination with a non-streaming archiver, as detailed below.
 
