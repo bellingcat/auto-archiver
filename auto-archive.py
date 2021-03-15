@@ -30,10 +30,14 @@ def col_to_index(col):
 
 def index_to_col(index):
     alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-
+    
     if index > 25:
-        t = math.floor(index / 26)
-        return alphabet[t - 1] + index_to_col(index - t * 26)
+        t = index
+        dig = 0
+        while t > 25:
+            t = math.floor(t / 26)
+            dig += 1
+        return alphabet[t - 1] + index_to_col(index - t * int(math.pow(26, dig)))
     else:
         return alphabet[index]
 
@@ -100,19 +104,19 @@ def update_sheet(wks, row, status, url, columns):
 
     if url is not None and columns['archive'] is not None:
         update += [{
-            'range': args.archive + str(row),
+            'range': columns['archive'] + str(row),
             'values': [[url]]
         }]
 
     if columns['status'] is not None:
         update += [{
-            'range': args.status + str(row),
+            'range': columns['status'] + str(row),
             'values': [[status]]
         }]
 
     if columns['date'] is not None:
         update += [{
-            'range': args.date + str(row),
+            'range': columns['date'] + str(row),
             'values': [[datetime.datetime.now().isoformat()]]
         }]
 
@@ -126,10 +130,6 @@ def main():
     parser.add_argument('--streaming', dest='streaming', action='store_true')
     parser.add_argument('--all-worksheets',
                         dest='all_worksheets', action='store_true')
-    # parser.add_argument('--url-col', dest='url', action='store')
-    # parser.add_argument('--archive-col', dest='archive', action='store')
-    # parser.add_argument('--date-col', dest='date', action='store')
-    # parser.add_argument('--status-col', dest='status', action='store')
     args = parser.parse_args()
 
     print("Opening document " + args.sheet)
@@ -156,6 +156,8 @@ def main():
 
         columns['url'] = index_to_col(headers.index(
             'Media URL')) if 'Media URL' in headers else None
+        url_index = col_to_index(columns['url'])
+
         columns['archive'] = index_to_col(headers.index(
             'Archive location')) if 'Archive location' in headers else None
         columns['date'] = index_to_col(headers.index(
@@ -163,15 +165,15 @@ def main():
         columns['status'] = index_to_col(headers.index(
             'Archive status')) if 'Archive status' in headers else None
 
+        if columns['url'] is None:
+            print("No 'Media URL' column found, skipping")
+            continue
+
         # loop through rows in worksheet
         for i in range(2, len(values)+1):
             v = values[i-1]
 
-            url_index = col_to_index(args.url)
-
-            if v[url_index] != "" and v[col_to_index(args.status)] == "":
-                print(v[col_to_index(args.url)])
-
+            if v[url_index] != "" and v[col_to_index(columns['status'])] == "":
                 try:
                     ydl_opts = {
                         'outtmpl': 'tmp/%(id)s.%(ext)s', 'quiet': False}
@@ -179,7 +181,7 @@ def main():
                     info = ydl.extract_info(v[url_index], download=False)
 
                     if args.streaming and 'is_live' in info and info['is_live']:
-                        wks.update(args.status + str(i), 'Recording stream')
+                        wks.update(columns['status'] + str(i), 'Recording stream')
                         cdn_url, status = download_vid(v[url_index], s3_client)
                         update_sheet(wks, i, status, cdn_url, columns)
                         sys.exit()
