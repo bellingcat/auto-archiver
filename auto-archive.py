@@ -220,15 +220,14 @@ def main():
         description="Automatically use youtube-dl to download media from a Google Sheet")
     parser.add_argument("--sheet", action="store", dest="sheet")
     parser.add_argument('--streaming', dest='streaming', action='store_true')
-    parser.add_argument('--all-worksheets',
-                        dest='all_worksheets', action='store_true')
+
     args = parser.parse_args()
 
     print("Opening document " + args.sheet)
 
     gc = gspread.service_account()
     sh = gc.open(args.sheet)
-    n_worksheets = len(sh.worksheets()) if args.all_worksheets else 1
+    n_worksheets = len(sh.worksheets())
 
     s3_client = boto3.client('s3',
                              region_name=os.getenv('DO_SPACES_REGION'),
