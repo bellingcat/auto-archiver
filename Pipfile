@@ -9,6 +9,7 @@ boto3 = "*"
 python-dotenv = "*"
 youtube_dl = "*"
 argparse = "*"
+ffmpeg-python = "*"
 
 [dev-packages]
 
