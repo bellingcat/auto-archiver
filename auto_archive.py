@@ -10,6 +10,8 @@ from botocore.errorfactory import ClientError
 import argparse
 import math
 import ffmpeg
+import threading
+import time
 
 load_dotenv()
 
@@ -214,19 +216,13 @@ def update_sheet(wks, row, status, video_data, columns, v):
 
     wks.batch_update(update, value_input_option='USER_ENTERED')
 
+def record_stream(url, s3_client, wks, i, columns, v):
+    video_data, status = download_vid(url, s3_client)
+    update_sheet(wks, i, status, video_data, columns, v)
 
-def main():
-    parser = argparse.ArgumentParser(
-        description="Automatically use youtube-dl to download media from a Google Sheet")
-    parser.add_argument("--sheet", action="store", dest="sheet")
-    parser.add_argument('--streaming', dest='streaming', action='store_true')
-
-    args = parser.parse_args()
-
-    print("Opening document " + args.sheet)
-
+def process_sheet(sheet):
     gc = gspread.service_account()
-    sh = gc.open(args.sheet)
+    sh = gc.open(sheet)
     n_worksheets = len(sh.worksheets())
 
     s3_client = boto3.client('s3',
@@ -247,6 +243,11 @@ def main():
 
         columns['url'] = index_to_col(headers.index(
             'Media URL')) if 'Media URL' in headers else None
+
+        if columns['url'] is None:
+            print("No 'Media URL' column found, skipping")
+            continue
+
         url_index = col_to_index(columns['url'])
 
         columns['archive'] = index_to_col(headers.index(
@@ -255,6 +256,11 @@ def main():
             'Archive date')) if 'Archive date' in headers else None
         columns['status'] = index_to_col(headers.index(
             'Archive status')) if 'Archive status' in headers else None
+
+        if columns['status'] is None:
+            print("No 'Archive status' column found, skipping")
+            continue
+
         columns['thumbnail'] = index_to_col(headers.index(
             'Thumbnail')) if 'Thumbnail' in headers else None
         columns['thumbnail_index'] = index_to_col(headers.index(
@@ -265,10 +271,6 @@ def main():
             'Upload title')) if 'Upload title' in headers else None
         columns['duration'] = index_to_col(headers.index(
             'Duration')) if 'Duration' in headers else None
-
-        if columns['url'] is None:
-            print("No 'Media URL' column found, skipping")
-            continue
 
         # loop through rows in worksheet
         for i in range(2, len(values)+1):
@@ -281,21 +283,35 @@ def main():
                     ydl = youtube_dl.YoutubeDL(ydl_opts)
                     info = ydl.extract_info(v[url_index], download=False)
 
-                    if args.streaming and 'is_live' in info and info['is_live']:
+                    if 'is_live' in info and info['is_live']:
                         wks.update(columns['status'] + str(i), 'Recording stream')
-                        video_data, status = download_vid(v[url_index], s3_client)
-                        update_sheet(wks, i, status, video_data, columns, v)
-                        sys.exit()
-                    elif not args.streaming and ('is_live' not in info or not info['is_live']):
-                        video_data, status = download_vid(
-                            v[url_index], s3_client, check_if_exists=True)
-                    update_sheet(wks, i, status, video_data, columns, v)
+                        t = threading.Thread(target=record_stream, args=(v[url_index], s3_client, wks, i, columns, v))
+                        t.start()
+                        continue
+                    elif 'is_live' not in info or not info['is_live']:
+                        latest_val = wks.acell(columns['status'] + str(i)).value
+
+                        # check so we don't step on each others' toes
+                        if latest_val == '' or latest_val is None:
+                            wks.update(columns['status'] + str(i), 'Archive in progress')
+                            video_data, status = download_vid(
+                                v[url_index], s3_client, check_if_exists=True)
+                            update_sheet(wks, i, status, video_data, columns, v)
 
                 except:
                     # if any unexpected errors occured, log these into the Google Sheet
                     t, value, traceback = sys.exc_info()
                     update_sheet(wks, i, str(value), {}, columns, v)
 
+def main():
+    parser = argparse.ArgumentParser(
+        description="Automatically use youtube-dl to download media from a Google Sheet")
+    parser.add_argument("--sheet", action="store", dest="sheet")
+    args = parser.parse_args()
+
+    print("Opening document " + args.sheet)
+
+    process_sheet(args.sheet)
 
 if __name__ == "__main__":
     main()
