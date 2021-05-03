@@ -12,8 +12,11 @@ import math
 import ffmpeg
 import threading
 import time
+from bs4 import BeautifulSoup
+import requests
 
 load_dotenv()
+
 
 def col_to_index(col):
     col = list(col)
@@ -29,6 +32,7 @@ def col_to_index(col):
 
     return v - 1
 
+
 def index_to_col(index):
     alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
@@ -41,6 +45,7 @@ def index_to_col(index):
         return alphabet[t - 1] + index_to_col(index - t * int(math.pow(26, dig)))
     else:
         return alphabet[index]
+
 
 def get_thumbnails(filename, s3_client):
     if not os.path.exists(filename.split('.')[0]):
@@ -90,6 +95,69 @@ def get_thumbnails(filename, s3_client):
         os.getenv('DO_BUCKET'), os.getenv('DO_SPACES_REGION'), thumb_index)
 
     return (key_thumb, thumb_index_cdn_url)
+
+
+def download_telegram_video(url, s3_client, check_if_exists=False):
+    status = 'success'
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36'}
+
+    original_url = url
+
+    if url[-8:] != "?embed=1":
+        url += "?embed=1"
+
+    t = requests.get(url, headers=headers)
+    s = BeautifulSoup(t.content, 'html.parser')
+    video = s.find("video")
+
+    if video is None:
+        return ({}, 'No telegram video found')
+    else:
+        video_url = video.get('src')
+        key = video_url.split('/')[-1].split('?')[0]
+        filename = 'tmp/' + key
+        print(video_url, key)
+
+        if check_if_exists:
+            try:
+                s3_client.head_object(Bucket=os.getenv('DO_BUCKET'), Key=key)
+
+                # file exists
+                cdn_url = 'https://{}.{}.cdn.digitaloceanspaces.com/{}'.format(
+                    os.getenv('DO_BUCKET'), os.getenv('DO_SPACES_REGION'), key)
+
+                status = 'already archived'
+
+            except ClientError:
+                pass
+
+        v = requests.get(video_url, headers=headers)
+
+        with open(filename, 'wb') as f:
+            f.write(v.content)
+
+        if status != 'already archived':
+            cdn_url = 'https://{}.{}.cdn.digitaloceanspaces.com/{}'.format(
+            os.getenv('DO_BUCKET'), os.getenv('DO_SPACES_REGION'), key)
+
+            with open(filename, 'rb') as f:
+                s3_client.upload_fileobj(f, Bucket=os.getenv(
+                    'DO_BUCKET'), Key=key, ExtraArgs={'ACL': 'public-read'})
+
+        key_thumb, thumb_index = get_thumbnails(filename, s3_client)
+        os.remove(filename)
+
+        video_data = {
+            'cdn_url': cdn_url,
+            'thumbnail': key_thumb,
+            'thumbnail_index': thumb_index,
+            'duration': s.find_all('time')[0].contents[0],
+            'title': original_url,
+            'timestamp': s.find_all('time')[1].get('datetime')
+        }
+
+        return (video_data, status)
 
 
 def download_vid(url, s3_client, check_if_exists=False):
@@ -199,7 +267,7 @@ def update_sheet(wks, row, status, video_data, columns, v):
     if 'timestamp' in video_data and columns['timestamp'] is not None and video_data['timestamp'] is not None and v[col_to_index(columns['timestamp'])] == '':
         update += [{
             'range': columns['timestamp'] + str(row),
-            'values': [[datetime.datetime.fromtimestamp(video_data['timestamp']).isoformat()]]
+            'values': [[video_data['timestamp']]] if type(video_data['timestamp']) == str else [[datetime.datetime.fromtimestamp(video_data['timestamp']).isoformat()]]
         }]
 
     if 'title' in video_data and columns['title'] is not None and video_data['title'] is not None and v[col_to_index(columns['title'])] == '':
@@ -278,25 +346,29 @@ def process_sheet(sheet):
 
             if v[url_index] != "" and v[col_to_index(columns['status'])] == "":
                 try:
-                    ydl_opts = {
-                        'outtmpl': 'tmp/%(id)s.%(ext)s', 'quiet': False}
-                    ydl = youtube_dl.YoutubeDL(ydl_opts)
-                    info = ydl.extract_info(v[url_index], download=False)
+                    if 'http://t.me/' in v[url_index] or 'https://t.me/' in v[url_index]:
+                        video_data, status = download_telegram_video(v[url_index], s3_client, check_if_exists=True)
+                        update_sheet(wks, i, status, video_data, columns, v)
+                    else:
+                        ydl_opts = {
+                            'outtmpl': 'tmp/%(id)s.%(ext)s', 'quiet': False}
+                        ydl = youtube_dl.YoutubeDL(ydl_opts)
+                        info = ydl.extract_info(v[url_index], download=False)
 
-                    if 'is_live' in info and info['is_live']:
-                        wks.update(columns['status'] + str(i), 'Recording stream')
-                        t = threading.Thread(target=record_stream, args=(v[url_index], s3_client, wks, i, columns, v))
-                        t.start()
-                        continue
-                    elif 'is_live' not in info or not info['is_live']:
-                        latest_val = wks.acell(columns['status'] + str(i)).value
+                        if 'is_live' in info and info['is_live']:
+                            wks.update(columns['status'] + str(i), 'Recording stream')
+                            t = threading.Thread(target=record_stream, args=(v[url_index], s3_client, wks, i, columns, v))
+                            t.start()
+                            continue
+                        elif 'is_live' not in info or not info['is_live']:
+                            latest_val = wks.acell(columns['status'] + str(i)).value
 
-                        # check so we don't step on each others' toes
-                        if latest_val == '' or latest_val is None:
-                            wks.update(columns['status'] + str(i), 'Archive in progress')
-                            video_data, status = download_vid(
-                                v[url_index], s3_client, check_if_exists=True)
-                            update_sheet(wks, i, status, video_data, columns, v)
+                            # check so we don't step on each others' toes
+                            if latest_val == '' or latest_val is None:
+                                wks.update(columns['status'] + str(i), 'Archive in progress')
+                                video_data, status = download_vid(
+                                    v[url_index], s3_client, check_if_exists=True)
+                                update_sheet(wks, i, status, video_data, columns, v)
 
                 except:
                     # if any unexpected errors occured, log these into the Google Sheet
