@@ -10,6 +10,7 @@ python-dotenv = "*"
 youtube_dl = "*"
 argparse = "*"
 ffmpeg-python = "*"
+beautifulsoup4 = "*"
 
 [dev-packages]
 

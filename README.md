@@ -19,36 +19,39 @@ DO_SPACES_SECRET=
 
 ## Running
 
-There are several necessary command line flags:
-* `--sheet name` sets the name of the Google Sheet to check for URLs. This sheet must have been shared with the Google Service account used by `gspread`.
-* `--url-col`, `--status-col`, `--archive-col`, and `--date-col` give the letter name of the column for the original source URL, the archiver status, the archive location, and the archive date respectively.
+There is just one necessary command line flag, `--sheet name` which the name of the Google Sheet to check for URLs. This sheet must have been shared with the Google Service account used by `gspread`. This sheet must also have specific columns in the first row:
+* `Media URL` (required): the location of the media to be archived. This is the only column that should be supplied with data initially
+* `Archive status` (required): the status of the auto archiver script. Any row with text in this column will be skipped automatically.
+* `Archive location` (required): the location of the archived version. For files that were not able to be auto archived, this can be manually updated.
+* `Archive date`: the date that the auto archiver script ran for this file
+* `Upload timestamp`: the timestamp extracted from the video. (For YouTube, this unfortunately does not currently include the time)
+* `Duration`: the duration of the video
+* `Upload title`: the "title" of the video from the original source
+* `Thumbnail`: an image thumbnail of the video (resize row height to make this more visible)
+* `Thumbnail index`: a link to a page that shows many thumbnails for the video, useful for quickly seeing video content
 
 For example, for use with this spreadsheet:
 
-![A screenshot of a Google Spreadsheet with a single Youtube URL in column A](docs/before.png)
+![A screenshot of a Google Spreadsheet with column headers defined as above, and several Youtube and Twitter URLs in the "Media URL" column](docs/demo-before.png)
 
-```pipenv run python auto-archive.py --sheet archiver-test --url-col A --status-col B --archive-col C --date-col D ```
+```pipenv run python auto-archive.py --sheet archiver-test```
 
-The Youtube link is downloaded and archived, and the spreadsheet is updated to the following:
+When the auto archiver starts running, it updates the "Archive status" column.
 
-![A screenshot of a Google Spreadsheet with the same Youtube URL in column A, and additional archival information in B, C, and D](docs/after.png)
+![A screenshot of a Google Spreadsheet with column headers defined as above, and several Youtube and Twitter URLs in the "Media URL" column. The auto archiver has added "archive in progress" to one of the status columns.](docs/demo-progress.png)
 
-By default, the archiver will skip over live streaming content. However, with the `--streaming` flag, it will skip over non-real time content and archive livestreams. This is blocking, and each execution of the archiver will start downloading only a single livestreamed video. This is so that it can be used in combination with a non-streaming archiver, as detailed below.
+The links are downloaded and archived, and the spreadsheet is updated to the following:
 
-Note that the first row is skipped, as it is assumed to be a header row. Rows with an empty URL column, or a non-empty archive column are also skipped.
+![A screenshot of a Google Spreadsheet with videos archived and metadata added per the description of the columns above.](docs/demo-after.png)
 
-Finally, by default only the first worksheet in a Google Sheet is checked. To check all use the `--all-worksheets` flag. These worksheets must use the same column locations.
+Live streaming content is recorded in a separate thread.
+
+Note that the first row is skipped, as it is assumed to be a header row. Rows with an empty URL column, or a non-empty archive column are also skipped. All sheets in the document will be checked.
 
 ## Automating
 
-The auto-archiver can be run automatically via cron. To prevent overlapping execution (which should not affect archive integrity, but will use unecessary compute and network resources) `flock` can be used to create a lockfile. An example crontab entry that runs the archiver every minute is as follows.
+The auto-archiver can be run automatically via cron. An example crontab entry that runs the archiver every minute is as follows.
 
-```* * * * * flock -w 0 archive.lock python auto-archive.py --sheet archiver-test --url-col A --status-col B --archive-col C --date-col D```
+```* * * * * python auto-archive.py --sheet archiver-test```
 
-Of course, additional logging information, etc. might be required.
-
-With streaming mode enabled, the archiver can run safely at any frequency (since each iteration affects only a single row in the spreadsheet and it marks when streaming has started.) An example crontab line to run it every minute is as follows:
-
-```* * * * * python auto-archive.py --sheet archiver-test --url-col A --status-col B --archive-col C --date-col D --streaming```
-
-When these two cronjobs are used together, the archiver should archive and store all media added to the Google Sheet every 60 seconds.
+With this configuration, the archiver should archive and store all media added to the Google Sheet every 60 seconds. Of course, additional logging information, etc. might be required. 

@@ -2,6 +2,7 @@ import gspread
 import subprocess
 import argparse
 import auto_archive
+import datetime
 
 def main():
     parser = argparse.ArgumentParser(
@@ -10,15 +11,16 @@ def main():
 
     args = parser.parse_args()
 
+    print(datetime.datetime.now())
     print("Opening document " + args.sheet)
 
-    gc = gspread.service_account()
+    gc = gspread.service_account(filename='service_account.json')
     sh = gc.open(args.sheet)
 
     wks = sh.get_worksheet(0)
     values = wks.get_all_values()
 
-    for i in range(1, len(values)):
+    for i in range(11, len(values)):
         sheet_name = values[i][0]
 
         print("Processing " + sheet_name)
