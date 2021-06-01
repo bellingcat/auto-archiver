@@ -382,6 +382,9 @@ def process_sheet(sheet):
                     except:
                         # i'm sure there's a better way to handle this than nested try/catch blocks
                         try:
+                            wks.update(
+                                columns['status'] + str(i), 'Archive in progress')
+
                             r = requests.get(
                                 'https://web.archive.org/save/' + v[url_index], allow_redirects=True)
 
