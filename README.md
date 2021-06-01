@@ -34,7 +34,7 @@ For example, for use with this spreadsheet:
 
 ![A screenshot of a Google Spreadsheet with column headers defined as above, and several Youtube and Twitter URLs in the "Media URL" column](docs/demo-before.png)
 
-```pipenv run python auto-archive.py --sheet archiver-test```
+```pipenv run python auto_archive.py --sheet archiver-test```
 
 When the auto archiver starts running, it updates the "Archive status" column.
 
@@ -52,11 +52,11 @@ Note that the first row is skipped, as it is assumed to be a header row. Rows wi
 
 The auto-archiver can be run automatically via cron. An example crontab entry that runs the archiver every minute is as follows.
 
-```* * * * * python auto-archive.py --sheet archiver-test```
+```* * * * * python auto_archive.py --sheet archiver-test```
 
 With this configuration, the archiver should archive and store all media added to the Google Sheet every 60 seconds. Of course, additional logging information, etc. might be required.
 
-# auto-auto-archiver
+# auto_auto_archiver
 
 To make it easier to set up new auto-archiver sheets, the auto-auto-archiver will look at a particular sheet and run the auto-archiver on every sheet name in column A, starting from row 11. (It starts here to support instructional text in the first rows of the sheet, as shown below.) This script takes one command line argument, with `--sheet`, the name of the sheet. It must be shared with the same service account.
 
