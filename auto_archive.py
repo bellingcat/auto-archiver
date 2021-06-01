@@ -139,7 +139,7 @@ def download_telegram_video(url, s3_client, check_if_exists=False):
 
         if status != 'already archived':
             cdn_url = 'https://{}.{}.cdn.digitaloceanspaces.com/{}'.format(
-            os.getenv('DO_BUCKET'), os.getenv('DO_SPACES_REGION'), key)
+                os.getenv('DO_BUCKET'), os.getenv('DO_SPACES_REGION'), key)
 
             with open(filename, 'rb') as f:
                 s3_client.upload_fileobj(f, Bucket=os.getenv(
@@ -225,7 +225,7 @@ def download_vid(url, s3_client, check_if_exists=False):
         'thumbnail_index': thumb_index,
         'duration': info['duration'] if 'duration' in info else None,
         'title': info['title'] if 'title' in info else None,
-        'timestamp': info['timestamp'] if 'timestamp' in info  else datetime.datetime.strptime(info['upload_date'], '%Y%m%d').timestamp() if 'upload_date' in info else None,
+        'timestamp': info['timestamp'] if 'timestamp' in info else datetime.datetime.strptime(info['upload_date'], '%Y%m%d').timestamp() if 'upload_date' in info else None,
     }
 
     return (video_data, status)
@@ -284,9 +284,11 @@ def update_sheet(wks, row, status, video_data, columns, v):
 
     wks.batch_update(update, value_input_option='USER_ENTERED')
 
+
 def record_stream(url, s3_client, wks, i, columns, v):
     video_data, status = download_vid(url, s3_client)
     update_sheet(wks, i, status, video_data, columns, v)
+
 
 def process_sheet(sheet):
     gc = gspread.service_account()
@@ -345,35 +347,55 @@ def process_sheet(sheet):
             v = values[i-1]
 
             if v[url_index] != "" and v[col_to_index(columns['status'])] == "":
-                try:
-                    if 'http://t.me/' in v[url_index] or 'https://t.me/' in v[url_index]:
-                        video_data, status = download_telegram_video(v[url_index], s3_client, check_if_exists=True)
-                        update_sheet(wks, i, status, video_data, columns, v)
-                    else:
+
+                if 'http://t.me/' in v[url_index] or 'https://t.me/' in v[url_index]:
+                    video_data, status = download_telegram_video(
+                        v[url_index], s3_client, check_if_exists=True)
+                    update_sheet(wks, i, status, video_data, columns, v)
+                else:
+                    try:
                         ydl_opts = {
                             'outtmpl': 'tmp/%(id)s.%(ext)s', 'quiet': False}
                         ydl = youtube_dl.YoutubeDL(ydl_opts)
                         info = ydl.extract_info(v[url_index], download=False)
+                        print(info)
 
                         if 'is_live' in info and info['is_live']:
-                            wks.update(columns['status'] + str(i), 'Recording stream')
-                            t = threading.Thread(target=record_stream, args=(v[url_index], s3_client, wks, i, columns, v))
+                            wks.update(columns['status'] +
+                                       str(i), 'Recording stream')
+                            t = threading.Thread(target=record_stream, args=(
+                                v[url_index], s3_client, wks, i, columns, v))
                             t.start()
                             continue
                         elif 'is_live' not in info or not info['is_live']:
-                            latest_val = wks.acell(columns['status'] + str(i)).value
+                            latest_val = wks.acell(
+                                columns['status'] + str(i)).value
 
                             # check so we don't step on each others' toes
                             if latest_val == '' or latest_val is None:
-                                wks.update(columns['status'] + str(i), 'Archive in progress')
+                                wks.update(
+                                    columns['status'] + str(i), 'Archive in progress')
                                 video_data, status = download_vid(
                                     v[url_index], s3_client, check_if_exists=True)
-                                update_sheet(wks, i, status, video_data, columns, v)
+                                update_sheet(wks, i, status,
+                                             video_data, columns, v)
+                    except:
+                        # i'm sure there's a better way to handle this than nested try/catch blocks
+                        try:
+                            r = requests.get(
+                                'https://web.archive.org/save/' + v[url_index])
 
-                except:
-                    # if any unexpected errors occured, log these into the Google Sheet
-                    t, value, traceback = sys.exc_info()
-                    update_sheet(wks, i, str(value), {}, columns, v)
+                            parsed = BeautifulSoup(r.content, 'html.parser')
+                            title = parsed.find_all('title')[0].text
+
+                            update_sheet(wks, i, str('Internet Archive fallback'), {
+                                         'cdn_url': r.url, 'title': title}, columns, v)
+                        except:
+                            # if any unexpected errors occured, log these into the Google Sheet
+                            t, value, traceback = sys.exc_info()
+
+                            update_sheet(wks, i, str(value), {}, columns, v)
+
 
 def main():
     parser = argparse.ArgumentParser(
@@ -384,6 +406,7 @@ def main():
     print("Opening document " + args.sheet)
 
     process_sheet(args.sheet)
+
 
 if __name__ == "__main__":
     main()
