@@ -347,57 +347,65 @@ def process_sheet(sheet):
             v = values[i-1]
 
             if v[url_index] != "" and v[col_to_index(columns['status'])] == "":
+                latest_val = wks.acell(
+                    columns['status'] + str(i)).value
 
-                if 'http://t.me/' in v[url_index] or 'https://t.me/' in v[url_index]:
-                    video_data, status = download_telegram_video(
-                        v[url_index], s3_client, check_if_exists=True)
-                    update_sheet(wks, i, status, video_data, columns, v)
-                else:
-                    try:
-                        ydl_opts = {
-                            'outtmpl': 'tmp/%(id)s.%(ext)s', 'quiet': False}
-                        ydl = youtube_dl.YoutubeDL(ydl_opts)
-                        info = ydl.extract_info(v[url_index], download=False)
-                        print(info)
+                # check so we don't step on each others' toes
+                if latest_val == '' or latest_val is None:
+                    if 'http://t.me/' in v[url_index] or 'https://t.me/' in v[url_index]:
+                        video_data, status = download_telegram_video(
+                            v[url_index], s3_client, check_if_exists=True)
+                        update_sheet(wks, i, status, video_data, columns, v)
+                    else:
+                        try:
+                            ydl_opts = {
+                                'outtmpl': 'tmp/%(id)s.%(ext)s', 'quiet': False}
+                            ydl = youtube_dl.YoutubeDL(ydl_opts)
+                            info = ydl.extract_info(
+                                v[url_index], download=False)
 
-                        if 'is_live' in info and info['is_live']:
-                            wks.update(columns['status'] +
-                                       str(i), 'Recording stream')
-                            t = threading.Thread(target=record_stream, args=(
-                                v[url_index], s3_client, wks, i, columns, v))
-                            t.start()
-                            continue
-                        elif 'is_live' not in info or not info['is_live']:
-                            latest_val = wks.acell(
-                                columns['status'] + str(i)).value
+                            if 'is_live' in info and info['is_live']:
+                                wks.update(columns['status'] +
+                                           str(i), 'Recording stream')
+                                t = threading.Thread(target=record_stream, args=(
+                                    v[url_index], s3_client, wks, i, columns, v))
+                                t.start()
+                                continue
+                            elif 'is_live' not in info or not info['is_live']:
 
-                            # check so we don't step on each others' toes
-                            if latest_val == '' or latest_val is None:
                                 wks.update(
                                     columns['status'] + str(i), 'Archive in progress')
                                 video_data, status = download_vid(
                                     v[url_index], s3_client, check_if_exists=True)
                                 update_sheet(wks, i, status,
                                              video_data, columns, v)
-                    except:
-                        # i'm sure there's a better way to handle this than nested try/catch blocks
-                        try:
-                            wks.update(
-                                columns['status'] + str(i), 'Archive in progress')
-
-                            r = requests.get(
-                                'https://web.archive.org/save/' + v[url_index], allow_redirects=True)
-
-                            parsed = BeautifulSoup(r.content, 'html.parser')
-                            title = parsed.find_all('title')[0].text
-
-                            update_sheet(wks, i, str('Internet Archive fallback'), {
-                                         'cdn_url': r.url, 'title': title}, columns, v)
                         except:
-                            # if any unexpected errors occured, log these into the Google Sheet
-                            t, value, traceback = sys.exc_info()
+                            # i'm sure there's a better way to handle this than nested try/catch blocks
+                            try:
+                                wks.update(
+                                    columns['status'] + str(i), 'Archive in progress')
 
-                            update_sheet(wks, i, str(value), {}, columns, v)
+                                print("Trying Internet Archive fallback")
+
+                                r = requests.get(
+                                    'https://web.archive.org/save/' + v[url_index], allow_redirects=True)
+
+                                if r.status_code == 200:
+                                    parsed = BeautifulSoup(
+                                        r.content, 'html.parser')
+                                    title = parsed.find_all('title')[0].text
+
+                                    update_sheet(wks, i, str('Internet Archive fallback'), {
+                                        'cdn_url': r.url, 'title': title}, columns, v)
+                                else:
+                                    update_sheet(wks, i, str(
+                                        'Internet Archive failed'), {}, columns, v)
+                            except:
+                                # if any unexpected errors occured, log these into the Google Sheet
+                                t, value, traceback = sys.exc_info()
+
+                                update_sheet(wks, i, str(
+                                    value), {}, columns, v)
 
 
 def main():
