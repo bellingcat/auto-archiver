@@ -291,7 +291,7 @@ def record_stream(url, s3_client, wks, i, columns, v):
 
 
 def process_sheet(sheet):
-    gc = gspread.service_account()
+    gc = gspread.service_account(filename='service_account.json')
     sh = gc.open(sheet)
     n_worksheets = len(sh.worksheets())
 
