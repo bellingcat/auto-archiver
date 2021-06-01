@@ -383,7 +383,7 @@ def process_sheet(sheet):
                         # i'm sure there's a better way to handle this than nested try/catch blocks
                         try:
                             r = requests.get(
-                                'https://web.archive.org/save/' + v[url_index])
+                                'https://web.archive.org/save/' + v[url_index], allow_redirects=True)
 
                             parsed = BeautifulSoup(r.content, 'html.parser')
                             title = parsed.find_all('title')[0].text
