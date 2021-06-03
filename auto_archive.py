@@ -160,6 +160,55 @@ def download_telegram_video(url, s3_client, check_if_exists=False):
         return (video_data, status)
 
 
+def internet_archive(url, s3_client):
+    r = requests.post(
+        'https://web.archive.org/save/', headers={
+            "Accept": "application/json",
+            "Authorization": "LOW " + os.getenv('INTERNET_ARCHIVE_S3_KEY') + ":" + os.getenv('INTERNET_ARCHIVE_S3_SECRET')
+        }, data={'url': url})
+
+    if r.status_code != 200:
+        return ({}, 'Internet archive failed')
+    else:
+        job_id = r.json()['job_id']
+
+        status_r = requests.get(
+            'https://web.archive.org/save/status/' + job_id, headers={
+                "Accept": "application/json",
+                "Authorization": "LOW " + os.getenv('INTERNET_ARCHIVE_S3_KEY') + ":" + os.getenv('INTERNET_ARCHIVE_S3_SECRET')
+            })
+
+        retries = 0
+
+        while status_r.json()['status'] == 'pending' and retries < 40:
+            time.sleep(5)
+
+            status_r = requests.get(
+                'https://web.archive.org/save/status/' + job_id, headers={
+                    "Accept": "application/json",
+                    "Authorization": "LOW " + os.getenv('INTERNET_ARCHIVE_S3_KEY') + ":" + os.getenv('INTERNET_ARCHIVE_S3_SECRET')
+                })
+
+            retries += 1
+
+        status_json = status_r.json()
+
+        if status_json['status'] == 'success':
+            url = 'https://web.archive.org/web/' + \
+                status_json['timestamp'] + '/' + status_json['original_url']
+
+            r = requests.get(url)
+
+            parsed = BeautifulSoup(
+                r.content, 'html.parser')
+            title = parsed.find_all('title')[
+                0].text
+
+            return ({'cdn_url': url, 'title': title}, 'Internet Archive fallback')
+        else:
+            return ({}, 'Internet Archive failed: ' + status_json['message'])
+
+
 def download_vid(url, s3_client, check_if_exists=False):
     ydl_opts = {'outtmpl': 'tmp/%(id)s.%(ext)s', 'quiet': False}
     ydl = youtube_dl.YoutubeDL(ydl_opts)
@@ -353,6 +402,9 @@ def process_sheet(sheet):
                 # check so we don't step on each others' toes
                 if latest_val == '' or latest_val is None:
                     if 'http://t.me/' in v[url_index] or 'https://t.me/' in v[url_index]:
+                        wks.update(
+                            columns['status'] + str(i), 'Archive in progress')
+
                         video_data, status = download_telegram_video(
                             v[url_index], s3_client, check_if_exists=True)
                         update_sheet(wks, i, status, video_data, columns, v)
@@ -372,9 +424,6 @@ def process_sheet(sheet):
                                 t.start()
                                 continue
                             elif 'is_live' not in info or not info['is_live']:
-
-                                wks.update(
-                                    columns['status'] + str(i), 'Archive in progress')
                                 video_data, status = download_vid(
                                     v[url_index], s3_client, check_if_exists=True)
                                 update_sheet(wks, i, status,
@@ -387,19 +436,11 @@ def process_sheet(sheet):
 
                                 print("Trying Internet Archive fallback")
 
-                                r = requests.get(
-                                    'https://web.archive.org/save/' + v[url_index], allow_redirects=True)
+                                video_data, status = internet_archive(
+                                    v[url_index], s3_client)
+                                update_sheet(wks, i, status,
+                                             video_data, columns, v)
 
-                                if r.status_code == 200:
-                                    parsed = BeautifulSoup(
-                                        r.content, 'html.parser')
-                                    title = parsed.find_all('title')[0].text
-
-                                    update_sheet(wks, i, str('Internet Archive fallback'), {
-                                        'cdn_url': r.url, 'title': title}, columns, v)
-                                else:
-                                    update_sheet(wks, i, str(
-                                        'Internet Archive failed'), {}, columns, v)
                             except:
                                 # if any unexpected errors occured, log these into the Google Sheet
                                 t, value, traceback = sys.exc_info()
