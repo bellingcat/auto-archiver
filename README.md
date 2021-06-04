@@ -8,14 +8,18 @@ If you are using `pipenv` (recommended), `pipenv install` is sufficient to insta
 
 [A Google Service account is necessary for use with `gspread`.](https://gspread.readthedocs.io/en/latest/oauth2.html#for-bots-using-service-account) Credentials for this account should be stored in `~/.config/gspread/service_account.json`.
 
-A `.env` file is required for saving content to a Digital Ocean space. This file should contain the following variables:
+A `.env` file is required for saving content to a Digital Ocean space, and for archiving pages to the Internet Archive. This file should contain the following variables:
 
 ```
 DO_SPACES_REGION=
 DO_BUCKET=
 DO_SPACES_KEY=
 DO_SPACES_SECRET=
+INTERNET_ARCHIVE_S3_KEY=
+INTERNET_ARCHIVE_S3_SECRET=
 ```
+
+Internet Archive credentials can be retrieved from https://archive.org/account/s3.php.
 
 ## Running
 
