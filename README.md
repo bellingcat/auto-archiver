@@ -6,9 +6,9 @@ This Python script will look for links to Youtube, Twitter, etc,. in a specified
 
 If you are using `pipenv` (recommended), `pipenv install` is sufficient to install Python prerequisites.
 
-[A Google Service account is necessary for use with `gspread`.](https://gspread.readthedocs.io/en/latest/oauth2.html#for-bots-using-service-account) Credentials for this account should be stored in `~/.config/gspread/service_account.json`.
+[A Google Service account is necessary for use with `gspread`.](https://gspread.readthedocs.io/en/latest/oauth2.html#for-bots-using-service-account) Credentials for this account should be stored in `service_account.json`, in the same directory as the script.
 
-A `.env` file is required for saving content to a Digital Ocean space, and for archiving pages to the Internet Archive. This file should contain the following variables:
+A `.env` file is required for saving content to a Digital Ocean space, and for archiving pages to the Internet Archive. This file should also be in the script directory, and should contain the following variables:
 
 ```
 DO_SPACES_REGION=
