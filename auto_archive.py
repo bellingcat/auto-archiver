@@ -357,11 +357,12 @@ def process_sheet(sheet):
         wks = sh.get_worksheet(ii)
         values = wks.get_all_values()
 
-        headers = values[0]
+        headers = [v.lower() for v in values[0]]
         columns = {}
 
         columns['url'] = index_to_col(headers.index(
-            'Media URL')) if 'Media URL' in headers else None
+            'media url')) if 'media url' in headers else index_to_col(headers.index(
+                'source url')) if 'source url' in headers else None
 
         if columns['url'] is None:
             print("No 'Media URL' column found, skipping")
@@ -370,26 +371,26 @@ def process_sheet(sheet):
         url_index = col_to_index(columns['url'])
 
         columns['archive'] = index_to_col(headers.index(
-            'Archive location')) if 'Archive location' in headers else None
+            'archive location')) if 'archive location' in headers else None
         columns['date'] = index_to_col(headers.index(
-            'Archive date')) if 'Archive date' in headers else None
+            'archive date')) if 'archive date' in headers else None
         columns['status'] = index_to_col(headers.index(
-            'Archive status')) if 'Archive status' in headers else None
+            'archive status')) if 'archive status' in headers else None
 
         if columns['status'] is None:
             print("No 'Archive status' column found, skipping")
             continue
 
         columns['thumbnail'] = index_to_col(headers.index(
-            'Thumbnail')) if 'Thumbnail' in headers else None
+            'thumbnail')) if 'thumbnail' in headers else None
         columns['thumbnail_index'] = index_to_col(headers.index(
-            'Thumbnail index')) if 'Thumbnail index' in headers else None
+            'thumbnail index')) if 'thumbnail index' in headers else None
         columns['timestamp'] = index_to_col(headers.index(
-            'Upload timestamp')) if 'Upload timestamp' in headers else None
+            'upload timestamp')) if 'upload timestamp' in headers else None
         columns['title'] = index_to_col(headers.index(
-            'Upload title')) if 'Upload title' in headers else None
+            'upload title')) if 'upload title' in headers else None
         columns['duration'] = index_to_col(headers.index(
-            'Duration')) if 'Duration' in headers else None
+            'duration')) if 'duration' in headers else None
 
         # loop through rows in worksheet
         for i in range(2, len(values)+1):
