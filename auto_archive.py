@@ -211,6 +211,8 @@ def internet_archive(url, s3_client):
 
 def download_vid(url, s3_client, check_if_exists=False):
     ydl_opts = {'outtmpl': 'tmp/%(id)s.%(ext)s', 'quiet': False}
+    if url[0:20] == 'https://facebook.com' and os.getenv('FB_COOKIE'):
+        youtube_dl.utils.std_headers['cookie'] = os.getenv('FB_COOKIE')
     ydl = youtube_dl.YoutubeDL(ydl_opts)
     cdn_url = None
     status = 'success'
