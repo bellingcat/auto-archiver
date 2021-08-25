@@ -47,32 +47,45 @@ def index_to_col(index):
         return alphabet[index]
 
 
-def get_thumbnails(filename, s3_client):
+def get_thumbnails(filename, s3_client, duration = None):
     if not os.path.exists(filename.split('.')[0]):
         os.mkdir(filename.split('.')[0])
 
+    fps = 0.5
+    if duration is not None:
+        duration = float(duration)
+
+        if duration < 60:
+            fps = 10.0 / duration
+        elif duration < 120:
+            fps = 20.0 / duration
+        else:
+            fps = 40.0 / duration
+
+
     stream = ffmpeg.input(filename)
-    stream = ffmpeg.filter(stream, 'fps', fps=0.5).filter('scale', 512, -1)
+    stream = ffmpeg.filter(stream, 'fps', fps=fps).filter('scale', 512, -1)
     stream.output(filename.split('.')[0] + '/out%d.jpg').run()
 
     thumbnails = os.listdir(filename.split('.')[0] + '/')
     cdn_urls = []
 
     for fname in thumbnails:
-        thumbnail_filename = filename.split('.')[0] + '/' + fname
-        key = filename.split('/')[1].split('.')[0] + '/' + fname
+        if fname[-3:] == 'jpg':
+            thumbnail_filename = filename.split('.')[0] + '/' + fname
+            key = filename.split('/')[1].split('.')[0] + '/' + fname
 
-        cdn_url = 'https://{}.{}.cdn.digitaloceanspaces.com/{}'.format(
-            os.getenv('DO_BUCKET'), os.getenv('DO_SPACES_REGION'), key)
+            cdn_url = 'https://{}.{}.cdn.digitaloceanspaces.com/{}'.format(
+                os.getenv('DO_BUCKET'), os.getenv('DO_SPACES_REGION'), key)
 
-        with open(thumbnail_filename, 'rb') as f:
-            s3_client.upload_fileobj(f, Bucket=os.getenv(
-                'DO_BUCKET'), Key=key, ExtraArgs={'ACL': 'public-read'})
+            with open(thumbnail_filename, 'rb') as f:
+                s3_client.upload_fileobj(f, Bucket=os.getenv(
+                    'DO_BUCKET'), Key=key, ExtraArgs={'ACL': 'public-read'})
 
-        cdn_urls.append(cdn_url)
-        os.remove(thumbnail_filename)
+            cdn_urls.append(cdn_url)
+            os.remove(thumbnail_filename)
 
-    key_thumb = cdn_urls[int(len(cdn_urls)*0.25)]
+    key_thumb = cdn_urls[int(len(cdn_urls)*0.1)]
 
     index_page = f'''<html><head><title>{filename}</title></head>
         <body>'''
@@ -117,7 +130,6 @@ def download_telegram_video(url, s3_client, check_if_exists=False):
         video_url = video.get('src')
         key = video_url.split('/')[-1].split('?')[0]
         filename = 'tmp/' + key
-        print(video_url, key)
 
         if check_if_exists:
             try:
@@ -145,14 +157,20 @@ def download_telegram_video(url, s3_client, check_if_exists=False):
                 s3_client.upload_fileobj(f, Bucket=os.getenv(
                     'DO_BUCKET'), Key=key, ExtraArgs={'ACL': 'public-read'})
 
-        key_thumb, thumb_index = get_thumbnails(filename, s3_client)
+        duration = s.find_all('time')[0].contents[0]
+        if ':' in duration:
+            duration = float(duration.split(':')[0])*60 + float(duration.split(':')[1])
+        else:
+            duration = float(duration)
+
+        key_thumb, thumb_index = get_thumbnails(filename, s3_client, duration=duration)
         os.remove(filename)
 
         video_data = {
             'cdn_url': cdn_url,
             'thumbnail': key_thumb,
             'thumbnail_index': thumb_index,
-            'duration': s.find_all('time')[0].contents[0],
+            'duration': duration,
             'title': original_url,
             'timestamp': s.find_all('time')[1].get('datetime')
         }
@@ -183,11 +201,14 @@ def internet_archive(url, s3_client):
         while status_r.json()['status'] == 'pending' and retries < 40:
             time.sleep(5)
 
-            status_r = requests.get(
-                'https://web.archive.org/save/status/' + job_id, headers={
-                    "Accept": "application/json",
-                    "Authorization": "LOW " + os.getenv('INTERNET_ARCHIVE_S3_KEY') + ":" + os.getenv('INTERNET_ARCHIVE_S3_SECRET')
-                })
+            try:
+                status_r = requests.get(
+                    'https://web.archive.org/save/status/' + job_id, headers={
+                        "Accept": "application/json",
+                        "Authorization": "LOW " + os.getenv('INTERNET_ARCHIVE_S3_KEY') + ":" + os.getenv('INTERNET_ARCHIVE_S3_SECRET')
+                    })
+            except:
+                time.sleep(1)
 
             retries += 1
 
@@ -211,7 +232,8 @@ def internet_archive(url, s3_client):
 
 def download_vid(url, s3_client, check_if_exists=False):
     ydl_opts = {'outtmpl': 'tmp/%(id)s.%(ext)s', 'quiet': False}
-    if url[0:20] == 'https://facebook.com' and os.getenv('FB_COOKIE'):
+    if (url[0:21] == 'https://facebook.com/' or url[0:25]  == 'https://wwww.facebook.com/') and os.getenv('FB_COOKIE'):
+        print('Using cookie')
         youtube_dl.utils.std_headers['cookie'] = os.getenv('FB_COOKIE')
     ydl = youtube_dl.YoutubeDL(ydl_opts)
     cdn_url = None
@@ -250,10 +272,10 @@ def download_vid(url, s3_client, check_if_exists=False):
         if len(info['entries']) > 1:
             raise Exception(
                 'ERROR: Cannot archive channels or pages with multiple videos')
+        else:
+            info = info['entries'][0]
 
-        filename = ydl.prepare_filename(info['entries'][0])
-    else:
-        filename = ydl.prepare_filename(info)
+    filename = ydl.prepare_filename(info)
 
     if not os.path.exists(filename):
         filename = filename.split('.')[0] + '.mkv'
@@ -267,14 +289,15 @@ def download_vid(url, s3_client, check_if_exists=False):
             s3_client.upload_fileobj(f, Bucket=os.getenv(
                 'DO_BUCKET'), Key=key, ExtraArgs={'ACL': 'public-read'})
 
-    key_thumb, thumb_index = get_thumbnails(filename, s3_client)
+    duration = info['duration'] if 'duration' in info else None
+    key_thumb, thumb_index = get_thumbnails(filename, s3_client, duration=duration)
     os.remove(filename)
 
     video_data = {
         'cdn_url': cdn_url,
         'thumbnail': key_thumb,
         'thumbnail_index': thumb_index,
-        'duration': info['duration'] if 'duration' in info else None,
+        'duration': duration,
         'title': info['title'] if 'title' in info else None,
         'timestamp': info['timestamp'] if 'timestamp' in info else datetime.datetime.strptime(info['upload_date'], '%Y%m%d').timestamp() if 'upload_date' in info else None,
     }
@@ -404,17 +427,29 @@ def process_sheet(sheet):
 
                 # check so we don't step on each others' toes
                 if latest_val == '' or latest_val is None:
-                    if 'http://t.me/' in v[url_index] or 'https://t.me/' in v[url_index]:
-                        wks.update(
+                    wks.update(
                             columns['status'] + str(i), 'Archive in progress')
 
+                    if 'http://t.me/' in v[url_index] or 'https://t.me/' in v[url_index]:
                         video_data, status = download_telegram_video(
                             v[url_index], s3_client, check_if_exists=True)
+                        
+                        if status == 'No telegram video found':
+                            print("Trying Internet Archive fallback")
+
+                            video_data, status = internet_archive(
+                                v[url_index], s3_client)
+                        
                         update_sheet(wks, i, status, video_data, columns, v)
+
                     else:
                         try:
                             ydl_opts = {
                                 'outtmpl': 'tmp/%(id)s.%(ext)s', 'quiet': False}
+                            if (v[url_index][0:21] == 'https://facebook.com/' or v[url_index][0:25] == 'https://www.facebook.com/') and os.getenv('FB_COOKIE'):
+                                print('Using cookie')
+                                youtube_dl.utils.std_headers['cookie'] = os.getenv(
+                                    'FB_COOKIE')
                             ydl = youtube_dl.YoutubeDL(ydl_opts)
                             info = ydl.extract_info(
                                 v[url_index], download=False)
@@ -434,9 +469,6 @@ def process_sheet(sheet):
                         except:
                             # i'm sure there's a better way to handle this than nested try/catch blocks
                             try:
-                                wks.update(
-                                    columns['status'] + str(i), 'Archive in progress')
-
                                 print("Trying Internet Archive fallback")
 
                                 video_data, status = internet_archive(
