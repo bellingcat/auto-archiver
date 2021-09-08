@@ -46,6 +46,14 @@ def index_to_col(index):
     else:
         return alphabet[index]
 
+def get_cdn_url(os, key):
+    return 'https://{}.{}.cdn.digitaloceanspaces.com/{}'.format(
+                os.getenv('DO_BUCKET'), os.getenv('DO_SPACES_REGION'), key)
+
+def do_s3_upload(s3_client, f, os, key):
+    s3_client.upload_fileobj(f, Bucket=os.getenv(
+                    'DO_BUCKET'), Key=key, ExtraArgs={'ACL': 'public-read'})
+
 
 def get_thumbnails(filename, s3_client, duration = None):
     if not os.path.exists(filename.split('.')[0]):
@@ -75,12 +83,10 @@ def get_thumbnails(filename, s3_client, duration = None):
             thumbnail_filename = filename.split('.')[0] + '/' + fname
             key = filename.split('/')[1].split('.')[0] + '/' + fname
 
-            cdn_url = 'https://{}.{}.cdn.digitaloceanspaces.com/{}'.format(
-                os.getenv('DO_BUCKET'), os.getenv('DO_SPACES_REGION'), key)
+            cdn_url = get_cdn_url(os, key)
 
             with open(thumbnail_filename, 'rb') as f:
-                s3_client.upload_fileobj(f, Bucket=os.getenv(
-                    'DO_BUCKET'), Key=key, ExtraArgs={'ACL': 'public-read'})
+                do_s3_upload(s3_client, f, os, key)
 
             cdn_urls.append(cdn_url)
             os.remove(thumbnail_filename)
@@ -104,8 +110,7 @@ def get_thumbnails(filename, s3_client, duration = None):
     s3_client.upload_fileobj(open(index_fname, 'rb'), Bucket=os.getenv(
         'DO_BUCKET'), Key=thumb_index, ExtraArgs={'ACL': 'public-read', 'ContentType': 'text/html'})
 
-    thumb_index_cdn_url = 'https://{}.{}.cdn.digitaloceanspaces.com/{}'.format(
-        os.getenv('DO_BUCKET'), os.getenv('DO_SPACES_REGION'), thumb_index)
+    thumb_index_cdn_url =  get_cdn_url(os, thumb_index)
 
     return (key_thumb, thumb_index_cdn_url)
 
@@ -136,8 +141,7 @@ def download_telegram_video(url, s3_client, check_if_exists=False):
                 s3_client.head_object(Bucket=os.getenv('DO_BUCKET'), Key=key)
 
                 # file exists
-                cdn_url = 'https://{}.{}.cdn.digitaloceanspaces.com/{}'.format(
-                    os.getenv('DO_BUCKET'), os.getenv('DO_SPACES_REGION'), key)
+                cdn_url = get_cdn_url(os, key)
 
                 status = 'already archived'
 
@@ -150,12 +154,10 @@ def download_telegram_video(url, s3_client, check_if_exists=False):
             f.write(v.content)
 
         if status != 'already archived':
-            cdn_url = 'https://{}.{}.cdn.digitaloceanspaces.com/{}'.format(
-                os.getenv('DO_BUCKET'), os.getenv('DO_SPACES_REGION'), key)
+            cdn_url = get_cdn_url(os, key)
 
             with open(filename, 'rb') as f:
-                s3_client.upload_fileobj(f, Bucket=os.getenv(
-                    'DO_BUCKET'), Key=key, ExtraArgs={'ACL': 'public-read'})
+                do_s3_upload(s3_client, f, os, key)
 
         duration = s.find_all('time')[0].contents[0]
         if ':' in duration:
@@ -179,11 +181,15 @@ def download_telegram_video(url, s3_client, check_if_exists=False):
 
 
 def internet_archive(url, s3_client):
-    r = requests.post(
-        'https://web.archive.org/save/', headers={
+
+
+    ia_headers = {
             "Accept": "application/json",
             "Authorization": "LOW " + os.getenv('INTERNET_ARCHIVE_S3_KEY') + ":" + os.getenv('INTERNET_ARCHIVE_S3_SECRET')
-        }, data={'url': url})
+        }
+
+    r = requests.post(
+        'https://web.archive.org/save/', headers=ia_headers, data={'url': url})
 
     if r.status_code != 200:
         return ({}, 'Internet archive failed')
@@ -191,10 +197,7 @@ def internet_archive(url, s3_client):
         job_id = r.json()['job_id']
 
         status_r = requests.get(
-            'https://web.archive.org/save/status/' + job_id, headers={
-                "Accept": "application/json",
-                "Authorization": "LOW " + os.getenv('INTERNET_ARCHIVE_S3_KEY') + ":" + os.getenv('INTERNET_ARCHIVE_S3_SECRET')
-            })
+            'https://web.archive.org/save/status/' + job_id, headers=ia_headers)
 
         retries = 0
 
@@ -203,10 +206,7 @@ def internet_archive(url, s3_client):
 
             try:
                 status_r = requests.get(
-                    'https://web.archive.org/save/status/' + job_id, headers={
-                        "Accept": "application/json",
-                        "Authorization": "LOW " + os.getenv('INTERNET_ARCHIVE_S3_KEY') + ":" + os.getenv('INTERNET_ARCHIVE_S3_SECRET')
-                    })
+                    'https://web.archive.org/save/status/' + job_id, headers=ia_headers)
             except:
                 time.sleep(1)
 
@@ -257,8 +257,7 @@ def download_vid(url, s3_client, check_if_exists=False):
             s3_client.head_object(Bucket=os.getenv('DO_BUCKET'), Key=key)
 
             # file exists
-            cdn_url = 'https://{}.{}.cdn.digitaloceanspaces.com/{}'.format(
-                os.getenv('DO_BUCKET'), os.getenv('DO_SPACES_REGION'), key)
+            cdn_url = get_cdn_url(os, key)
 
             status = 'already archived'
 
@@ -282,12 +281,10 @@ def download_vid(url, s3_client, check_if_exists=False):
 
     if status != 'already archived':
         key = filename.split('/')[1]
-        cdn_url = 'https://{}.{}.cdn.digitaloceanspaces.com/{}'.format(
-            os.getenv('DO_BUCKET'), os.getenv('DO_SPACES_REGION'), key)
+        cdn_url = get_cdn_url(os, key)
 
         with open(filename, 'rb') as f:
-            s3_client.upload_fileobj(f, Bucket=os.getenv(
-                'DO_BUCKET'), Key=key, ExtraArgs={'ACL': 'public-read'})
+            do_s3_upload(s3_client, f, os, key)
 
     duration = info['duration'] if 'duration' in info else None
     key_thumb, thumb_index = get_thumbnails(filename, s3_client, duration=duration)
