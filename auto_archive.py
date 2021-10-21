@@ -85,6 +85,9 @@ def get_thumbnails(filename, s3_client, duration = None):
             cdn_urls.append(cdn_url)
             os.remove(thumbnail_filename)
 
+    if len(cdn_urls) == 0:
+        return ('None', 'None')
+
     key_thumb = cdn_urls[int(len(cdn_urls)*0.1)]
 
     index_page = f'''<html><head><title>{filename}</title></head>
@@ -229,6 +232,12 @@ def internet_archive(url, s3_client):
         else:
             return ({}, 'Internet Archive failed: ' + status_json['message'])
 
+def get_key(filename):
+    key = filename.split('/')[1]
+    if 'unknown_video' in key:
+        key = key.replace('unknown_video', 'jpg')
+    return key
+
 
 def download_vid(url, s3_client, check_if_exists=False):
     ydl_opts = {'outtmpl': 'tmp/%(id)s.%(ext)s', 'quiet': False}
@@ -251,7 +260,7 @@ def download_vid(url, s3_client, check_if_exists=False):
         else:
             filename = ydl.prepare_filename(info)
 
-        key = filename.split('/')[1]
+        key = get_key(filename)
 
         try:
             s3_client.head_object(Bucket=os.getenv('DO_BUCKET'), Key=key)
@@ -281,7 +290,7 @@ def download_vid(url, s3_client, check_if_exists=False):
         filename = filename.split('.')[0] + '.mkv'
 
     if status != 'already archived':
-        key = filename.split('/')[1]
+        key = get_key(filename)
         cdn_url = 'https://{}.{}.cdn.digitaloceanspaces.com/{}'.format(
             os.getenv('DO_BUCKET'), os.getenv('DO_SPACES_REGION'), key)
 
@@ -456,7 +465,7 @@ def process_sheet(sheet):
 
                             if 'is_live' in info and info['is_live']:
                                 wks.update(columns['status'] +
-                                           str(i), 'Recording stream')
+                                            str(i), 'Recording stream')
                                 t = threading.Thread(target=record_stream, args=(
                                     v[url_index], s3_client, wks, i, columns, v))
                                 t.start()
@@ -465,7 +474,8 @@ def process_sheet(sheet):
                                 video_data, status = download_vid(
                                     v[url_index], s3_client, check_if_exists=True)
                                 update_sheet(wks, i, status,
-                                             video_data, columns, v)
+                                                video_data, columns, v)
+                        
                         except:
                             # i'm sure there's a better way to handle this than nested try/catch blocks
                             try:
