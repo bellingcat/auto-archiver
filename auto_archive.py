@@ -474,9 +474,9 @@ def process_sheet(sheet):
                     netloc = urlparse(v[url_index]).netloc
 
                     if netloc == "twitter.com":
-                        success = try_download_twitter_images(v[url_index])
-                        # update_sheet(wks, i, status, video_data, columns, v)
-
+                        image_data, status = try_download_twitter_images(v[url_index])
+                        update_sheet(wks, i, status, image_data, columns, v)
+                        if status == "success": continue
 
                     if netloc == 't.me':
                         video_data, status = download_telegram_video(
