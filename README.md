@@ -17,6 +17,7 @@ DO_SPACES_KEY=
 DO_SPACES_SECRET=
 INTERNET_ARCHIVE_S3_KEY=
 INTERNET_ARCHIVE_S3_SECRET=
+TWITTER_API_BEARER_TOKEN=
 ```
 
 Internet Archive credentials can be retrieved from https://archive.org/account/s3.php.
@@ -28,8 +29,8 @@ There is just one necessary command line flag, `--sheet name` which the name of 
 * `Archive status` (required): the status of the auto archiver script. Any row with text in this column will be skipped automatically.
 * `Archive location` (required): the location of the archived version. For files that were not able to be auto archived, this can be manually updated.
 * `Archive date`: the date that the auto archiver script ran for this file
-* `Upload timestamp`: the timestamp extracted from the video. (For YouTube, this unfortunately does not currently include the time)
-* `Duration`: the duration of the video
+* `Upload timestamp`: the timestamp extracted from the archived file. (For YouTube, this unfortunately does not currently include the time)
+* `Duration`: the duration of the video (in case of videos)
 * `Upload title`: the "title" of the video from the original source
 * `Thumbnail`: an image thumbnail of the video (resize row height to make this more visible)
 * `Thumbnail index`: a link to a page that shows many thumbnails for the video, useful for quickly seeing video content

@@ -1,6 +1,5 @@
 import gspread
 import youtube_dl
-from pathlib import Path
 import sys
 import datetime
 import boto3
@@ -14,6 +13,7 @@ import threading
 import time
 from bs4 import BeautifulSoup
 import requests
+from urllib.parse import urlparse
 
 load_dotenv()
 
@@ -117,9 +117,29 @@ def get_thumbnails(filename, s3_client, duration = None):
 
     return (key_thumb, thumb_index_cdn_url)
 
+def fetch_and_upload_to_s3(url, key, s3_client, check_if_exists=False, headers={}, status="success"):
+    filename = 'tmp/' + key
+    if check_if_exists:
+        try:
+            s3_client.head_object(Bucket=os.getenv('DO_BUCKET'), Key=key)
+            # file exists
+            cdn_url = get_cdn_url(key)
+            status = 'already archived'
+        except ClientError: pass
+
+    r_file = requests.get(url, headers=headers)
+
+    with open(filename, 'wb') as f:
+        f.write(r_file.content)
+
+    if status != 'already archived':
+        cdn_url = get_cdn_url(key)
+        with open(filename, 'rb') as f:
+            do_s3_upload(s3_client, f, key)
+
+    return cdn_url, filename, status
 
 def download_telegram_video(url, s3_client, check_if_exists=False):
-    status = 'success'
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36'}
 
@@ -137,31 +157,8 @@ def download_telegram_video(url, s3_client, check_if_exists=False):
     else:
         video_url = video.get('src')
         key = video_url.split('/')[-1].split('?')[0]
-        filename = 'tmp/' + key
-
-        if check_if_exists:
-            try:
-                s3_client.head_object(Bucket=os.getenv('DO_BUCKET'), Key=key)
-
-                # file exists
-                cdn_url = get_cdn_url(key)
-
-                status = 'already archived'
-
-            except ClientError:
-                pass
-
-        v = requests.get(video_url, headers=headers)
-
-        with open(filename, 'wb') as f:
-            f.write(v.content)
-
-        if status != 'already archived':
-            cdn_url = get_cdn_url(key)
-
-            with open(filename, 'rb') as f:
-                do_s3_upload(s3_client, f, key)
-
+        cdn_url, filename, status = fetch_and_upload_to_s3(video_url, key, s3_client, check_if_exists, headers)
+        
         duration = s.find_all('time')[0].contents[0]
         if ':' in duration:
             duration = float(duration.split(':')[0])*60 + float(duration.split(':')[1])
@@ -182,8 +179,50 @@ def download_telegram_video(url, s3_client, check_if_exists=False):
 
         return (video_data, status)
 
+def try_download_twitter_images(url, s3_client, check_if_exists=False):
+    """
+    Downloads twitter images, note:
+    * (2022-02-13) 
+        * twitter only allows (1 video) OR (1 gif) OR (up to 5 images)
+        * this can be checked by creating a tweet and trying to upload 2 videos at once
+        * media types can be 'video', 'photo', or 'animated_gif' 
+        but only 'photo' has the url for download
+    """
+    if not os.getenv("TWITTER_API_BEARER_TOKEN"): return False
+    
+    bearer_token = os.getenv("TWITTER_API_BEARER_TOKEN")
+    tweet_id = urlparse(url).path.split('/')[-1]
 
-def internet_archive(url, s3_client):
+    r = requests.get(f"https://api.twitter.com/2/tweets/{tweet_id}?expansions=attachments.media_keys,author_id&media.fields=url,alt_text&tweet.fields=created_at", headers={"Authorization": f"Bearer {bearer_token}"})
+
+    if r.status_code != 200: 
+        return ({}, f"Something went wrong with tweet id={tweet_id} - status code: {r.status_code}")
+        
+    tweet = r.json()
+    if "includes" in tweet and "media" in tweet["includes"]:
+        cdn_urls = []
+        for media in tweet["includes"]["media"]:
+             # only 'photo' types have the url
+            if "url" not in media: continue
+            extension = media["url"].split(".")[-1]
+            key = f"twitter_{media['media_key']}.{extension}"
+            cdn_url, _, status = fetch_and_upload_to_s3(media["url"], key, s3_client, check_if_exists)
+            cdn_urls.append(cdn_url)
+
+        if len(cdn_urls):
+            # multiple images can exist
+            image_data = {
+                'cdn_url': " ".join(cdn_urls),
+                'thumbnail': '',
+                'thumbnail_index': -1,
+                'duration': 0,
+                'title': tweet["data"]["text"],
+                'timestamp': datetime.datetime.strptime(tweet["data"]["created_at"], "%Y-%m-%dT%H:%M:%S.%fZ")
+            }
+            return (image_data, status)
+    return ({}, f"no media found in tweet id={tweet_id}")
+
+def internet_archive(url):
 
 
     ia_headers = {
@@ -223,10 +262,8 @@ def internet_archive(url, s3_client):
 
             r = requests.get(url)
 
-            parsed = BeautifulSoup(
-                r.content, 'html.parser')
-            title = parsed.find_all('title')[
-                0].text
+            parsed = BeautifulSoup(r.content, 'html.parser')
+            title = parsed.find_all('title')[0].text
 
             return ({'cdn_url': url, 'title': title}, 'Internet Archive fallback')
         else:
@@ -241,7 +278,8 @@ def get_key(filename):
 
 def download_vid(url, s3_client, check_if_exists=False):
     ydl_opts = {'outtmpl': 'tmp/%(id)s.%(ext)s', 'quiet': False}
-    if (url[0:21] == 'https://facebook.com/' or url[0:25]  == 'https://wwww.facebook.com/') and os.getenv('FB_COOKIE'):
+    netloc = urlparse(url).netloc
+    if netloc == 'facebook.com' and os.getenv('FB_COOKIE'):
         print('Using cookie')
         youtube_dl.utils.std_headers['cookie'] = os.getenv('FB_COOKIE')
     ydl = youtube_dl.YoutubeDL(ydl_opts)
@@ -428,15 +466,19 @@ def process_sheet(sheet):
             v = values[i-1]
 
             if v[url_index] != "" and v[col_to_index(columns['status'])] == "":
-                latest_val = wks.acell(
-                    columns['status'] + str(i)).value
+                latest_val = wks.acell(columns['status'] + str(i)).value
 
                 # check so we don't step on each others' toes
                 if latest_val == '' or latest_val is None:
-                    wks.update(
-                            columns['status'] + str(i), 'Archive in progress')
+                    wks.update(columns['status'] + str(i), 'Archive in progress')
+                    netloc = urlparse(v[url_index]).netloc
 
-                    if 'http://t.me/' in v[url_index] or 'https://t.me/' in v[url_index]:
+                    if netloc == "twitter.com":
+                        success = try_download_twitter_images(v[url_index])
+                        # update_sheet(wks, i, status, video_data, columns, v)
+
+
+                    if netloc == 't.me':
                         video_data, status = download_telegram_video(
                             v[url_index], s3_client, check_if_exists=True)
                         
@@ -447,18 +489,16 @@ def process_sheet(sheet):
                                 v[url_index], s3_client)
                         
                         update_sheet(wks, i, status, video_data, columns, v)
-
                     else:
                         try:
                             ydl_opts = {
                                 'outtmpl': 'tmp/%(id)s.%(ext)s', 'quiet': False}
-                            if (v[url_index][0:21] == 'https://facebook.com/' or v[url_index][0:25] == 'https://www.facebook.com/') and os.getenv('FB_COOKIE'):
+                            if netloc == "facebook.com" and os.getenv('FB_COOKIE'):
                                 print('Using cookie')
                                 youtube_dl.utils.std_headers['cookie'] = os.getenv(
                                     'FB_COOKIE')
                             ydl = youtube_dl.YoutubeDL(ydl_opts)
-                            info = ydl.extract_info(
-                                v[url_index], download=False)
+                            info = ydl.extract_info(v[url_index], download=False)
 
                             if 'is_live' in info and info['is_live']:
                                 wks.update(columns['status'] +
@@ -484,11 +524,10 @@ def process_sheet(sheet):
                                              video_data, columns, v)
 
                             except:
-                                # if any unexpected errors occured, log these into the Google Sheet
+                                # if any unexpected errors occurred, log these into the Google Sheet
                                 t, value, traceback = sys.exc_info()
 
-                                update_sheet(wks, i, str(
-                                    value), {}, columns, v)
+                                update_sheet(wks, i, str(value), {}, columns, v)
 
 
 def main():

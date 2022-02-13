@@ -1,5 +1,4 @@
 import gspread
-import subprocess
 import argparse
 import auto_archive
 import datetime
