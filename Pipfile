@@ -9,14 +9,12 @@ boto3 = "*"
 python-dotenv = "*"
 youtube_dl = "*"
 argparse = "*"
-ffmpeg-python = "*"
 beautifulsoup4 = "*"
 nordvpn-switcher = "*"
 tiktok-downloader = {git = "https://github.com/msramalho/tiktok-downloader"}
-telethon = "*"
-ffmpeg = "*"
 bs4 = "*"
 loguru = "*"
+ffmpeg-python = "*"
 
 [dev-packages]
 

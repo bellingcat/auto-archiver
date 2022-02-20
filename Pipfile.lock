@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "420a5d5c155830dac792fe2f037bebce97c30f4271301bb5950a288254798660"
+            "sha256": "af39efbad8c78641a732697001193b5f4f92a0af8a9709081428001362a47060"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -92,13 +92,6 @@
                 "sha256:dda29028c5628b5ba3e4dc43816ed38fd46bd945ef938c420f185586a6d8dff2"
             ],
             "version": "==1.2.58"
-        },
-        "ffmpeg": {
-            "hashes": [
-                "sha256:6931692c890ff21d39938433c2189747815dca0c60ddc7f9bb97f199dba0b5b9"
-            ],
-            "index": "pypi",
-            "version": "==1.4"
         },
         "ffmpeg-python": {
             "hashes": [
@@ -369,12 +362,6 @@
             ],
             "version": "==0.6.0"
         },
-        "pyaes": {
-            "hashes": [
-                "sha256:02c1b1405c38d3c370b085fb952dd8bea3fadcee6411ad99f312cc129c536d8f"
-            ],
-            "version": "==1.6.1"
-        },
         "pyasn1": {
             "hashes": [
                 "sha256:014c0e9976956a08139dc0712ae195324a75e142284d5f87f1a87ee1b068a359",
@@ -496,14 +483,6 @@
             ],
             "markers": "python_version >= '3.6'",
             "version": "==2.3.1"
-        },
-        "telethon": {
-            "hashes": [
-                "sha256:04fdc5fa4ed3e886e6ecf4bad79205ab8880c6aefbd42c29c89c689a502aa816",
-                "sha256:818cb61281ed3f75ba4da9b68cb69486bed9474d2db4e0aa16e482053117452c"
-            ],
-            "index": "pypi",
-            "version": "==1.24.0"
         },
         "tiktok-downloader": {
             "git": "https://github.com/msramalho/tiktok-downloader",
