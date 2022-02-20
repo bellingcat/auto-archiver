@@ -4,3 +4,4 @@ tmp/
 expmt/
 service_account.json
 __pycache__/
+._*

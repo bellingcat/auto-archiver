@@ -11,8 +11,14 @@ youtube_dl = "*"
 argparse = "*"
 ffmpeg-python = "*"
 beautifulsoup4 = "*"
+nordvpn-switcher = "*"
+tiktok-downloader = {git = "https://github.com/msramalho/tiktok-downloader"}
+telethon = "*"
+ffmpeg = "*"
+bs4 = "*"
+loguru = "*"
 
 [dev-packages]
 
 [requires]
-python_version = "3.8"
+python_version = "3.9"
