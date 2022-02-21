@@ -1,14 +1,12 @@
-from dataclasses import dataclass
-import gspread
-from pathlib import Path
-import datetime
-import boto3
 import os
-from dotenv import load_dotenv
+import datetime
 import argparse
 import math
-import threading
+import gspread
+import boto3
 from loguru import logger
+from dotenv import load_dotenv
+
 import archivers
 
 load_dotenv()
@@ -156,6 +154,7 @@ def process_sheet(sheet):
             'duration')) if 'duration' in headers else None
 
 
+        # order matters, first to succeed excludes remaining
         active_archivers = [
             archivers.TelegramArchiver(s3_client),
             archivers.TiktokArchiver(s3_client),
@@ -198,7 +197,7 @@ def process_sheet(sheet):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Automatically use youtube-dl to download media from a Google Sheet")
+        description="Automatically archive social media videos from a Google Sheet")
     parser.add_argument("--sheet", action="store", dest="sheet")
     args = parser.parse_args()
 

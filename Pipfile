@@ -10,7 +10,6 @@ python-dotenv = "*"
 youtube_dl = "*"
 argparse = "*"
 beautifulsoup4 = "*"
-nordvpn-switcher = "*"
 tiktok-downloader = {git = "https://github.com/msramalho/tiktok-downloader"}
 bs4 = "*"
 loguru = "*"

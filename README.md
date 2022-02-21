@@ -8,6 +8,8 @@ If you are using `pipenv` (recommended), `pipenv install` is sufficient to insta
 
 [A Google Service account is necessary for use with `gspread`.](https://gspread.readthedocs.io/en/latest/oauth2.html#for-bots-using-service-account) Credentials for this account should be stored in `service_account.json`, in the same directory as the script.
 
+[ffmpeg](https://www.ffmpeg.org/) must also be installed locally for this tool to work. 
+
 A `.env` file is required for saving content to a Digital Ocean space, and for archiving pages to the Internet Archive. This file should also be in the script directory, and should contain the following variables:
 
 ```
