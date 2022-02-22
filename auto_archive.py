@@ -10,6 +10,7 @@ import math
 import threading
 from loguru import logger
 import archivers
+import requests
 
 load_dotenv()
 
@@ -43,7 +44,7 @@ def index_to_col(index):
         return alphabet[index]
 
 
-def update_sheet(wks, row, result : archivers.ArchiveResult, columns, v):
+def update_sheet(wks, row, result: archivers.ArchiveResult, columns, v):
     update = []
 
     if columns['status'] is not None:
@@ -155,14 +156,12 @@ def process_sheet(sheet):
         columns['duration'] = index_to_col(headers.index(
             'duration')) if 'duration' in headers else None
 
-
         active_archivers = [
             archivers.TelegramArchiver(s3_client),
             archivers.TiktokArchiver(s3_client),
             archivers.YoutubeDLArchiver(s3_client),
             archivers.WaybackArchiver(s3_client)
         ]
-
 
         # loop through rows in worksheet
         for i in range(2, len(values)+1):
@@ -174,26 +173,35 @@ def process_sheet(sheet):
 
                 # check so we don't step on each others' toes
                 if latest_val == '' or latest_val is None:
-                    wks.update(
-                        columns['status'] + str(i), 'Archive in progress')
+                    wks.update(columns['status'] + str(i),
+                               'Archive in progress')
 
                     for archiver in active_archivers:
                         logger.debug(f"Trying {archiver} on row {i}")
-                        result = archiver.download(v[url_index], check_if_exists=True)
+
+                        url = v[url_index]
+                        # expand short URL links
+                        if 'https://t.co/' in url:
+                            r = requests.get(url)
+                            url = r.url
+
+                        result = archiver.download(url, check_if_exists=True)
                         if result:
                             logger.info(f"{archiver} succeeded on row {i}")
                             break
 
                     if result:
                         update_sheet(wks, i, result, columns, v)
-
+                    else:
+                        wks.update(columns['status'] +
+                                   str(i), 'failed: no archiver')
 
                         # except:
-                            # if any unexpected errors occured, log these into the Google Sheet
-                            # t, value, traceback = sys.exc_info()
+                        # if any unexpected errors occured, log these into the Google Sheet
+                        # t, value, traceback = sys.exc_info()
 
-                            # update_sheet(wks, i, str(
-                            #     value), {}, columns, v)
+                        # update_sheet(wks, i, str(
+                        #     value), {}, columns, v)
 
 
 def main():

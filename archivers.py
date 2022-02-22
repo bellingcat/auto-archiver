@@ -210,7 +210,11 @@ class YoutubeDLArchiver(Archiver):
             if 'entries' in info:
                 if len(info['entries']) > 1:
                     logger.warning(
-                        'YoutubeDLArchiver cannot archive channels or pages with multiple videos')
+                        'YoutubeDLArchiver succeeded but cannot archive channels or pages with multiple videos')
+                    return False
+                elif len(info['entries']) == 0:
+                    logger.warning(
+                        'YoutubeDLArchiver succeeded but did not find video')
                     return False
 
                 filename = ydl.prepare_filename(info['entries'][0])
@@ -257,13 +261,21 @@ class YoutubeDLArchiver(Archiver):
         duration = info['duration'] if 'duration' in info else None
 
         # get thumbnails
-        key_thumb, thumb_index = get_thumbnails(
-            filename, self.s3, duration=duration)
+        try:
+            key_thumb, thumb_index = get_thumbnails(
+                filename, self.s3, duration=duration)
+        except:
+            key_thumb = ''
+            thumb_index = 'Could not generate thumbnails'
+
         os.remove(filename)
+
+        timestamp = info['timestamp'] if 'timestamp' in info else datetime.datetime.strptime(
+            info['upload_date'], '%Y%m%d').timestamp() if 'upload_date' in info and info['upload_date'] is not None else None
 
         return ArchiveResult(status=status, cdn_url=cdn_url, thumbnail=key_thumb, thumbnail_index=thumb_index, duration=duration,
                              title=info['title'] if 'title' in info else None,
-                             timestamp=info['timestamp'] if 'timestamp' in info else datetime.datetime.strptime(info['upload_date'], '%Y%m%d').timestamp() if 'upload_date' in info else None)
+                             timestamp=timestamp)
 
 
 class WaybackArchiver(Archiver):
@@ -285,6 +297,9 @@ class WaybackArchiver(Archiver):
 
         if r.status_code != 200:
             return ArchiveResult(status="Internet archive failed")
+
+        if 'job_id' not in r.json() and 'message' in r.json():
+            return ArchiveResult(status=f"Internet archive failed: {r.json()['message']}")
 
         job_id = r.json()['job_id']
 
@@ -311,7 +326,7 @@ class WaybackArchiver(Archiver):
         status_json = status_r.json()
 
         if status_json['status'] != 'success':
-            return ArchiveResult(status='Internet Archive failed: ' + status_json['message'])
+            return ArchiveResult(status='Internet Archive failed: ' + str(status_json))
 
         archive_url = 'https://web.archive.org/web/' + \
             status_json['timestamp'] + '/' + status_json['original_url']
@@ -324,6 +339,9 @@ class WaybackArchiver(Archiver):
 
             title = parsed.find_all('title')[
                 0].text
+
+            if title == 'Wayback Machine':
+                title = 'Could not get title'
         except:
             title = "Could not get title"
 
@@ -343,6 +361,7 @@ class TiktokArchiver(Archiver):
         try:
             info = tiktok_downloader.info_post(url)
             key = 'tiktok_' + str(info.id) + '.mp4'
+            cdn_url = get_cdn_url(key)
             filename = 'tmp/' + key
 
             if check_if_exists:
@@ -357,16 +376,19 @@ class TiktokArchiver(Archiver):
                 except ClientError:
                     pass
 
-            if status != 'already archived':
-                media = tiktok_downloader.snaptik(url).get_media()
-                if len(media) > 0:
-                    media[0].download(filename)
-                    with open(filename, 'rb') as f:
-                        do_s3_upload(self.s3, f, key)
+            media = tiktok_downloader.snaptik(url).get_media()
 
-                    cdn_url = get_cdn_url(key)
+            if len(media) <= 0:
+                if status == 'already archived':
+                    return ArchiveResult(status='Could not download media, but already archived', cdn_url=cdn_url)
                 else:
-                    status = 'could not download media'
+                    return ArchiveResult(status='Could not download media')
+
+            media[0].download(filename)
+
+            if status != 'already archived':
+                with open(filename, 'rb') as f:
+                    do_s3_upload(self.s3, f, key)
 
             try:
                 key_thumb, thumb_index = get_thumbnails(
