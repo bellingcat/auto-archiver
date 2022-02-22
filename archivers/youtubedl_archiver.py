@@ -3,12 +3,13 @@ import os
 import datetime
 import youtube_dl
 from loguru import logger
-from botocore.errorfactory import ClientError
+
 from .base_archiver import Archiver, ArchiveResult
+
 
 class YoutubeDLArchiver(Archiver):
     name = "yotube_dl"
-    
+
     def download(self, url, check_if_exists=False):
         ydl_opts = {'outtmpl': 'tmp/%(id)s.%(ext)s', 'quiet': False}
         if (url[0:21] == 'https://facebook.com/' or url[0:25] == 'https://wwww.facebook.com/') and os.getenv('FB_COOKIE'):
@@ -32,8 +33,11 @@ class YoutubeDLArchiver(Archiver):
         if check_if_exists:
             if 'entries' in info:
                 if len(info['entries']) > 1:
+                    logger.warning('YoutubeDLArchiver succeeded but cannot archive channels or pages with multiple videos')
+                    return False
+                elif len(info['entries']) == 0:
                     logger.warning(
-                        'YoutubeDLArchiver cannot archive channels or pages with multiple videos')
+                        'YoutubeDLArchiver succeeded but did not find video')
                     return False
 
                 filename = ydl.prepare_filename(info['entries'][0])
@@ -42,20 +46,14 @@ class YoutubeDLArchiver(Archiver):
 
             key = self.get_key(filename)
 
-            try:
-                self.s3.head_object(Bucket=os.getenv('DO_BUCKET'), Key=key)
-
-                # file exists
-                cdn_url = self.get_cdn_url(key)
-
+            if self.storage.exists(key):
                 status = 'already archived'
-
-            except ClientError:
-                pass
+                cdn_url = self.storage.get_cdn_url(key)
 
         # sometimes this results in a different filename, so do this again
         info = ydl.extract_info(url, download=True)
 
+        # TODO: add support for multiple videos
         if 'entries' in info:
             if len(info['entries']) > 1:
                 logger.warning(
@@ -70,19 +68,24 @@ class YoutubeDLArchiver(Archiver):
             filename = filename.split('.')[0] + '.mkv'
 
         if status != 'already archived':
-            key = self. get_key(filename)
-            cdn_url = self.get_cdn_url(key)
+            key = self.get_key(filename)
+            cdn_url = self.storage.get_cdn_url(key)
 
-            with open(filename, 'rb') as f:
-                self.do_s3_upload(f, key)
+            self.storage.upload(filename, key)
 
         # get duration
         duration = info['duration'] if 'duration' in info else None
 
         # get thumbnails
-        key_thumb, thumb_index = self.get_thumbnails(filename, duration=duration)
+        try:
+            key_thumb, thumb_index = self.get_thumbnails(filename, duration=duration)
+        except:
+            key_thumb = ''
+            thumb_index = 'Could not generate thumbnails'
+
         os.remove(filename)
 
+        timestamp = info['timestamp'] if 'timestamp' in info else datetime.datetime.strptime(info['upload_date'], '%Y%m%d').timestamp() if 'upload_date' in info and info['upload_date'] is not None else None
+
         return ArchiveResult(status=status, cdn_url=cdn_url, thumbnail=key_thumb, thumbnail_index=thumb_index, duration=duration,
-                             title=info['title'] if 'title' in info else None,
-                             timestamp=info['timestamp'] if 'timestamp' in info else datetime.datetime.strptime(info['upload_date'], '%Y%m%d').timestamp() if 'upload_date' in info else None)
+                             title=info['title'] if 'title' in info else None, timestamp=timestamp)

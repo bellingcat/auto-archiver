@@ -1,15 +1,13 @@
 import os
 import requests
 from bs4 import BeautifulSoup
-from botocore.errorfactory import ClientError
-from .base_archiver import Archiver, ArchiveResult
 
-# TODO: get_cdn_url, get_thumbnails, do_s3_upload
+from .base_archiver import Archiver, ArchiveResult
 
 
 class TelegramArchiver(Archiver):
     name = "telegram"
-    
+
     def download(self, url, check_if_exists=False):
         # detect URLs that we definitely cannot handle
         if 'http://t.me/' not in url and 'https://t.me/' not in url:
@@ -35,19 +33,13 @@ class TelegramArchiver(Archiver):
 
         video_url = video.get('src')
         key = video_url.split('/')[-1].split('?')[0]
+        key = self.get_key(key)
+
         filename = 'tmp/' + key
 
-        if check_if_exists:
-            try:
-                self.s3.head_object(Bucket=os.getenv('DO_BUCKET'), Key=key)
-
-                # file exists
-                cdn_url = self.get_cdn_url(key)
-
-                status = 'already archived'
-
-            except ClientError:
-                pass
+        if check_if_exists and self.storage.exists(key):
+            status = 'already archived'
+            cdn_url = self.storage.get_cdn_url(key)
 
         v = requests.get(video_url, headers=headers)
 
@@ -55,10 +47,9 @@ class TelegramArchiver(Archiver):
             f.write(v.content)
 
         if status != 'already archived':
-            cdn_url = self.get_cdn_url(key)
+            cdn_url = self.storage.get_cdn_url(key)
 
-            with open(filename, 'rb') as f:
-                self.do_s3_upload(f, key)
+            self.storage.upload(filename, key)
 
         # extract duration from HTML
         duration = s.find_all('time')[0].contents[0]

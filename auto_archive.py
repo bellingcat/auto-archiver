@@ -2,12 +2,13 @@ import os
 import datetime
 import argparse
 import math
+import requests
 import gspread
-import boto3
 from loguru import logger
 from dotenv import load_dotenv
 
 import archivers
+from storages import S3Storage, S3Config
 
 load_dotenv()
 
@@ -41,7 +42,7 @@ def index_to_col(index):
         return alphabet[index]
 
 
-def update_sheet(wks, row, result : archivers.ArchiveResult, columns, v):
+def update_sheet(wks, row, result: archivers.ArchiveResult, columns, v):
     update = []
 
     if columns['status'] is not None:
@@ -103,19 +104,24 @@ def update_sheet(wks, row, result : archivers.ArchiveResult, columns, v):
 def process_sheet(sheet):
     gc = gspread.service_account(filename='service_account.json')
     sh = gc.open(sheet)
-    n_worksheets = len(sh.worksheets())
 
-    s3_client = boto3.client('s3',
-                             region_name=os.getenv('DO_SPACES_REGION'),
-                             endpoint_url='https://{}.digitaloceanspaces.com'.format(
-                                 os.getenv('DO_SPACES_REGION')),
-                             aws_access_key_id=os.getenv('DO_SPACES_KEY'),
-                             aws_secret_access_key=os.getenv('DO_SPACES_SECRET'))
+    s3_config = S3Config(
+        bucket=os.getenv('DO_BUCKET'),
+        region=os.getenv('DO_SPACES_REGION'),
+        key=os.getenv('DO_SPACES_KEY'),
+        secret=os.getenv('DO_SPACES_SECRET')
+    )
+
+    # s3_client = boto3.client('s3',
+    #                          region_name=os.getenv('DO_SPACES_REGION'),
+    #                          endpoint_url='https://{}.digitaloceanspaces.com'.format(
+    #                              os.getenv('DO_SPACES_REGION')),
+    #                          aws_access_key_id=os.getenv('DO_SPACES_KEY'),
+    #                          aws_secret_access_key=os.getenv('DO_SPACES_SECRET'))
 
     # loop through worksheets to check
-    for ii in range(n_worksheets):
-        logger.info("Opening worksheet " + str(ii))
-        wks = sh.get_worksheet(ii)
+    for ii, wks in enumerate(sh.worksheets()):
+        logger.info(f'Opening worksheet {ii}: "{wks.title}"')
         values = wks.get_all_values()
 
         headers = [v.lower() for v in values[0]]
@@ -126,7 +132,7 @@ def process_sheet(sheet):
                 'source url')) if 'source url' in headers else None
 
         if columns['url'] is None:
-            logger.warning("No 'Media URL' column found, skipping")
+            logger.warning(f'No "Media URL" column found, skipping worksheet {wks.title}')
             continue
 
         url_index = col_to_index(columns['url'])
@@ -153,6 +159,9 @@ def process_sheet(sheet):
         columns['duration'] = index_to_col(headers.index(
             'duration')) if 'duration' in headers else None
 
+        # archives will be in a folder 'doc_name/worksheet_name'
+        s3_config.folder = f'{sheet}/{wks.title}/'
+        s3_client = S3Storage(s3_config)
 
         # order matters, first to succeed excludes remaining
         active_archivers = [
@@ -162,37 +171,43 @@ def process_sheet(sheet):
             archivers.WaybackArchiver(s3_client)
         ]
 
-
         # loop through rows in worksheet
-        for i in range(2, len(values)+1):
-            v = values[i-1]
+        for i in range(2, len(values) + 1):
+            v = values[i - 1]
+            url = v[url_index]
 
-            if v[url_index] != "" and v[col_to_index(columns['status'])] == "":
-                latest_val = wks.acell(
-                    columns['status'] + str(i)).value
+            if url != "" and v[col_to_index(columns['status'])] == "":
+                latest_val = wks.acell(columns['status'] + str(i)).value
 
                 # check so we don't step on each others' toes
                 if latest_val == '' or latest_val is None:
-                    wks.update(
-                        columns['status'] + str(i), 'Archive in progress')
+                    wks.update(columns['status'] + str(i), 'Archive in progress')
+
+                    # expand short URL links
+                    if 'https://t.co/' in url:
+                        r = requests.get(url)
+                        url = r.url
 
                     for archiver in active_archivers:
                         logger.debug(f"Trying {archiver} on row {i}")
-                        result = archiver.download(v[url_index], check_if_exists=True)
+
+                        result = archiver.download(url, check_if_exists=True)
+
                         if result:
-                            logger.info(f"{archiver} succeeded on row {i}")
+                            logger.success(f"{archiver} succeeded on row {i}")
                             break
 
                     if result:
                         update_sheet(wks, i, result, columns, v)
+                    else:
+                        wks.update(columns['status'] + str(i), 'failed: no archiver')
 
+                    # except:
+                    # if any unexpected errors occured, log these into the Google Sheet
+                    # t, value, traceback = sys.exc_info()
 
-                        # except:
-                            # if any unexpected errors occured, log these into the Google Sheet
-                            # t, value, traceback = sys.exc_info()
-
-                            # update_sheet(wks, i, str(
-                            #     value), {}, columns, v)
+                    # update_sheet(wks, i, str(
+                    #     value), {}, columns, v)
 
 
 def main():

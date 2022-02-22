@@ -1,15 +1,13 @@
 import os, traceback
-from botocore.errorfactory import ClientError
 import tiktok_downloader
 from loguru import logger
-from .base_archiver import Archiver, ArchiveResult
 
-# TODO: get_cdn_url, do_s3_upload, get_thumbnails
+from .base_archiver import Archiver, ArchiveResult
 
 
 class TiktokArchiver(Archiver):
     name = "tiktok"
-    
+
     def download(self, url, check_if_exists=False):
         if 'tiktok.com' not in url:
             return False
@@ -18,35 +16,28 @@ class TiktokArchiver(Archiver):
 
         try:
             info = tiktok_downloader.info_post(url)
-            key = 'tiktok_' + str(info.id) + '.mp4'
+            key = self.get_key(f'{info.id}.mp4')
+            cdn_url = self.get_cdn_url(key)
             filename = 'tmp/' + key
 
-            if check_if_exists:
-                try:
-                    self.s3.head_object(Bucket=os.getenv('DO_BUCKET'), Key=key)
+            if check_if_exists and self.storage.exists(key):
+                status = 'already archived'
 
-                    # file exists
-                    cdn_url = self.get_cdn_url(key)
+            media = tiktok_downloader.snaptik(url).get_media()
 
-                    status = 'already archived'
+            if len(media) <= 0:
+                if status == 'already archived':
+                    return ArchiveResult(status='Could not download media, but already archived', cdn_url=cdn_url)
+                else:
+                    return ArchiveResult(status='Could not download media')
 
-                except ClientError:
-                    pass
+            media[0].download(filename)
 
             if status != 'already archived':
-                media = tiktok_downloader.snaptik(url).get_media()
-                if len(media) > 0:
-                    media[0].download(filename)
-                    with open(filename, 'rb') as f:
-                        self.do_s3_upload(f, key)
-
-                    cdn_url = self.get_cdn_url(key)
-                else:
-                    status = 'could not download media'
+                self.storage.upload(filename, key)
 
             try:
-                key_thumb, thumb_index = self.get_thumbnails(
-                    filename, duration=info.duration)
+                key_thumb, thumb_index = self.get_thumbnails(filename, duration=info.duration)
             except:
                 key_thumb = ''
                 thumb_index = 'error creating thumbnails'
