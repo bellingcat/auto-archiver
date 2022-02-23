@@ -71,7 +71,7 @@ def process_sheet(sheet):
             continue
 
         if not gw.col_exists('status'):
-            logger.warning("No 'Archive status' column found, skipping")
+            logger.warning(f'No "Archive status" column found, skipping worksheet {wks.title}')
             continue
 
         # archives will be in a folder 'doc_name/worksheet_name'
