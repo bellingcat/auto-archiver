@@ -88,6 +88,7 @@ def process_sheet(sheet):
 
                 for archiver in active_archivers:
                     logger.debug(f'Trying {archiver} on row {i}')
+                    # TODO: add support for multiple videos/images
                     result = archiver.download(url, check_if_exists=True)
 
                     if result:
