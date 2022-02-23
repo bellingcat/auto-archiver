@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 
 import archivers
 from storages import S3Storage, S3Config
-from utils import GWorksheet
+from utils import GWorksheet, mkdir_if_not_exists
 
 load_dotenv()
 
@@ -124,6 +124,7 @@ def main():
 
     logger.info(f'Opening document {args.sheet}')
 
+    mkdir_if_not_exists('tmp')
     process_sheet(args.sheet)
 
 

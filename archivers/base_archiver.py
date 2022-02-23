@@ -6,6 +6,7 @@ from abc import ABC, abstractmethod
 from urllib.parse import urlparse
 
 from storages import Storage
+from utils import mkdir_if_not_exists
 
 
 @dataclass
@@ -48,8 +49,7 @@ class Archiver(ABC):
         thumbnails_folder = filename.split('.')[0] + '/'
         key_folder = key.split('.')[0] + '/'
 
-        if not os.path.exists(thumbnails_folder):
-            os.mkdir(thumbnails_folder)
+        mkdir_if_not_exists(thumbnails_folder)
 
         fps = 0.5
         if duration is not None:
