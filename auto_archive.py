@@ -2,6 +2,7 @@ import os
 import datetime
 import argparse
 import requests
+import shutil
 import gspread
 from loguru import logger
 from dotenv import load_dotenv
@@ -126,7 +127,7 @@ def main():
 
     mkdir_if_not_exists('tmp')
     process_sheet(args.sheet)
-
+    shutil.rmtree('tmp')
 
 if __name__ == '__main__':
     main()

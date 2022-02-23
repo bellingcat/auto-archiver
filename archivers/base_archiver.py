@@ -1,6 +1,7 @@
 import os
 import ffmpeg
 import datetime
+import shutil
 from dataclasses import dataclass
 from abc import ABC, abstractmethod
 from urllib.parse import urlparse
@@ -78,7 +79,6 @@ class Archiver(ABC):
                 self.storage.upload(thumbnail_filename, key)
 
                 cdn_urls.append(cdn_url)
-                os.remove(thumbnail_filename)
 
         if len(cdn_urls) == 0:
             return ('None', 'None')
@@ -100,6 +100,7 @@ class Archiver(ABC):
         thumb_index = key_folder + 'index.html'
 
         self.storage.upload(index_fname, thumb_index, extra_args={'ACL': 'public-read', 'ContentType': 'text/html'})
+        shutil.rmtree(thumbnails_folder)
 
         thumb_index_cdn_url = self.storage.get_cdn_url(thumb_index)
 
