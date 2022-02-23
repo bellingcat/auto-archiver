@@ -17,7 +17,7 @@ class TiktokArchiver(Archiver):
         try:
             info = tiktok_downloader.info_post(url)
             key = self.get_key(f'{info.id}.mp4')
-            cdn_url = self.get_cdn_url(key)
+            cdn_url = self.storage.get_cdn_url(key)
             filename = 'tmp/' + key
 
             if check_if_exists and self.storage.exists(key):

@@ -1,7 +1,6 @@
 import os
 import datetime
 import argparse
-import math
 import requests
 import gspread
 from loguru import logger
@@ -9,96 +8,34 @@ from dotenv import load_dotenv
 
 import archivers
 from storages import S3Storage, S3Config
+from gworksheet import GWorksheet
 
 load_dotenv()
 
 
-def col_to_index(col):
-    col = list(col)
-    ndigits = len(col)
-    alphabet = ' ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-    v = 0
-    i = ndigits - 1
-
-    for digit in col:
-        index = alphabet.find(digit)
-        v += (26 ** i) * index
-        i -= 1
-
-    return v - 1
-
-
-def index_to_col(index):
-    alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-
-    if index > 25:
-        t = index
-        dig = 0
-        while t > 25:
-            t = math.floor(t / 26)
-            dig += 1
-        return alphabet[t - 1] + index_to_col(index - t * int(math.pow(26, dig)))
-    else:
-        return alphabet[index]
-
-
-def update_sheet(wks, row, result: archivers.ArchiveResult, columns, v):
+def update_sheet(gw, row, result: archivers.ArchiveResult):
     update = []
 
-    if columns['status'] is not None:
-        update += [{
-            'range': columns['status'] + str(row),
-            'values': [[result.status]]
-        }]
+    def batch_if_valid(col, val, final_value=None):
+        final_value = final_value or val
+        if val and gw.col_exists(col) and gw.cell(row, col) == '':
+            update.append((row, col, final_value))
 
-    if result.cdn_url and columns['archive'] is not None and v[col_to_index(columns['archive'])] == '':
-        update += [{
-            'range': columns['archive'] + str(row),
-            'values': [[result.cdn_url]]
-        }]
+    update.append((row, 'status', result.status))
 
-    if columns['date'] is not None and v[col_to_index(columns['date'])] == '':
-        update += [{
-            'range': columns['date'] + str(row),
-            'values': [[datetime.datetime.now().isoformat()]]
-        }]
+    batch_if_valid('archive', result.cdn_url)
+    batch_if_valid('archive', True, datetime.datetime.now().isoformat())
+    batch_if_valid('thumbnail', result.thumbnail, f'=IMAGE("{result.thumbnail}")')
+    batch_if_valid('thumbnail_index', result.thumbnail_index)
+    batch_if_valid('title', result.title)
+    batch_if_valid('duration', result.duration, str(result.duration))
 
-    if result.thumbnail and columns['thumbnail'] is not None and v[col_to_index(columns['thumbnail'])] == '':
-        update += [{
-            'range': columns['thumbnail'] + str(row),
-            'values': [['=IMAGE("' + result.thumbnail + '")']]
-        }]
+    if result.timestamp and type(result.timestamp) != str:
+        result.timestamp = datetime.datetime.fromtimestamp(result.timestamp).isoformat()
+    batch_if_valid('timestamp', result.timestamp)
 
-    if result.thumbnail_index and columns['thumbnail_index'] is not None and v[col_to_index(columns['thumbnail_index'])] == '':
-        update += [{
-            'range': columns['thumbnail_index'] + str(row),
-            'values': [[result.thumbnail_index]]
-        }]
-
-    if result.timestamp and columns['timestamp'] is not None and v[col_to_index(columns['timestamp'])] == '':
-        update += [{
-            'range': columns['timestamp'] + str(row),
-            'values': [[result.timestamp]] if type(result.timestamp) == str else [[datetime.datetime.fromtimestamp(result.timestamp).isoformat()]]
-        }]
-
-    if result.title and columns['title'] is not None and v[col_to_index(columns['title'])] == '':
-        update += [{
-            'range': columns['title'] + str(row),
-            'values': [[result.title]]
-        }]
-
-    if result.duration and columns['duration'] is not None and v[col_to_index(columns['duration'])] == '':
-        update += [{
-            'range': columns['duration'] + str(row),
-            'values': [[str(result.duration)]]
-        }]
-
-    wks.batch_update(update, value_input_option='USER_ENTERED')
-
-
-# def record_stream(url, s3_client, wks, i, columns, v):
-#     video_data, status = download_vid(url, s3_client)
-#     update_sheet(wks, i, status, video_data, columns, v)
+    gw.update_batch(update)
+    
 
 
 def process_sheet(sheet):
@@ -112,52 +49,18 @@ def process_sheet(sheet):
         secret=os.getenv('DO_SPACES_SECRET')
     )
 
-    # s3_client = boto3.client('s3',
-    #                          region_name=os.getenv('DO_SPACES_REGION'),
-    #                          endpoint_url='https://{}.digitaloceanspaces.com'.format(
-    #                              os.getenv('DO_SPACES_REGION')),
-    #                          aws_access_key_id=os.getenv('DO_SPACES_KEY'),
-    #                          aws_secret_access_key=os.getenv('DO_SPACES_SECRET'))
-
     # loop through worksheets to check
     for ii, wks in enumerate(sh.worksheets()):
         logger.info(f'Opening worksheet {ii}: "{wks.title}"')
-        values = wks.get_all_values()
+        gw = GWorksheet(wks)
 
-        headers = [v.lower() for v in values[0]]
-        columns = {}
-
-        columns['url'] = index_to_col(headers.index(
-            'media url')) if 'media url' in headers else index_to_col(headers.index(
-                'source url')) if 'source url' in headers else None
-
-        if columns['url'] is None:
+        if not gw.col_exists("url"):
             logger.warning(f'No "Media URL" column found, skipping worksheet {wks.title}')
             continue
 
-        url_index = col_to_index(columns['url'])
-
-        columns['archive'] = index_to_col(headers.index(
-            'archive location')) if 'archive location' in headers else None
-        columns['date'] = index_to_col(headers.index(
-            'archive date')) if 'archive date' in headers else None
-        columns['status'] = index_to_col(headers.index(
-            'archive status')) if 'archive status' in headers else None
-
-        if columns['status'] is None:
+        if not gw.col_exists("status"):
             logger.warning("No 'Archive status' column found, skipping")
             continue
-
-        columns['thumbnail'] = index_to_col(headers.index(
-            'thumbnail')) if 'thumbnail' in headers else None
-        columns['thumbnail_index'] = index_to_col(headers.index(
-            'thumbnail index')) if 'thumbnail index' in headers else None
-        columns['timestamp'] = index_to_col(headers.index(
-            'upload timestamp')) if 'upload timestamp' in headers else None
-        columns['title'] = index_to_col(headers.index(
-            'upload title')) if 'upload title' in headers else None
-        columns['duration'] = index_to_col(headers.index(
-            'duration')) if 'duration' in headers else None
 
         # archives will be in a folder 'doc_name/worksheet_name'
         s3_config.folder = f'{sheet}/{wks.title}/'
@@ -172,47 +75,42 @@ def process_sheet(sheet):
         ]
 
         # loop through rows in worksheet
-        for i in range(2, len(values) + 1):
-            v = values[i - 1]
-            url = v[url_index]
+        for i in range(2, gw.count_rows() + 1):
+            row = gw.get_row(i)
+            url = gw.cell(row, 'url')
+            status = gw.cell(row, 'status')
+            if url != '' and status in ['', None]:
+                gw.update(i, 'status', 'Archive in progress')
 
-            if url != "" and v[col_to_index(columns['status'])] == "":
-                latest_val = wks.acell(columns['status'] + str(i)).value
+                # expand short URL links
+                if 'https://t.co/' in url:
+                    r = requests.get(url)
+                    url = r.url
 
-                # check so we don't step on each others' toes
-                if latest_val == '' or latest_val is None:
-                    wks.update(columns['status'] + str(i), 'Archive in progress')
-
-                    # expand short URL links
-                    if 'https://t.co/' in url:
-                        r = requests.get(url)
-                        url = r.url
-
-                    for archiver in active_archivers:
-                        logger.debug(f"Trying {archiver} on row {i}")
-
-                        result = archiver.download(url, check_if_exists=True)
-
-                        if result:
-                            logger.success(f"{archiver} succeeded on row {i}")
-                            break
+                for archiver in active_archivers:
+                    logger.debug(f'Trying {archiver} on row {i}')
+                    result = archiver.download(url, check_if_exists=True)
 
                     if result:
-                        update_sheet(wks, i, result, columns, v)
-                    else:
-                        wks.update(columns['status'] + str(i), 'failed: no archiver')
+                        logger.success(f'{archiver} succeeded on row {i}')
+                        break
 
-                    # except:
-                    # if any unexpected errors occured, log these into the Google Sheet
-                    # t, value, traceback = sys.exc_info()
+                if result:
+                    update_sheet(gw, i, result)
+                else:
+                    gw.update(i, 'status', 'failed: no archiver')
 
-                    # update_sheet(wks, i, str(
-                    #     value), {}, columns, v)
+        #             # except:
+        #             # if any unexpected errors occured, log these into the Google Sheet
+        #             # t, value, traceback = sys.exc_info()
+
+        #             # update_sheet(wks, i, str(
+        #             #     value), {}, columns, v)
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Automatically archive social media videos from a Google Sheet")
+        description="Automatically archive social media videos from a Google Sheets document")
     parser.add_argument("--sheet", action="store", dest="sheet")
     args = parser.parse_args()
 
