@@ -35,7 +35,6 @@ def update_sheet(gw, row, result: archivers.ArchiveResult):
     batch_if_valid('timestamp', result.timestamp)
 
     gw.update_batch(update)
-    
 
 
 def process_sheet(sheet):
@@ -54,11 +53,11 @@ def process_sheet(sheet):
         logger.info(f'Opening worksheet {ii}: "{wks.title}"')
         gw = GWorksheet(wks)
 
-        if not gw.col_exists("url"):
+        if not gw.col_exists('url'):
             logger.warning(f'No "Media URL" column found, skipping worksheet {wks.title}')
             continue
 
-        if not gw.col_exists("status"):
+        if not gw.col_exists('status'):
             logger.warning("No 'Archive status' column found, skipping")
             continue
 
@@ -110,14 +109,14 @@ def process_sheet(sheet):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Automatically archive social media videos from a Google Sheets document")
-    parser.add_argument("--sheet", action="store", dest="sheet")
+        description='Automatically archive social media videos from a Google Sheets document')
+    parser.add_argument('--sheet', action='store', dest='sheet')
     args = parser.parse_args()
 
-    logger.info("Opening document " + args.sheet)
+    logger.info(f'Opening document {args.sheet}')
 
     process_sheet(args.sheet)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

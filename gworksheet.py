@@ -68,30 +68,3 @@ class GWorksheet:
     def to_a1(self, row: int, col: int):
         # row, col are 1-based
         return utils.rowcol_to_a1(row, col)
-
-    # def index_to_col(self, index):
-    #     alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-
-    #     if index > 25:
-    #         t = index
-    #         dig = 0
-    #         while t > 25:
-    #             t = math.floor(t / 26)
-    #             dig += 1
-    #         return alphabet[t - 1] + self.index_to_col(index - t * int(math.pow(26, dig)))
-    #     else:
-    #         return alphabet[index]
-
-    # def col_to_index(self, col):
-    #     col = list(col)
-    #     ndigits = len(col)
-    #     alphabet = ' ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-    #     v = 0
-    #     i = ndigits - 1
-
-    #     for digit in col:
-    #         index = alphabet.find(digit)
-    #         v += (26 ** i) * index
-    #         i -= 1
-
-    #     return v - 1
