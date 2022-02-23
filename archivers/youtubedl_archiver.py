@@ -9,14 +9,15 @@ from .base_archiver import Archiver, ArchiveResult
 
 class YoutubeDLArchiver(Archiver):
     name = "yotube_dl"
+    ydl_opts = {'outtmpl': 'tmp/%(id)s.%(ext)s', 'quiet': False}
 
     def download(self, url, check_if_exists=False):
-        ydl_opts = {'outtmpl': 'tmp/%(id)s.%(ext)s', 'quiet': False}
-        if (url[0:21] == 'https://facebook.com/' or url[0:25] == 'https://wwww.facebook.com/') and os.getenv('FB_COOKIE'):
+        netloc = self.get_netloc(url)
+        if netloc in ['facebook.com', 'wwww.facebook.com'] and os.getenv('FB_COOKIE'):
             logger.info('Using Facebook cookie')
             youtube_dl.utils.std_headers['cookie'] = os.getenv('FB_COOKIE')
 
-        ydl = youtube_dl.YoutubeDL(ydl_opts)
+        ydl = youtube_dl.YoutubeDL(YoutubeDLArchiver.ydl_opts)
         cdn_url = None
         status = 'success'
 
@@ -26,7 +27,7 @@ class YoutubeDLArchiver(Archiver):
             # no video here
             return False
 
-        if 'is_live' in info and info['is_live']:
+        if info.get('is_live', False):
             logger.warning("Live streaming media, not archiving now")
             return ArchiveResult(status="Streaming media")
 
@@ -74,11 +75,11 @@ class YoutubeDLArchiver(Archiver):
             self.storage.upload(filename, key)
 
         # get duration
-        duration = info['duration'] if 'duration' in info else None
+        duration = info.get('duration')
 
         # get thumbnails
         try:
-            key_thumb, thumb_index = self.get_thumbnails(filename, duration=duration)
+            key_thumb, thumb_index = self.get_thumbnails(filename, key, duration=duration)
         except:
             key_thumb = ''
             thumb_index = 'Could not generate thumbnails'

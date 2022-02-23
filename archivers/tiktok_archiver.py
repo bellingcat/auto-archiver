@@ -37,8 +37,9 @@ class TiktokArchiver(Archiver):
                 self.storage.upload(filename, key)
 
             try:
-                key_thumb, thumb_index = self.get_thumbnails(filename, duration=info.duration)
-            except:
+                key_thumb, thumb_index = self.get_thumbnails(filename, key, duration=info.duration)
+            except Exception as e:
+                logger.error(e)
                 key_thumb = ''
                 thumb_index = 'error creating thumbnails'
 

@@ -68,3 +68,23 @@ To make it easier to set up new auto-archiver sheets, the auto-auto-archiver wil
 
 ![A screenshot of a Google Spreadsheet configured to show instructional text and a list of sheet names to check with auto-archiver.](docs/auto-auto.png)
 
+# Code structure
+Code is split into functional concepts:
+1. [Archivers](archivers/) - receive a URL that they try to archive
+2. [Storages](storages/) - they deal with where the archived files go
+3. utilities
+   1. [GWorksheet](gworksheet.py) - facilitates some of the reading/writing tasks for a Google Worksheet
+
+### Current Archivers
+```mermaid
+graph TD
+    A(Archiver) -->|parent of| B(TelegramArchiver)
+    A -->|parent of| C(TikTokArchiver)
+    A -->|parent of| D(YoutubeDLArchiver)
+    A -->|parent of| E(WaybackArchiver)
+```
+### Current Storages
+```mermaid
+graph TD
+    A(BaseStorage) -->|parent of| B(S3Storage)
+```

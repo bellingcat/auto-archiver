@@ -63,13 +63,13 @@ class GWorksheet:
         """
         cell_updates = [
             {
-                'range': self.to_a1(row, self._col_index(col) + 1),
+                'range': self.to_a1(row, col),
                 'values': [[val]]
             }
             for row, col, val in cell_updates
         ]
         self.wks.batch_update(cell_updates, value_input_option='USER_ENTERED')
 
-    def to_a1(self, row: int, col: int):
-        # row, col are 1-based
-        return utils.rowcol_to_a1(row, col)
+    def to_a1(self, row: int, col: str):
+        # row is 1-based
+        return utils.rowcol_to_a1(row, self._col_index(col) + 1)

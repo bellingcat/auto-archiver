@@ -3,6 +3,7 @@ import ffmpeg
 import datetime
 from dataclasses import dataclass
 from abc import ABC, abstractmethod
+from urllib.parse import urlparse
 
 from storages import Storage
 
@@ -30,6 +31,9 @@ class Archiver(ABC):
     @abstractmethod
     def download(self, url, check_if_exists=False): pass
 
+    def get_netloc(self, url):
+        return urlparse(url).netloc
+
     def get_key(self, filename):
         """
         returns a key in the format "[archiverName]_[filename]" includes extension
@@ -40,9 +44,12 @@ class Archiver(ABC):
             _id = _id.replace('unknown_video', 'jpg')
         return f'{self.name}_{_id}{extension}'
 
-    def get_thumbnails(self, filename, duration=None):
-        if not os.path.exists(filename.split('.')[0]):
-            os.mkdir(filename.split('.')[0])
+    def get_thumbnails(self, filename, key, duration=None):
+        thumbnails_folder = filename.split('.')[0] + '/'
+        key_folder = key.split('.')[0] + '/'
+
+        if not os.path.exists(thumbnails_folder):
+            os.mkdir(thumbnails_folder)
 
         fps = 0.5
         if duration is not None:
@@ -57,15 +64,14 @@ class Archiver(ABC):
 
         stream = ffmpeg.input(filename)
         stream = ffmpeg.filter(stream, 'fps', fps=fps).filter('scale', 512, -1)
-        stream.output(filename.split('.')[0] + '/out%d.jpg').run()
+        stream.output(thumbnails_folder + 'out%d.jpg').run()
 
-        thumbnails = os.listdir(filename.split('.')[0] + '/')
+        thumbnails = os.listdir(thumbnails_folder)
         cdn_urls = []
-
         for fname in thumbnails:
             if fname[-3:] == 'jpg':
-                thumbnail_filename = filename.split('.')[0] + '/' + fname
-                key = filename.split('/')[1].split('.')[0] + '/' + fname
+                thumbnail_filename = thumbnails_folder + fname
+                key = key_folder + fname
 
                 cdn_url = self.storage.get_cdn_url(key)
 
@@ -86,12 +92,12 @@ class Archiver(ABC):
             index_page += f'<img src="{t}" />'
 
         index_page += f"</body></html>"
-        index_fname = filename.split('.')[0] + '/index.html'
+        index_fname = thumbnails_folder + 'index.html'
 
         with open(index_fname, 'w') as f:
             f.write(index_page)
 
-        thumb_index = filename.split('/')[1].split('.')[0] + '/index.html'
+        thumb_index = key_folder + 'index.html'
 
         self.storage.upload(index_fname, thumb_index, extra_args={'ACL': 'public-read', 'ContentType': 'text/html'})
 
