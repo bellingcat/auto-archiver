@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 
 import archivers
 from storages import S3Storage, S3Config
-from gworksheet import GWorksheet
+from utils import GWorksheet
 
 load_dotenv()
 

@@ -72,8 +72,8 @@ To make it easier to set up new auto-archiver sheets, the auto-auto-archiver wil
 Code is split into functional concepts:
 1. [Archivers](archivers/) - receive a URL that they try to archive
 2. [Storages](storages/) - they deal with where the archived files go
-3. utilities
-   1. [GWorksheet](gworksheet.py) - facilitates some of the reading/writing tasks for a Google Worksheet
+3. [Utilities](utils/)
+   1. [GWorksheet](utils/gworksheet.py) - facilitates some of the reading/writing tasks for a Google Worksheet
 
 ### Current Archivers
 ```mermaid
