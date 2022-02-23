@@ -54,8 +54,8 @@ class TelegramArchiver(Archiver):
         # extract duration from HTML
         duration = s.find_all('time')[0].contents[0]
         if ':' in duration:
-            duration = float(duration.split(
-                ':')[0]) * 60 + float(duration.split(':')[1])
+            duration = float(duration.split(':')[0]) * 60
+            + float(duration.split(':')[1])
         else:
             duration = float(duration)
 

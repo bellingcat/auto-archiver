@@ -14,17 +14,18 @@ load_dotenv()
 
 
 def update_sheet(gw, row, result: archivers.ArchiveResult):
-    update = []
+    cell_updates = []
+    row_values = gw.get_row(row)
 
     def batch_if_valid(col, val, final_value=None):
         final_value = final_value or val
-        if val and gw.col_exists(col) and gw.cell(row, col) == '':
-            update.append((row, col, final_value))
+        if val and gw.col_exists(col) and gw.get_cell(row_values, col) == '':
+            cell_updates.append((row, col, final_value))
 
-    update.append((row, 'status', result.status))
+    cell_updates.append((row, 'status', result.status))
 
     batch_if_valid('archive', result.cdn_url)
-    batch_if_valid('archive', True, datetime.datetime.now().isoformat())
+    batch_if_valid('date', True, datetime.datetime.now().isoformat())
     batch_if_valid('thumbnail', result.thumbnail, f'=IMAGE("{result.thumbnail}")')
     batch_if_valid('thumbnail_index', result.thumbnail_index)
     batch_if_valid('title', result.title)
@@ -34,7 +35,18 @@ def update_sheet(gw, row, result: archivers.ArchiveResult):
         result.timestamp = datetime.datetime.fromtimestamp(result.timestamp).isoformat()
     batch_if_valid('timestamp', result.timestamp)
 
-    gw.update_batch(update)
+    gw.batch_set_cell(cell_updates)
+
+
+def expand_url(url):
+    # expand short URL links
+    if 'https://t.co/' in url:
+        try:
+            r = requests.get(url)
+            url = r.url
+        except:
+            logger.error(f'Failed to expand url {url}')
+    return url
 
 
 def process_sheet(sheet):
@@ -74,38 +86,34 @@ def process_sheet(sheet):
         ]
 
         # loop through rows in worksheet
-        for i in range(2, gw.count_rows() + 1):
-            row = gw.get_row(i)
-            url = gw.cell(row, 'url')
-            status = gw.cell(row, 'status')
+        for row in range(2, gw.count_rows() + 1):
+            url = gw.get_cell(row, 'url')
+            status = gw.get_cell(row, 'status')
             if url != '' and status in ['', None]:
-                gw.update(i, 'status', 'Archive in progress')
+                gw.set_cell(row, 'status', 'Archive in progress')
 
-                # expand short URL links
-                if 'https://t.co/' in url:
-                    r = requests.get(url)
-                    url = r.url
+                url = expand_url(url)
 
                 for archiver in active_archivers:
-                    logger.debug(f'Trying {archiver} on row {i}')
+                    logger.debug(f'Trying {archiver} on row {row}')
+
                     # TODO: add support for multiple videos/images
-                    result = archiver.download(url, check_if_exists=True)
+                    try:
+                        result = archiver.download(url, check_if_exists=True)
+                    except Exception as e:
+                        result = False
+                        logger.error(f'Got unexpected error in row {row} with archiver {archiver} for url {url}: {e}')
 
                     if result:
-                        logger.success(f'{archiver} succeeded on row {i}')
-                        break
+                        if result.status in ['success', 'already archived']:
+                            logger.success(f'{archiver} succeeded on row {row}')
+                            break
+                        logger.warning(f'{archiver} did not succeed on row {row}, final status: {result.status}')
 
                 if result:
-                    update_sheet(gw, i, result)
+                    update_sheet(gw, row, result)
                 else:
-                    gw.update(i, 'status', 'failed: no archiver')
-
-        #             # except:
-        #             # if any unexpected errors occured, log these into the Google Sheet
-        #             # t, value, traceback = sys.exc_info()
-
-        #             # update_sheet(wks, i, str(
-        #             #     value), {}, columns, v)
+                    gw.set_cell(row, 'status', 'failed: no archiver')
 
 
 def main():
