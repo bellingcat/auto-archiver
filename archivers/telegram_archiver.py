@@ -36,10 +36,10 @@ class TelegramArchiver(Archiver):
         key = self.get_key(video_id)
 
         filename = 'tmp/' + key
+        cdn_url = self.storage.get_cdn_url(key)
 
         if check_if_exists and self.storage.exists(key):
             status = 'already archived'
-            cdn_url = self.storage.get_cdn_url(key)
 
         v = requests.get(video_url, headers=headers)
 
@@ -47,8 +47,6 @@ class TelegramArchiver(Archiver):
             f.write(v.content)
 
         if status != 'already archived':
-            cdn_url = self.storage.get_cdn_url(key)
-
             self.storage.upload(filename, key)
 
         # extract duration from HTML
