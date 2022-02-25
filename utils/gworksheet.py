@@ -3,7 +3,7 @@ from gspread import utils
 
 class GWorksheet:
     COLUMN_NAMES = {
-        'url': 'media url',
+        'url': 'link',
         'archive': 'archive location',
         'date': 'archive date',
         'status': 'archive status',
@@ -11,12 +11,14 @@ class GWorksheet:
         'thumbnail_index': 'thumbnail index',
         'timestamp': 'upload timestamp',
         'title': 'upload title',
-        'duration': 'duration'
+        'duration': 'duration',
+        'screenshot': 'screenshot',
+        'hash': 'hash'
     }
 
-    def __init__(self, worksheet, columns=COLUMN_NAMES):
+    def __init__(self, worksheet, columns=COLUMN_NAMES, header_row=1):
         self.wks = worksheet
-        self.headers = [v.lower() for v in self.wks.row_values(1)]
+        self.headers = [v.lower() for v in self.wks.row_values(header_row)]
         self.columns = columns
 
     def _check_col_exists(self, col: str):
@@ -37,6 +39,9 @@ class GWorksheet:
     def get_row(self, row: int):
         # row is 1-based
         return self.wks.row_values(row)
+
+    def get_values(self):
+        return self.wks.get_values()
 
     def get_cell(self, row, col: str):
         """

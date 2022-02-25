@@ -43,6 +43,7 @@ class Archiver(ABC):
     def get_netloc(self, url):
         return urlparse(url).netloc
 
+
     def get_key(self, filename):
         """
         returns a key in the format "[archiverName]_[filename]" includes extension
