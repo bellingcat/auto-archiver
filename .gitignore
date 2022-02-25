@@ -1,6 +1,8 @@
 tmp/
-.env
+.env*
 .DS_Store
 expmt/
 service_account.json
 __pycache__/
+._*
+anu.html

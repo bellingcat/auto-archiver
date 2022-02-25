@@ -9,10 +9,13 @@ boto3 = "*"
 python-dotenv = "*"
 youtube_dl = "*"
 argparse = "*"
-ffmpeg-python = "*"
 beautifulsoup4 = "*"
+tiktok-downloader = {git = "https://github.com/msramalho/tiktok-downloader"}
+bs4 = "*"
+loguru = "*"
+ffmpeg-python = "*"
 
 [dev-packages]
 
 [requires]
-python_version = "3.8"
+python_version = "3.9"

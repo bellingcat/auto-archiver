@@ -1,8 +1,7 @@
 import gspread
-import subprocess
 import argparse
 import auto_archive
-import datetime
+from loguru import logger
 
 def main():
     parser = argparse.ArgumentParser(
@@ -11,8 +10,7 @@ def main():
 
     args = parser.parse_args()
 
-    print(datetime.datetime.now())
-    print("Opening document " + args.sheet)
+    logger.info("Opening document " + args.sheet)
 
     gc = gspread.service_account(filename='service_account.json')
     sh = gc.open(args.sheet)
@@ -23,7 +21,7 @@ def main():
     for i in range(11, len(values)):
         sheet_name = values[i][0]
 
-        print("Processing " + sheet_name)
+        logger.info("Processing " + sheet_name)
 
         auto_archive.process_sheet(sheet_name)
 
