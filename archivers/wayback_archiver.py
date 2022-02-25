@@ -8,8 +8,8 @@ from .base_archiver import Archiver, ArchiveResult
 class WaybackArchiver(Archiver):
     name = "wayback"
 
-    def __init__(self, storage: Storage):
-        super(WaybackArchiver, self).__init__(storage)
+    def __init__(self, storage: Storage, driver):
+        super(WaybackArchiver, self).__init__(storage, driver)
         self.seen_urls = {}
 
     def download(self, url, check_if_exists=False):
@@ -71,6 +71,7 @@ class WaybackArchiver(Archiver):
         except:
             title = "Could not get title"
 
-        result = ArchiveResult(status='Internet Archive fallback', cdn_url=archive_url, title=title)
+        screenshot = self.get_screenshot(url)
+        result = ArchiveResult(status='Internet Archive fallback', cdn_url=archive_url, title=title, screenshot=screenshot)
         self.seen_urls[url] = result
         return result

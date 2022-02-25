@@ -7,13 +7,15 @@ name = "pypi"
 gspread = "*"
 boto3 = "*"
 python-dotenv = "*"
-youtube_dl = "*"
 argparse = "*"
 beautifulsoup4 = "*"
 tiktok-downloader = {git = "https://github.com/msramalho/tiktok-downloader"}
 bs4 = "*"
 loguru = "*"
 ffmpeg-python = "*"
+selenium = "*"
+snscrape = "*"
+yt-dlp = "*"
 
 [dev-packages]
 

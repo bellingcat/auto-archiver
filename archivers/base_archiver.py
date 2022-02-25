@@ -5,6 +5,10 @@ import shutil
 from dataclasses import dataclass
 from abc import ABC, abstractmethod
 from urllib.parse import urlparse
+import hashlib
+from selenium.common.exceptions import TimeoutException
+from loguru import logger
+import time
 
 from storages import Storage
 from utils import mkdir_if_not_exists
@@ -19,13 +23,16 @@ class ArchiveResult:
     duration: float = None
     title: str = None
     timestamp: datetime.datetime = None
+    screenshot: str = None
+    hash: str = None
 
 
 class Archiver(ABC):
     name = "default"
 
-    def __init__(self, storage: Storage):
+    def __init__(self, storage: Storage, driver):
         self.storage = storage
+        self.driver = driver
 
     def __str__(self):
         return self.__class__.__name__
@@ -45,6 +52,26 @@ class Archiver(ABC):
         if 'unknown_video' in _id:
             _id = _id.replace('unknown_video', 'jpg')
         return f'{self.name}_{_id}{extension}'
+
+    def get_hash(self, filename):
+        f = open(filename, "rb")
+        bytes = f.read()  # read entire file as bytes
+        hash = hashlib.sha256(bytes)
+        f.close()
+        return hash.hexdigest()
+
+    def get_screenshot(self, url):
+        key = self.get_key(urlparse(url).path.replace(
+            "/", "_") + datetime.datetime.utcnow().isoformat().replace(" ", "_") + ".png")
+        filename = 'tmp/' + key
+
+        self.driver.get(url)
+        time.sleep(6)
+
+        self.driver.save_screenshot(filename)
+        self.storage.upload(filename, key, extra_args={
+                            'ACL': 'public-read', 'ContentType': 'image/png'})
+        return self.storage.get_cdn_url(key)
 
     def get_thumbnails(self, filename, key, duration=None):
         thumbnails_folder = filename.split('.')[0] + '/'

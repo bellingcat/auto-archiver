@@ -49,6 +49,9 @@ class TelegramArchiver(Archiver):
         if status != 'already archived':
             self.storage.upload(filename, key)
 
+        hash = self.get_hash(filename)
+        screenshot = self.get_screenshot(url)
+
         # extract duration from HTML
         duration = s.find_all('time')[0].contents[0]
         if ':' in duration:
@@ -58,8 +61,9 @@ class TelegramArchiver(Archiver):
             duration = float(duration)
 
         # process thumbnails
-        key_thumb, thumb_index = self.get_thumbnails(filename, key, duration=duration)
+        key_thumb, thumb_index = self.get_thumbnails(
+            filename, key, duration=duration)
         os.remove(filename)
 
         return ArchiveResult(status=status, cdn_url=cdn_url, thumbnail=key_thumb, thumbnail_index=thumb_index,
-                             duration=duration, title=original_url, timestamp=s.find_all('time')[1].get('datetime'))
+                             duration=duration, title=original_url, timestamp=s.find_all('time')[1].get('datetime'), hash=hash, screenshot=screenshot)
