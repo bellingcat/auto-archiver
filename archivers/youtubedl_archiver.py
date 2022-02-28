@@ -89,7 +89,13 @@ class YoutubeDLArchiver(Archiver):
 
         os.remove(filename)
 
-        timestamp = info['timestamp'] if 'timestamp' in info else datetime.datetime.strptime(info['upload_date'], '%Y%m%d').timestamp() if 'upload_date' in info and info['upload_date'] is not None else None
+        # TODO test YoutubeDL's date conventions for a variety of sources (Twitter, Youtube, etc)
+        #   is the timestamp always in "user" time?
+        timestamp = datetime.datetime.fromtimestamp(info['timestamp']).replace(tzinfo=datetime.timezone(datetime.timedelta(hours=1))).astimezone(datetime.timezone.utc).isoformat() \
+            if 'timestamp' in info else \
+                datetime.datetime.strptime(info['upload_date'], '%Y%m%d').timestamp() \
+            if 'upload_date' in info and info['upload_date'] is not None else \
+                None
 
         return ArchiveResult(status=status, cdn_url=cdn_url, thumbnail=key_thumb, thumbnail_index=thumb_index, duration=duration,
                              title=info['title'] if 'title' in info else None, timestamp=timestamp, hash=hash, screenshot=screenshot)

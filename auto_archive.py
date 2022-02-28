@@ -27,7 +27,7 @@ def update_sheet(gw, row, result: archivers.ArchiveResult):
     cell_updates.append((row, 'status', result.status))
 
     batch_if_valid('archive', result.cdn_url)
-    batch_if_valid('date', True, datetime.datetime.now().isoformat())
+    batch_if_valid('date', True, datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc).isoformat())
     batch_if_valid('thumbnail', result.thumbnail,
                    f'=IMAGE("{result.thumbnail}")')
     batch_if_valid('thumbnail_index', result.thumbnail_index)
@@ -36,10 +36,14 @@ def update_sheet(gw, row, result: archivers.ArchiveResult):
     batch_if_valid('screenshot', result.screenshot)
     batch_if_valid('hash', result.hash)
 
-    if result.timestamp and type(result.timestamp) != str:
-        result.timestamp = datetime.datetime.fromtimestamp(
-            result.timestamp).isoformat()
-    batch_if_valid('timestamp', result.timestamp)
+    if type(result.timestamp) == int:
+        timestamp_string = datetime.datetime.fromtimestamp(result.timestamp).replace(tzinfo=datetime.timezone.utc).isoformat()
+    elif type(result.timestamp) == str:
+        timestamp_string = result.timestamp
+    else:
+        timestamp_string = result.timestamp.isoformat()
+
+    batch_if_valid('timestamp', timestamp_string)
 
     gw.batch_set_cell(cell_updates)
 
@@ -115,14 +119,12 @@ def process_sheet(sheet, header=1):
                     for archiver in active_archivers:
                         logger.debug(f'Trying {archiver} on row {row}')
 
-                        # TODO: add support for multiple videos/images
-                        # try:
-                        result = archiver.download(
-                            url, check_if_exists=True)
-                        # except Exception as e:
-                        #     result = False
-                        #     logger.error(
-                        #         f'Got unexpected error in row {row} with archiver {archiver} for url {url}: {e}')
+                        try:
+                            result = archiver.download(url, check_if_exists=True)
+                        except Exception as e:
+                            result = False
+                            logger.error(
+                                f'Got unexpected error in row {row} with archiver {archiver} for url {url}: {e}')
 
                         if result:
                             if result.status in ['success', 'already archived']:
