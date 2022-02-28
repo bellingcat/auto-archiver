@@ -9,6 +9,7 @@ import hashlib
 from selenium.common.exceptions import TimeoutException
 from loguru import logger
 import time
+import requests
 
 from storages import Storage
 from utils import mkdir_if_not_exists
@@ -43,6 +44,55 @@ class Archiver(ABC):
     def get_netloc(self, url):
         return urlparse(url).netloc
 
+    def generate_media_page(self, urls, url, object):
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36'
+        }
+
+        page = f'''<html><head><title>{url}</title></head>
+            <body>
+            <h2>Archived media from {self.name}</h2>
+            <h3><a href="{url}">{url}</a></h3><ul>'''
+
+        thumbnail = None
+
+        for media_url in urls:
+            path = urlparse(media_url).path
+            key = self.get_key(path.replace("/", "_"))
+            if '.' not in path:
+                key += '.jpg'
+
+            filename = 'tmp/' + key
+
+            d = requests.get(media_url, headers=headers)
+            with open(filename, 'wb') as f:
+                f.write(d.content)
+
+            self.storage.upload(filename, key)
+            hash = self.get_hash(filename)
+            cdn_url = self.storage.get_cdn_url(key)
+
+            if thumbnail is None:
+                thumbnail = cdn_url
+
+            page += f'''<li><a href="{cdn_url}">{media_url}</a>: {hash}</li>'''
+
+        page += f"</ul><h2>{self.name} object data:</h2><code>{object}</code>"
+        page += f"</body></html>"
+
+        page_key = self.get_key(urlparse(url).path.replace("/", "_") + ".html")
+        page_filename = 'tmp/' + page_key
+        page_cdn = self.storage.get_cdn_url(page_key)
+
+        with open(page_filename, "w") as f:
+            f.write(page)
+
+        page_hash = self.get_hash(page_filename)
+
+        self.storage.upload(page_filename, page_key, extra_args={
+            'ACL': 'public-read', 'ContentType': 'text/html'})
+
+        return (page_cdn, page_hash, thumbnail)
 
     def get_key(self, filename):
         """
@@ -52,6 +102,11 @@ class Archiver(ABC):
         _id, extension = os.path.splitext(tail)  # returns [filename, .ext]
         if 'unknown_video' in _id:
             _id = _id.replace('unknown_video', 'jpg')
+
+        # long filenames can cause problems, so trim them if necessary
+        if len(_id) > 128:
+            _id = _id[-128:]
+
         return f'{self.name}_{_id}{extension}'
 
     def get_hash(self, filename):
@@ -127,7 +182,8 @@ class Archiver(ABC):
 
         thumb_index = key_folder + 'index.html'
 
-        self.storage.upload(index_fname, thumb_index, extra_args={'ACL': 'public-read', 'ContentType': 'text/html'})
+        self.storage.upload(index_fname, thumb_index, extra_args={
+                            'ACL': 'public-read', 'ContentType': 'text/html'})
         shutil.rmtree(thumbnails_folder)
 
         thumb_index_cdn_url = self.storage.get_cdn_url(thumb_index)

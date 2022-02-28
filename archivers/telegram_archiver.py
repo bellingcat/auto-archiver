@@ -1,6 +1,9 @@
 import os
 import requests
 from bs4 import BeautifulSoup
+from loguru import logger
+import re
+import html
 
 from .base_archiver import Archiver, ArchiveResult
 
@@ -24,12 +27,24 @@ class TelegramArchiver(Archiver):
         if url[-8:] != "?embed=1":
             url += "?embed=1"
 
+        screenshot = self.get_screenshot(url)
+
         t = requests.get(url, headers=headers)
         s = BeautifulSoup(t.content, 'html.parser')
         video = s.find("video")
 
         if video is None:
-            return False  # could not find video
+            logger.warning("could not find video")
+            image_tags = s.find_all(class_="js-message_photo")
+
+            images = []
+            for im in image_tags:
+                urls = [u.replace("'", "") for u in re.findall('url\((.*?)\)', im['style'])]
+                images += urls
+
+            page_cdn, page_hash, thumbnail = self.generate_media_page(images, url, html.escape(str(t.content)))
+
+            return ArchiveResult(status="success", cdn_url=page_cdn, screenshot=screenshot, hash=page_hash, thumbnail=thumbnail,  timestamp=s.find_all('time')[1].get('datetime'))
 
         video_url = video.get('src')
         video_id = video_url.split('/')[-1].split('?')[0]
@@ -50,7 +65,6 @@ class TelegramArchiver(Archiver):
             self.storage.upload(filename, key)
 
         hash = self.get_hash(filename)
-        screenshot = self.get_screenshot(url)
 
         # extract duration from HTML
         duration = s.find_all('time')[0].contents[0]
