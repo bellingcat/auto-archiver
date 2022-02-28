@@ -36,14 +36,15 @@ def update_sheet(gw, row, result: archivers.ArchiveResult):
     batch_if_valid('screenshot', result.screenshot)
     batch_if_valid('hash', result.hash)
 
-    if type(result.timestamp) == int:
-        timestamp_string = datetime.datetime.fromtimestamp(result.timestamp).replace(tzinfo=datetime.timezone.utc).isoformat()
-    elif type(result.timestamp) == str:
-        timestamp_string = result.timestamp
-    else:
-        timestamp_string = result.timestamp.isoformat()
+    if result.timestamp is not None:
+        if type(result.timestamp) == int:
+            timestamp_string = datetime.datetime.fromtimestamp(result.timestamp).replace(tzinfo=datetime.timezone.utc).isoformat()
+        elif type(result.timestamp) == str:
+            timestamp_string = result.timestamp
+        else:
+            timestamp_string = result.timestamp.isoformat()
 
-    batch_if_valid('timestamp', timestamp_string)
+        batch_if_valid('timestamp', timestamp_string)
 
     gw.batch_set_cell(cell_updates)
 

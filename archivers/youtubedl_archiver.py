@@ -89,11 +89,9 @@ class YoutubeDLArchiver(Archiver):
 
         os.remove(filename)
 
-        # TODO test YoutubeDL's date conventions for a variety of sources (Twitter, Youtube, etc)
-        #   is the timestamp always in "user" time?
-        timestamp = datetime.datetime.fromtimestamp(info['timestamp']).replace(tzinfo=datetime.timezone(datetime.timedelta(hours=1))).astimezone(datetime.timezone.utc).isoformat() \
+        timestamp = datetime.datetime.utcfromtimestamp(info['timestamp']).replace(tzinfo=datetime.timezone.utc).isoformat() \
             if 'timestamp' in info else \
-                datetime.datetime.strptime(info['upload_date'], '%Y%m%d').timestamp() \
+                datetime.datetime.strptime(info['upload_date'], '%Y%m%d').replace(tzinfo=datetime.timezone.utc) \
             if 'upload_date' in info and info['upload_date'] is not None else \
                 None
 
