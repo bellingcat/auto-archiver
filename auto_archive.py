@@ -70,7 +70,9 @@ def process_sheet(sheet, header=1):
         secret=os.getenv('DO_SPACES_SECRET')
     )
 
-    driver = webdriver.Firefox()
+    options = webdriver.FirefoxOptions()
+    options.headless = True
+    driver = webdriver.Firefox(options=options)
     driver.set_window_size(1400, 2000)
 
     # loop through worksheets to check
