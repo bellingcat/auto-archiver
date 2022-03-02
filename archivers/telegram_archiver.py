@@ -44,7 +44,7 @@ class TelegramArchiver(Archiver):
 
             page_cdn, page_hash, thumbnail = self.generate_media_page(images, url, html.escape(str(t.content)))
 
-            return ArchiveResult(status="success", cdn_url=page_cdn, screenshot=screenshot, hash=page_hash, thumbnail=thumbnail,  timestamp=s.find_all('time')[1].get('datetime'))
+            return ArchiveResult(status="success", cdn_url=page_cdn, screenshot=screenshot, hash=page_hash, thumbnail=thumbnail, timestamp=s.find_all('time')[0].get('datetime'))
 
         video_url = video.get('src')
         video_id = video_url.split('/')[-1].split('?')[0]
