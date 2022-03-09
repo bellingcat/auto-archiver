@@ -18,7 +18,8 @@ class GWorksheet:
 
     def __init__(self, worksheet, columns=COLUMN_NAMES, header_row=1):
         self.wks = worksheet
-        self.headers = [v.lower() for v in self.wks.row_values(header_row)]
+        self.values = self.wks.get_values()
+        self.headers = [v.lower() for v in self.values[header_row - 1]]
         self.columns = columns
 
     def _check_col_exists(self, col: str):
@@ -34,14 +35,14 @@ class GWorksheet:
         return self.columns[col] in self.headers
 
     def count_rows(self):
-        return len(self.wks.get_values())
+        return len(self.values)
 
     def get_row(self, row: int):
         # row is 1-based
-        return self.wks.row_values(row)
+        return self.values[row - 1]
 
     def get_values(self):
-        return self.wks.get_values()
+        return self.values
 
     def get_cell(self, row, col: str):
         """

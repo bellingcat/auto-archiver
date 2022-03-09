@@ -7,6 +7,7 @@ import gspread
 from loguru import logger
 from dotenv import load_dotenv
 from selenium import webdriver
+import traceback
 
 import archivers
 from storages import S3Storage, S3Config
@@ -104,12 +105,10 @@ def process_sheet(sheet, header=1):
             archivers.WaybackArchiver(s3_client, driver)
         ]
 
-        values = gw.get_values()
         # loop through rows in worksheet
         for row in range(1 + header, gw.count_rows() + 1):
-            row_values = values[row-1]
-            url = gw.get_cell(row_values, 'url')
-            status = gw.get_cell(row_values, 'status')
+            url = gw.get_cell(row, 'url')
+            status = gw.get_cell(row, 'status')
             if url != '' and status in ['', None]:
                 gw.set_cell(row, 'status', 'Archive in progress')
 
@@ -122,8 +121,7 @@ def process_sheet(sheet, header=1):
                         result = archiver.download(url, check_if_exists=True)
                     except Exception as e:
                         result = False
-                        logger.error(
-                            f'Got unexpected error in row {row} with archiver {archiver} for url {url}: {e}')
+                        logger.error(f'Got unexpected error in row {row} with archiver {archiver} for url {url}: {e}\n{traceback.format_exc()}')
 
                     if result:
                         if result.status in ['success', 'already archived']:
