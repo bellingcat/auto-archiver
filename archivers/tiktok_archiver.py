@@ -43,12 +43,16 @@ class TiktokArchiver(Archiver):
                 key_thumb = ''
                 thumb_index = 'error creating thumbnails'
 
+            hash = self.get_hash(filename)
+            screenshot = self.get_screenshot(url)
+
             try: os.remove(filename)
             except FileNotFoundError:
                 logger.info(f'tmp file not found thus not deleted {filename}')
 
             return ArchiveResult(status=status, cdn_url=cdn_url, thumbnail=key_thumb,
-                                 thumbnail_index=thumb_index, duration=info.duration, title=info.caption, timestamp=info.create.isoformat())
+                                 thumbnail_index=thumb_index, duration=info.duration, title=info.caption, timestamp=info.create.isoformat(),
+                                 hash=hash, screenshot=screenshot)
 
         except tiktok_downloader.Except.InvalidUrl:
             status = 'Invalid URL'

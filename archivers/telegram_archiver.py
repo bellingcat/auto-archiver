@@ -1,6 +1,9 @@
 import os
 import requests
 from bs4 import BeautifulSoup
+from loguru import logger
+import re
+import html
 
 from .base_archiver import Archiver, ArchiveResult
 
@@ -24,12 +27,24 @@ class TelegramArchiver(Archiver):
         if url[-8:] != "?embed=1":
             url += "?embed=1"
 
+        screenshot = self.get_screenshot(url)
+
         t = requests.get(url, headers=headers)
         s = BeautifulSoup(t.content, 'html.parser')
         video = s.find("video")
 
         if video is None:
-            return False  # could not find video
+            logger.warning("could not find video")
+            image_tags = s.find_all(class_="js-message_photo")
+
+            images = []
+            for im in image_tags:
+                urls = [u.replace("'", "") for u in re.findall('url\((.*?)\)', im['style'])]
+                images += urls
+
+            page_cdn, page_hash, thumbnail = self.generate_media_page(images, url, html.escape(str(t.content)))
+
+            return ArchiveResult(status="success", cdn_url=page_cdn, screenshot=screenshot, hash=page_hash, thumbnail=thumbnail, timestamp=s.find_all('time')[0].get('datetime'))
 
         video_url = video.get('src')
         video_id = video_url.split('/')[-1].split('?')[0]
@@ -49,17 +64,20 @@ class TelegramArchiver(Archiver):
         if status != 'already archived':
             self.storage.upload(filename, key)
 
+        hash = self.get_hash(filename)
+
         # extract duration from HTML
         duration = s.find_all('time')[0].contents[0]
         if ':' in duration:
-            duration = float(duration.split(':')[0]) * 60
-            + float(duration.split(':')[1])
+            duration = float(duration.split(
+                ':')[0]) * 60 + float(duration.split(':')[1])
         else:
             duration = float(duration)
 
         # process thumbnails
-        key_thumb, thumb_index = self.get_thumbnails(filename, key, duration=duration)
+        key_thumb, thumb_index = self.get_thumbnails(
+            filename, key, duration=duration)
         os.remove(filename)
 
         return ArchiveResult(status=status, cdn_url=cdn_url, thumbnail=key_thumb, thumbnail_index=thumb_index,
-                             duration=duration, title=original_url, timestamp=s.find_all('time')[1].get('datetime'))
+                             duration=duration, title=original_url, timestamp=s.find_all('time')[1].get('datetime'), hash=hash, screenshot=screenshot)

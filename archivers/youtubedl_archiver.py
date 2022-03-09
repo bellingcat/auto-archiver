@@ -1,29 +1,29 @@
 
 import os
 import datetime
-import youtube_dl
+import yt_dlp
 from loguru import logger
 
 from .base_archiver import Archiver, ArchiveResult
 
 
 class YoutubeDLArchiver(Archiver):
-    name = "yotube_dl"
+    name = "youtube_dl"
     ydl_opts = {'outtmpl': 'tmp/%(id)s.%(ext)s', 'quiet': False}
 
     def download(self, url, check_if_exists=False):
         netloc = self.get_netloc(url)
         if netloc in ['facebook.com', 'wwww.facebook.com'] and os.getenv('FB_COOKIE'):
             logger.info('Using Facebook cookie')
-            youtube_dl.utils.std_headers['cookie'] = os.getenv('FB_COOKIE')
+            yt_dlp.utils.std_headers['cookie'] = os.getenv('FB_COOKIE')
 
-        ydl = youtube_dl.YoutubeDL(YoutubeDLArchiver.ydl_opts)
+        ydl = yt_dlp.YoutubeDL(YoutubeDLArchiver.ydl_opts)
         cdn_url = None
         status = 'success'
 
         try:
             info = ydl.extract_info(url, download=False)
-        except youtube_dl.utils.DownloadError:
+        except yt_dlp.utils.DownloadError:
             # no video here
             return False
 
@@ -74,6 +74,9 @@ class YoutubeDLArchiver(Archiver):
 
             self.storage.upload(filename, key)
 
+        hash = self.get_hash(filename)
+        screenshot = self.get_screenshot(url)
+
         # get duration
         duration = info.get('duration')
 
@@ -86,7 +89,11 @@ class YoutubeDLArchiver(Archiver):
 
         os.remove(filename)
 
-        timestamp = info['timestamp'] if 'timestamp' in info else datetime.datetime.strptime(info['upload_date'], '%Y%m%d').timestamp() if 'upload_date' in info and info['upload_date'] is not None else None
+        timestamp = datetime.datetime.utcfromtimestamp(info['timestamp']).replace(tzinfo=datetime.timezone.utc).isoformat() \
+            if 'timestamp' in info else \
+                datetime.datetime.strptime(info['upload_date'], '%Y%m%d').replace(tzinfo=datetime.timezone.utc) \
+            if 'upload_date' in info and info['upload_date'] is not None else \
+                None
 
         return ArchiveResult(status=status, cdn_url=cdn_url, thumbnail=key_thumb, thumbnail_index=thumb_index, duration=duration,
-                             title=info['title'] if 'title' in info else None, timestamp=timestamp)
+                             title=info['title'] if 'title' in info else None, timestamp=timestamp, hash=hash, screenshot=screenshot)

@@ -4,3 +4,4 @@ from .telegram_archiver import *
 from .tiktok_archiver import *
 from .wayback_archiver import *
 from .youtubedl_archiver import *
+from .twitter_archiver import *
