@@ -61,7 +61,7 @@ def expand_url(url):
     return url
 
 
-def process_sheet(sheet, header=1):
+def process_sheet(sheet, header=1, columns=GWorksheet.COLUMN_NAMES):
     gc = gspread.service_account(filename='service_account.json')
     sh = gc.open(sheet)
 
@@ -80,16 +80,16 @@ def process_sheet(sheet, header=1):
     # loop through worksheets to check
     for ii, wks in enumerate(sh.worksheets()):
         logger.info(f'Opening worksheet {ii}: "{wks.title}"')
-        gw = GWorksheet(wks, header_row=header)
+        gw = GWorksheet(wks, header_row=header, columns=columns)
 
         if not gw.col_exists('url'):
             logger.warning(
-                f'No "Media URL" column found, skipping worksheet {wks.title}')
+                f'No "{columns["url"]}" column found, skipping worksheet {wks.title}')
             continue
 
         if not gw.col_exists('status'):
             logger.warning(
-                f'No "Archive status" column found, skipping worksheet {wks.title}')
+                f'No "{columns["status"]}" column found, skipping worksheet {wks.title}')
             continue
 
         # archives will be in a folder 'doc_name/worksheet_name'
@@ -139,7 +139,7 @@ def process_sheet(sheet, header=1):
                     update_sheet(gw, row, result)
                 else:
                     gw.set_cell(row, 'status', 'failed: no archiver')
-
+        logger.success(f'Finshed worksheet {wks.title}')
     driver.quit()
 
 
@@ -147,13 +147,17 @@ def main():
     parser = argparse.ArgumentParser(
         description='Automatically archive social media videos from a Google Sheets document')
     parser.add_argument('--sheet', action='store', dest='sheet')
-    parser.add_argument('--header', action='store', dest='header', default=1, type=int)
+    parser.add_argument('--header', action='store', dest='header', default=1, type=int, help='1-based index for the header row')
+    for k, v in GWorksheet.COLUMN_NAMES.items():
+        parser.add_argument(f'--col-{k}', action='store', dest=k, default=v, help=f'the name of the column to fill with {k} (defaults={v})')
+
     args = parser.parse_args()
+    config_columns = {k: getattr(args, k) for k in GWorksheet.COLUMN_NAMES.keys()}
 
     logger.info(f'Opening document {args.sheet}')
 
     mkdir_if_not_exists('tmp')
-    process_sheet(args.sheet, header=args.header)
+    process_sheet(args.sheet, header=args.header, columns=config_columns)
     shutil.rmtree('tmp')
 
 
