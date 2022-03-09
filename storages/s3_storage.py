@@ -45,5 +45,5 @@ class S3Storage(Storage):
             return False
 
     def uploadf(self, file, key, **kwargs):
-        extra_args = kwargs["extra_args"] if "extra_args" in kwargs else {'ACL': 'public-read'}
+        extra_args = kwargs.get("extra_args", {'ACL': 'public-read'})
         self.s3.upload_fileobj(file, Bucket=self.bucket, Key=self._get_path(key), ExtraArgs=extra_args)
