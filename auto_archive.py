@@ -111,40 +111,36 @@ def process_sheet(sheet, header=1):
             url = gw.get_cell(row_values, 'url')
             status = gw.get_cell(row_values, 'status')
             if url != '' and status in ['', None]:
-                url = gw.get_cell(row, 'url')
-                status = gw.get_cell(status, 'status')
+                gw.set_cell(row, 'status', 'Archive in progress')
 
-                if url != '' and status in ['', None]:
-                    gw.set_cell(row, 'status', 'Archive in progress')
+                url = expand_url(url)
 
-                    url = expand_url(url)
+                for archiver in active_archivers:
+                    logger.debug(f'Trying {archiver} on row {row}')
 
-                    for archiver in active_archivers:
-                        logger.debug(f'Trying {archiver} on row {row}')
-
-                        try:
-                            result = archiver.download(url, check_if_exists=True)
-                        except Exception as e:
-                            result = False
-                            logger.error(
-                                f'Got unexpected error in row {row} with archiver {archiver} for url {url}: {e}')
-
-                        if result:
-                            if result.status in ['success', 'already archived']:
-                                result.status = archiver.name + \
-                                    ": " + str(result.status)
-                                logger.success(
-                                    f'{archiver} succeeded on row {row}')
-                                break
-                            logger.warning(
-                                f'{archiver} did not succeed on row {row}, final status: {result.status}')
-                            result.status = archiver.name + \
-                                ": " + str(result.status)
+                    try:
+                        result = archiver.download(url, check_if_exists=True)
+                    except Exception as e:
+                        result = False
+                        logger.error(
+                            f'Got unexpected error in row {row} with archiver {archiver} for url {url}: {e}')
 
                     if result:
-                        update_sheet(gw, row, result)
-                    else:
-                        gw.set_cell(row, 'status', 'failed: no archiver')
+                        if result.status in ['success', 'already archived']:
+                            result.status = archiver.name + \
+                                ": " + str(result.status)
+                            logger.success(
+                                f'{archiver} succeeded on row {row}')
+                            break
+                        logger.warning(
+                            f'{archiver} did not succeed on row {row}, final status: {result.status}')
+                        result.status = archiver.name + \
+                            ": " + str(result.status)
+
+                if result:
+                    update_sheet(gw, row, result)
+                else:
+                    gw.set_cell(row, 'status', 'failed: no archiver')
 
     driver.quit()
 
