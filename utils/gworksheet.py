@@ -44,16 +44,20 @@ class GWorksheet:
     def get_values(self):
         return self.values
 
-    def get_cell(self, row, col: str):
+    def get_cell(self, row, col: str, fresh=False):
         """
         returns the cell value from (row, col), 
         where row can be an index (1-based) OR list of values
         as received from self.get_row(row)
+        if fresh=True, the sheet is queried again for this cell
         """
+        col_index = self._col_index(col)
+
+        if fresh:
+            return self.wks.cell(row, col_index + 1).value
         if type(row) == int:
             row = self.get_row(row)
 
-        col_index = self._col_index(col)
         if col_index >= len(row):
             return ''
         return row[col_index]

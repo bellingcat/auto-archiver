@@ -108,7 +108,8 @@ def process_sheet(sheet, header=1, columns=GWorksheet.COLUMN_NAMES):
         # loop through rows in worksheet
         for row in range(1 + header, gw.count_rows() + 1):
             url = gw.get_cell(row, 'url')
-            status = gw.get_cell(row, 'status')
+            original_status = gw.get_cell(row, 'status')
+            status = gw.get_cell(row, 'status', fresh=original_status in ['', None])
             if url != '' and status in ['', None]:
                 gw.set_cell(row, 'status', 'Archive in progress')
 
@@ -146,7 +147,7 @@ def process_sheet(sheet, header=1, columns=GWorksheet.COLUMN_NAMES):
 def main():
     parser = argparse.ArgumentParser(
         description='Automatically archive social media videos from a Google Sheets document')
-    parser.add_argument('--sheet', action='store', dest='sheet')
+    parser.add_argument('--sheet', action='store', dest='sheet', help='the name of the google sheets document', required=True)
     parser.add_argument('--header', action='store', dest='header', default=1, type=int, help='1-based index for the header row')
     for k, v in GWorksheet.COLUMN_NAMES.items():
         parser.add_argument(f'--col-{k}', action='store', dest=k, default=v, help=f'the name of the column to fill with {k} (defaults={v})')
