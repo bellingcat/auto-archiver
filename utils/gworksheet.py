@@ -19,7 +19,7 @@ class GWorksheet:
     def __init__(self, worksheet, columns=COLUMN_NAMES, header_row=1):
         self.wks = worksheet
         self.values = self.wks.get_values()[header_row - 1:]
-        self.headers = [v for v in self.values[0]]
+        self.headers = [v.lower() for v in self.values[0]]
         self.row_offset = header_row - 1
         self.columns = columns
 

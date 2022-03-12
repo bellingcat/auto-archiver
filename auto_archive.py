@@ -153,7 +153,7 @@ def main():
         parser.add_argument(f'--col-{k}', action='store', dest=k, default=v, help=f'the name of the column to fill with {k} (defaults={v})')
 
     args = parser.parse_args()
-    config_columns = {k: getattr(args, k) for k in GWorksheet.COLUMN_NAMES.keys()}
+    config_columns = {k: getattr(args, k).lower() for k in GWorksheet.COLUMN_NAMES.keys()}
 
     logger.info(f'Opening document {args.sheet} for header {args.header}')
 
