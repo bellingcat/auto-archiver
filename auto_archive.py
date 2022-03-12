@@ -155,7 +155,7 @@ def main():
     args = parser.parse_args()
     config_columns = {k: getattr(args, k) for k in GWorksheet.COLUMN_NAMES.keys()}
 
-    logger.info(f'Opening document {args.sheet}')
+    logger.info(f'Opening document {args.sheet} for header {args.header}')
 
     mkdir_if_not_exists('tmp')
     process_sheet(args.sheet, header=args.header, columns=config_columns)
