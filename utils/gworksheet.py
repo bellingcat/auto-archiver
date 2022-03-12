@@ -66,7 +66,7 @@ class GWorksheet:
     def set_cell(self, row: int, col: str, val):
         # row is 1-based
         col_index = self._col_index(col) + 1
-        self.wks.update_cell(row + self.row_offset, col_index, val)
+        self.wks.update_cell(row, col_index, val)
 
     def batch_set_cell(self, cell_updates):
         """
@@ -83,4 +83,4 @@ class GWorksheet:
 
     def to_a1(self, row: int, col: str):
         # row is 1-based
-        return utils.rowcol_to_a1(row + self.row_offset, self._col_index(col) + 1)
+        return utils.rowcol_to_a1(row, self._col_index(col) + 1)
