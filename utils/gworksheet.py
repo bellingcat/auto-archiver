@@ -18,8 +18,8 @@ class GWorksheet:
 
     def __init__(self, worksheet, columns=COLUMN_NAMES, header_row=1):
         self.wks = worksheet
-        self.values = self.wks.get_values()
-        self.headers = [v.lower() for v in self.values[header_row - 1]]
+        self.values = self.wks.get_values()[header_row-1:]
+        self.headers = [v.lower() for v in self.values[0]]
         self.columns = columns
 
     def _check_col_exists(self, col: str):
