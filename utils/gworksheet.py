@@ -18,8 +18,10 @@ class GWorksheet:
 
     def __init__(self, worksheet, columns=COLUMN_NAMES, header_row=1):
         self.wks = worksheet
-        self.values = self.wks.get_values()[header_row-1:]
+        self.values = self.wks.get_values()[header_row - 1:]
         self.headers = [v.lower() for v in self.values[0]]
+        print(self.headers)
+        self.row_offset = header_row - 1
         self.columns = columns
 
     def _check_col_exists(self, col: str):
@@ -54,7 +56,7 @@ class GWorksheet:
         col_index = self._col_index(col)
 
         if fresh:
-            return self.wks.cell(row, col_index + 1).value
+            return self.wks.cell(row + self.row_offset, col_index + 1).value
         if type(row) == int:
             row = self.get_row(row)
 
@@ -65,7 +67,7 @@ class GWorksheet:
     def set_cell(self, row: int, col: str, val):
         # row is 1-based
         col_index = self._col_index(col) + 1
-        self.wks.update_cell(row, col_index, val)
+        self.wks.update_cell(row + self.row_offset, col_index, val)
 
     def batch_set_cell(self, cell_updates):
         """
@@ -82,4 +84,4 @@ class GWorksheet:
 
     def to_a1(self, row: int, col: str):
         # row is 1-based
-        return utils.rowcol_to_a1(row, self._col_index(col) + 1)
+        return utils.rowcol_to_a1(row + self.row_offset, self._col_index(col) + 1)
