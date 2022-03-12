@@ -55,7 +55,7 @@ class GWorksheet:
         col_index = self._col_index(col)
 
         if fresh:
-            return self.wks.cell(row + self.row_offset, col_index + 1).value
+            return self.wks.cell(row, col_index + 1).value
         if type(row) == int:
             row = self.get_row(row)
 
