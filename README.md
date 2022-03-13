@@ -84,6 +84,7 @@ graph TD
     A -->|parent of| C(TikTokArchiver)
     A -->|parent of| D(YoutubeDLArchiver)
     A -->|parent of| E(WaybackArchiver)
+    A -->|parent of| F(TwitterArchiver)
 ```
 ### Current Storages
 ```mermaid

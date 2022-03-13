@@ -2,6 +2,12 @@ from gspread import utils
 
 
 class GWorksheet:
+    """
+    This class makes read/write operations to the a worksheet easier.
+    It can read the headers from a custom row number, but the row references
+    should always include the offset of the header. 
+    eg: if header=4, row 5 will be the first with data. 
+    """
     COLUMN_NAMES = {
         'url': 'link',
         'archive': 'archive location',
