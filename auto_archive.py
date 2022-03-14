@@ -109,7 +109,7 @@ def process_sheet(sheet, header=1, columns=GWorksheet.COLUMN_NAMES):
         for row in range(1 + header, gw.count_rows() + 1):
             url = gw.get_cell(row, 'url')
             original_status = gw.get_cell(row, 'status')
-            status = gw.get_cell(row, 'status', fresh=original_status in ['', None])
+            status = gw.get_cell(row, 'status', fresh=original_status in ['', None] and url != '')
             if url != '' and status in ['', None]:
                 gw.set_cell(row, 'status', 'Archive in progress')
 
