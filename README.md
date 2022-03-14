@@ -10,6 +10,8 @@ If you are using `pipenv` (recommended), `pipenv install` is sufficient to insta
 
 [ffmpeg](https://www.ffmpeg.org/) must also be installed locally for this tool to work. 
 
+[firefox](https://www.mozilla.org/en-US/firefox/new/) and [geckodriver](https://github.com/mozilla/geckodriver/releases) on a path folder like `/usr/local/bin`. 
+
 A `.env` file is required for saving content to a Digital Ocean space, and for archiving pages to the Internet Archive. This file should also be in the script directory, and should contain the following variables:
 
 ```
@@ -82,6 +84,7 @@ graph TD
     A -->|parent of| C(TikTokArchiver)
     A -->|parent of| D(YoutubeDLArchiver)
     A -->|parent of| E(WaybackArchiver)
+    A -->|parent of| F(TwitterArchiver)
 ```
 ### Current Storages
 ```mermaid

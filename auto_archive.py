@@ -7,6 +7,7 @@ import gspread
 from loguru import logger
 from dotenv import load_dotenv
 from selenium import webdriver
+import traceback
 
 import archivers
 from storages import S3Storage, S3Config
@@ -60,7 +61,7 @@ def expand_url(url):
     return url
 
 
-def process_sheet(sheet, header=1):
+def process_sheet(sheet, header=1, columns=GWorksheet.COLUMN_NAMES):
     gc = gspread.service_account(filename='service_account.json')
     sh = gc.open(sheet)
 
@@ -78,17 +79,17 @@ def process_sheet(sheet, header=1):
 
     # loop through worksheets to check
     for ii, wks in enumerate(sh.worksheets()):
-        logger.info(f'Opening worksheet {ii}: "{wks.title}"')
-        gw = GWorksheet(wks, header_row=header)
+        logger.info(f'Opening worksheet {ii}: "{wks.title}" header={header}')
+        gw = GWorksheet(wks, header_row=header, columns=columns)
 
         if not gw.col_exists('url'):
             logger.warning(
-                f'No "Media URL" column found, skipping worksheet {wks.title}')
+                f'No "{columns["url"]}" column found, skipping worksheet {wks.title}')
             continue
 
         if not gw.col_exists('status'):
             logger.warning(
-                f'No "Archive status" column found, skipping worksheet {wks.title}')
+                f'No "{columns["status"]}" column found, skipping worksheet {wks.title}')
             continue
 
         # archives will be in a folder 'doc_name/worksheet_name'
@@ -104,62 +105,60 @@ def process_sheet(sheet, header=1):
             archivers.WaybackArchiver(s3_client, driver)
         ]
 
-        values = gw.get_values()
         # loop through rows in worksheet
         for row in range(1 + header, gw.count_rows() + 1):
-            row_values = values[row-1]
-            url = gw.get_cell(row_values, 'url')
-            status = gw.get_cell(row_values, 'status')
+            url = gw.get_cell(row, 'url')
+            original_status = gw.get_cell(row, 'status')
+            status = gw.get_cell(row, 'status', fresh=original_status in ['', None])
             if url != '' and status in ['', None]:
-                url = gw.get_cell(row, 'url')
-                status = gw.get_cell(status, 'status')
+                gw.set_cell(row, 'status', 'Archive in progress')
 
-                if url != '' and status in ['', None]:
-                    gw.set_cell(row, 'status', 'Archive in progress')
+                url = expand_url(url)
 
-                    url = expand_url(url)
+                for archiver in active_archivers:
+                    logger.debug(f'Trying {archiver} on row {row}')
 
-                    for archiver in active_archivers:
-                        logger.debug(f'Trying {archiver} on row {row}')
-
-                        try:
-                            result = archiver.download(url, check_if_exists=True)
-                        except Exception as e:
-                            result = False
-                            logger.error(
-                                f'Got unexpected error in row {row} with archiver {archiver} for url {url}: {e}')
-
-                        if result:
-                            if result.status in ['success', 'already archived']:
-                                result.status = archiver.name + \
-                                    ": " + str(result.status)
-                                logger.success(
-                                    f'{archiver} succeeded on row {row}')
-                                break
-                            logger.warning(
-                                f'{archiver} did not succeed on row {row}, final status: {result.status}')
-                            result.status = archiver.name + \
-                                ": " + str(result.status)
+                    try:
+                        result = archiver.download(url, check_if_exists=True)
+                    except Exception as e:
+                        result = False
+                        logger.error(f'Got unexpected error in row {row} with archiver {archiver} for url {url}: {e}\n{traceback.format_exc()}')
 
                     if result:
-                        update_sheet(gw, row, result)
-                    else:
-                        gw.set_cell(row, 'status', 'failed: no archiver')
+                        if result.status in ['success', 'already archived']:
+                            result.status = archiver.name + \
+                                ": " + str(result.status)
+                            logger.success(
+                                f'{archiver} succeeded on row {row}')
+                            break
+                        logger.warning(
+                            f'{archiver} did not succeed on row {row}, final status: {result.status}')
+                        result.status = archiver.name + \
+                            ": " + str(result.status)
 
+                if result:
+                    update_sheet(gw, row, result)
+                else:
+                    gw.set_cell(row, 'status', 'failed: no archiver')
+        logger.success(f'Finshed worksheet {wks.title}')
     driver.quit()
 
 
 def main():
     parser = argparse.ArgumentParser(
         description='Automatically archive social media videos from a Google Sheets document')
-    parser.add_argument('--sheet', action='store', dest='sheet')
-    parser.add_argument('--header', action='store', dest='header', default=1, type=int)
-    args = parser.parse_args()
+    parser.add_argument('--sheet', action='store', dest='sheet', help='the name of the google sheets document', required=True)
+    parser.add_argument('--header', action='store', dest='header', default=1, type=int, help='1-based index for the header row')
+    for k, v in GWorksheet.COLUMN_NAMES.items():
+        parser.add_argument(f'--col-{k}', action='store', dest=k, default=v, help=f'the name of the column to fill with {k} (defaults={v})')
 
-    logger.info(f'Opening document {args.sheet}')
+    args = parser.parse_args()
+    config_columns = {k: getattr(args, k).lower() for k in GWorksheet.COLUMN_NAMES.keys()}
+
+    logger.info(f'Opening document {args.sheet} for header {args.header}')
 
     mkdir_if_not_exists('tmp')
-    process_sheet(args.sheet, header=args.header)
+    process_sheet(args.sheet, header=args.header, columns=config_columns)
     shutil.rmtree('tmp')
 
 

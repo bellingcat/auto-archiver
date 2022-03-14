@@ -2,6 +2,12 @@ from gspread import utils
 
 
 class GWorksheet:
+    """
+    This class makes read/write operations to the a worksheet easier.
+    It can read the headers from a custom row number, but the row references
+    should always include the offset of the header. 
+    eg: if header=4, row 5 will be the first with data. 
+    """
     COLUMN_NAMES = {
         'url': 'link',
         'archive': 'archive location',
@@ -18,7 +24,8 @@ class GWorksheet:
 
     def __init__(self, worksheet, columns=COLUMN_NAMES, header_row=1):
         self.wks = worksheet
-        self.headers = [v.lower() for v in self.wks.row_values(header_row)]
+        self.values = self.wks.get_values()
+        self.headers = [v.lower() for v in self.values[header_row - 1]]
         self.columns = columns
 
     def _check_col_exists(self, col: str):
@@ -34,25 +41,29 @@ class GWorksheet:
         return self.columns[col] in self.headers
 
     def count_rows(self):
-        return len(self.wks.get_values())
+        return len(self.values)
 
     def get_row(self, row: int):
         # row is 1-based
-        return self.wks.row_values(row)
+        return self.values[row - 1]
 
     def get_values(self):
-        return self.wks.get_values()
+        return self.values
 
-    def get_cell(self, row, col: str):
+    def get_cell(self, row, col: str, fresh=False):
         """
         returns the cell value from (row, col), 
         where row can be an index (1-based) OR list of values
         as received from self.get_row(row)
+        if fresh=True, the sheet is queried again for this cell
         """
+        col_index = self._col_index(col)
+
+        if fresh:
+            return self.wks.cell(row, col_index + 1).value
         if type(row) == int:
             row = self.get_row(row)
 
-        col_index = self._col_index(col)
         if col_index >= len(row):
             return ''
         return row[col_index]
