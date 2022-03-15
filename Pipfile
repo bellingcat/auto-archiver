@@ -16,6 +16,7 @@ ffmpeg-python = "*"
 selenium = "*"
 snscrape = "*"
 yt-dlp = "*"
+telethon = "*"
 
 [dev-packages]
 

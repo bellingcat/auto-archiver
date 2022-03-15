@@ -8,3 +8,4 @@ __pycache__/
 anu.html
 *.log
 .pytest_cach
+anon*
