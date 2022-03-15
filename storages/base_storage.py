@@ -6,10 +6,10 @@ class Storage(ABC):
     def __init__(self, config): pass
 
     @abstractmethod
-    def get_cdn_url(self, path): pass
+    def get_cdn_url(self, key): pass
 
     @abstractmethod
-    def exists(self, path): pass
+    def exists(self, key): pass
 
     @abstractmethod
     def uploadf(self, file, key, **kwargs): pass

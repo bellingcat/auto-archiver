@@ -6,7 +6,6 @@ from dataclasses import dataclass
 from abc import ABC, abstractmethod
 from urllib.parse import urlparse
 import hashlib
-from selenium.common.exceptions import TimeoutException
 from loguru import logger
 import time
 import requests
