@@ -64,8 +64,6 @@ class TelethonArchiver(Archiver):
 
             media_posts = self._get_media_posts_in_group(chat, post)
 
-
-            print(len(media_posts))
             if len(media_posts) > 1:
                 key = self.get_html_key(url)
                 cdn_url = self.storage.get_cdn_url(key)
