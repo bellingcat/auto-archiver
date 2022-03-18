@@ -6,5 +6,6 @@ service_account.json
 __pycache__/
 ._*
 anu.html
-geckodriver.log
-
+*.log
+.pytest_cach
+anon*

@@ -39,7 +39,7 @@ class TelegramArchiver(Archiver):
 
             images = []
             for im in image_tags:
-                urls = [u.replace("'", "") for u in re.findall('url\((.*?)\)', im['style'])]
+                urls = [u.replace("'", "") for u in re.findall(r'url\((.*?)\)', im['style'])]
                 images += urls
 
             page_cdn, page_hash, thumbnail = self.generate_media_page(images, url, html.escape(str(t.content)))
