@@ -71,6 +71,10 @@ def process_sheet(sheet, header=1, columns=GWorksheet.COLUMN_NAMES):
         key=os.getenv('DO_SPACES_KEY'),
         secret=os.getenv('DO_SPACES_SECRET')
     )
+    telegram_config = archivers.TelegramConfig(
+        api_id=os.getenv('TELEGRAM_API_ID'),
+        api_hash=os.getenv('TELEGRAM_API_HASH')
+    )
 
     options = webdriver.FirefoxOptions()
     options.headless = True
@@ -98,6 +102,7 @@ def process_sheet(sheet, header=1, columns=GWorksheet.COLUMN_NAMES):
 
         # order matters, first to succeed excludes remaining
         active_archivers = [
+            archivers.TelethonArchiver(s3_client, driver, telegram_config),
             archivers.TelegramArchiver(s3_client, driver),
             archivers.TiktokArchiver(s3_client, driver),
             archivers.YoutubeDLArchiver(s3_client, driver),

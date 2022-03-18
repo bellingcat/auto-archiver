@@ -6,8 +6,6 @@ from dataclasses import dataclass
 from abc import ABC, abstractmethod
 from urllib.parse import urlparse
 import hashlib
-from selenium.common.exceptions import TimeoutException
-from loguru import logger
 import time
 import requests
 
@@ -44,18 +42,41 @@ class Archiver(ABC):
     def get_netloc(self, url):
         return urlparse(url).netloc
 
-    def generate_media_page(self, urls, url, object):
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36'
-        }
+    def get_html_key(self, url):
+        return self.get_key(urlparse(url).path.replace("/", "_") + ".html")
 
+    def generate_media_page_html(self, url, urls_info: dict, object, thumbnail=None):
         page = f'''<html><head><title>{url}</title></head>
             <body>
             <h2>Archived media from {self.name}</h2>
             <h3><a href="{url}">{url}</a></h3><ul>'''
 
-        thumbnail = None
+        for url_info in urls_info:
+            page += f'''<li><a href="{url_info['cdn_url']}">{url_info['key']}</a>: {url_info['hash']}</li>'''
 
+        page += f"</ul><h2>{self.name} object data:</h2><code>{object}</code>"
+        page += f"</body></html>"
+
+        page_key = self.get_key(urlparse(url).path.replace("/", "_") + ".html")
+        page_filename = 'tmp/' + page_key
+        page_cdn = self.storage.get_cdn_url(page_key)
+
+        with open(page_filename, "w") as f:
+            f.write(page)
+
+        page_hash = self.get_hash(page_filename)
+
+        self.storage.upload(page_filename, page_key, extra_args={
+            'ACL': 'public-read', 'ContentType': 'text/html'})
+        return (page_cdn, page_hash, thumbnail)
+
+    def generate_media_page(self, urls, url, object):
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36'
+        }
+
+        thumbnail = None
+        uploaded_media = []
         for media_url in urls:
             path = urlparse(media_url).path
             key = self.get_key(path.replace("/", "_"))
@@ -74,26 +95,9 @@ class Archiver(ABC):
 
             if thumbnail is None:
                 thumbnail = cdn_url
+            uploaded_media.append({'cdn_url': cdn_url, 'key': key, 'hash': hash})
 
-            page += f'''<li><a href="{cdn_url}">{media_url}</a>: {hash}</li>'''
-
-        page += f"</ul><h2>{self.name} object data:</h2><code>{object}</code>"
-        page += f"</body></html>"
-
-        page_key = self.get_key(urlparse(url).path.replace("/", "_") + ".html")
-        page_filename = 'tmp/' + page_key
-        page_cdn = self.storage.get_cdn_url(page_key)
-
-        with open(page_filename, "w") as f:
-            f.write(page)
-
-        page_hash = self.get_hash(page_filename)
-
-        self.storage.upload(page_filename, page_key, extra_args={
-            'ACL': 'public-read', 'ContentType': 'text/html'})
-
-        return (page_cdn, page_hash, thumbnail)
-
+        return self.generate_media_page_html(url, uploaded_media, object, thumbnail=thumbnail)
     def get_key(self, filename):
         """
         returns a key in the format "[archiverName]_[filename]" includes extension
