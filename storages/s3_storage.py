@@ -11,6 +11,7 @@ class S3Config:
     key: str
     secret: str
     folder: str = ""
+    private: bool = False
 
 
 class S3Storage(Storage):
@@ -45,5 +46,9 @@ class S3Storage(Storage):
             return False
 
     def uploadf(self, file, key, **kwargs):
-        extra_args = kwargs.get("extra_args", {'ACL': 'public-read'})
+        if self.private:
+            extra_args = kwargs.get("extra_args", {})
+        else:
+            extra_args = kwargs.get("extra_args", {'ACL': 'public-read'})
+
         self.s3.upload_fileobj(file, Bucket=self.bucket, Key=self._get_path(key), ExtraArgs=extra_args)

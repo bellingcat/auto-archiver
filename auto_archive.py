@@ -149,6 +149,8 @@ def main():
         description='Automatically archive social media videos from a Google Sheets document')
     parser.add_argument('--sheet', action='store', dest='sheet', help='the name of the google sheets document', required=True)
     parser.add_argument('--header', action='store', dest='header', default=1, type=int, help='1-based index for the header row')
+    parser.add_argument('--private', action='store_true', help='Store content without public access permission')
+
     for k, v in GWorksheet.COLUMN_NAMES.items():
         parser.add_argument(f'--col-{k}', action='store', dest=k, default=v, help=f'the name of the column to fill with {k} (defaults={v})')
 
