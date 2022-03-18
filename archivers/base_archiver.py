@@ -8,6 +8,8 @@ from urllib.parse import urlparse
 import hashlib
 import time
 import requests
+from loguru import logger
+from selenium.common.exceptions import TimeoutException
 
 from storages import Storage
 from utils import mkdir_if_not_exists
@@ -54,6 +56,7 @@ class Archiver(ABC):
         for url_info in urls_info:
             page += f'''<li><a href="{url_info['cdn_url']}">{url_info['key']}</a>: {url_info['hash']}</li>'''
 
+        # TODO/ISSUE: character encoding is incorrect for Cyrillic, produces garbled text
         page += f"</ul><h2>{self.name} object data:</h2><code>{object}</code>"
         page += f"</body></html>"
 
@@ -125,8 +128,11 @@ class Archiver(ABC):
             "/", "_") + datetime.datetime.utcnow().isoformat().replace(" ", "_") + ".png")
         filename = 'tmp/' + key
 
-        self.driver.get(url)
-        time.sleep(6)
+        try:
+            self.driver.get(url)
+            time.sleep(6)
+        except TimeoutException:
+            logger.info("TimeoutException loading page for screenshot")
 
         self.driver.save_screenshot(filename)
         self.storage.upload(filename, key, extra_args={
