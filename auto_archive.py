@@ -78,10 +78,9 @@ def process_sheet(sheet, header=1, columns=GWorksheet.COLUMN_NAMES):
 
     options = webdriver.FirefoxOptions()
     options.headless = True
-    profile = webdriver.FirefoxProfile()
-    profile.set_preference('network.protocol-handler.external.tg', False)
+    options.set_preference('network.protocol-handler.external.tg', False)
 
-    driver = webdriver.Firefox(profile, options=options)
+    driver = webdriver.Firefox(options=options)
     driver.set_window_size(1400, 2000)
     driver.set_page_load_timeout(10)
 

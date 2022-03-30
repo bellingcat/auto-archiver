@@ -2,7 +2,6 @@ import os
 import re
 import html
 from dataclasses import dataclass
-from urllib.parse import urlparse
 from loguru import logger
 
 from storages import Storage
