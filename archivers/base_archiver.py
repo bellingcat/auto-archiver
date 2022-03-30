@@ -56,7 +56,6 @@ class Archiver(ABC):
         for url_info in urls_info:
             page += f'''<li><a href="{url_info['cdn_url']}">{url_info['key']}</a>: {url_info['hash']}</li>'''
 
-        # TODO/ISSUE: character encoding is incorrect for Cyrillic, produces garbled text
         page += f"</ul><h2>{self.name} object data:</h2><code>{object}</code>"
         page += f"</body></html>"
 
