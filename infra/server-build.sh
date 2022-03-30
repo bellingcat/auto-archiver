@@ -1,12 +1,18 @@
 # script to configure production server
+#!/bin/sh
+
 # on proxmox hypervisor
 
-# assume 16GB disk space
+# 16GB disk space
 # 4 vcpu
+# 8GB RAM (3.5GB min to run selenium)
 # Ubuntu 20.04
 
-git clone https://github.com/djhmateer/auto-archiver
 
+# run this on the VM, then can run this script
+# git clone https://github.com/djhmateer/auto-archiver
+# cd auto-archiver/infra
+# ./server-build.sh 
 
 ## Python
 sudo apt update -y
@@ -28,7 +34,12 @@ sudo apt install python3-pip -y
 # update pip to 22.0.4
 pip install --upgrade pip
 
-pip install --user pipenv
+# We are calling pipenv from cron so need to install this way
+# https://stackoverflow.com/questions/46391721/pipenv-command-not-found
+# pip install --user pipenv
+sudo -H pip install -U pipenv
+
+
 
 cd auto-archiver
 
@@ -41,7 +52,6 @@ pipenv install
 sudo add-apt-repository ppa:savoury1/ffmpeg4 -y
 sudo apt update -y
 sudo apt upgrade -y
-# do I need to do this again as ffmeg installed already?
 sudo apt install ffmpeg -y
 
 ## Firefox
@@ -54,12 +64,21 @@ wget https://github.com/mozilla/geckodriver/releases/download/v0.30.0/geckodrive
 tar -xvzf geckodriver*
 chmod +x geckodriver
 sudo mv geckodriver /usr/local/bin/
+rm geckodriver*
 
 # get google secret: service_account.json
 # use filezilla
 
+# got issue with telethon archiver
+# Please enter your phone (or bot token):
+# then failing after that (even aftrer manually giving access)
+
 # get env secrests: .env
 # use filezilla
 
+# RUN MANUALLY
 cd ~/auto-archiver
 pipenv run python auto_archive.py --sheet "Test Hashing"
+
+## CRON
+## see the cron.sh file
