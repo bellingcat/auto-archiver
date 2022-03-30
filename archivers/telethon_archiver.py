@@ -37,7 +37,7 @@ class TelethonArchiver(Archiver):
         posts = self.client.get_messages(chat, ids=search_ids)
         media = []
         for post in posts:
-            if post.grouped_id == original_post.grouped_id and post.media is not None:
+            if post is not None and post.grouped_id == original_post.grouped_id and post.media is not None:
                 media.append(post)
         return media
 
