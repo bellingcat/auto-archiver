@@ -1,6 +1,6 @@
-# script to configure production server
 #!/bin/sh
 
+# script to configure production server
 # on proxmox hypervisor
 
 # 16GB disk space
@@ -76,9 +76,20 @@ rm geckodriver*
 # get env secrests: .env
 # use filezilla
 
-# RUN MANUALLY
+# TEST MANUALLY
 cd ~/auto-archiver
 pipenv run python auto_archive.py --sheet "Test Hashing"
 
-## CRON
-## see the cron.sh file
+
+## CRON 
+
+# so the cron job can execute the shell script (running as user dave)
+sudo chmod +x ~/auto-archiver/infra/cron.sh
+
+# runs the script every minute
+cat <<EOT >> auto 
+* * * * * dave /home/dave/auto-archiver/infra/cron.sh
+EOT
+
+mv auto /etc/cron.d
+

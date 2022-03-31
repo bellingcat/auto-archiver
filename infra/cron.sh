@@ -24,3 +24,10 @@ pipenv run python auto_archive.py --sheet "Test Hashing" >> /home/dave/log.txt 2
 
 ## cron job output is in 
 ## vim /home/dave/log.txt
+
+# ps -ef | grep auto
+# kill -9 to stop job
+
+# to stop cron job comment out in /etc/cron.d
+# then reload
+# sudo service cron reload
