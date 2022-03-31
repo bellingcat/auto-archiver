@@ -91,7 +91,7 @@ EOT
 
 sudo mv auto /etc/cron.d
 
-sudo chown root auto
+# sudo chown root auto
 sudo chmod 600 /etc/cron.d/auto
 
 # syslog in /var/log/syslog
