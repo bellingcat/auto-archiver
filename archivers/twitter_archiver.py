@@ -24,8 +24,10 @@ class TwitterArchiver(Archiver):
 
         try:
             tweet = next(scr.get_items())
-        except:
-            logger.warning('wah wah')
+        # except:
+        except Exception as e:
+            # logger.warning('wah wah')
+            logger.warning(f'Exception in twitter_archiver - {e}')
             return False
 
         if tweet.media is None:
@@ -41,7 +43,15 @@ class TwitterArchiver(Archiver):
             elif type(media) == Gif:
                 urls.append(media.variants[0].url)
             elif type(media) == Photo:
-                urls.append(media.fullUrl)
+                # https://webtrickz.com/download-images-in-original-size-on-twitter/
+                # 'https://pbs.twimg.com/media/ExeUSW2UcAE6RbN?format=jpg&name=large'
+                # we want name=orig
+                # so can get original quality
+                foo = media.fullUrl
+                bar = foo.replace("name=large", "name=orig")
+
+                # urls.append(media.fullUrl)
+                urls.append(bar)
             else:
                 logger.warning(f"Could not get media URL of {media}")
 

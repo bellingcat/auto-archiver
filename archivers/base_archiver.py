@@ -116,7 +116,9 @@ class Archiver(ABC):
     def get_hash(self, filename):
         f = open(filename, "rb")
         bytes = f.read()  # read entire file as bytes
-        hash = hashlib.sha256(bytes)
+        # DM changed hash for CIR
+        # hash = hashlib.sha256(bytes)
+        hash = hashlib.sha3_512(bytes)
         f.close()
         return hash.hexdigest()
 

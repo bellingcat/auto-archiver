@@ -11,13 +11,13 @@
 			"args": ["--sheet","Test Hashing"]
 		},
 		{
-			"name": "Python: auto_archive 2 --sheet",
+			"name": "Python: auto_archive CIR --sheet",
 			"type": "python",
 			"request": "launch",
 			"program": "auto_archive.py",
 			"console": "integratedTerminal",
 			"justMyCode": true,
-			"args": ["--sheet","Test Hashing2"]
+			"args": ["--sheet","Test Hashing CIR"]
 		},
 		{
 			"name": "Python: Current File",
