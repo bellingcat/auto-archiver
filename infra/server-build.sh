@@ -5,12 +5,9 @@
 
 # git clone https://github.com/djhmateer/auto-archiver
 # sudo chmod +x ~/auto-archiver/infra/server-build.sh
-#./auto-archiver/infra/server-build.sh
+# ./auto-archiver/infra/server-build.sh
 
-
-## AFTER SCRIPT HAS RUN
-## Use Filezilla to copy .env and service-account.json
-
+# Use Filezilla to copy secrets - .env and service-account.json
 
 ## Python
 sudo apt update -y
@@ -37,13 +34,10 @@ pip install --upgrade pip
 # pip install --user pipenv
 sudo -H pip install -U pipenv
 
-
-
 cd auto-archiver
 
 # get all the pip packages using pipenv
 pipenv install
-
 
 # FFMpeg
 # 4.4.1
@@ -64,22 +58,15 @@ chmod +x geckodriver
 sudo mv geckodriver /usr/local/bin/
 rm geckodriver*
 
-# get google secret: service_account.json
-# use filezilla
-
 # got issue with telethon archiver
 # Please enter your phone (or bot token):
 # then failing after that (even aftrer manually giving access)
 
-# get env secrests: .env
-# use filezilla
-
-# TEST MANUALLY
+# RUN MANUALLY
 # cd ~/auto-archiver
 # pipenv run python auto_archive.py --sheet "Test Hashing"
 
-
-## CRON 
+## CRON RUN EVERY MINUTE
 
 # so the cron job can execute the shell script (running as user dave)
 sudo chmod +x ~/auto-archiver/infra/cron.sh
@@ -91,9 +78,12 @@ EOT
 
 sudo mv auto /etc/cron.d
 
-# sudo chown root auto
+sudo chown root /etc/cron.d/auto
 sudo chmod 600 /etc/cron.d/auto
 
+# MONITORING
 # syslog in /var/log/syslog
 # cron output is in /home/dave/log.txt
+
+# sudo service cron restart
 
