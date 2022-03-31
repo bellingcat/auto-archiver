@@ -1,26 +1,16 @@
 #!/bin/sh
 
-# script to configure production server
-# on proxmox hypervisor
+# Script to configure production server
+# Run the 3 commands below manually
 
-# 16GB disk space
-# 4 vcpu
-# 8GB RAM (3.5GB min to run selenium)
-# Ubuntu 20.04
-
-
-# run this on the VM, then can run this script
 # git clone https://github.com/djhmateer/auto-archiver
-# cd auto-archiver/infra
+# sudo chmod +x ~/auto-archiver/infra/server-build.sh
+#./auto-archiver/infra/server-build.sh
 
-# need to run script as root.. 
-# but is this a problem running others as root too ie pip?
-# https://askubuntu.com/questions/425754/how-do-i-run-a-sudo-command-inside-a-script
 
-# sudo bash server-build.sh 
+## AFTER SCRIPT HAS RUN
+## Use Filezilla to copy .env and service-account.json
 
-# foo
-# sudo chmod +x server-build.sh
 
 ## Python
 sudo apt update -y
@@ -99,5 +89,11 @@ cat <<EOT >> auto
 * * * * * dave /home/dave/auto-archiver/infra/cron.sh
 EOT
 
-mv auto /etc/cron.d
+sudo mv auto /etc/cron.d
+
+sudo chown root auto
+sudo chmod 600 /etc/cron.d/auto
+
+# syslog in /var/log/syslog
+# cron output is in /home/dave/log.txt
 
