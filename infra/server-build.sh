@@ -12,7 +12,15 @@
 # run this on the VM, then can run this script
 # git clone https://github.com/djhmateer/auto-archiver
 # cd auto-archiver/infra
-# ./server-build.sh 
+
+# need to run script as root.. 
+# but is this a problem running others as root too ie pip?
+# https://askubuntu.com/questions/425754/how-do-i-run-a-sudo-command-inside-a-script
+
+# sudo bash server-build.sh 
+
+# foo
+# sudo chmod +x server-build.sh
 
 ## Python
 sudo apt update -y
@@ -77,8 +85,8 @@ rm geckodriver*
 # use filezilla
 
 # TEST MANUALLY
-cd ~/auto-archiver
-pipenv run python auto_archive.py --sheet "Test Hashing"
+# cd ~/auto-archiver
+# pipenv run python auto_archive.py --sheet "Test Hashing"
 
 
 ## CRON 
