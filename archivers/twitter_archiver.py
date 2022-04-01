@@ -5,6 +5,8 @@ from urllib.parse import urlparse
 
 from .base_archiver import Archiver, ArchiveResult
 
+import traceback
+
 
 class TwitterArchiver(Archiver):
     name = "twitter"
@@ -27,7 +29,7 @@ class TwitterArchiver(Archiver):
         # except:
         except Exception as e:
             # logger.warning('wah wah')
-            logger.warning(f'Exception in twitter_archiver - {e}')
+            logger.warning(f'Exception in twitter_archiver - traceback: {traceback.format_exc()}')
             return False
 
         if tweet.media is None:
