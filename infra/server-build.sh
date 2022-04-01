@@ -1,11 +1,14 @@
 #!/bin/sh
 
 # Script to configure production server
-# Run the 3 commands below manually
 
-# git clone https://github.com/djhmateer/auto-archiver
-# sudo chmod +x ~/auto-archiver/infra/server-build.sh
-# ./auto-archiver/infra/server-build.sh
+# Create a clean VM
+# Proxmox, shutdown VM, backup, restore
+
+# connect to the VM
+# ssh pfsense -p 30 
+
+# git clone https://github.com/djhmateer/auto-archiver ;  sudo chmod +x ~/auto-archiver/infra/server-build.sh ; ./auto-archiver/infra/server-build.sh
 
 # Use Filezilla to copy secrets - .env and service-account.json
 
