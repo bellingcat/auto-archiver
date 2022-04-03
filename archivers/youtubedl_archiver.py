@@ -31,6 +31,13 @@ class YoutubeDLArchiver(Archiver):
             logger.warning("Live streaming media, not archiving now")
             return ArchiveResult(status="Streaming media")
 
+        if 'twitter.com' in netloc:
+            if 'https://twitter.com/' in info['webpage_url']:
+                logger.info('Found https://twitter.com/ in the download url from Twitter')
+            else:
+                logger.warning('Found a linked video probably in a link in a tweet - not getting that video as there may be images in the tweet')
+                return False
+
         if check_if_exists:
             if 'entries' in info:
                 if len(info['entries']) > 1:
