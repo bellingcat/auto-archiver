@@ -92,6 +92,10 @@ graph TD
     A(BaseStorage) -->|parent of| B(S3Storage)
 ```
 
+# Twitter Video - YoutubeDL 
+
+- Put in catch so that tweets that contain a non Twitter url are ignored by ytd. As the intent probably is to get images from that tweet
+
 # Twitter Images
 
 As of 1st April 2022 I have noticed
@@ -104,7 +108,6 @@ As of 1st April 2022 I have noticed
 
 - Twitter images posted at 3.2MB come back as 3MB. Twitter limits of size. This is after the Python code tweak to give original filesize ?name=orig https://webtrickz.com/download-images-in-original-size-on-twitter/  This is all fine probably as we are getting best quality image twitter can give us.
 
-# Twitter Video - YoutubeDL 
 
 
 
