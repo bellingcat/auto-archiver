@@ -116,3 +116,5 @@ full res Twitter image
 catch on public / private upload bucket
 
 Twitter exception catch better error
+
+youtube archiver - catch for twitter when embedded url contains video.. don't want.
