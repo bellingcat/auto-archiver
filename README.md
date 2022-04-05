@@ -92,9 +92,38 @@ graph TD
     A(BaseStorage) -->|parent of| B(S3Storage)
 ```
 
+## Archive logic
+
+Below is a list of archivers in order of what the `auto_archive.py` script tries:
+
+- Telethon (telegram's API)
+- Telegram 
+- TikTok
+- YoutubeDL - Twitter Video, Facebook Video
+- TwitterArchiver - Twitter Images
+- WaybackArchiver - Facebook Image
+
+# Telethon (Telegram API)
+
+asfd
+
+# Telegram
+
+asdf
+
+# TikTok
+
+asdf
+
+
 # Twitter Video - YoutubeDL 
 
+- Generally works well
+
 - Put in catch so that tweets that contain a non Twitter url are ignored by ytd. As the intent probably is to get images from that tweet
+
+- Sometimes we get a: ERROR: Sign in to confirm your age. This video may be inappropriate for some users.  and many other edge cases which may have to be handled manually
+
 
 # Twitter Images
 
@@ -108,7 +137,29 @@ As of 1st April 2022 I have noticed
 
 - Twitter images posted at 3.2MB come back as 3MB. Twitter limits of size. This is after the Python code tweak to give original filesize ?name=orig https://webtrickz.com/download-images-in-original-size-on-twitter/  This is all fine probably as we are getting best quality image twitter can give us.
 
+# Facebook Video - YoutubeDL
 
+- The videos are generally downloaded well
+
+- TODO - explore the ones which are failing
+
+- However the screenshots have "Allow the use of cookies from Facebook in this browser". This is handled by `base_archiver.py` get which uses Selenium.Webdriver.Firefox which is configured in `base_archiver.py`
+
+- Potentially could pass cookies using [https://www.selenium.dev/documentation/webdriver/browser/cookies/](https://www.selenium.dev/documentation/webdriver/browser/cookies/)
+
+- And or [https://stackoverflow.com/questions/67070686/popup-blocking-to-login-to-facebook](https://stackoverflow.com/questions/67070686/popup-blocking-to-login-to-facebook) just click the button
+
+
+
+# Facebook Images
+
+- DONT WORK
+
+- doesn't download image
+
+- Uses WaybackArchiver and only displays screenshot with facebook cookies images
+
+- WaybackArchiver getting rate limit problem?
 
 
 
@@ -121,3 +172,5 @@ catch on public / private upload bucket
 Twitter exception catch better error
 
 youtube archiver - catch for twitter when embedded url contains video.. don't want.
+
+youtubedl - 4wwww to 3www fix for facebook cookie

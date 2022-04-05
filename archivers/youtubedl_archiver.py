@@ -13,7 +13,7 @@ class YoutubeDLArchiver(Archiver):
 
     def download(self, url, check_if_exists=False):
         netloc = self.get_netloc(url)
-        if netloc in ['facebook.com', 'wwww.facebook.com'] and os.getenv('FB_COOKIE'):
+        if netloc in ['facebook.com', 'www.facebook.com'] and os.getenv('FB_COOKIE'):
             logger.info('Using Facebook cookie')
             yt_dlp.utils.std_headers['cookie'] = os.getenv('FB_COOKIE')
 
