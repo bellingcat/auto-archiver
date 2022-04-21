@@ -13,6 +13,8 @@ import archivers
 from storages import S3Storage, S3Config
 from utils import GWorksheet, mkdir_if_not_exists
 
+import sys
+
 load_dotenv()
 
 
@@ -151,6 +153,9 @@ def process_sheet(sheet, header=1, columns=GWorksheet.COLUMN_NAMES):
 
 
 def main():
+
+    print(sys.argv[1:])
+
     parser = argparse.ArgumentParser(
         description='Automatically archive social media videos from a Google Sheets document')
     parser.add_argument('--sheet', action='store', dest='sheet', help='the name of the google sheets document', required=True)

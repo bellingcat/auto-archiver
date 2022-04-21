@@ -20,6 +20,15 @@
 			"args": ["--sheet","Test Hashing CIR"]
 		},
 		{
+			"name": "Kayleigh - test - DM",
+			"type": "python",
+			"request": "launch",
+			"program": "auto_archive.py",
+			"console": "integratedTerminal",
+			"justMyCode": true,
+			"args": ["--sheet","Kayleigh - test - DM", "--header=2"]
+		},
+		{
 			"name": "Python: Current File",
 			"type": "python",
 			"request": "launch",
