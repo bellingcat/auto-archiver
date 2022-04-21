@@ -4,6 +4,8 @@ from bs4 import BeautifulSoup
 from storages import Storage
 from .base_archiver import Archiver, ArchiveResult
 
+from loguru import logger
+
 
 class WaybackArchiver(Archiver):
     name = "wayback"

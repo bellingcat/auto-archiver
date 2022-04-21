@@ -10,7 +10,9 @@
 
 # git clone https://github.com/djhmateer/auto-archiver ;  sudo chmod +x ~/auto-archiver/infra/server-build.sh ; ./auto-archiver/infra/server-build.sh
 
-# Use Filezilla to copy secrets - .env and service-account.json
+# Use Filezilla to copy secrets - `.env` and `service-account.json` and `anon.session`
+
+# export FB_COOKIE="cookie: datr=asdf"
 
 ## Python
 sudo apt update -y

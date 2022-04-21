@@ -102,6 +102,7 @@ def process_sheet(sheet, header=1, columns=GWorksheet.COLUMN_NAMES):
 
         # order matters, first to succeed excludes remaining
         active_archivers = [
+            # telethon is the API for telegram eg t.me url's
             archivers.TelethonArchiver(s3_client, driver, telegram_config),
             archivers.TelegramArchiver(s3_client, driver),
             archivers.TiktokArchiver(s3_client, driver),

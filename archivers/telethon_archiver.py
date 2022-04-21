@@ -38,7 +38,10 @@ class TelethonArchiver(Archiver):
         posts = self.client.get_messages(chat, ids=search_ids)
         media = []
         for post in posts:
-            if post.grouped_id == original_post.grouped_id and post.media is not None:
+            # DM fix from PR
+            # https://github.com/bellingcat/auto-archiver/pull/21/commits/8358ab0bfc4db0e318caf421b1d232b925e64708
+            # if post.grouped_id == original_post.grouped_id and post.media is not None:
+            if post is not None and post.grouped_id == original_post.grouped_id and post.media is not None:
                 media.append(post)
         return media
 
@@ -51,6 +54,7 @@ class TelethonArchiver(Archiver):
         status = "success"
         screenshot = self.get_screenshot(url)
 
+        # app will ask (stall for user input!) for phone number and auth code if anon.session not found
         with self.client.start():
             matches = list(matches[0])
             chat, post_id = matches[1], matches[2]
@@ -76,7 +80,9 @@ class TelethonArchiver(Archiver):
                 uploaded_media = []
                 message = post.message
                 for mp in media_posts:
-                    if len(mp.message) > message: message = mp.message
+                    #DM from PR
+                    if len(mp.message) > len(message): message = mp.message
+
                     filename = self.client.download_media(mp.media, f'tmp/{chat}_{group_id}/{mp.id}')
                     key = filename.split('tmp/')[1]
                     self.storage.upload(filename, key)

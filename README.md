@@ -105,15 +105,23 @@ Below is a list of archivers in order of what the `auto_archive.py` script tries
 
 # Telethon (Telegram API)
 
-asfd
+https://telethonn.readthedocs.io/en/latest/extra/basic/creating-a-client.html#
+
+https://my.telegram.org/apps
+
+- Needs API key and hash to be put into .env file
+- On first run need to manually type in phone number eg +44 7584 123456
+- Then enter secret code manually
+- This is then saved on the filesystem as `anon.session` which is a sqllite3 db.
+- The app may stall for input (but lets monitor when a session expires and we are reprompted)
 
 # Telegram
 
-asdf
+not tested as the API is getting all so far
 
 # TikTok
 
-asdf
+not tested yet
 
 
 # Twitter Video - YoutubeDL 
@@ -139,29 +147,43 @@ As of 1st April 2022 I have noticed
 
 # Facebook Video - YoutubeDL
 
-- The videos are generally downloaded well
+- Public videos generally downloaded well
 
-- TODO - explore the ones which are failing
+- Public videos worked around cookie popup for screenshots with code - "Allow the use of cookies from Facebook in this browser". This is handled by `base_archiver.py` get which uses Selenium.Webdriver.Firefox which is configured in `base_archiver.py`
 
-- However the screenshots have "Allow the use of cookies from Facebook in this browser". This is handled by `base_archiver.py` get which uses Selenium.Webdriver.Firefox which is configured in `base_archiver.py`
+- Private videos need to set the ytdlp facebook cookie.
 
-- Potentially could pass cookies using [https://www.selenium.dev/documentation/webdriver/browser/cookies/](https://www.selenium.dev/documentation/webdriver/browser/cookies/)
-
-- And or [https://stackoverflow.com/questions/67070686/popup-blocking-to-login-to-facebook](https://stackoverflow.com/questions/67070686/popup-blocking-to-login-to-facebook) just click the button
-
+- Private video screenshots not working as have login prompt
 
 
 # Facebook Images
 
 - DONT WORK
 
-- doesn't download image
-
 - Uses WaybackArchiver and only displays screenshot with facebook cookies images
 
-- WaybackArchiver getting rate limit problem?
+- Newly created snapshot doesn't appear in URL (takes more than 30s?)
+
+todo - https://gist.github.com/pcardune/1332911  uses facebook's fbconsole which may help.
+
+# Wayback
+
+If telethon, telegran, tiktok, youtube, twitter fail.. then fallback to waybackarchiver 
+
+- Sends a request to snapshot that page every time using an IA API key
+
+- Uses beautiful soup to take a snapshot of the page (have facebook cookie issue)
+
+- Text rendering issues - squares. eg  https://web.archive.org/web/20220421133815/https://www.kanbawzatainews.com/2021/09/mytel_25.html    renders on chrome. But screenshot shows squares. UTF-8?
 
 
+# Update
+
+To update dependencies
+
+```bash
+pipenv update
+```
 
 # Code PR's
 
@@ -174,3 +196,5 @@ Twitter exception catch better error
 youtube archiver - catch for twitter when embedded url contains video.. don't want.
 
 youtubedl - 4wwww to 3www fix for facebook cookie
+
+fb catch - cookie click on homepage

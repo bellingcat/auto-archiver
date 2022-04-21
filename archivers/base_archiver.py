@@ -12,6 +12,8 @@ import requests
 from storages import Storage
 from utils import mkdir_if_not_exists
 
+from selenium.webdriver.common.by import By
+from loguru import logger
 
 @dataclass
 class ArchiveResult:
@@ -45,8 +47,10 @@ class Archiver(ABC):
     def get_html_key(self, url):
         return self.get_key(urlparse(url).path.replace("/", "_") + ".html")
 
+    # DM added UTF
+    # https://github.com/bellingcat/auto-archiver/pull/21/commits/576f1a8f687199cf38864f7271b9a63e65de8692
     def generate_media_page_html(self, url, urls_info: dict, object, thumbnail=None):
-        page = f'''<html><head><title>{url}</title></head>
+        page = f'''<html><head><title>{url}</title><meta charset="UTF-8"></head>
             <body>
             <h2>Archived media from {self.name}</h2>
             <h3><a href="{url}">{url}</a></h3><ul>'''
@@ -127,6 +131,15 @@ class Archiver(ABC):
             "/", "_") + datetime.datetime.utcnow().isoformat().replace(" ", "_") + ".png")
         filename = 'tmp/' + key
 
+
+        # DM - Accept cookies popup dismiss
+        if 'facebook.com' in url:
+            try:
+                self.driver.get("http://www.facebook.com") 
+                self.driver.find_element(By.XPATH,"//button[@data-cookiebanner='accept_only_essential_button']").click()
+            except:
+                logger.error('Failed on fb accept cookies')
+        
         self.driver.get(url)
         time.sleep(6)
 
@@ -174,7 +187,9 @@ class Archiver(ABC):
 
         key_thumb = cdn_urls[int(len(cdn_urls) * 0.1)]
 
-        index_page = f'''<html><head><title>{filename}</title></head>
+        # DM added UTF
+        # https://github.com/bellingcat/auto-archiver/pull/21/commits/576f1a8f687199cf38864f7271b9a63e65de8692
+        index_page = f'''<html><head><title>{filename}</title><meta charset="UTF-8"></head>
             <body>'''
 
         for t in cdn_urls:
