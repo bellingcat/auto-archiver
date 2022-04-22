@@ -5,18 +5,27 @@ import yt_dlp
 from loguru import logger
 
 from .base_archiver import Archiver, ArchiveResult
-
+from storages import Storage
 
 class YoutubeDLArchiver(Archiver):
     name = "youtube_dl"
     ydl_opts = {'outtmpl': 'tmp/%(id)s.%(ext)s', 'quiet': False}
 
+    # DM added so can pass in facebook cookie from .env
+    def __init__(self, storage: Storage, driver, fb_cookie):
+        super().__init__(storage, driver)
+        self.fb_cookie = fb_cookie
+
     def download(self, url, check_if_exists=False):
+        logger.debug(f'fb cookie is {self.fb_cookie}')
         netloc = self.get_netloc(url)
         # DM to set env variable: export FB_COOKIE="paste"
-        if netloc in ['facebook.com', 'www.facebook.com'] and os.getenv('FB_COOKIE'):
+        # this gets blanked at the end of each session ie when vs code closes
+        # if netloc in ['facebook.com', 'www.facebook.com'] and os.getenv('FB_COOKIE'):
+        if netloc in ['facebook.com', 'www.facebook.com']:
             logger.info('Using Facebook cookie')
-            yt_dlp.utils.std_headers['cookie'] = os.getenv('FB_COOKIE')
+            # yt_dlp.utils.std_headers['cookie'] = os.getenv('FB_COOKIE')
+            yt_dlp.utils.std_headers['cookie'] = self.fb_cookie
 
         ydl = yt_dlp.YoutubeDL(YoutubeDLArchiver.ydl_opts)
         cdn_url = None
