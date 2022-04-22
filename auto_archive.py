@@ -133,12 +133,23 @@ def process_sheet(sheet, header=1, columns=GWorksheet.COLUMN_NAMES):
                         logger.error(f'Got unexpected error in row {row} with archiver {archiver} for url {url}: {e}\n{traceback.format_exc()}')
 
                     if result:
-                        if result.status in ['success', 'already archived']:
+                        # DM add IA as this is a success really 
+                        if result.status in ['success', 'already archived', 'Internet Archive fallback']:
                             result.status = archiver.name + \
                                 ": " + str(result.status)
                             logger.success(
                                 f'{archiver} succeeded on row {row}')
                             break
+
+                        # DM wayback has seen this url before so keep existing status
+                        # if result.status == "wayback: Internet Archive fallback":
+                        if "wayback: Internet Archive fallback" in result.status:
+                            logger.success(
+                                f'wayback has seen this url before so keep existing status on row {row}')
+                            result.status = result.status.replace(' (duplicate)', '')
+                            result.status = str(result.status) + " (duplicate)"
+                            break
+
                         logger.warning(
                             f'{archiver} did not succeed on row {row}, final status: {result.status}')
                         result.status = archiver.name + \

@@ -46,6 +46,7 @@ class TelethonArchiver(Archiver):
         return media
 
     def download(self, url, check_if_exists=False):
+        logger.debug(f'telethon download start of function')
         # detect URLs that we definitely cannot handle
         matches = self.link_pattern.findall(url)
         if not len(matches):
@@ -55,11 +56,14 @@ class TelethonArchiver(Archiver):
         screenshot = self.get_screenshot(url)
 
         # app will ask (stall for user input!) for phone number and auth code if anon.session not found
+        logger.debug(f'telethon download: Just before start()')
         with self.client.start():
             matches = list(matches[0])
             chat, post_id = matches[1], matches[2]
 
             post_id = int(post_id)
+
+            logger.debug(f'telethon download: post_id {post_id}')
             try:
                 post = self.client.get_messages(chat, ids=post_id)
             except ValueError as e:
