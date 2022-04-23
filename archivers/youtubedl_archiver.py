@@ -36,11 +36,17 @@ class YoutubeDLArchiver(Archiver):
         except yt_dlp.utils.DownloadError:
             # no video here
             return False
+        # DM Exception is actually normal control flow!
+        # todo
+        except Exception as e:
+            logger.debug(f'ytdlp exception which is normal for example a facebook page with images only will cause a IndexError: list index out of range. Exception here is: \n  {e}')
+            return False
 
         if info.get('is_live', False):
             logger.warning("Live streaming media, not archiving now")
             return ArchiveResult(status="Streaming media")
 
+        #DM
         if 'twitter.com' in netloc:
             if 'https://twitter.com/' in info['webpage_url']:
                 logger.info('Found https://twitter.com/ in the download url from Twitter')

@@ -12,8 +12,6 @@
 
 # Use Filezilla to copy secrets - `.env` and `service-account.json` and `anon.session`
 
-# export FB_COOKIE="cookie: datr=asdf"
-
 ## Python
 sudo apt update -y
 sudo apt upgrade -y
@@ -77,7 +75,7 @@ rm geckodriver*
 sudo chmod +x ~/auto-archiver/infra/cron.sh
 
 # runs the script every minute
-cat <<EOT >> auto 
+cat <<EOT >> run-auto-archive 
 * * * * * dave /home/dave/auto-archiver/infra/cron.sh
 EOT
 

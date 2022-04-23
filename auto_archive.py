@@ -83,6 +83,8 @@ def process_sheet(sheet, header=1, columns=GWorksheet.COLUMN_NAMES):
     options.headless = True
     driver = webdriver.Firefox(options=options)
     driver.set_window_size(1400, 2000)
+    # DM put in for telegram screenshots which don't come back
+    driver.set_page_load_timeout(60)
 
     # loop through worksheets to check
     for ii, wks in enumerate(sh.worksheets()):

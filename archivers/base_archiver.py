@@ -142,7 +142,9 @@ class Archiver(ABC):
                 logger.error('Failed on fb accept cookies')
         
         logger.debug(f'get_screenshot: Requesting url')
+
         self.driver.get(url)
+
         logger.debug(f'get_screenshot: Back from request')
         time.sleep(6)
 
