@@ -20,8 +20,7 @@ cd /home/dave/auto-archiver
 # do I need this?
 PATH=/usr/local/bin:$PATH
 
-# NOTE I'm getting a warning running this command.
-# /usr/local/lib/python3.8/dist-packages/pkg_resources/__init__.py:123: PkgResourcesDeprecationWarning: 0.23ubuntu1 is an invalid version and will not be supported in a future release
+
 pipenv run python auto_archive.py --sheet "Test Hashing" >> /home/dave/log.txt 2>&1
 
 

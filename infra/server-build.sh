@@ -74,15 +74,21 @@ rm geckodriver*
 # so the cron job can execute the shell script (running as user dave)
 sudo chmod +x ~/auto-archiver/infra/cron.sh
 
+# to stop errors
+# https://askubuntu.com/questions/1383506/deprecation-warnings-python3-8-packages
+#/usr/local/lib/python3.8/dist-packages/pkg_resources/__init__.py:123: PkgResourcesDeprecationWarning: 0.23ubuntu1 is an invalid version and will not be supported in a future release      
+sudo mv /usr/local/lib/python3.8/dist-packages/pkg_resources pkg_resources_back
+
+
 # runs the script every minute
 cat <<EOT >> run-auto-archive 
 * * * * * dave /home/dave/auto-archiver/infra/cron.sh
 EOT
 
-sudo mv auto /etc/cron.d
+sudo mv run-auto-archive /etc/cron.d
 
-sudo chown root /etc/cron.d/auto
-sudo chmod 600 /etc/cron.d/auto
+sudo chown root /etc/cron.d/run-auto-archive
+sudo chmod 600 /etc/cron.d/run-auto-archive
 
 # MONITORING
 # syslog in /var/log/syslog

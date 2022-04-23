@@ -17,7 +17,6 @@ class YoutubeDLArchiver(Archiver):
         self.fb_cookie = fb_cookie
 
     def download(self, url, check_if_exists=False):
-        logger.debug(f'fb cookie is {self.fb_cookie}')
         netloc = self.get_netloc(url)
         # DM to set env variable: export FB_COOKIE="paste"
         # this gets blanked at the end of each session ie when vs code closes
