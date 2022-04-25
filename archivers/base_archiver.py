@@ -127,11 +127,9 @@ class Archiver(ABC):
         return hash.hexdigest()
 
     def get_screenshot(self, url):
-        logger.debug(f'In get_screenshot for {url}')
         key = self.get_key(urlparse(url).path.replace(
             "/", "_") + datetime.datetime.utcnow().isoformat().replace(" ", "_") + ".png")
         filename = 'tmp/' + key
-
 
         # DM - Accept cookies popup dismiss for ytdlp video
         if 'facebook.com' in url:
@@ -141,11 +139,8 @@ class Archiver(ABC):
             except:
                 logger.error('Failed on fb accept cookies')
         
-        logger.debug(f'get_screenshot: Requesting url')
-
         self.driver.get(url)
 
-        logger.debug(f'get_screenshot: Back from request')
         time.sleep(6)
 
         self.driver.save_screenshot(filename)

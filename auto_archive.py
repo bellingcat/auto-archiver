@@ -15,8 +15,10 @@ from utils import GWorksheet, mkdir_if_not_exists
 
 import sys
 
-load_dotenv()
+logger.add("trace.log", level="TRACE")
+logger.add("warnings.log", level="WARNING")
 
+load_dotenv()
 
 def update_sheet(gw, row, result: archivers.ArchiveResult):
     cell_updates = []
@@ -67,6 +69,9 @@ def process_sheet(sheet, header=1, columns=GWorksheet.COLUMN_NAMES):
     gc = gspread.service_account(filename='service_account.json')
     sh = gc.open(sheet)
 
+    # DM test raise error for decorator to catch
+    # raise ValueError('A very specific bad thing happened.')
+
     s3_config = S3Config(
         bucket=os.getenv('DO_BUCKET'),
         region=os.getenv('DO_SPACES_REGION'),
@@ -88,7 +93,9 @@ def process_sheet(sheet, header=1, columns=GWorksheet.COLUMN_NAMES):
 
     # loop through worksheets to check
     for ii, wks in enumerate(sh.worksheets()):
-        logger.info(f'Opening worksheet {ii}: "{wks.title}" header={header}')
+        # logger.info(f'Opening worksheet {ii}: "{wks.title}" header={header}')
+        # DM take " out of log message and clarify ii
+        logger.info(f'Opening worksheet ii={ii}: {wks.title} header={header}')
         gw = GWorksheet(wks, header_row=header, columns=columns)
 
         if not gw.col_exists('url'):
@@ -134,6 +141,7 @@ def process_sheet(sheet, header=1, columns=GWorksheet.COLUMN_NAMES):
                         result = archiver.download(url, check_if_exists=True)
                     except Exception as e:
                         result = False
+                        # DM loguru writes traceback to files so this traceback may be superfluous
                         logger.error(f'Got unexpected error in row {row} with archiver {archiver} for url {url}: {e}\n{traceback.format_exc()}')
 
                     if result:
@@ -166,10 +174,11 @@ def process_sheet(sheet, header=1, columns=GWorksheet.COLUMN_NAMES):
         logger.success(f'Finshed worksheet {wks.title}')
     driver.quit()
 
-
+@logger.catch
 def main():
-
-    print(sys.argv[1:])
+    # DM don't want to use print anymore
+    # print(sys.argv[1:])
+    logger.info(f'Passed args:{sys.argv}')
 
     parser = argparse.ArgumentParser(
         description='Automatically archive social media videos from a Google Sheets document')
@@ -192,4 +201,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-    logger.success("finished")

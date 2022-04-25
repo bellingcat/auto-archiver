@@ -20,6 +20,15 @@
 			"args": ["--sheet","Test Hashing CIR"]
 		},
 		{
+			"name": "Archive - Dearbhla",
+			"type": "python",
+			"request": "launch",
+			"program": "auto_archive.py",
+			"console": "integratedTerminal",
+			"justMyCode": true,
+			"args": ["--sheet","Archive - Dearbhla"]
+		},
+		{
 			"name": "Kayleigh - test - DM",
 			"type": "python",
 			"request": "launch",
