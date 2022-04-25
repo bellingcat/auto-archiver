@@ -29,7 +29,9 @@ class TwitterArchiver(Archiver):
         # except:
         except Exception as e:
             # logger.warning('wah wah')
-            logger.warning(f'Exception in twitter_archiver - traceback: {traceback.format_exc()}')
+            # DM can happen if a media sensitive tweet
+            # logger.warning(f'Exception in twitter_archiver - traceback: {traceback.format_exc()}')
+            logger.warning(f'TwitterArchiver cant get tweet - can happen if a media sensitive tweet', exc_info=True)
             return False
 
         if tweet.media is None:
