@@ -77,7 +77,7 @@ sudo chmod +x ~/auto-archiver/infra/cron.sh
 # to stop errors
 # https://askubuntu.com/questions/1383506/deprecation-warnings-python3-8-packages
 #/usr/local/lib/python3.8/dist-packages/pkg_resources/__init__.py:123: PkgResourcesDeprecationWarning: 0.23ubuntu1 is an invalid version and will not be supported in a future release      
-sudo mv /usr/local/lib/python3.8/dist-packages/pkg_resources pkg_resources_back
+sudo mv /usr/local/lib/python3.8/dist-packages/pkg_resources /usr/local/lib/python3.8/dist-packages/pkg_resources/pkg_resources_back
 
 
 # runs the script every minute

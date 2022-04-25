@@ -198,3 +198,12 @@ youtube archiver - catch for twitter when embedded url contains video.. don't wa
 youtubedl - 4wwww to 3www fix for facebook cookie
 
 fb catch - cookie click on homepage
+
+
+## Spreasheet
+
+if delete link rows then auto-archiver will keep going if it read that row initially
+  and would probably update the wrong row!
+
+same with sort/ordering????
+
