@@ -177,7 +177,6 @@ def process_sheet(sheet, header=1, columns=GWorksheet.COLUMN_NAMES):
                 else:
                     gw.set_cell(row, 'status', 'failed: no archiver')
                     logger.success(f'Finshed worksheet {wks.title}')
-    # driver.quit()
 
 @logger.catch
 def main():
