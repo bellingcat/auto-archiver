@@ -2,7 +2,6 @@ import os
 import re
 import html
 from dataclasses import dataclass
-from urllib.parse import urlparse
 from loguru import logger
 
 from storages import Storage
@@ -38,7 +37,7 @@ class TelethonArchiver(Archiver):
         posts = self.client.get_messages(chat, ids=search_ids)
         media = []
         for post in posts:
-            if post.grouped_id == original_post.grouped_id and post.media is not None:
+            if post is not None and post.grouped_id == original_post.grouped_id and post.media is not None:
                 media.append(post)
         return media
 
@@ -76,7 +75,7 @@ class TelethonArchiver(Archiver):
                 uploaded_media = []
                 message = post.message
                 for mp in media_posts:
-                    if len(mp.message) > message: message = mp.message
+                    if len(mp.message) > len(message): message = mp.message
                     filename = self.client.download_media(mp.media, f'tmp/{chat}_{group_id}/{mp.id}')
                     key = filename.split('tmp/')[1]
                     self.storage.upload(filename, key)

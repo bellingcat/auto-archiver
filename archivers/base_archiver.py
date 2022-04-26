@@ -8,6 +8,8 @@ from urllib.parse import urlparse
 import hashlib
 import time
 import requests
+from loguru import logger
+from selenium.common.exceptions import TimeoutException
 
 from storages import Storage
 from utils import mkdir_if_not_exists
@@ -46,7 +48,7 @@ class Archiver(ABC):
         return self.get_key(urlparse(url).path.replace("/", "_") + ".html")
 
     def generate_media_page_html(self, url, urls_info: dict, object, thumbnail=None):
-        page = f'''<html><head><title>{url}</title></head>
+        page = f'''<html><head><title>{url}</title><meta charset="UTF-8"></head>
             <body>
             <h2>Archived media from {self.name}</h2>
             <h3><a href="{url}">{url}</a></h3><ul>'''
@@ -98,6 +100,7 @@ class Archiver(ABC):
             uploaded_media.append({'cdn_url': cdn_url, 'key': key, 'hash': hash})
 
         return self.generate_media_page_html(url, uploaded_media, object, thumbnail=thumbnail)
+
     def get_key(self, filename):
         """
         returns a key in the format "[archiverName]_[filename]" includes extension
@@ -125,8 +128,11 @@ class Archiver(ABC):
             "/", "_") + datetime.datetime.utcnow().isoformat().replace(" ", "_") + ".png")
         filename = 'tmp/' + key
 
-        self.driver.get(url)
-        time.sleep(6)
+        try:
+            self.driver.get(url)
+            time.sleep(6)
+        except TimeoutException:
+            logger.info("TimeoutException loading page for screenshot")
 
         self.driver.save_screenshot(filename)
         self.storage.upload(filename, key, extra_args={
@@ -172,7 +178,7 @@ class Archiver(ABC):
 
         key_thumb = cdn_urls[int(len(cdn_urls) * 0.1)]
 
-        index_page = f'''<html><head><title>{filename}</title></head>
+        index_page = f'''<html><head><title>{filename}</title><meta charset="UTF-8"></head>
             <body>'''
 
         for t in cdn_urls:

@@ -20,6 +20,7 @@ class S3Storage(Storage):
         self.bucket = config.bucket
         self.region = config.region
         self.folder = config.folder
+        self.private = config.private
 
         if len(self.folder) and self.folder[-1] != '/':
             self.folder += '/'
