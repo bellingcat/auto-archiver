@@ -77,7 +77,7 @@ sudo chmod +x ~/auto-archiver/infra/cron.sh
 # to stop errors
 # https://askubuntu.com/questions/1383506/deprecation-warnings-python3-8-packages
 #/usr/local/lib/python3.8/dist-packages/pkg_resources/__init__.py:123: PkgResourcesDeprecationWarning: 0.23ubuntu1 is an invalid version and will not be supported in a future release      
-sudo mv /usr/local/lib/python3.8/dist-packages/pkg_resources /usr/local/lib/python3.8/dist-packages/pkg_resources/pkg_resources_back
+sudo mv /usr/local/lib/python3.8/dist-packages/pkg_resources /usr/local/lib/python3.8/dist-packages/pkg_resources_back
 
 
 # don't want service to run until a reboot
@@ -93,6 +93,12 @@ sudo mv run-auto-archive /etc/cron.d
 
 sudo chown root /etc/cron.d/run-auto-archive
 sudo chmod 600 /etc/cron.d/run-auto-archive
+
+sudo chmod 600 ~/auto-archive/go.sh
+
+# install fonts eg burmese, chinese for rendering in selenium firefox
+# https://stackoverflow.com/questions/72015245/firefox-unicode-boxes-in-selenium-screenshot-instead-of-characters/72015719#72015719
+sudo apt install fonts-noto -y
 
 sudo reboot now
 

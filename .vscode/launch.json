@@ -1,8 +1,9 @@
 {
 	"version": "0.2.0",
 	"configurations": [
+
 		{
-			"name": "Python: auto_archive --sheet",
+			"name": "Test Hashing",
 			"type": "python",
 			"request": "launch",
 			"program": "auto_archive.py",
@@ -36,6 +37,15 @@
 			"console": "integratedTerminal",
 			"justMyCode": true,
 			"args": ["--sheet","Kayleigh - test - DM", "--header=2"]
+		},
+		{
+			"name": "Kayleigh - test",
+			"type": "python",
+			"request": "launch",
+			"program": "auto_archive.py",
+			"console": "integratedTerminal",
+			"justMyCode": true,
+			"args": ["--sheet","Kayleigh - test", "--header=2"]
 		},
 		{
 			"name": "Python: Current File",

@@ -139,9 +139,12 @@ class Archiver(ABC):
                 foo = self.driver.find_element(By.XPATH,"//button[@data-cookiebanner='accept_only_essential_button']")
                 foo.click()
                 logger.debug(f'fb click worked')
+                # linux server needs a sleep otherwise facebook cookie wont have worked and we'll get a popup on next page
+                time.sleep(2)
                 # DM some FB videos needs to be logged in
             except:
                 logger.warning(f'Failed on fb accept cookies for url {url}')
+        
         
         self.driver.get(url)
 

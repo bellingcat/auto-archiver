@@ -27,9 +27,11 @@ class WaybackArchiver(Archiver):
             'https://web.archive.org/save/', headers=ia_headers, data={'url': url})
 
         if r.status_code != 200:
+            logger.warning(f"Internet archive failed with status of {r.status_code}")
             return ArchiveResult(status="Internet archive failed")
 
         if 'job_id' not in r.json() and 'message' in r.json():
+            logger.warning(f"Internet archive failed json \n {r.json()}")
             return ArchiveResult(status=f"Internet archive failed: {r.json()['message']}")
 
         job_id = r.json()['job_id']
