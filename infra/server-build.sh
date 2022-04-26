@@ -80,6 +80,10 @@ sudo chmod +x ~/auto-archiver/infra/cron.sh
 sudo mv /usr/local/lib/python3.8/dist-packages/pkg_resources /usr/local/lib/python3.8/dist-packages/pkg_resources/pkg_resources_back
 
 
+# don't want service to run until a reboot
+# otherwise problems with Gecko driver
+sudo service cron stop
+
 # runs the script every minute
 cat <<EOT >> run-auto-archive 
 * * * * * dave /home/dave/auto-archiver/infra/cron.sh
@@ -89,6 +93,8 @@ sudo mv run-auto-archive /etc/cron.d
 
 sudo chown root /etc/cron.d/run-auto-archive
 sudo chmod 600 /etc/cron.d/run-auto-archive
+
+sudo reboot now
 
 # MONITORING
 # syslog in /var/log/syslog

@@ -21,7 +21,9 @@ cd /home/dave/auto-archiver
 PATH=/usr/local/bin:$PATH
 
 
-pipenv run python auto_archive.py --sheet "Test Hashing" >> /home/dave/log.txt 2>&1
+# application log files are in ~/auto_archive/logs
+# pipenv run python auto_archive.py --sheet "Test Hashing" >> /home/dave/log.txt 2>&1
+pipenv run python auto_archive.py --sheet "Test Hashing" 
 
 
 ## cron job output is in 

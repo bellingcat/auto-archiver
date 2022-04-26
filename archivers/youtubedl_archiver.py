@@ -22,7 +22,7 @@ class YoutubeDLArchiver(Archiver):
         # this gets blanked at the end of each session ie when vs code closes
         # if netloc in ['facebook.com', 'www.facebook.com'] and os.getenv('FB_COOKIE'):
         if netloc in ['facebook.com', 'www.facebook.com']:
-            logger.info('Using Facebook cookie')
+            logger.trace('Using Facebook cookie')
             # yt_dlp.utils.std_headers['cookie'] = os.getenv('FB_COOKIE')
             yt_dlp.utils.std_headers['cookie'] = self.fb_cookie
 
@@ -50,7 +50,7 @@ class YoutubeDLArchiver(Archiver):
             if 'https://twitter.com/' in info['webpage_url']:
                 logger.info('Found https://twitter.com/ in the download url from Twitter')
             else:
-                logger.warning('Found a linked video probably in a link in a tweet - not getting that video as there may be images in the tweet')
+                logger.info('Found a linked video probably in a link in a tweet - not getting that video as there may be images in the tweet')
                 return False
 
         if check_if_exists:

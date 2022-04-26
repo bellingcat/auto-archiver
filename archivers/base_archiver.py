@@ -134,16 +134,23 @@ class Archiver(ABC):
         # DM - Accept cookies popup dismiss for ytdlp video
         if 'facebook.com' in url:
             try:
+                logger.debug(f'Trying fb click accept cookie popup for {url}')
                 self.driver.get("http://www.facebook.com") 
-                self.driver.find_element(By.XPATH,"//button[@data-cookiebanner='accept_only_essential_button']").click()
+                foo = self.driver.find_element(By.XPATH,"//button[@data-cookiebanner='accept_only_essential_button']")
+                foo.click()
+                logger.debug(f'fb click worked')
+                # DM some FB videos needs to be logged in
             except:
-                logger.error('Failed on fb accept cookies')
+                logger.warning(f'Failed on fb accept cookies for url {url}')
         
         self.driver.get(url)
 
         time.sleep(6)
 
         self.driver.save_screenshot(filename)
+
+        # want to reset so that next call to selenium doesn't have cookies?
+        # functions needs to be idempotent
 
         self.storage.upload(filename, key, extra_args={
                             'ACL': 'public-read', 'ContentType': 'image/png'})

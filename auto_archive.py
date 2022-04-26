@@ -15,8 +15,10 @@ from utils import GWorksheet, mkdir_if_not_exists
 
 import sys
 
-logger.add("trace.log", level="TRACE")
-logger.add("warnings.log", level="WARNING")
+logger.add("logs/1trace.log", level="TRACE")
+logger.add("logs/2info.log", level="INFO")
+logger.add("logs/3success.log", level="SUCCESS")
+logger.add("logs/4warning.log", level="WARNING")
 
 load_dotenv()
 
@@ -83,14 +85,6 @@ def process_sheet(sheet, header=1, columns=GWorksheet.COLUMN_NAMES):
         api_hash=os.getenv('TELEGRAM_API_HASH')
     )
 
-
-    options = webdriver.FirefoxOptions()
-    options.headless = True
-    driver = webdriver.Firefox(options=options)
-    driver.set_window_size(1400, 2000)
-    # DM put in for telegram screenshots which don't come back
-    driver.set_page_load_timeout(60)
-
     # loop through worksheets to check
     for ii, wks in enumerate(sh.worksheets()):
         # logger.info(f'Opening worksheet {ii}: "{wks.title}" header={header}')
@@ -112,28 +106,37 @@ def process_sheet(sheet, header=1, columns=GWorksheet.COLUMN_NAMES):
         s3_config.folder = f'{sheet.replace(" ", "_")}/{wks.title.replace(" ", "_")}/'
         s3_client = S3Storage(s3_config)
 
-        # order matters, first to succeed excludes remaining
-        active_archivers = [
-            # telethon is the API for telegram eg t.me url's
-            archivers.TelethonArchiver(s3_client, driver, telegram_config),
-            archivers.TelegramArchiver(s3_client, driver),
-            archivers.TiktokArchiver(s3_client, driver),
-            # DM pass facebook cookie
-            archivers.YoutubeDLArchiver(s3_client, driver, os.getenv('FACEBOOK_COOKIE')),
-            archivers.TwitterArchiver(s3_client, driver),
-            archivers.WaybackArchiver(s3_client, driver)
-        ]
-
         # loop through rows in worksheet
         for row in range(1 + header, gw.count_rows() + 1):
             url = gw.get_cell(row, 'url')
             original_status = gw.get_cell(row, 'status')
             status = gw.get_cell(row, 'status', fresh=original_status in ['', None] and url != '')
+            # logger.trace(f'Row {row} status {status}')
             if url != '' and status in ['', None]:
                 gw.set_cell(row, 'status', 'Archive in progress')
 
                 url = expand_url(url)
 
+                # DM make a new driver every row so idempotent
+                # otherwise cookies will be remembered
+                options = webdriver.FirefoxOptions()
+                options.headless = True
+                driver = webdriver.Firefox(options=options)
+                driver.set_window_size(1400, 2000)
+                # DM put in for telegram screenshots which don't come back
+                driver.set_page_load_timeout(60)
+        
+                # order matters, first to succeed excludes remaining
+                active_archivers = [
+                    # telethon is the API for telegram eg t.me url's
+                    archivers.TelethonArchiver(s3_client, driver, telegram_config),
+                    archivers.TelegramArchiver(s3_client, driver),
+                    archivers.TiktokArchiver(s3_client, driver),
+                    # DM pass facebook cookie
+                    archivers.YoutubeDLArchiver(s3_client, driver, os.getenv('FACEBOOK_COOKIE')),
+                    archivers.TwitterArchiver(s3_client, driver),
+                    archivers.WaybackArchiver(s3_client, driver)
+                ]
                 for archiver in active_archivers:
                     logger.debug(f'Trying {archiver} on row {row}')
 
@@ -150,7 +153,7 @@ def process_sheet(sheet, header=1, columns=GWorksheet.COLUMN_NAMES):
                             result.status = archiver.name + \
                                 ": " + str(result.status)
                             logger.success(
-                                f'{archiver} succeeded on row {row}')
+                                f'{archiver} succeeded on row {row}, url {url}')
                             break
 
                         # DM wayback has seen this url before so keep existing status
@@ -166,19 +169,21 @@ def process_sheet(sheet, header=1, columns=GWorksheet.COLUMN_NAMES):
                             f'{archiver} did not succeed on row {row}, final status: {result.status}')
                         result.status = archiver.name + \
                             ": " + str(result.status)
+                # get rid of driver so can reload on next row
+                driver.quit()
 
                 if result:
                     update_sheet(gw, row, result)
                 else:
                     gw.set_cell(row, 'status', 'failed: no archiver')
-        logger.success(f'Finshed worksheet {wks.title}')
-    driver.quit()
+                    logger.success(f'Finshed worksheet {wks.title}')
+    # driver.quit()
 
 @logger.catch
 def main():
     # DM don't want to use print anymore
     # print(sys.argv[1:])
-    logger.info(f'Passed args:{sys.argv}')
+    logger.debug(f'Passed args:{sys.argv}')
 
     parser = argparse.ArgumentParser(
         description='Automatically archive social media videos from a Google Sheets document')
