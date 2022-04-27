@@ -2,6 +2,7 @@
 	"version": "0.2.0",
 	"configurations": [
 
+
 		{
 			"name": "Test Hashing",
 			"type": "python",
@@ -9,7 +10,7 @@
 			"program": "auto_archive.py",
 			"console": "integratedTerminal",
 			"justMyCode": true,
-			"args": ["--sheet","Test Hashing"]
+			"args": ["--sheet","Test Hashing","--use-filenumber-as-directory=True"]
 		},
 		{
 			"name": "Python: auto_archive CIR --sheet",

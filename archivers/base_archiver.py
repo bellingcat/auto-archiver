@@ -42,7 +42,9 @@ class Archiver(ABC):
         return self.__class__.__name__
 
     @abstractmethod
-    def download(self, url, check_if_exists=False): pass
+    # def download(self, url, check_if_exists=False): pass
+    # DM add feature flad
+    def download(self, url, check_if_exists=False, filenumber=None): pass
 
     def get_netloc(self, url):
         return urlparse(url).netloc
@@ -50,9 +52,8 @@ class Archiver(ABC):
     def get_html_key(self, url):
         return self.get_key(urlparse(url).path.replace("/", "_") + ".html")
 
-    # DM added UTF
-    # https://github.com/bellingcat/auto-archiver/pull/21/commits/576f1a8f687199cf38864f7271b9a63e65de8692
-    def generate_media_page_html(self, url, urls_info: dict, object, thumbnail=None):
+    # generate the html page eg SM3013/twitter__minmyatnaing13_status_1499415562937503751.html
+    def generate_media_page_html(self, url, urls_info: dict, object, thumbnail=None, filenumber=None):
         page = f'''<html><head><title>{url}</title><meta charset="UTF-8"></head>
             <body>
             <h2>Archived media from {self.name}</h2>
@@ -66,18 +67,31 @@ class Archiver(ABC):
 
         page_key = self.get_key(urlparse(url).path.replace("/", "_") + ".html")
         page_filename = 'tmp/' + page_key
-        page_cdn = self.storage.get_cdn_url(page_key)
+
+        # DM feature flag
+        # page_cdn gets written to the spreadsheet
+        if filenumber is None:
+            page_cdn = self.storage.get_cdn_url(page_key)
+        else:
+            page_cdn = self.storage.get_cdn_url(filenumber + "/" + page_key)
 
         with open(page_filename, "w") as f:
             f.write(page)
 
         page_hash = self.get_hash(page_filename)
 
+         # DM feature flag
+        if filenumber != "":
+            logger.debug(f'filenumber for directory is {filenumber}')
+            page_key = filenumber + "/" + page_key
+            
         self.storage.upload(page_filename, page_key, extra_args={
             'ACL': 'public-read', 'ContentType': 'text/html'})
         return (page_cdn, page_hash, thumbnail)
 
-    def generate_media_page(self, urls, url, object):
+    # def generate_media_page(self, urls, url, object):
+    # eg images in a tweet save to cloud storage
+    def generate_media_page(self, urls, url, object, filenumber=None):
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36'
         }
@@ -92,19 +106,32 @@ class Archiver(ABC):
 
             filename = 'tmp/' + key
 
+            # eg media_url: https://pbs.twimg.com/media/FM7-ggCUYAQHKWW?format=jpg&name=orig
             d = requests.get(media_url, headers=headers)
             with open(filename, 'wb') as f:
                 f.write(d.content)
 
+            # DM feature flag
+            if filenumber is not None:
+                logger.debug(f'filenumber for directory is {filenumber}')
+                key = filenumber + "/" + key
+
+            # eg filename: 'tmp/twitter__media_FM7-ggCUYAQHKWW.jpg'
+            # eg key: 'twitter__media_FM7-ggCUYAQHKWW.jpg'
+            # or key: 'SM3013/twitter__media_FM7-ggCUYAQHKWW.jpg'
             self.storage.upload(filename, key)
+
+            # file will be in storage now as: twitter__media_FM7-ggCUYAQHKWW.jpg
+
             hash = self.get_hash(filename)
+            # eg 'https://testhashing.fra1.cdn.digitaloceanspaces.com/Test_Hashing/Sheet1/twitter__media_FM7-ggCUYAQHKWW.jpg'
             cdn_url = self.storage.get_cdn_url(key)
 
             if thumbnail is None:
                 thumbnail = cdn_url
             uploaded_media.append({'cdn_url': cdn_url, 'key': key, 'hash': hash})
 
-        return self.generate_media_page_html(url, uploaded_media, object, thumbnail=thumbnail)
+        return self.generate_media_page_html(url, uploaded_media, object, thumbnail=thumbnail, filenumber=filenumber)
 
     def get_key(self, filename):
         """
@@ -130,7 +157,8 @@ class Archiver(ABC):
         f.close()
         return hash.hexdigest()
 
-    def get_screenshot(self, url):
+    # eg SA3013/twitter__minmyatnaing13_status_14994155629375037512022-04-27T13:51:43.701962.png
+    def get_screenshot(self, url, filenumber):
         key = self.get_key(urlparse(url).path.replace(
             "/", "_") + datetime.datetime.utcnow().isoformat().replace(" ", "_") + ".png")
         filename = 'tmp/' + key
@@ -157,14 +185,15 @@ class Archiver(ABC):
 
         self.driver.save_screenshot(filename)
 
-        # want to reset so that next call to selenium doesn't have cookies?
-        # functions needs to be idempotent
+        if filenumber is not None:
+            logger.debug(f'filenumber for directory is {filenumber}')
+            key = filenumber + "/" + key
 
         self.storage.upload(filename, key, extra_args={
                             'ACL': 'public-read', 'ContentType': 'image/png'})
         return self.storage.get_cdn_url(key)
 
-    def get_thumbnails(self, filename, key, duration=None):
+    def get_thumbnails(self, filename, key, duration=None, filenumber=None):
         thumbnails_folder = filename.split('.')[0] + '/'
         key_folder = key.split('.')[0] + '/'
 
@@ -191,6 +220,10 @@ class Archiver(ABC):
             if fname[-3:] == 'jpg':
                 thumbnail_filename = thumbnails_folder + fname
                 key = key_folder + fname
+
+                # DM feature flag
+                # if filenumber is not None:
+                #     key = filenumber + "/" + key
 
                 cdn_url = self.storage.get_cdn_url(key)
 

@@ -41,7 +41,7 @@ class TelethonArchiver(Archiver):
                 media.append(post)
         return media
 
-    def download(self, url, check_if_exists=False):
+    def download(self, url, check_if_exists=False, filenumber=None):
         # detect URLs that we definitely cannot handle
         matches = self.link_pattern.findall(url)
         if not len(matches):

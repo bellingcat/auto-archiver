@@ -11,7 +11,7 @@ from .base_archiver import Archiver, ArchiveResult
 class TelegramArchiver(Archiver):
     name = "telegram"
 
-    def download(self, url, check_if_exists=False):
+    def download(self, url, check_if_exists=False, filenumber=""):
         # detect URLs that we definitely cannot handle
         if 't.me' != self.get_netloc(url):
             return False

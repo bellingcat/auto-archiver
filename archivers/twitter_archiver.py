@@ -11,7 +11,11 @@ import traceback
 class TwitterArchiver(Archiver):
     name = "twitter"
 
-    def download(self, url, check_if_exists=False):
+    # DM added filenumber params todo fix ""
+    def download(self, url, check_if_exists=False, filenumber=None):
+        if filenumber is not None:
+            logger.debug(f'filenumber is {filenumber}')
+
         if 'twitter.com' != self.get_netloc(url):
             return False
 
@@ -29,8 +33,7 @@ class TwitterArchiver(Archiver):
         # except:
         except Exception as e:
             # logger.warning('wah wah')
-            # DM can happen if a media sensitive tweet
-            # logger.warning(f'Exception in twitter_archiver - traceback: {traceback.format_exc()}')
+            # DM 
             logger.warning(f'TwitterArchiver cant get tweet for url {url} - can happen if a media sensitive tweet: \n{traceback.format_exc()}')
             return False
 
@@ -59,8 +62,9 @@ class TwitterArchiver(Archiver):
             else:
                 logger.warning(f"Could not get media URL of {media}")
 
-        page_cdn, page_hash, thumbnail = self.generate_media_page(urls, url, tweet.json())
+        # page_cdn, page_hash, thumbnail = self.generate_media_page(urls, url, tweet.json())
+        page_cdn, page_hash, thumbnail = self.generate_media_page(urls, url, tweet.json(), filenumber)
 
-        screenshot = self.get_screenshot(url)
+        screenshot = self.get_screenshot(url, filenumber)
 
         return ArchiveResult(status="success", cdn_url=page_cdn, screenshot=screenshot, hash=page_hash, thumbnail=thumbnail, timestamp=tweet.date)

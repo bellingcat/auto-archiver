@@ -8,7 +8,7 @@ from .base_archiver import Archiver, ArchiveResult
 class TiktokArchiver(Archiver):
     name = "tiktok"
 
-    def download(self, url, check_if_exists=False):
+    def download(self, url, check_if_exists=False, filenumber=""):
         if 'tiktok.com' not in url:
             return False
 

@@ -67,7 +67,7 @@ def expand_url(url):
     return url
 
 
-def process_sheet(sheet, header=1, columns=GWorksheet.COLUMN_NAMES):
+def process_sheet(sheet, header=1, columns=GWorksheet.COLUMN_NAMES, usefilenumber=False):
     gc = gspread.service_account(filename='service_account.json')
     sh = gc.open(sheet)
 
@@ -117,6 +117,18 @@ def process_sheet(sheet, header=1, columns=GWorksheet.COLUMN_NAMES):
 
                 url = expand_url(url)
 
+                # DM Feature flag
+                if usefilenumber:
+                    filenumber = gw.get_cell(row, 'filenumber')
+                    logger.debug(f'filenumber is {filenumber}')
+                    if filenumber == "":
+                        logger.warning(f'Logic error - the feature flag for usefilenumber is True, yet cant find a corresponding filenumber')
+                        gw.set_cell(row, 'status', 'Missing filenumber')
+                        continue
+                else:
+                    # We will use this through the app to differentiate between where to save
+                    filenumber = None
+
                 # DM make a new driver every row so idempotent
                 # otherwise cookies will be remembered
                 options = webdriver.FirefoxOptions()
@@ -142,10 +154,10 @@ def process_sheet(sheet, header=1, columns=GWorksheet.COLUMN_NAMES):
                     logger.debug(f'Trying {archiver} on row {row}')
 
                     try:
-                        result = archiver.download(url, check_if_exists=True)
+                        # DM . filenumber="" if not to be used
+                        result = archiver.download(url, check_if_exists=True, filenumber=filenumber)
                     except Exception as e:
                         result = False
-                        # DM loguru writes traceback to files so this traceback may be superfluous
                         logger.error(f'Got unexpected error in row {row} with archiver {archiver} for url {url}: {e}\n{traceback.format_exc()}')
 
                     if result:
@@ -190,6 +202,7 @@ def main():
     parser.add_argument('--sheet', action='store', dest='sheet', help='the name of the google sheets document', required=True)
     parser.add_argument('--header', action='store', dest='header', default=1, type=int, help='1-based index for the header row')
     parser.add_argument('--private', action='store_true', help='Store content without public access permission')
+    parser.add_argument('--use-filenumber-as-directory', action='store', dest='usefilenumber', default=False, type=bool, help='False is default and True will save files into a subfolder on cloud storage which has the File Number eg SM3012')
 
     for k, v in GWorksheet.COLUMN_NAMES.items():
         parser.add_argument(f'--col-{k}', action='store', dest=k, default=v, help=f'the name of the column to fill with {k} (defaults={v})')
@@ -197,10 +210,11 @@ def main():
     args = parser.parse_args()
     config_columns = {k: getattr(args, k).lower() for k in GWorksheet.COLUMN_NAMES.keys()}
 
-    logger.info(f'Opening document {args.sheet} for header {args.header}')
+    logger.info(f'Opening document {args.sheet} for header {args.header} using filenumber: {args.usefilenumber}')
 
     mkdir_if_not_exists('tmp')
-    process_sheet(args.sheet, header=args.header, columns=config_columns)
+    # DM added a feature flag for usefilenumber
+    process_sheet(args.sheet, header=args.header, columns=config_columns, usefilenumber=args.usefilenumber)
     shutil.rmtree('tmp')
 
 

@@ -16,7 +16,7 @@ class YoutubeDLArchiver(Archiver):
         super().__init__(storage, driver)
         self.fb_cookie = fb_cookie
 
-    def download(self, url, check_if_exists=False):
+    def download(self, url, check_if_exists=False, filenumber=None):
         netloc = self.get_netloc(url)
         # DM to set env variable: export FB_COOKIE="paste"
         # this gets blanked at the end of each session ie when vs code closes
@@ -69,6 +69,10 @@ class YoutubeDLArchiver(Archiver):
 
             key = self.get_key(filename)
 
+            # DM feature flag
+            if filenumber is not None:
+                key = filenumber + "/" + key
+
             if self.storage.exists(key):
                 status = 'already archived'
                 cdn_url = self.storage.get_cdn_url(key)
@@ -92,19 +96,24 @@ class YoutubeDLArchiver(Archiver):
 
         if status != 'already archived':
             key = self.get_key(filename)
+
+            # DM feature flag
+            if filenumber is not None:
+                key = filenumber + "/" + key
+
             cdn_url = self.storage.get_cdn_url(key)
 
             self.storage.upload(filename, key)
 
         hash = self.get_hash(filename)
-        screenshot = self.get_screenshot(url)
+        screenshot = self.get_screenshot(url, filenumber)
 
         # get duration
         duration = info.get('duration')
 
         # get thumbnails
         try:
-            key_thumb, thumb_index = self.get_thumbnails(filename, key, duration=duration)
+            key_thumb, thumb_index = self.get_thumbnails(filename, key, duration=duration, filenumber=filenumber)
         except:
             key_thumb = ''
             thumb_index = 'Could not generate thumbnails'
