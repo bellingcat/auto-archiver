@@ -38,9 +38,6 @@ class TelethonArchiver(Archiver):
         posts = self.client.get_messages(chat, ids=search_ids)
         media = []
         for post in posts:
-            # DM fix from PR
-            # https://github.com/bellingcat/auto-archiver/pull/21/commits/8358ab0bfc4db0e318caf421b1d232b925e64708
-            # if post.grouped_id == original_post.grouped_id and post.media is not None:
             if post is not None and post.grouped_id == original_post.grouped_id and post.media is not None:
                 media.append(post)
         return media
@@ -81,7 +78,6 @@ class TelethonArchiver(Archiver):
                 uploaded_media = []
                 message = post.message
                 for mp in media_posts:
-                    #DM from PR
                     if len(mp.message) > len(message): message = mp.message
 
                     filename = self.client.download_media(mp.media, f'tmp/{chat}_{group_id}/{mp.id}')

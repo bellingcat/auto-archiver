@@ -20,6 +20,7 @@ class S3Storage(Storage):
         self.bucket = config.bucket
         self.region = config.region
         self.folder = config.folder
+        self.private = config.private
 
         if len(self.folder) and self.folder[-1] != '/':
             self.folder += '/'
@@ -46,10 +47,9 @@ class S3Storage(Storage):
             return False
 
     def uploadf(self, file, key, **kwargs):
-        # DM commented out to fix 'S3Storage' object has no attribute 'private'
-        # if self.private:
-        #     extra_args = kwargs.get("extra_args", {})
-        # else:
-        extra_args = kwargs.get("extra_args", {'ACL': 'public-read'})
+        if self.private:
+            extra_args = kwargs.get("extra_args", {})
+        else:
+            extra_args = kwargs.get("extra_args", {'ACL': 'public-read'})
 
         self.s3.upload_fileobj(file, Bucket=self.bucket, Key=self._get_path(key), ExtraArgs=extra_args)

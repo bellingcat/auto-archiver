@@ -14,6 +14,7 @@ from utils import mkdir_if_not_exists
 
 from selenium.webdriver.common.by import By
 from loguru import logger
+from selenium.common.exceptions import TimeoutException
 
 @dataclass
 class ArchiveResult:
@@ -145,10 +146,11 @@ class Archiver(ABC):
             except:
                 logger.warning(f'Failed on fb accept cookies for url {url}')
         
-        
-        self.driver.get(url)
-
-        time.sleep(6)
+        try: 
+            self.driver.get(url)
+            time.sleep(6)
+        except TimeoutException:
+            logger.info("TimeoutException loading page for screenshot")
 
         self.driver.save_screenshot(filename)
 

@@ -121,6 +121,7 @@ def process_sheet(sheet, header=1, columns=GWorksheet.COLUMN_NAMES):
                 # otherwise cookies will be remembered
                 options = webdriver.FirefoxOptions()
                 options.headless = True
+                options.set_preference('network.protocol-handler.external.tg', False)
                 driver = webdriver.Firefox(options=options)
                 driver.set_window_size(1400, 2000)
                 # DM put in for telegram screenshots which don't come back
