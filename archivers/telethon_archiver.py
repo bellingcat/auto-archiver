@@ -2,7 +2,6 @@ import os
 import re
 import html
 from dataclasses import dataclass
-from urllib.parse import urlparse
 from loguru import logger
 
 from storages import Storage
@@ -79,7 +78,6 @@ class TelethonArchiver(Archiver):
                 message = post.message
                 for mp in media_posts:
                     if len(mp.message) > len(message): message = mp.message
-
                     filename = self.client.download_media(mp.media, f'tmp/{chat}_{group_id}/{mp.id}')
                     key = filename.split('tmp/')[1]
                     self.storage.upload(filename, key)

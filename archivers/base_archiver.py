@@ -8,6 +8,8 @@ from urllib.parse import urlparse
 import hashlib
 import time
 import requests
+from loguru import logger
+from selenium.common.exceptions import TimeoutException
 
 from storages import Storage
 from utils import mkdir_if_not_exists
@@ -103,6 +105,7 @@ class Archiver(ABC):
             uploaded_media.append({'cdn_url': cdn_url, 'key': key, 'hash': hash})
 
         return self.generate_media_page_html(url, uploaded_media, object, thumbnail=thumbnail)
+
     def get_key(self, filename):
         """
         returns a key in the format "[archiverName]_[filename]" includes extension
@@ -200,8 +203,6 @@ class Archiver(ABC):
 
         key_thumb = cdn_urls[int(len(cdn_urls) * 0.1)]
 
-        # DM added UTF
-        # https://github.com/bellingcat/auto-archiver/pull/21/commits/576f1a8f687199cf38864f7271b9a63e65de8692
         index_page = f'''<html><head><title>{filename}</title><meta charset="UTF-8"></head>
             <body>'''
 
