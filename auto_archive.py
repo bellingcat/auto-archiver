@@ -166,7 +166,7 @@ def process_sheet(sheet, header=1, columns=GWorksheet.COLUMN_NAMES):
                             break
 
                         logger.warning(
-                            f'{archiver} did not succeed on row {row}, final status: {result.status}')
+                            f'{archiver} did not succeed on row {row}, url: {url}, final status: {result.status}')
                         result.status = archiver.name + \
                             ": " + str(result.status)
                 # get rid of driver so can reload on next row
