@@ -121,7 +121,8 @@ not tested as the API is getting all so far
 
 # TikTok
 
-not tested yet
+Always getting invalid URL using the library [https://github.com/msramalho/tiktok-downloader](https://github.com/msramalho/tiktok-downloader) which is a fork of [https://github.com/krypton-byte/tiktok-downloader](https://github.com/krypton-byte/tiktok-downloader) and has a nice test app [https://tkdown.herokuapp.com/](https://tkdown.herokuapp.com/)
+
 
 
 # Twitter Video - YoutubeDL 

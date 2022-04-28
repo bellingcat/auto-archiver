@@ -37,7 +37,7 @@ class TiktokArchiver(Archiver):
                 self.storage.upload(filename, key)
 
             try:
-                key_thumb, thumb_index = self.get_thumbnails(filename, key, duration=info.duration)
+                key_thumb, thumb_index = self.get_thumbnails(filename, key, duration=info.duration, filenumber=filenumber)
             except Exception as e:
                 logger.error(e)
                 key_thumb = ''
@@ -54,8 +54,9 @@ class TiktokArchiver(Archiver):
                                  thumbnail_index=thumb_index, duration=info.duration, title=info.caption, timestamp=info.create.isoformat(),
                                  hash=hash, screenshot=screenshot)
 
-        except tiktok_downloader.Except.InvalidUrl:
+        except tiktok_downloader.Except.InvalidUrl as e:
             status = 'Invalid URL'
+            logger.warning(f'Invalid URL on {url}  {e}\n{traceback.format_exc()}')
             return ArchiveResult(status=status)
 
         except:

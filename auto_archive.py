@@ -154,8 +154,13 @@ def process_sheet(sheet, header=1, columns=GWorksheet.COLUMN_NAMES, usefilenumbe
                     logger.debug(f'Trying {archiver} on row {row}')
 
                     try:
-                        # DM . filenumber="" if not to be used
-                        result = archiver.download(url, check_if_exists=True, filenumber=filenumber)
+                        # DM 
+                        if usefilenumber:
+                            # using filenumber to store in folders so can't check for existance of that url
+                            result = archiver.download(url, check_if_exists=False, filenumber=filenumber)
+                        else:
+                            result = archiver.download(url, check_if_exists=True, filenumber=filenumber)
+
                     except Exception as e:
                         result = False
                         logger.error(f'Got unexpected error in row {row} with archiver {archiver} for url {url}: {e}\n{traceback.format_exc()}')

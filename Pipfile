@@ -17,8 +17,13 @@ selenium = "*"
 snscrape = "*"
 yt-dlp = "*"
 telethon = "*"
+google-api-python-client = "*"
+google-auth-httplib2 = "*"
+google-auth-oauthlib = "*"
+oauth2client = "*"
 
 [dev-packages]
+autopep8 = "*"
 
 [requires]
 python_version = "3.9"

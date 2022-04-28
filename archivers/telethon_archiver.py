@@ -48,7 +48,7 @@ class TelethonArchiver(Archiver):
             return False
 
         status = "success"
-        screenshot = self.get_screenshot(url)
+        screenshot = self.get_screenshot(url, filenumber)
 
         # app will ask (stall for user input!) for phone number and auth code if anon.session not found
         with self.client.start():
@@ -67,6 +67,11 @@ class TelethonArchiver(Archiver):
 
             if len(media_posts) > 1:
                 key = self.get_html_key(url)
+
+                # DM feature flag
+                if filenumber is not None:
+                    key = filenumber + "/" + key              
+                
                 cdn_url = self.storage.get_cdn_url(key)
 
                 if check_if_exists and self.storage.exists(key):
@@ -80,26 +85,33 @@ class TelethonArchiver(Archiver):
                     if len(mp.message) > len(message): message = mp.message
                     filename = self.client.download_media(mp.media, f'tmp/{chat}_{group_id}/{mp.id}')
                     key = filename.split('tmp/')[1]
+                    # DM feature flag
+                    if filenumber is not None:
+                        key = filenumber + "/" + key
                     self.storage.upload(filename, key)
                     hash = self.get_hash(filename)
                     cdn_url = self.storage.get_cdn_url(key)
                     uploaded_media.append({'cdn_url': cdn_url, 'key': key, 'hash': hash})
                     os.remove(filename)
 
-                page_cdn, page_hash, _ = self.generate_media_page_html(url, uploaded_media, html.escape(str(post)))
+                #DM
+                page_cdn, page_hash, _ = self.generate_media_page_html(url, uploaded_media, html.escape(str(post)), filenumber=filenumber)
 
                 return ArchiveResult(status=status, cdn_url=page_cdn, title=post.message, timestamp=post.date, hash=page_hash, screenshot=screenshot)
             elif len(media_posts) == 1:
                 key = self.get_key(f'{chat}_{post_id}')
                 filename = self.client.download_media(post.media, f'tmp/{key}')
                 key = filename.split('tmp/')[1].replace(" ", "")
+                # DM feature flag
+                if filenumber is not None:
+                    key = filenumber + "/" + key
                 self.storage.upload(filename, key)
                 hash = self.get_hash(filename)
                 cdn_url = self.storage.get_cdn_url(key)
-                key_thumb, thumb_index = self.get_thumbnails(filename, key)
+                key_thumb, thumb_index = self.get_thumbnails(filename, key, filenumber=filenumber)
                 os.remove(filename)
 
                 return ArchiveResult(status=status, cdn_url=cdn_url, title=post.message, thumbnail=key_thumb, thumbnail_index=thumb_index, timestamp=post.date, hash=hash, screenshot=screenshot)
 
-            page_cdn, page_hash, _ = self.generate_media_page_html(url, [], html.escape(str(post)))
+            page_cdn, page_hash, _ = self.generate_media_page_html(url, [], html.escape(str(post)), filenumber=filenumber)
             return ArchiveResult(status=status, cdn_url=page_cdn, title=post.message, timestamp=post.date, hash=page_hash, screenshot=screenshot)

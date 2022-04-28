@@ -11,7 +11,7 @@ from .base_archiver import Archiver, ArchiveResult
 class TelegramArchiver(Archiver):
     name = "telegram"
 
-    def download(self, url, check_if_exists=False, filenumber=""):
+    def download(self, url, check_if_exists=False, filenumber=None):
         # detect URLs that we definitely cannot handle
         if 't.me' != self.get_netloc(url):
             return False
@@ -52,6 +52,10 @@ class TelegramArchiver(Archiver):
         video_id = video_url.split('/')[-1].split('?')[0]
         key = self.get_key(video_id)
 
+        # DM feature flag (not tested as telethon gets all requests)
+        if filenumber is not None:
+            key = filenumber + "/" + key
+
         filename = 'tmp/' + key
         cdn_url = self.storage.get_cdn_url(key)
 
@@ -81,7 +85,7 @@ class TelegramArchiver(Archiver):
 
         # process thumbnails
         key_thumb, thumb_index = self.get_thumbnails(
-            filename, key, duration=duration)
+            filename, key, duration=duration, filenumber=filenumber)
         os.remove(filename)
 
         return ArchiveResult(status=status, cdn_url=cdn_url, thumbnail=key_thumb, thumbnail_index=thumb_index,
