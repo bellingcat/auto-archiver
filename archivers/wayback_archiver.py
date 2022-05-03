@@ -1,10 +1,17 @@
 import time, requests, os
 from bs4 import BeautifulSoup
+# from dataclasses import dataclass
 
 from storages import Storage
 from .base_archiver import Archiver, ArchiveResult
 
+# @dataclass
+# class WaybackConfig:
+#     key: str
+#     secret: str
+from configs import WaybackConfig
 
+# TODO: use WaybackConfig
 class WaybackArchiver(Archiver):
     name = "wayback"
 
