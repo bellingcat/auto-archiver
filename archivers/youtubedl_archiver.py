@@ -101,9 +101,11 @@ class YoutubeDLArchiver(Archiver):
             if filenumber is not None:
                 key = filenumber + "/" + key
 
-            cdn_url = self.storage.get_cdn_url(key)
-
             self.storage.upload(filename, key)
+
+            # filename ='tmp/sDE-qZdi8p8.webm'
+            # key ='SM0022/youtube_dl_sDE-qZdi8p8.webm'
+            cdn_url = self.storage.get_cdn_url(key)
 
         hash = self.get_hash(filename)
         screenshot = self.get_screenshot(url, filenumber)

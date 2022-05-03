@@ -1,6 +1,7 @@
 import os
 import datetime
 import argparse
+import string
 import requests
 import shutil
 import gspread
@@ -11,14 +12,21 @@ import traceback
 
 import archivers
 from storages import S3Storage, S3Config
+from storages.gd_storage import GDConfig, GDStorage
 from utils import GWorksheet, mkdir_if_not_exists
 
 import sys
+
+from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
+from googleapiclient.http import MediaFileUpload
+from google.oauth2 import service_account
 
 logger.add("logs/1trace.log", level="TRACE")
 logger.add("logs/2info.log", level="INFO")
 logger.add("logs/3success.log", level="SUCCESS")
 logger.add("logs/4warning.log", level="WARNING")
+logger.add("logs/5error.log", level="ERROR")
 
 load_dotenv()
 
@@ -67,12 +75,9 @@ def expand_url(url):
     return url
 
 
-def process_sheet(sheet, header=1, columns=GWorksheet.COLUMN_NAMES, usefilenumber=False):
+def process_sheet(sheet, usefilenumber, storage, header=1, columns=GWorksheet.COLUMN_NAMES):
     gc = gspread.service_account(filename='service_account.json')
     sh = gc.open(sheet)
-
-    # DM test raise error for decorator to catch
-    # raise ValueError('A very specific bad thing happened.')
 
     s3_config = S3Config(
         bucket=os.getenv('DO_BUCKET'),
@@ -80,6 +85,14 @@ def process_sheet(sheet, header=1, columns=GWorksheet.COLUMN_NAMES, usefilenumbe
         key=os.getenv('DO_SPACES_KEY'),
         secret=os.getenv('DO_SPACES_SECRET')
     )
+
+    gd_config = GDConfig(
+        bucket=os.getenv('DO_BUCKET'),
+        region=os.getenv('DO_SPACES_REGION'),
+        key=os.getenv('DO_SPACES_KEY'),
+        secret=os.getenv('DO_SPACES_SECRET')
+    )
+   
     telegram_config = archivers.TelegramConfig(
         api_id=os.getenv('TELEGRAM_API_ID'),
         api_hash=os.getenv('TELEGRAM_API_HASH')
@@ -87,8 +100,6 @@ def process_sheet(sheet, header=1, columns=GWorksheet.COLUMN_NAMES, usefilenumbe
 
     # loop through worksheets to check
     for ii, wks in enumerate(sh.worksheets()):
-        # logger.info(f'Opening worksheet {ii}: "{wks.title}" header={header}')
-        # DM take " out of log message and clarify ii
         logger.info(f'Opening worksheet ii={ii}: {wks.title} header={header}')
         gw = GWorksheet(wks, header_row=header, columns=columns)
 
@@ -105,6 +116,9 @@ def process_sheet(sheet, header=1, columns=GWorksheet.COLUMN_NAMES, usefilenumbe
         # archives will be in a folder 'doc_name/worksheet_name'
         s3_config.folder = f'{sheet.replace(" ", "_")}/{wks.title.replace(" ", "_")}/'
         s3_client = S3Storage(s3_config)
+
+        gd_config.folder = f'{sheet.replace(" ", "_")}/{wks.title.replace(" ", "_")}/'
+        gd_client = GDStorage(gd_config)
 
         # loop through rows in worksheet
         for row in range(1 + header, gw.count_rows() + 1):
@@ -139,16 +153,23 @@ def process_sheet(sheet, header=1, columns=GWorksheet.COLUMN_NAMES, usefilenumbe
                 # DM put in for telegram screenshots which don't come back
                 driver.set_page_load_timeout(120)
         
+                # client
+                storage_client = None
+                if storage == "s3":
+                    storage_client = s3_client
+                elif storage == "gd":
+                    storage_client = gd_client
+                else:
+                    raise ValueError(f'Cant get storage_client {storage_client}')
+
                 # order matters, first to succeed excludes remaining
                 active_archivers = [
-                    # telethon is the API for telegram eg t.me url's
-                    archivers.TelethonArchiver(s3_client, driver, telegram_config),
-                    archivers.TelegramArchiver(s3_client, driver),
-                    archivers.TiktokArchiver(s3_client, driver),
-                    # DM pass facebook cookie
-                    archivers.YoutubeDLArchiver(s3_client, driver, os.getenv('FACEBOOK_COOKIE')),
-                    archivers.TwitterArchiver(s3_client, driver),
-                    archivers.WaybackArchiver(s3_client, driver)
+                    archivers.TelethonArchiver(storage_client, driver, telegram_config),
+                    archivers.TelegramArchiver(storage_client, driver),
+                    archivers.TiktokArchiver(storage_client, driver),
+                    archivers.YoutubeDLArchiver(storage_client, driver, os.getenv('FACEBOOK_COOKIE')),
+                    archivers.TwitterArchiver(storage_client, driver),
+                    archivers.WaybackArchiver(storage_client, driver)
                 ]
                 for archiver in active_archivers:
                     logger.debug(f'Trying {archiver} on row {row}')
@@ -159,7 +180,7 @@ def process_sheet(sheet, header=1, columns=GWorksheet.COLUMN_NAMES, usefilenumbe
                             # using filenumber to store in folders so can't check for existance of that url
                             result = archiver.download(url, check_if_exists=False, filenumber=filenumber)
                         else:
-                            result = archiver.download(url, check_if_exists=True, filenumber=filenumber)
+                            result = archiver.download(url, check_if_exists=True)
 
                     except Exception as e:
                         result = False
@@ -207,7 +228,9 @@ def main():
     parser.add_argument('--sheet', action='store', dest='sheet', help='the name of the google sheets document', required=True)
     parser.add_argument('--header', action='store', dest='header', default=1, type=int, help='1-based index for the header row')
     parser.add_argument('--private', action='store_true', help='Store content without public access permission')
-    parser.add_argument('--use-filenumber-as-directory', action='store', dest='usefilenumber', default=False, type=bool, help='False is default and True will save files into a subfolder on cloud storage which has the File Number eg SM3012')
+    parser.add_argument('--use-filenumber-as-directory', action=argparse.BooleanOptionalAction, dest='usefilenumber',  \
+         help='Will save files into a subfolder on cloud storage which has the File Number eg SM3012')
+    parser.add_argument('--storage', action='store', dest='storage', default='s3', help='s3 or gd storage. Default is s3')
 
     for k, v in GWorksheet.COLUMN_NAMES.items():
         parser.add_argument(f'--col-{k}', action='store', dest=k, default=v, help=f'the name of the column to fill with {k} (defaults={v})')
@@ -215,11 +238,19 @@ def main():
     args = parser.parse_args()
     config_columns = {k: getattr(args, k).lower() for k in GWorksheet.COLUMN_NAMES.keys()}
 
-    logger.info(f'Opening document {args.sheet} for header {args.header} using filenumber: {args.usefilenumber}')
+    logger.info(f'Opening document {args.sheet} for header {args.header} using filenumber: {args.usefilenumber} and storage {args.storage}')
+
+    # https://stackoverflow.com/questions/15008758/parsing-boolean-values-with-argparse
+    # filenumber is True (of type bool) when set or None when argument is not there
+    logger.debug(f'usefilenumber type is {type(args.usefilenumber)}')
+    # explicitly setting usefilenumber to a bool
+    usefilenumber = False
+    if args.usefilenumber:
+        usefilenumber = True
 
     mkdir_if_not_exists('tmp')
-    # DM added a feature flag for usefilenumber
-    process_sheet(args.sheet, header=args.header, columns=config_columns, usefilenumber=args.usefilenumber)
+    # DM added usefilenumber (default is False) and storage (default is s3) or gd (Google Drive)
+    process_sheet(args.sheet, usefilenumber=usefilenumber, storage=args.storage, header=args.header, columns=config_columns)
     shutil.rmtree('tmp')
 
 

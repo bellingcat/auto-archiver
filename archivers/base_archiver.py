@@ -68,25 +68,25 @@ class Archiver(ABC):
         page_key = self.get_key(urlparse(url).path.replace("/", "_") + ".html")
         page_filename = 'tmp/' + page_key
 
-        # DM feature flag
-        # page_cdn gets written to the spreadsheet
-        if filenumber is None:
-            page_cdn = self.storage.get_cdn_url(page_key)
-        else:
-            page_cdn = self.storage.get_cdn_url(filenumber + "/" + page_key)
-
         with open(page_filename, "w") as f:
             f.write(page)
 
         page_hash = self.get_hash(page_filename)
 
          # DM feature flag
-        if filenumber != "":
+        if filenumber != None:
             logger.debug(f'filenumber for directory is {filenumber}')
             page_key = filenumber + "/" + page_key
             
         self.storage.upload(page_filename, page_key, extra_args={
             'ACL': 'public-read', 'ContentType': 'text/html'})
+
+        # DM feature flag
+        # page_cdn gets written to the spreadsheet
+        if filenumber is None:
+            page_cdn = self.storage.get_cdn_url(page_key)
+        else:
+            page_cdn = self.storage.get_cdn_url(filenumber + "/" + page_key)
         return (page_cdn, page_hash, thumbnail)
 
     # def generate_media_page(self, urls, url, object):
@@ -158,7 +158,7 @@ class Archiver(ABC):
         return hash.hexdigest()
 
     # eg SA3013/twitter__minmyatnaing13_status_14994155629375037512022-04-27T13:51:43.701962.png
-    def get_screenshot(self, url, filenumber):
+    def get_screenshot(self, url, filenumber, storage="GD"):
         key = self.get_key(urlparse(url).path.replace(
             "/", "_") + datetime.datetime.utcnow().isoformat().replace(" ", "_") + ".png")
         filename = 'tmp/' + key
@@ -191,7 +191,8 @@ class Archiver(ABC):
 
         self.storage.upload(filename, key, extra_args={
                             'ACL': 'public-read', 'ContentType': 'image/png'})
-        return self.storage.get_cdn_url(key)
+        foo = self.storage.get_cdn_url(key)
+        return foo 
 
     def get_thumbnails(self, filename, key, duration=None, filenumber=None):
         thumbnails_folder = filename.split('.')[0] + '/'
@@ -219,15 +220,17 @@ class Archiver(ABC):
         for fname in thumbnails:
             if fname[-3:] == 'jpg':
                 thumbnail_filename = thumbnails_folder + fname
+                # 'SM0022/youtube_dl_sDE-qZdi8p8/out1.jpg'
                 key = key_folder + fname
 
                 # DM feature flag
                 # if filenumber is not None:
                 #     key = filenumber + "/" + key
 
-                cdn_url = self.storage.get_cdn_url(key)
-
                 self.storage.upload(thumbnail_filename, key)
+
+                # 'https://testhashing.fra1.cdn.digitaloceanspaces.com/Test_Hashing/Sheet1/SM0022/youtube_dl_sDE-qZdi8p8/out1.jpg'
+                cdn_url = self.storage.get_cdn_url(key)
 
                 cdn_urls.append(cdn_url)
 

@@ -11,7 +11,7 @@ import traceback
 class TwitterArchiver(Archiver):
     name = "twitter"
 
-    # DM added filenumber params todo fix ""
+    # DM added filenumber params and storage 
     def download(self, url, check_if_exists=False, filenumber=None):
         if filenumber is not None:
             logger.debug(f'filenumber is {filenumber}')
