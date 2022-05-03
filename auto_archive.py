@@ -1,22 +1,24 @@
-import os
+# import os
 import datetime
-import argparse
+# import argparse
 import requests
 import shutil
-import gspread
+# import gspread
 from loguru import logger
 from dotenv import load_dotenv
-from selenium import webdriver
+# from selenium import webdriver
 import traceback
 
-import archivers
-from storages import S3Storage, S3Config
+# import archivers
+from archivers import TelethonArchiver, TelegramArchiver, TiktokArchiver, YoutubeDLArchiver, TwitterArchiver, WaybackArchiver, ArchiveResult
+from storages import S3Storage
 from utils import GWorksheet, mkdir_if_not_exists
+from configs import Config
 
 load_dotenv()
 
 
-def update_sheet(gw, row, result: archivers.ArchiveResult):
+def update_sheet(gw, row, result: ArchiveResult):
     cell_updates = []
     row_values = gw.get_row(row)
 
@@ -61,56 +63,56 @@ def expand_url(url):
     return url
 
 
-def process_sheet(sheet, header=1, columns=GWorksheet.COLUMN_NAMES):
-    gc = gspread.service_account(filename='service_account.json')
-    sh = gc.open(sheet)
+def process_sheet(c: Config, sheet, header=1, columns=GWorksheet.COLUMN_NAMES):
+    # gc = gspread.service_account(filename='service_account.json')
+    sh = c.gsheets_client.open(sheet)
 
-    s3_config = S3Config(
-        bucket=os.getenv('DO_BUCKET'),
-        region=os.getenv('DO_SPACES_REGION'),
-        key=os.getenv('DO_SPACES_KEY'),
-        secret=os.getenv('DO_SPACES_SECRET')
-    )
-    telegram_config = archivers.TelegramConfig(
-        api_id=os.getenv('TELEGRAM_API_ID'),
-        api_hash=os.getenv('TELEGRAM_API_HASH')
-    )
+    # s3_config = S3Config(
+    #     bucket=os.getenv('DO_BUCKET'),
+    #     region=os.getenv('DO_SPACES_REGION'),
+    #     key=os.getenv('DO_SPACES_KEY'),
+    #     secret=os.getenv('DO_SPACES_SECRET')
+    # )
+    # telegram_config = archivers.TelegramConfig(
+    #     api_id=os.getenv('TELEGRAM_API_ID'),
+    #     api_hash=os.getenv('TELEGRAM_API_HASH')
+    # )
 
-    options = webdriver.FirefoxOptions()
-    options.headless = True
-    options.set_preference('network.protocol-handler.external.tg', False)
+    # options = webdriver.FirefoxOptions()
+    # options.headless = True
+    # options.set_preference('network.protocol-handler.external.tg', False)
 
-    driver = webdriver.Firefox(options=options)
-    driver.set_window_size(1400, 2000)
-    driver.set_page_load_timeout(10)
+    # driver = webdriver.Firefox(options=options)
+    # driver.set_window_size(1400, 2000)
+    # driver.set_page_load_timeout(10)
 
     # loop through worksheets to check
     for ii, wks in enumerate(sh.worksheets()):
-        logger.info(f'Opening worksheet {ii}: "{wks.title}" header={header}')
-        gw = GWorksheet(wks, header_row=header, columns=columns)
+        logger.info(f'Opening worksheet {ii}: "{wks.title}" header={c.header}')
+        gw = GWorksheet(wks, header_row=c.header, columns=c.column_names)
 
         if not gw.col_exists('url'):
             logger.warning(
-                f'No "{columns["url"]}" column found, skipping worksheet {wks.title}')
+                f'No "{c.column_names["url"]}" column found, skipping worksheet {wks.title}')
             continue
 
         if not gw.col_exists('status'):
             logger.warning(
-                f'No "{columns["status"]}" column found, skipping worksheet {wks.title}')
+                f'No "{c.column_names["status"]}" column found, skipping worksheet {wks.title}')
             continue
 
         # archives will be in a folder 'doc_name/worksheet_name'
-        s3_config.folder = f'{sheet.replace(" ", "_")}/{wks.title.replace(" ", "_")}/'
-        s3_client = S3Storage(s3_config)
+        c.s3_config.folder = f'{sheet.replace(" ", "_")}/{wks.title.replace(" ", "_")}/'
+        s3_client = S3Storage(c.s3_config)
 
         # order matters, first to succeed excludes remaining
         active_archivers = [
-            archivers.TelethonArchiver(s3_client, driver, telegram_config),
-            archivers.TelegramArchiver(s3_client, driver),
-            archivers.TiktokArchiver(s3_client, driver),
-            archivers.YoutubeDLArchiver(s3_client, driver),
-            archivers.TwitterArchiver(s3_client, driver),
-            archivers.WaybackArchiver(s3_client, driver)
+            TelethonArchiver(s3_client, c.webdriver, c.telegram_config),
+            TelegramArchiver(s3_client, c.webdriver),
+            TiktokArchiver(s3_client, c.webdriver),
+            YoutubeDLArchiver(s3_client, c.webdriver),
+            TwitterArchiver(s3_client, c.webdriver),
+            WaybackArchiver(s3_client, c.webdriver)
         ]
 
         # loop through rows in worksheet
@@ -149,27 +151,18 @@ def process_sheet(sheet, header=1, columns=GWorksheet.COLUMN_NAMES):
                 else:
                     gw.set_cell(row, 'status', 'failed: no archiver')
         logger.success(f'Finshed worksheet {wks.title}')
-    driver.quit()
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description='Automatically archive social media videos from a Google Sheets document')
-    parser.add_argument('--sheet', action='store', dest='sheet', help='the name of the google sheets document', required=True)
-    parser.add_argument('--header', action='store', dest='header', default=1, type=int, help='1-based index for the header row')
-    parser.add_argument('--private', action='store_true', help='Store content without public access permission')
+    c = Config()
+    c.parse()
 
-    for k, v in GWorksheet.COLUMN_NAMES.items():
-        parser.add_argument(f'--col-{k}', action='store', dest=k, default=v, help=f'the name of the column to fill with {k} (defaults={v})')
+    logger.info(f'Opening document {c.sheet} for header {c.header}')
 
-    args = parser.parse_args()
-    config_columns = {k: getattr(args, k).lower() for k in GWorksheet.COLUMN_NAMES.keys()}
-
-    logger.info(f'Opening document {args.sheet} for header {args.header}')
-
-    mkdir_if_not_exists('tmp')
-    process_sheet(args.sheet, header=args.header, columns=config_columns)
-    shutil.rmtree('tmp')
+    mkdir_if_not_exists(c.tmp_folder)
+    process_sheet(c, c.sheet, header=c.header, columns=c.column_names)
+    shutil.rmtree(c.tmp_folder)
+    c.webdriver.quit()
 
 
 if __name__ == '__main__':
