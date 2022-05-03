@@ -1,18 +1,13 @@
 import os
 import re
 import html
-from dataclasses import dataclass
 from loguru import logger
 
 from storages import Storage
 from .base_archiver import Archiver, ArchiveResult
 from telethon.sync import TelegramClient
+from configs import TelegramConfig
 
-
-@dataclass
-class TelegramConfig:
-    api_id: str
-    api_hash: str
 
 
 class TelethonArchiver(Archiver):
