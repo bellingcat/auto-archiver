@@ -11,6 +11,8 @@ class S3Config:
     key: str
     secret: str
     folder: str = ""
+    endpoint_url: str = "https://{region}.digitaloceanspaces.com"
+    cdn_url: str = "https://{bucket}.{region}.cdn.digitaloceanspaces.com/{key}"
     private: bool = False
 
 
