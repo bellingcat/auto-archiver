@@ -9,3 +9,4 @@ anu.html
 *.log
 .pytest_cach
 anon*
+config.json
