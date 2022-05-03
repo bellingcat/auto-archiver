@@ -1,8 +1,8 @@
 # we need to explicitly expose the available imports here
-from .base_archiver import *
-from .telegram_archiver import *
-from .telethon_archiver import *
-from .tiktok_archiver import *
-from .wayback_archiver import *
-from .youtubedl_archiver import *
-from .twitter_archiver import *
+from .base_archiver import Archiver, ArchiveResult
+from .telegram_archiver import TelegramArchiver
+from .telethon_archiver import TelethonArchiver, TelegramConfig
+from .tiktok_archiver import TiktokArchiver
+from .wayback_archiver import WaybackArchiver, WaybackConfig
+from .youtubedl_archiver import YoutubeDLArchiver
+from .twitter_archiver import TwitterArchiver

@@ -1,0 +1,123 @@
+
+import argparse, json
+import gspread
+from loguru import logger
+from selenium import webdriver
+
+from utils.gworksheet import GWorksheet
+from storages import S3Config
+from .wayback_config import WaybackConfig
+from .telegram_config import TelegramConfig
+
+class Config:
+    """
+    Controls the current execution parameters and manages API configurations
+    """
+
+    def __init__(self):
+        self.parser = self.get_argument_parser()
+
+    def parse(self):
+        self.args = self.parser.parse_args()
+        logger.success(f'Command line arguments parsed successfully')
+        self.config_file = self.args.config
+        self.read_config_json()
+        logger.info(f'APIs and Services initialized:\n{self}')
+
+    def read_config_json(self):
+        with open(self.config_file, "r", encoding="utf-8") as inf:
+            self.config = json.load(inf)
+
+        execution = self.config.get("execution", {})
+
+        # general sheet configurations
+        self.sheet = getattr(self.args, "sheet") or execution.get("sheet")
+        assert self.sheet is not None, "'sheet' must be provided either through command line or configuration file"
+
+        self.header = int(getattr(self.args, "header") or execution.get("header", 1))
+        self.tmp_folder = execution.get("tmp_folder", "tmp/")
+
+        self.storage = execution.get("storage", "s3")
+
+        # Column names come from config and can be overwritten by CMD
+        # in the end all are considered as lower case
+        config_column_names = execution.get("column_names", {})
+        self.column_names = {}
+        for k in GWorksheet.COLUMN_NAMES.keys():
+            self.column_names[k] = getattr(self.args, k) or config_column_names.get(k) or GWorksheet.COLUMN_NAMES[k]
+        self.column_names = {k: v.lower() for k, v in self.column_names.items()}
+
+        # selenium driver
+        selenium_configs = execution.get("selenium", {})
+        self.selenium_timeout = int(selenium_configs.get("timeout_seconds", 10))
+        options = webdriver.FirefoxOptions()
+        options.headless = True
+        options.set_preference('network.protocol-handler.external.tg', False)
+        self.webdriver = webdriver.Firefox(options=options)
+        self.webdriver.set_window_size(1400, 2000)
+        self.webdriver.set_page_load_timeout(self.selenium_timeout)
+
+        # APIs and service configurations
+        if "s3" in self.config:
+            s3 = self.config["s3"]
+            self.s3_config = S3Config(
+                bucket=s3["bucket"],
+                region=s3["region"],
+                key=s3["key"],
+                secret=s3["secret"]
+            )
+            self.s3_config.private = getattr(self.args, "private") or s3["private"] or self.s3_config.private
+            self.s3_config.endpoint_url = s3["endpoint_url"] or self.s3_config.endpoint_url
+            self.s3_config.cdn_url = s3["cdn_url"] or self.s3_config.cdn_url
+        else:
+            logger.debug(f"'s3' key not present in the {self.config_file=}")
+
+        if "wayback" in self.config:
+            self.wayback_config = WaybackConfig(
+                key=self.config["wayback"]["key"],
+                secret=self.config["wayback"]["secret"],
+            )
+        else:
+            logger.debug(f"'wayback' key not present in the {self.config_file=}")
+
+        if "telegram" in self.config:
+            self.telegram_config = TelegramConfig(
+                api_id=self.config["telegram"]["api_id"],
+                api_hash=self.config["telegram"]["api_hash"]
+            )
+        else:
+            logger.debug(f"'telegram' key not present in the {self.config_file=}")
+
+        self.gsheets_client = gspread.service_account(
+            filename=self.config.get("google_api", {}).get("filename", 'service_account.json')
+        )
+
+
+    def get_argument_parser(self):
+        parser = argparse.ArgumentParser(description='Automatically archive social media videos from a Google Sheets document')
+
+        parser.add_argument('--config', action='store', dest='config', help='the filename of the JSON configuration file (defaults to \'config.json\')', default='config.json')
+        parser.add_argument('--sheet', action='store', dest='sheet', help='the name of the google sheets document [execution.sheet in config.json]')
+        parser.add_argument('--header', action='store', dest='header', help='1-based index for the header row [execution.header in config.json]')
+        parser.add_argument('--private', action='store_true', help='Store content without public access permission [execution.header in config.json]')
+
+        for k, v in GWorksheet.COLUMN_NAMES.items():
+            parser.add_argument(f'--col-{k}', action='store', dest=k, help=f'the name of the column to fill with {k} (default={v})')
+
+        return parser
+
+    def __str__(self) -> str:
+        return json.dumps({
+            "config_file": self.config_file,
+            "sheet": self.sheet,
+            "header": self.header,
+            "tmp_folder": self.tmp_folder,
+            "selenium_timeout_seconds": self.selenium_timeout,
+            "selenium_webdriver": self.webdriver != None,
+            "s3_config": self.s3_config != None,
+            "s3_private": getattr(self.s3_config, "private", None),
+            "wayback_config": self.wayback_config != None,
+            "telegram_config": self.telegram_config != None,
+            "gsheets_client": self.gsheets_client != None,
+            "column_names": self.column_names,
+        }, ensure_ascii=False, indent=4)
