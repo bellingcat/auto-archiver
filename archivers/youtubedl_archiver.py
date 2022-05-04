@@ -22,7 +22,7 @@ class YoutubeDLArchiver(Archiver):
         # this gets blanked at the end of each session ie when vs code closes
         # if netloc in ['facebook.com', 'www.facebook.com'] and os.getenv('FB_COOKIE'):
         if netloc in ['facebook.com', 'www.facebook.com']:
-            logger.trace('Using Facebook cookie')
+            logger.debug('Using Facebook cookie')
             # yt_dlp.utils.std_headers['cookie'] = os.getenv('FB_COOKIE')
             yt_dlp.utils.std_headers['cookie'] = self.fb_cookie
 
@@ -32,8 +32,9 @@ class YoutubeDLArchiver(Archiver):
 
         try:
             info = ydl.extract_info(url, download=False)
-        except yt_dlp.utils.DownloadError:
+        except yt_dlp.utils.DownloadError as e:
             # no video here
+            logger.debug(f'Youtube normal control flow: {e}')
             return False
         # DM Exception is actually normal control flow!
         # todo

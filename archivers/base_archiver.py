@@ -86,7 +86,10 @@ class Archiver(ABC):
         if filenumber is None:
             page_cdn = self.storage.get_cdn_url(page_key)
         else:
-            page_cdn = self.storage.get_cdn_url(filenumber + "/" + page_key)
+            # filenumber: SM0001
+            # page_key: SM0001/twitter__minmyatnaing13_status_1499415562937503751.html
+            # page_cdn = self.storage.get_cdn_url(filenumber + "/" + page_key)
+            page_cdn = self.storage.get_cdn_url(page_key)
         return (page_cdn, page_hash, thumbnail)
 
     # def generate_media_page(self, urls, url, object):

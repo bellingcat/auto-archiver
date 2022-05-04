@@ -9,9 +9,12 @@ from googleapiclient.errors import HttpError
 from googleapiclient.http import MediaFileUpload
 from google.oauth2 import service_account
 
+import time
+
 
 @dataclass
 class GDConfig:
+    root_folder_id: str
     bucket: str
     region: str
     key: str
@@ -23,6 +26,8 @@ class GDConfig:
 class GDStorage(Storage):
 
     def __init__(self, config: GDConfig):
+        self.root_folder_id = config.root_folder_id
+
         self.bucket = config.bucket
         self.region = config.region
         self.folder = config.folder
@@ -49,46 +54,47 @@ class GDStorage(Storage):
         return self.folder + key
 
     def get_cdn_url(self, key):
+        # only support files saved in a folders for GD
         # key will be SM0002/twitter__media_ExeUSW2UcAE6RbN.jpg
-
         directory = key.split('/', 1)[0]
-        logger.debug(f'directory: {directory}')
         # eg twitter__media_asdf.jpg
         filename = key.split('/', 1)[1]
-        logger.debug(f'filename: {filename}')
 
+        logger.debug(f'Looking for {directory} and filename: {filename} on GD')
 
-        # TODO put that back to CIR value!
-        cir_faa_folder_id ='1ljwzoAdKdJMJzRW9gPHDC8fkRykVH83X'
-
-        # need to lookup the id of folder eg SM0002 
-        results = self.service.files().list(q=f"'{cir_faa_folder_id}' in parents \
-                                            and name = '{directory}' ",
-                                        spaces='drive', # ie not appDataFolder or photos
-                                        fields='files(id, name)'
-                                        ).execute()
-        items = results.get('files', [])
-
+        try_again = True
+        counter = 1
         folder_id = None
-        for item in items:
-            logger.debug(f"found folder of {item['name']}")
-            folder_id= item['id']
+        while try_again:
+            # need to lookup the id of folder eg SM0002 which should be there already as this is get_cdn_url
+            results = self.service.files().list(q=f"'{self.root_folder_id}' in parents \
+                                                and name = '{directory}' ",
+                                            spaces='drive', # ie not appDataFolder or photos
+                                            fields='files(id, name)'
+                                            ).execute()
+            items = results.get('files', [])
 
-        if folder_id is None:
-            raise ValueError('Cant find folder')
+            for item in items:
+                logger.debug(f"found folder of {item['name']}")
+                folder_id= item['id']
+                try_again = False
 
-        # check for folder name in file eg youtube_dl_sDE-qZdi8p8/index.html'
+            if folder_id is None:
+                logger.warning(f'Cant find folder {directory} waiting and trying again count {counter}')
+                counter += 1
+                time.sleep(3)
+                if counter > 5:
+                    raise ValueError(f'Cant find folder {directory} and retried 5 times')
+
+        # check for sub folder in file eg youtube_dl_sDE-qZdi8p8/index.html'
         # happens doing thumbnails
 
-        # will always return a and a blank b even if there is nothing to split
         a, _, b = filename.partition('/')
 
         if b != '':
             # a: 'youtube_dl_sDE-qZdi8p8'
             # b: 'index.html'
-            logger.debug(f'xxxx need to split on a: {a} and {b}')
-
-             
+            logger.debug(f'get_cdn_url: Found a subfolder so need to split on a: {a} and {b}')
 
             # get id of the sub folder
             results = self.service.files().list(q=f"'{folder_id}' in parents \
@@ -104,13 +110,13 @@ class GDStorage(Storage):
                 folder_id = item['id']
                 filename = b
             if filename is None:
-                raise ValueError('Problem finding folder')
+                raise ValueError(f'Problem finding sub folder {a}')
 
 
         # get id of file inside folder (or sub folder)
         results = self.service.files().list(q=f"'{folder_id}' in parents \
                                             and name = '{filename}' ",
-                                        spaces='drive', # ie not appDataFolder or photos
+                                        spaces='drive', 
                                         fields='files(id, name)'
                                         ).execute()
         items = results.get('files', [])
@@ -121,12 +127,10 @@ class GDStorage(Storage):
             file_id= item['id']
 
         if file_id is None:
-            raise ValueError('Problem finding file')
+            raise ValueError(f'Problem finding file {filename} in folder_id {folder_id}')
             
         foo = "https://drive.google.com/file/d/" + file_id + "/view?usp=sharing"
-
         return foo
-        # return f'https://{self.bucket}.{self.region}.cdn.digitaloceanspaces.com/{self._get_path(key)}'
 
     def exists(self, key):
         # try:
@@ -142,50 +146,38 @@ class GDStorage(Storage):
         # else:
         #     extra_args = kwargs.get("extra_args", {'ACL': 'public-read'})
 
-        dm_hash_folder_id ='1ljwzoAdKdJMJzRW9gPHDC8fkRykVH83X'
-
-        # Files auto-archiver (CIR and linked to dave@hmsoftware.co.uk)
-        # cir_faa_folder_id ='1H2RWV89kSjjS2CJJjAF_YHW3kiXjxm69'
-        # TODO put that back to CIR value!
-        cir_faa_folder_id ='1ljwzoAdKdJMJzRW9gPHDC8fkRykVH83X'
-
-        # Assuming using filenumber as a folder eg SM0002
-        # key is 'SM0002/twitter__media_ExeUSW2UcAE6RbN.jpg'
-        
         # split on first occurance of /
         # eg SM0005
-        directory = key.split('/', 1)[0]
+        foldername = key.split('/', 1)[0]
         # eg twitter__media_asdf.jpg
         filename = key.split('/', 1)[1]
 
          # does folder eg SM0005 exist already inside parent of Files auto-archiver
-        results = self.service.files().list(q=f"'{cir_faa_folder_id}' in parents \
+        results = self.service.files().list(q=f"'{self.root_folder_id}' in parents \
                                             and mimeType='application/vnd.google-apps.folder' \
-                                            and name = '{directory}' ",
-                                        spaces='drive', # ie not appDataFolder or photos
+                                            and name = '{foldername}' ",
+                                        spaces='drive', 
                                         fields='files(id, name)'
                                         ).execute()
         items = results.get('files', [])
         folder_id_to_upload_to = None
         if len(items) > 1:
-            logger.error(f'Duplicate folder name of {directory} which should never happen')
+            logger.error(f'Duplicate folder name of {foldername} which should never happen')
 
         for item in items:
             logger.debug(f"Found existing folder of {item['name']}")
             folder_id_to_upload_to = item['id']
 
         if folder_id_to_upload_to is None:
-            # create new folder
+            logger.debug(f'Creating new folder {foldername}')
             file_metadata = {
-                'name': [directory],
+                'name': [foldername],
                 'mimeType': 'application/vnd.google-apps.folder',
-                'parents': [cir_faa_folder_id]
+                'parents': [self.root_folder_id]
             }
             gd_file = self.service.files().create(body=file_metadata, fields='id').execute()
             folder_id_to_upload_to = gd_file.get('id')
         
-
-
         # check for subfolder nema in file eg youtube_dl_sDE-qZdi8p8/out1.jpg'
         # happens doing thumbnails
 
@@ -196,7 +188,7 @@ class GDStorage(Storage):
         if b != '':
             # a: 'youtube_dl_sDE-qZdi8p8'
             # b: 'out1.jpg'
-            logger.debug(f'need to split')
+            logger.debug(f'uploadf: Found a subfolder so need to split on a: {a} and {b}')
 
             # does the 'a' folder exist already in folder_id_to_upload_to eg SM0005
             results = self.service.files().list(q=f"'{folder_id_to_upload_to}' in parents \

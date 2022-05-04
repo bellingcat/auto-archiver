@@ -87,6 +87,8 @@ def process_sheet(sheet, usefilenumber, storage, header=1, columns=GWorksheet.CO
     )
 
     gd_config = GDConfig(
+        root_folder_id=os.getenv('GD_ROOT_FOLDER_ID'),
+        # todo delete below
         bucket=os.getenv('DO_BUCKET'),
         region=os.getenv('DO_SPACES_REGION'),
         key=os.getenv('DO_SPACES_KEY'),
@@ -136,7 +138,7 @@ def process_sheet(sheet, usefilenumber, storage, header=1, columns=GWorksheet.CO
                     filenumber = gw.get_cell(row, 'filenumber')
                     logger.debug(f'filenumber is {filenumber}')
                     if filenumber == "":
-                        logger.warning(f'Logic error - the feature flag for usefilenumber is True, yet cant find a corresponding filenumber')
+                        logger.warning(f'Logic error on row {row} with url {url} - the feature flag for usefilenumber is True, yet cant find a corresponding filenumber')
                         gw.set_cell(row, 'status', 'Missing filenumber')
                         continue
                 else:
@@ -230,7 +232,8 @@ def main():
     parser.add_argument('--private', action='store_true', help='Store content without public access permission')
     parser.add_argument('--use-filenumber-as-directory', action=argparse.BooleanOptionalAction, dest='usefilenumber',  \
          help='Will save files into a subfolder on cloud storage which has the File Number eg SM3012')
-    parser.add_argument('--storage', action='store', dest='storage', default='s3', help='s3 or gd storage. Default is s3')
+    parser.add_argument('--storage', action='store', dest='storage', default='s3', \
+         help='s3 or gd storage. Default is s3. NOTE GD storage supports only using filenumber')
 
     for k, v in GWorksheet.COLUMN_NAMES.items():
         parser.add_argument(f'--col-{k}', action='store', dest=k, default=v, help=f'the name of the column to fill with {k} (defaults={v})')
@@ -242,7 +245,6 @@ def main():
 
     # https://stackoverflow.com/questions/15008758/parsing-boolean-values-with-argparse
     # filenumber is True (of type bool) when set or None when argument is not there
-    logger.debug(f'usefilenumber type is {type(args.usefilenumber)}')
     # explicitly setting usefilenumber to a bool
     usefilenumber = False
     if args.usefilenumber:

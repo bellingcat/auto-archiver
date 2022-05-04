@@ -4,7 +4,7 @@
 
 
 		{
-			"name": "Test Hashing",
+			"name": "Test Hashing (davemateer@gmail)",
 			"type": "python",
 			"request": "launch",
 			"program": "auto_archive.py",
@@ -43,13 +43,14 @@
 			"args": ["--sheet","Kayleigh - test - DM", "--header=2"]
 		},
 		{
-			"name": "Kayleigh - test",
+			"name": "Kayleigh - test (dave@hms)",
 			"type": "python",
 			"request": "launch",
 			"program": "auto_archive.py",
 			"console": "integratedTerminal",
 			"justMyCode": true,
-			"args": ["--sheet","Kayleigh - test", "--header=2"]
+			// "args": ["--sheet","Kayleigh - test", "--header=2"]
+			"args": ["--sheet","Kayleigh - test", "--header=2","--use-filenumber-as-directory", "--storage=gd"]
 		},
 		{
 			"name": "Python: Current File",

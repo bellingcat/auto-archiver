@@ -72,9 +72,12 @@ class TelethonArchiver(Archiver):
                 if filenumber is not None:
                     key = filenumber + "/" + key              
                 
-                cdn_url = self.storage.get_cdn_url(key)
+                # problem if gd storage, the html file isn't ready yet so don't know the url
+                # cdn_url = self.storage.get_cdn_url(key)
 
                 if check_if_exists and self.storage.exists(key):
+                    # only s3 storage supports storgae.exists as haven't implemented on gd
+                    cdn_url = self.storage.get_cdn_url(key)
                     status = 'already archived'
                     return ArchiveResult(status='already archived', cdn_url=cdn_url, title=post.message, timestamp=post.date, screenshot=screenshot)
 
