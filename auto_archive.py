@@ -17,10 +17,10 @@ from utils import GWorksheet, mkdir_if_not_exists
 
 import sys
 
-from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
-from googleapiclient.http import MediaFileUpload
-from google.oauth2 import service_account
+# from googleapiclient.discovery import build
+# from googleapiclient.errors import HttpError
+# from googleapiclient.http import MediaFileUpload
+# from google.oauth2 import service_account
 
 logger.add("logs/1trace.log", level="TRACE")
 logger.add("logs/2info.log", level="INFO")

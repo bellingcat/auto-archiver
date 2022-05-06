@@ -3,7 +3,6 @@ tmp/
 .DS_Store
 expmt/
 service_account.json
-drive_service_account.json
 __pycache__/
 ._*
 anu.html
