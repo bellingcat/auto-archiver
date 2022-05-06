@@ -23,7 +23,12 @@ PATH=/usr/local/bin:$PATH
 
 # application log files are in ~/auto_archive/logs
 # pipenv run python auto_archive.py --sheet "Test Hashing" >> /home/dave/log.txt 2>&1
-pipenv run python auto_archive.py --sheet "Test Hashing" 
+
+# this will default to s3
+# pipenv run python auto_archive.py --sheet "Test Hashing" 
+
+# make sure the correct gd storage is selected
+pipenv run python auto_archive.py --sheet "Test Hashing" --use-filenumber-as-directory --storage=gd
 
 
 ## cron job output is in 
