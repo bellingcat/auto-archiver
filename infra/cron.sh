@@ -34,7 +34,7 @@ PATH=/usr/local/bin:$PATH
 # pipenv run python auto_archive.py --sheet "Test Hashing" --use-filenumber-as-directory --storage=gd
 
 # make sure the correct gd storage is selected
-pipenv run python auto_archive.py --sheet "Kayleigh - test" --use-filenumber-as-directory --storage=gd
+pipenv run python auto_archive.py --sheet "Kayleigh - test" --header=2 --use-filenumber-as-directory --storage=gd
 
 
 ## cron job output is in 
