@@ -15,15 +15,15 @@
 
 			"args": ["--sheet","Test Hashing","--use-filenumber-as-directory", "--storage=gd"]
 		},
-		{
-			"name": "Python: auto_archive CIR --sheet",
-			"type": "python",
-			"request": "launch",
-			"program": "auto_archive.py",
-			"console": "integratedTerminal",
-			"justMyCode": true,
-			"args": ["--sheet","Test Hashing CIR"]
-		},
+		// {
+		// 	"name": "Python: auto_archive CIR --sheet",
+		// 	"type": "python",
+		// 	"request": "launch",
+		// 	"program": "auto_archive.py",
+		// 	"console": "integratedTerminal",
+		// 	"justMyCode": true,
+		// 	"args": ["--sheet","Test Hashing CIR"]
+		// },
 		{
 			"name": "Archive - Dearbhla",
 			"type": "python",
@@ -33,17 +33,17 @@
 			"justMyCode": true,
 			"args": ["--sheet","Archive - Dearbhla"]
 		},
+		// {
+		// 	"name": "Kayleigh - test - DM",
+		// 	"type": "python",
+		// 	"request": "launch",
+		// 	"program": "auto_archive.py",
+		// 	"console": "integratedTerminal",
+		// 	"justMyCode": true,
+		// 	"args": ["--sheet","Kayleigh - test - DM", "--header=2"]
+		// },
 		{
-			"name": "Kayleigh - test - DM",
-			"type": "python",
-			"request": "launch",
-			"program": "auto_archive.py",
-			"console": "integratedTerminal",
-			"justMyCode": true,
-			"args": ["--sheet","Kayleigh - test - DM", "--header=2"]
-		},
-		{
-			"name": "Kayleigh - test (dave@hms)",
+			"name": "Kayleigh - test (dave@hmsoftware.co.uk)",
 			"type": "python",
 			"request": "launch",
 			"program": "auto_archive.py",
