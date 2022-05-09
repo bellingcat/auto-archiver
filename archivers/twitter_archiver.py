@@ -41,7 +41,7 @@ class TwitterArchiver(Archiver):
             elif type(media) == Gif:
                 urls.append(media.variants[0].url)
             elif type(media) == Photo:
-                urls.append(media.fullUrl)
+                urls.append(media.fullUrl.replace('name=large', 'name=orig'))
             else:
                 logger.warning(f"Could not get media URL of {media}")
 
