@@ -76,13 +76,7 @@ def process_sheet(sheet, header=1, columns=GWorksheet.COLUMN_NAMES):
         api_hash=os.getenv('TELEGRAM_API_HASH')
     )
 
-    options = webdriver.FirefoxOptions()
-    options.headless = True
-    options.set_preference('network.protocol-handler.external.tg', False)
-
-    driver = webdriver.Firefox(options=options)
-    driver.set_window_size(1400, 2000)
-    driver.set_page_load_timeout(10)
+    
 
     # loop through worksheets to check
     for ii, wks in enumerate(sh.worksheets()):
@@ -122,7 +116,17 @@ def process_sheet(sheet, header=1, columns=GWorksheet.COLUMN_NAMES):
                 gw.set_cell(row, 'status', 'Archive in progress')
 
                 url = expand_url(url)
+                
 
+                # make a new driver so each spreadsheet row is idempotent
+                options = webdriver.FirefoxOptions()
+                options.headless = True
+                options.set_preference('network.protocol-handler.external.tg', False)
+
+                driver = webdriver.Firefox(options=options)
+                driver.set_window_size(1400, 2000)
+                # in seconds, telegram screenshots catch which don't come back
+                driver.set_page_load_timeout(120)
                 for archiver in active_archivers:
                     logger.debug(f'Trying {archiver} on row {row}')
 
@@ -143,13 +147,13 @@ def process_sheet(sheet, header=1, columns=GWorksheet.COLUMN_NAMES):
                             f'{archiver} did not succeed on row {row}, final status: {result.status}')
                         result.status = archiver.name + \
                             ": " + str(result.status)
-
+                # get rid of driver so can reload on next row
+                driver.quit()
                 if result:
                     update_sheet(gw, row, result)
                 else:
                     gw.set_cell(row, 'status', 'failed: no archiver')
         logger.success(f'Finshed worksheet {wks.title}')
-    driver.quit()
 
 
 def main():
