@@ -1,18 +1,16 @@
 # import os
 import datetime
 # import argparse
-import requests
 import shutil
 # import gspread
 from loguru import logger
 from dotenv import load_dotenv
-# from selenium import webdriver
+
 import traceback
 
 # import archivers
 from archivers import TelethonArchiver, TelegramArchiver, TiktokArchiver, YoutubeDLArchiver, TwitterArchiver, WaybackArchiver, ArchiveResult
-from storages import S3Storage
-from utils import GWorksheet, mkdir_if_not_exists
+from utils import GWorksheet, mkdir_if_not_exists, expand_url
 from configs import Config
 
 load_dotenv()
@@ -52,17 +50,6 @@ def update_sheet(gw, row, result: ArchiveResult):
     gw.batch_set_cell(cell_updates)
 
 
-def expand_url(url):
-    # expand short URL links
-    if 'https://t.co/' in url:
-        try:
-            r = requests.get(url)
-            url = r.url
-        except:
-            logger.error(f'Failed to expand url {url}')
-    return url
-
-
 def process_sheet(c: Config, sheet, header=1, columns=GWorksheet.COLUMN_NAMES):
     sh = c.gsheets_client.open(sheet)
 
@@ -87,7 +74,8 @@ def process_sheet(c: Config, sheet, header=1, columns=GWorksheet.COLUMN_NAMES):
 
         # order matters, first to succeed excludes remaining
         active_archivers = [
-            TelethonArchiver(storage, c.webdriver, c.telegram_config),
+            # TODO: uncomment once credentials are ready
+            # TelethonArchiver(storage, c.webdriver, c.telegram_config),
             TelegramArchiver(storage, c.webdriver),
             TiktokArchiver(storage, c.webdriver),
             YoutubeDLArchiver(storage, c.webdriver),
