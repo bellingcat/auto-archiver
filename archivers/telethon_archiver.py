@@ -9,7 +9,6 @@ from telethon.sync import TelegramClient
 from configs import TelegramConfig
 
 
-
 class TelethonArchiver(Archiver):
     name = "telethon"
     link_pattern = re.compile(r"https:\/\/t\.me(\/c){0,1}\/(.+)\/(.+)")
@@ -71,8 +70,8 @@ class TelethonArchiver(Archiver):
                 message = post.message
                 for mp in media_posts:
                     if len(mp.message) > len(message): message = mp.message
-                    filename = self.client.download_media(mp.media, f'tmp/{chat}_{group_id}/{mp.id}')
-                    key = filename.split('tmp/')[1]
+                    filename = self.client.download_media(mp.media, f'{Archiver.TMP_FOLDER}{chat}_{group_id}/{mp.id}')
+                    key = filename.split(Archiver.TMP_FOLDER)[1]
                     self.storage.upload(filename, key)
                     hash = self.get_hash(filename)
                     cdn_url = self.storage.get_cdn_url(key)
@@ -84,8 +83,8 @@ class TelethonArchiver(Archiver):
                 return ArchiveResult(status=status, cdn_url=page_cdn, title=post.message, timestamp=post.date, hash=page_hash, screenshot=screenshot)
             elif len(media_posts) == 1:
                 key = self.get_key(f'{chat}_{post_id}')
-                filename = self.client.download_media(post.media, f'tmp/{key}')
-                key = filename.split('tmp/')[1].replace(" ", "")
+                filename = self.client.download_media(post.media, f'{Archiver.TMP_FOLDER}{key}')
+                key = filename.split(Archiver.TMP_FOLDER)[1].replace(" ", "")
                 self.storage.upload(filename, key)
                 hash = self.get_hash(filename)
                 cdn_url = self.storage.get_cdn_url(key)

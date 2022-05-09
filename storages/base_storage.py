@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 
 
 class Storage(ABC):
+    TMP_FOLDER = "tmp/"
     @abstractmethod
     def __init__(self, config): pass
 

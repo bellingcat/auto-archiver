@@ -64,27 +64,7 @@ def expand_url(url):
 
 
 def process_sheet(c: Config, sheet, header=1, columns=GWorksheet.COLUMN_NAMES):
-    # gc = gspread.service_account(filename='service_account.json')
     sh = c.gsheets_client.open(sheet)
-
-    # s3_config = S3Config(
-    #     bucket=os.getenv('DO_BUCKET'),
-    #     region=os.getenv('DO_SPACES_REGION'),
-    #     key=os.getenv('DO_SPACES_KEY'),
-    #     secret=os.getenv('DO_SPACES_SECRET')
-    # )
-    # telegram_config = archivers.TelegramConfig(
-    #     api_id=os.getenv('TELEGRAM_API_ID'),
-    #     api_hash=os.getenv('TELEGRAM_API_HASH')
-    # )
-
-    # options = webdriver.FirefoxOptions()
-    # options.headless = True
-    # options.set_preference('network.protocol-handler.external.tg', False)
-
-    # driver = webdriver.Firefox(options=options)
-    # driver.set_window_size(1400, 2000)
-    # driver.set_page_load_timeout(10)
 
     # loop through worksheets to check
     for ii, wks in enumerate(sh.worksheets()):
@@ -102,17 +82,17 @@ def process_sheet(c: Config, sheet, header=1, columns=GWorksheet.COLUMN_NAMES):
             continue
 
         # archives will be in a folder 'doc_name/worksheet_name'
-        c.s3_config.folder = f'{sheet.replace(" ", "_")}/{wks.title.replace(" ", "_")}/'
-        s3_client = S3Storage(c.s3_config)
+        c.set_folder(f'{sheet.replace(" ", "_")}/{wks.title.replace(" ", "_")}/')
+        storage = c.get_storage()
 
         # order matters, first to succeed excludes remaining
         active_archivers = [
-            TelethonArchiver(s3_client, c.webdriver, c.telegram_config),
-            TelegramArchiver(s3_client, c.webdriver),
-            TiktokArchiver(s3_client, c.webdriver),
-            YoutubeDLArchiver(s3_client, c.webdriver),
-            TwitterArchiver(s3_client, c.webdriver),
-            WaybackArchiver(s3_client, c.webdriver)
+            TelethonArchiver(storage, c.webdriver, c.telegram_config),
+            TelegramArchiver(storage, c.webdriver),
+            TiktokArchiver(storage, c.webdriver),
+            YoutubeDLArchiver(storage, c.webdriver),
+            TwitterArchiver(storage, c.webdriver),
+            WaybackArchiver(storage, c.webdriver)
         ]
 
         # loop through rows in worksheet

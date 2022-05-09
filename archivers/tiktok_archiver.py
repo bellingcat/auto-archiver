@@ -18,7 +18,7 @@ class TiktokArchiver(Archiver):
             info = tiktok_downloader.info_post(url)
             key = self.get_key(f'{info.id}.mp4')
             cdn_url = self.storage.get_cdn_url(key)
-            filename = 'tmp/' + key
+            filename = Archiver.TMP_FOLDER + key
 
             if check_if_exists and self.storage.exists(key):
                 status = 'already archived'

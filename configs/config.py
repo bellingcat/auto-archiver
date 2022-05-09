@@ -3,19 +3,29 @@ import argparse, json
 import gspread
 from loguru import logger
 from selenium import webdriver
+from storages.local_storage import LocalStorage
 
 from utils.gworksheet import GWorksheet
-from storages import S3Config
+from storages import S3Config, S3Storage
 from .wayback_config import WaybackConfig
 from .telegram_config import TelegramConfig
+from archivers import Archiver
+
 
 class Config:
     """
     Controls the current execution parameters and manages API configurations
+    Usage:
+      c = Config() # initializes the argument parser
+      c.parse() # parses the values and initializes the Services and API clients
+      # you can then access the Services and APIs like
+      c.s3_config
+
     """
 
     def __init__(self):
         self.parser = self.get_argument_parser()
+        self.folder = ""
 
     def parse(self):
         self.args = self.parser.parse_args()
@@ -35,7 +45,8 @@ class Config:
         assert self.sheet is not None, "'sheet' must be provided either through command line or configuration file"
 
         self.header = int(getattr(self.args, "header") or execution.get("header", 1))
-        self.tmp_folder = execution.get("tmp_folder", "tmp/")
+        self.tmp_folder = execution.get("tmp_folder", Archiver.TMP_FOLDER)
+        Archiver.TMP_FOLDER = self.tmp_folder
 
         self.storage = execution.get("storage", "s3")
 
@@ -57,9 +68,10 @@ class Config:
         self.webdriver.set_window_size(1400, 2000)
         self.webdriver.set_page_load_timeout(self.selenium_timeout)
 
+        secrets = self.config.get("secrets", {})
         # APIs and service configurations
-        if "s3" in self.config:
-            s3 = self.config["s3"]
+        if "s3" in secrets:
+            s3 = secrets["s3"]
             self.s3_config = S3Config(
                 bucket=s3["bucket"],
                 region=s3["region"],
@@ -69,29 +81,32 @@ class Config:
             self.s3_config.private = getattr(self.args, "private") or s3["private"] or self.s3_config.private
             self.s3_config.endpoint_url = s3["endpoint_url"] or self.s3_config.endpoint_url
             self.s3_config.cdn_url = s3["cdn_url"] or self.s3_config.cdn_url
+            self.s3_config.key_path = s3["key_path"] or self.s3_config.key_path
+            self.s3_config.no_folder = s3["no_folder"] or self.s3_config.no_folder
         else:
             logger.debug(f"'s3' key not present in the {self.config_file=}")
 
-        if "wayback" in self.config:
+        if "wayback" in secrets:
             self.wayback_config = WaybackConfig(
-                key=self.config["wayback"]["key"],
-                secret=self.config["wayback"]["secret"],
+                key=secrets["wayback"]["key"],
+                secret=secrets["wayback"]["secret"],
             )
         else:
             logger.debug(f"'wayback' key not present in the {self.config_file=}")
 
-        if "telegram" in self.config:
+        if "telegram" in secrets:
             self.telegram_config = TelegramConfig(
-                api_id=self.config["telegram"]["api_id"],
-                api_hash=self.config["telegram"]["api_hash"]
+                api_id=secrets["telegram"]["api_id"],
+                api_hash=secrets["telegram"]["api_hash"]
             )
         else:
             logger.debug(f"'telegram' key not present in the {self.config_file=}")
 
         self.gsheets_client = gspread.service_account(
-            filename=self.config.get("google_api", {}).get("filename", 'service_account.json')
+            filename=secrets.get("google_api", {}).get("filename", 'service_account.json')
         )
 
+        del self.config["secrets"]
 
     def get_argument_parser(self):
         parser = argparse.ArgumentParser(description='Automatically archive social media videos from a Google Sheets document')
@@ -105,6 +120,19 @@ class Config:
             parser.add_argument(f'--col-{k}', action='store', dest=k, help=f'the name of the column to fill with {k} (default={v})')
 
         return parser
+
+    def set_folder(self, folder):
+        # update the folder in each of the storages
+        self.folder = folder
+        self.s3_config.folder = folder
+
+    def get_storage(self):
+        if self.storage == "s3":
+            return S3Storage(self.s3_config)
+        elif self.storage == "local":
+            return LocalStorage(self.folder)
+        raise f"storage {self.storage} not yet implemented"
+
 
     def __str__(self) -> str:
         return json.dumps({

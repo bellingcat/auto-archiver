@@ -52,7 +52,7 @@ class TelegramArchiver(Archiver):
         video_id = video_url.split('/')[-1].split('?')[0]
         key = self.get_key(video_id)
 
-        filename = 'tmp/' + key
+        filename = Archiver.TMP_FOLDER + key
         cdn_url = self.storage.get_cdn_url(key)
 
         if check_if_exists and self.storage.exists(key):
