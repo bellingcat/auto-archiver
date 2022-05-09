@@ -92,4 +92,5 @@ graph TD
 ```mermaid
 graph TD
     A(BaseStorage) -->|parent of| B(S3Storage)
+    C(BaseStorage) -->|parent of| C(LocalStorage)
 ```
