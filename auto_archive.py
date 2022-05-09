@@ -5,7 +5,7 @@ import requests
 import shutil
 import gspread
 from loguru import logger
-# from dotenv import load_dotenv
+from dotenv import load_dotenv
 from selenium import webdriver
 import traceback
 
