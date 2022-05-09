@@ -1,7 +1,7 @@
 import os
 import datetime
 import argparse
-import string
+# import string
 import requests
 import shutil
 import gspread
