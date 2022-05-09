@@ -5,16 +5,12 @@ from urllib.parse import urlparse
 
 from .base_archiver import Archiver, ArchiveResult
 
-import traceback
-
 
 class TwitterArchiver(Archiver):
     name = "twitter"
 
     # DM added filenumber params and storage 
     def download(self, url, check_if_exists=False, filenumber=None):
-        if filenumber is not None:
-            logger.debug(f'filenumber is {filenumber}')
 
         if 'twitter.com' != self.get_netloc(url):
             return False
@@ -30,11 +26,10 @@ class TwitterArchiver(Archiver):
 
         try:
             tweet = next(scr.get_items())
-        # except:
-        except Exception as e:
-            # logger.warning('wah wah')
-            # DM 
-            logger.warning(f'TwitterArchiver cant get tweet for url {url} - can happen if a media sensitive tweet: \n{traceback.format_exc()}')
+        except Exception as ex:
+            template = "TwitterArchiver cant get tweet and threw, which can happen if a media sensitive tweet. \n type: {0} occurred. \n arguments:{1!r}"
+            message = template.format(type(ex).__name__, ex.args)
+            logger.warning(message)
             return False
 
         if tweet.media is None:
@@ -50,15 +45,7 @@ class TwitterArchiver(Archiver):
             elif type(media) == Gif:
                 urls.append(media.variants[0].url)
             elif type(media) == Photo:
-                # https://webtrickz.com/download-images-in-original-size-on-twitter/
-                # 'https://pbs.twimg.com/media/ExeUSW2UcAE6RbN?format=jpg&name=large'
-                # we want name=orig
-                # so can get original quality
-                foo = media.fullUrl
-                bar = foo.replace("name=large", "name=orig")
-
-                # urls.append(media.fullUrl)
-                urls.append(bar)
+                urls.append(media.fullUrl.replace('name=large', 'name=orig'))
             else:
                 logger.warning(f"Could not get media URL of {media}")
 
