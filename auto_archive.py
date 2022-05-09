@@ -108,7 +108,7 @@ def process_sheet(sheet, header=1, columns=GWorksheet.COLUMN_NAMES):
             archivers.TelethonArchiver(s3_client, driver, telegram_config),
             archivers.TelegramArchiver(s3_client, driver),
             archivers.TiktokArchiver(s3_client, driver),
-            archivers.YoutubeDLArchiver(s3_client, driver),
+            archivers.YoutubeDLArchiver(s3_client, driver, os.getenv('FACEBOOK_COOKIE')),
             archivers.TwitterArchiver(s3_client, driver),
             archivers.WaybackArchiver(s3_client, driver)
         ]

@@ -5,17 +5,21 @@ import yt_dlp
 from loguru import logger
 
 from .base_archiver import Archiver, ArchiveResult
-
+from storages import Storage
 
 class YoutubeDLArchiver(Archiver):
     name = "youtube_dl"
     ydl_opts = {'outtmpl': 'tmp/%(id)s.%(ext)s', 'quiet': False}
 
+    def __init__(self, storage: Storage, driver, fb_cookie):
+        super().__init__(storage, driver)
+        self.fb_cookie = fb_cookie
+
     def download(self, url, check_if_exists=False):
         netloc = self.get_netloc(url)
-        if netloc in ['facebook.com', 'www.facebook.com'] and os.getenv('FB_COOKIE'):
-            logger.info('Using Facebook cookie')
-            yt_dlp.utils.std_headers['cookie'] = os.getenv('FB_COOKIE')
+        if netloc in ['facebook.com', 'www.facebook.com']:
+            logger.debug('Using Facebook cookie')
+            yt_dlp.utils.std_headers['cookie'] = self.fb_cookie
 
         ydl = yt_dlp.YoutubeDL(YoutubeDLArchiver.ydl_opts)
         cdn_url = None
