@@ -92,7 +92,7 @@ def process_sheet(sheet, header=1, columns=GWorksheet.COLUMN_NAMES):
 
     # loop through worksheets to check
     for ii, wks in enumerate(sh.worksheets()):
-        logger.info(f'Opening worksheet ii={ii}: {wks.title} header={header}')
+        logger.info(f'Opening worksheet {ii=}: {wks.title=} {header=}')
         gw = GWorksheet(wks, header_row=header, columns=columns)
 
         if not gw.col_exists('url'):
