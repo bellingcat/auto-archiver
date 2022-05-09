@@ -5,15 +5,20 @@ import requests
 import shutil
 import gspread
 from loguru import logger
-from dotenv import load_dotenv
+# from dotenv import load_dotenv
 from selenium import webdriver
 import traceback
 
 import archivers
 from storages import S3Storage, S3Config
 from utils import GWorksheet, mkdir_if_not_exists
+import sys
 
-load_dotenv()
+logger.add("logs/1trace.log", level="TRACE")
+logger.add("logs/2info.log", level="INFO")
+logger.add("logs/3success.log", level="SUCCESS")
+logger.add("logs/4warning.log", level="WARNING")
+logger.add("logs/5error.log", level="ERROR")
 
 
 def update_sheet(gw, row, result: archivers.ArchiveResult):
@@ -86,7 +91,7 @@ def process_sheet(sheet, header=1, columns=GWorksheet.COLUMN_NAMES):
 
     # loop through worksheets to check
     for ii, wks in enumerate(sh.worksheets()):
-        logger.info(f'Opening worksheet {ii}: "{wks.title}" header={header}')
+        logger.info(f'Opening worksheet ii={ii}: {wks.title} header={header}')
         gw = GWorksheet(wks, header_row=header, columns=columns)
 
         if not gw.col_exists('url'):
@@ -151,8 +156,9 @@ def process_sheet(sheet, header=1, columns=GWorksheet.COLUMN_NAMES):
         logger.success(f'Finshed worksheet {wks.title}')
     driver.quit()
 
-
+@logger.catch
 def main():
+    logger.debug(f'Passed args:{sys.argv}')
     parser = argparse.ArgumentParser(
         description='Automatically archive social media videos from a Google Sheets document')
     parser.add_argument('--sheet', action='store', dest='sheet', help='the name of the google sheets document', required=True)
