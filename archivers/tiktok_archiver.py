@@ -3,7 +3,7 @@ import tiktok_downloader
 from loguru import logger
 
 from .base_archiver import Archiver, ArchiveResult
-
+from storages import Storage
 
 class TiktokArchiver(Archiver):
     name = "tiktok"
@@ -18,7 +18,7 @@ class TiktokArchiver(Archiver):
             info = tiktok_downloader.info_post(url)
             key = self.get_key(f'{info.id}.mp4')
             cdn_url = self.storage.get_cdn_url(key)
-            filename = Archiver.TMP_FOLDER + key
+            filename = Storage.TMP_FOLDER + key
 
             if check_if_exists and self.storage.exists(key):
                 status = 'already archived'

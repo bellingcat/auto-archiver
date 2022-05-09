@@ -5,11 +5,11 @@ import yt_dlp
 from loguru import logger
 
 from .base_archiver import Archiver, ArchiveResult
-
+from storages import Storage
 
 class YoutubeDLArchiver(Archiver):
     name = "youtube_dl"
-    ydl_opts = {'outtmpl': f'{Archiver.TMP_FOLDER}%(id)s.%(ext)s', 'quiet': False}
+    ydl_opts = {'outtmpl': f'{Storage.TMP_FOLDER}%(id)s.%(ext)s', 'quiet': False}
 
     def download(self, url, check_if_exists=False):
         netloc = self.get_netloc(url)

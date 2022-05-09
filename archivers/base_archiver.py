@@ -30,7 +30,6 @@ class ArchiveResult:
 
 class Archiver(ABC):
     name = "default"
-    TMP_FOLDER = "tmp/"
 
     def __init__(self, storage: Storage, driver):
         self.storage = storage
@@ -61,7 +60,7 @@ class Archiver(ABC):
         page += f"</body></html>"
 
         page_key = self.get_key(urlparse(url).path.replace("/", "_") + ".html")
-        page_filename = Archiver.TMP_FOLDER + page_key
+        page_filename = Storage.TMP_FOLDER + page_key
         page_cdn = self.storage.get_cdn_url(page_key)
 
         with open(page_filename, "w") as f:
@@ -86,7 +85,7 @@ class Archiver(ABC):
             if '.' not in path:
                 key += '.jpg'
 
-            filename = Archiver.TMP_FOLDER + key
+            filename = Storage.TMP_FOLDER + key
 
             d = requests.get(media_url, headers=headers)
             with open(filename, 'wb') as f:
@@ -127,7 +126,7 @@ class Archiver(ABC):
     def get_screenshot(self, url):
         key = self.get_key(urlparse(url).path.replace(
             "/", "_") + datetime.datetime.utcnow().isoformat().replace(" ", "_") + ".png")
-        filename = Archiver.TMP_FOLDER + key
+        filename = Storage.TMP_FOLDER + key
 
         try:
             self.driver.get(url)

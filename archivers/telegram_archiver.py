@@ -6,6 +6,7 @@ import re
 import html
 
 from .base_archiver import Archiver, ArchiveResult
+from storages import Storage
 
 
 class TelegramArchiver(Archiver):
@@ -52,7 +53,7 @@ class TelegramArchiver(Archiver):
         video_id = video_url.split('/')[-1].split('?')[0]
         key = self.get_key(video_id)
 
-        filename = Archiver.TMP_FOLDER + key
+        filename = Storage.TMP_FOLDER + key
         cdn_url = self.storage.get_cdn_url(key)
 
         if check_if_exists and self.storage.exists(key):

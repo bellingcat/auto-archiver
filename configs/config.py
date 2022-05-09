@@ -9,7 +9,7 @@ from utils.gworksheet import GWorksheet
 from storages import S3Config, S3Storage
 from .wayback_config import WaybackConfig
 from .telegram_config import TelegramConfig
-from archivers import Archiver
+from storages import Storage
 
 
 class Config:
@@ -45,8 +45,8 @@ class Config:
         assert self.sheet is not None, "'sheet' must be provided either through command line or configuration file"
 
         self.header = int(getattr(self.args, "header") or execution.get("header", 1))
-        self.tmp_folder = execution.get("tmp_folder", Archiver.TMP_FOLDER)
-        Archiver.TMP_FOLDER = self.tmp_folder
+        self.tmp_folder = execution.get("tmp_folder", Storage.TMP_FOLDER)
+        Storage.TMP_FOLDER = self.tmp_folder
 
         self.storage = execution.get("storage", "s3")
 
