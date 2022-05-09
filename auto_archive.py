@@ -20,6 +20,7 @@ logger.add("logs/3success.log", level="SUCCESS")
 logger.add("logs/4warning.log", level="WARNING")
 logger.add("logs/5error.log", level="ERROR")
 
+load_dotenv()
 
 def update_sheet(gw, row, result: archivers.ArchiveResult):
     cell_updates = []
