@@ -105,13 +105,14 @@ def process_sheet(sheet, usefilenumber, storage, header=1, columns=GWorksheet.CO
         logger.info(f'Opening worksheet ii={ii}: {wks.title} header={header}')
         gw = GWorksheet(wks, header_row=header, columns=columns)
 
+        # DM changed debug to info to stop noise in production
         if not gw.col_exists('url'):
-            logger.warning(
+            logger.info(
                 f'No "{columns["url"]}" column found, skipping worksheet {wks.title}')
             continue
 
         if not gw.col_exists('status'):
-            logger.warning(
+            logger.info(
                 f'No "{columns["status"]}" column found, skipping worksheet {wks.title}')
             continue
 
