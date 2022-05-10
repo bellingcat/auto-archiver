@@ -137,10 +137,11 @@ class Config:
         raise f"storage {self.storage} not yet implemented"
 
     def destroy_webdriver(self):
-        if self.webdriver is not None:
+        if self.webdriver is not None and type(self.webdriver) != str:
             self.webdriver.quit()
 
     def recreate_webdriver(self):
+        self.destroy_webdriver()
         options = webdriver.FirefoxOptions()
         options.headless = True
         options.set_preference('network.protocol-handler.external.tg', False)
