@@ -10,3 +10,4 @@ anu.html
 .pytest_cach
 anon*
 config.json
+config-*.json
