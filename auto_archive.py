@@ -74,8 +74,7 @@ def process_sheet(c: Config, sheet, header=1, columns=GWorksheet.COLUMN_NAMES):
 
         # order matters, first to succeed excludes remaining
         active_archivers = [
-            # TODO: uncomment once credentials are ready
-            # TelethonArchiver(storage, c.webdriver, c.telegram_config),
+            TelethonArchiver(storage, c.webdriver, c.telegram_config),
             TelegramArchiver(storage, c.webdriver),
             TiktokArchiver(storage, c.webdriver),
             YoutubeDLArchiver(storage, c.webdriver),
