@@ -42,7 +42,6 @@ class TelethonArchiver(Archiver):
             return False
 
         status = "success"
-        screenshot = self.get_screenshot(url)
 
         with self.client.start():
             matches = list(matches[0])
@@ -56,6 +55,8 @@ class TelethonArchiver(Archiver):
                 return False
 
             media_posts = self._get_media_posts_in_group(chat, post)
+            
+            screenshot = self.get_screenshot(url)
 
             if len(media_posts) > 1:
                 key = self.get_html_key(url)
@@ -80,7 +81,7 @@ class TelethonArchiver(Archiver):
 
                 page_cdn, page_hash, _ = self.generate_media_page_html(url, uploaded_media, html.escape(str(post)))
 
-                return ArchiveResult(status=status, cdn_url=page_cdn, title=post.message, timestamp=post.date, hash=page_hash, screenshot=screenshot)
+                return ArchiveResult(status=status, cdn_url=page_cdn, title=message, timestamp=post.date, hash=page_hash, screenshot=screenshot)
             elif len(media_posts) == 1:
                 key = self.get_key(f'{chat}_{post_id}')
                 filename = self.client.download_media(post.media, f'{Storage.TMP_FOLDER}{key}')
