@@ -61,15 +61,20 @@ class Config:
         # selenium driver
         selenium_configs = execution.get("selenium", {})
         self.selenium_timeout = int(selenium_configs.get("timeout_seconds", 10))
-        options = webdriver.FirefoxOptions()
-        options.headless = True
-        options.set_preference('network.protocol-handler.external.tg', False)
-        self.webdriver = webdriver.Firefox(options=options)
-        self.webdriver.set_window_size(1400, 2000)
-        self.webdriver.set_page_load_timeout(self.selenium_timeout)
+        self.webdriver = "not initalized"
 
-        secrets = self.config.get("secrets", {})
         # APIs and service configurations
+        secrets = self.config.get("secrets", {})
+
+        # google sheets config
+        self.gsheets_client = gspread.service_account(
+            filename=secrets.get("google_api", {}).get("filename", 'service_account.json')
+        )
+
+        # facebook config
+        self.facebook_cookie = secrets.get("facebook", {}).get("cookie", None)
+
+        # s3 config
         if "s3" in secrets:
             s3 = secrets["s3"]
             self.s3_config = S3Config(
@@ -86,6 +91,7 @@ class Config:
         else:
             logger.debug(f"'s3' key not present in the {self.config_file=}")
 
+        # wayback machine config
         if "wayback" in secrets:
             self.wayback_config = WaybackConfig(
                 key=secrets["wayback"]["key"],
@@ -94,6 +100,7 @@ class Config:
         else:
             logger.debug(f"'wayback' key not present in the {self.config_file=}")
 
+        # telethon config
         if "telegram" in secrets:
             self.telegram_config = TelegramConfig(
                 api_id=secrets["telegram"]["api_id"],
@@ -101,10 +108,6 @@ class Config:
             )
         else:
             logger.debug(f"'telegram' key not present in the {self.config_file=}")
-
-        self.gsheets_client = gspread.service_account(
-            filename=secrets.get("google_api", {}).get("filename", 'service_account.json')
-        )
 
         del self.config["secrets"]
 
@@ -133,6 +136,17 @@ class Config:
             return LocalStorage(self.folder)
         raise f"storage {self.storage} not yet implemented"
 
+    def destroy_webdriver(self):
+        if self.webdriver is not None:
+            self.webdriver.quit()
+
+    def recreate_webdriver(self):
+        options = webdriver.FirefoxOptions()
+        options.headless = True
+        options.set_preference('network.protocol-handler.external.tg', False)
+        self.webdriver = webdriver.Firefox(options=options)
+        self.webdriver.set_window_size(1400, 2000)
+        self.webdriver.set_page_load_timeout(self.selenium_timeout)
 
     def __str__(self) -> str:
         return json.dumps({
