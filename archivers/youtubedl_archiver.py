@@ -11,11 +11,15 @@ class YoutubeDLArchiver(Archiver):
     name = "youtube_dl"
     ydl_opts = {'outtmpl': f'{Storage.TMP_FOLDER}%(id)s.%(ext)s', 'quiet': False}
 
+    def __init__(self, storage: Storage, driver, fb_cookie):
+        super().__init__(storage, driver)
+        self.fb_cookie = fb_cookie
+
     def download(self, url, check_if_exists=False):
         netloc = self.get_netloc(url)
-        if netloc in ['facebook.com', 'www.facebook.com'] and os.getenv('FB_COOKIE'):
-            logger.info('Using Facebook cookie')
-            yt_dlp.utils.std_headers['cookie'] = os.getenv('FB_COOKIE')
+        if netloc in ['facebook.com', 'www.facebook.com']:
+            logger.debug('Using Facebook cookie')
+            yt_dlp.utils.std_headers['cookie'] = self.fb_cookie
 
         ydl = yt_dlp.YoutubeDL(YoutubeDLArchiver.ydl_opts)
         cdn_url = None
@@ -30,6 +34,13 @@ class YoutubeDLArchiver(Archiver):
         if info.get('is_live', False):
             logger.warning("Live streaming media, not archiving now")
             return ArchiveResult(status="Streaming media")
+        if 'twitter.com' in netloc:
+            if 'https://twitter.com/' in info['webpage_url']:
+                logger.info('Found https://twitter.com/ in the download url from Twitter')
+            else:
+                logger.info('Found a linked video probably in a link in a tweet - not getting that video as there may be images in the tweet')
+                return False
+
 
         if check_if_exists:
             if 'entries' in info:

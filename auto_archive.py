@@ -12,6 +12,13 @@ import traceback
 from archivers import TelethonArchiver, TelegramArchiver, TiktokArchiver, YoutubeDLArchiver, TwitterArchiver, WaybackArchiver, ArchiveResult
 from utils import GWorksheet, mkdir_if_not_exists, expand_url
 from configs import Config
+import sys
+
+logger.add("logs/1trace.log", level="TRACE")
+logger.add("logs/2info.log", level="INFO")
+logger.add("logs/3success.log", level="SUCCESS")
+logger.add("logs/4warning.log", level="WARNING")
+logger.add("logs/5error.log", level="ERROR")
 
 load_dotenv()
 
@@ -55,8 +62,8 @@ def process_sheet(c: Config, sheet, header=1, columns=GWorksheet.COLUMN_NAMES):
 
     # loop through worksheets to check
     for ii, wks in enumerate(sh.worksheets()):
-        logger.info(f'Opening worksheet {ii}: "{wks.title}" header={c.header}')
-        gw = GWorksheet(wks, header_row=c.header, columns=c.column_names)
+        logger.info(f'Opening worksheet {ii=}: {wks.title=} {header=}')
+        gw = GWorksheet(wks, header_row=header, columns=columns)
 
         if not gw.col_exists('url'):
             logger.warning(
@@ -80,6 +87,7 @@ def process_sheet(c: Config, sheet, header=1, columns=GWorksheet.COLUMN_NAMES):
             YoutubeDLArchiver(storage, c.webdriver),
             TwitterArchiver(storage, c.webdriver),
             WaybackArchiver(storage, c.webdriver)
+            archivers.YoutubeDLArchiver(s3_client, driver, os.getenv('FACEBOOK_COOKIE')),
         ]
 
         # loop through rows in worksheet
@@ -91,7 +99,17 @@ def process_sheet(c: Config, sheet, header=1, columns=GWorksheet.COLUMN_NAMES):
                 gw.set_cell(row, 'status', 'Archive in progress')
 
                 url = expand_url(url)
+                
 
+                # make a new driver so each spreadsheet row is idempotent
+                options = webdriver.FirefoxOptions()
+                options.headless = True
+                options.set_preference('network.protocol-handler.external.tg', False)
+
+                driver = webdriver.Firefox(options=options)
+                driver.set_window_size(1400, 2000)
+                # in seconds, telegram screenshots catch which don't come back
+                driver.set_page_load_timeout(120)
                 for archiver in active_archivers:
                     logger.debug(f'Trying {archiver} on row {row}')
 
@@ -112,15 +130,17 @@ def process_sheet(c: Config, sheet, header=1, columns=GWorksheet.COLUMN_NAMES):
                             f'{archiver} did not succeed on row {row}, final status: {result.status}')
                         result.status = archiver.name + \
                             ": " + str(result.status)
-
+                # get rid of driver so can reload on next row
+                driver.quit()
                 if result:
                     update_sheet(gw, row, result)
                 else:
                     gw.set_cell(row, 'status', 'failed: no archiver')
         logger.success(f'Finshed worksheet {wks.title}')
 
-
+@logger.catch
 def main():
+    logger.debug(f'Passed args:{sys.argv}')
     c = Config()
     c.parse()
 
