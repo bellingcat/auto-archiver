@@ -24,9 +24,12 @@ class GWorksheet:
 
     def __init__(self, worksheet, columns=COLUMN_NAMES, header_row=1):
         self.wks = worksheet
-        self.values = self.wks.get_values()
-        self.headers = [v.lower() for v in self.values[header_row - 1]]
         self.columns = columns
+        self.values = self.wks.get_values()
+        if len(self.values) > 0:
+            self.headers = [v.lower() for v in self.values[header_row - 1]]
+        else:
+            self.headers = []
 
     def _check_col_exists(self, col: str):
         if col not in self.columns:
