@@ -5,18 +5,15 @@ from bs4 import BeautifulSoup
 from storages import Storage
 from .base_archiver import Archiver, ArchiveResult
 
-# @dataclass
-# class WaybackConfig:
-#     key: str
-#     secret: str
 from configs import WaybackConfig
 
 # TODO: use WaybackConfig
 class WaybackArchiver(Archiver):
     name = "wayback"
 
-    def __init__(self, storage: Storage, driver):
+    def __init__(self, storage: Storage, driver, config: WaybackConfig):
         super(WaybackArchiver, self).__init__(storage, driver)
+        self.config = config
         self.seen_urls = {}
 
     def download(self, url, check_if_exists=False):
@@ -25,7 +22,7 @@ class WaybackArchiver(Archiver):
 
         ia_headers = {
             "Accept": "application/json",
-            "Authorization": "LOW " + os.getenv('INTERNET_ARCHIVE_S3_KEY') + ":" + os.getenv('INTERNET_ARCHIVE_S3_SECRET')
+            "Authorization": f"LOW {self.config.key}:{self.config.secret}"
         }
 
         r = requests.post(

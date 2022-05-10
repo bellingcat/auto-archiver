@@ -95,7 +95,7 @@ def process_sheet(c: Config, sheet, header=1, columns=GWorksheet.COLUMN_NAMES):
                     TiktokArchiver(storage, c.webdriver),
                     YoutubeDLArchiver(storage, c.webdriver, c.facebook_cookie),
                     TwitterArchiver(storage, c.webdriver),
-                    WaybackArchiver(storage, c.webdriver)
+                    WaybackArchiver(storage, c.webdriver, c.wayback_config)
                 ]
 
                 for archiver in active_archivers:
