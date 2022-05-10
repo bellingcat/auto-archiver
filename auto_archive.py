@@ -14,6 +14,7 @@ import archivers
 from storages import S3Storage, S3Config
 from storages.gd_storage import GDConfig, GDStorage
 from utils import GWorksheet, mkdir_if_not_exists
+import sys
 
 import sys
 
@@ -100,9 +101,11 @@ def process_sheet(sheet, usefilenumber, storage, header=1, columns=GWorksheet.CO
         api_hash=os.getenv('TELEGRAM_API_HASH')
     )
 
+    
+
     # loop through worksheets to check
     for ii, wks in enumerate(sh.worksheets()):
-        logger.info(f'Opening worksheet ii={ii}: {wks.title} header={header}')
+        logger.info(f'Opening worksheet {ii=}: {wks.title=} {header=}')
         gw = GWorksheet(wks, header_row=header, columns=columns)
 
         # DM changed debug to info to stop noise in production
@@ -133,6 +136,7 @@ def process_sheet(sheet, usefilenumber, storage, header=1, columns=GWorksheet.CO
                 gw.set_cell(row, 'status', 'Archive in progress')
 
                 url = expand_url(url)
+                
 
                 # DM Feature flag
                 if usefilenumber:
@@ -213,7 +217,6 @@ def process_sheet(sheet, usefilenumber, storage, header=1, columns=GWorksheet.CO
                             ": " + str(result.status)
                 # get rid of driver so can reload on next row
                 driver.quit()
-
                 if result:
                     update_sheet(gw, row, result)
                 else:
