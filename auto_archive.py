@@ -11,6 +11,7 @@ import traceback
 
 import archivers
 from storages import S3Storage, S3Config
+from storages.gd_storage import GDConfig, GDStorage
 from utils import GWorksheet, mkdir_if_not_exists
 import sys
 
