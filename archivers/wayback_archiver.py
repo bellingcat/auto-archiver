@@ -4,6 +4,8 @@ from bs4 import BeautifulSoup
 from storages import Storage
 from .base_archiver import Archiver, ArchiveResult
 
+from loguru import logger
+
 
 class WaybackArchiver(Archiver):
     name = "wayback"
@@ -12,7 +14,7 @@ class WaybackArchiver(Archiver):
         super(WaybackArchiver, self).__init__(storage, driver)
         self.seen_urls = {}
 
-    def download(self, url, check_if_exists=False):
+    def download(self, url, check_if_exists=False, filenumber=None):
         if check_if_exists and url in self.seen_urls:
             return self.seen_urls[url]
 
@@ -25,9 +27,11 @@ class WaybackArchiver(Archiver):
             'https://web.archive.org/save/', headers=ia_headers, data={'url': url})
 
         if r.status_code != 200:
+            logger.warning(f"Internet archive failed with status of {r.status_code}")
             return ArchiveResult(status="Internet archive failed")
 
         if 'job_id' not in r.json() and 'message' in r.json():
+            logger.warning(f"Internet archive failed json \n {r.json()}")
             return ArchiveResult(status=f"Internet archive failed: {r.json()['message']}")
 
         job_id = r.json()['job_id']
@@ -71,7 +75,7 @@ class WaybackArchiver(Archiver):
         except:
             title = "Could not get title"
 
-        screenshot = self.get_screenshot(url)
+        screenshot = self.get_screenshot(url, filenumber)
         result = ArchiveResult(status='Internet Archive fallback', cdn_url=archive_url, title=title, screenshot=screenshot)
         self.seen_urls[url] = result
         return result

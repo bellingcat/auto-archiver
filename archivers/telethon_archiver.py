@@ -41,20 +41,22 @@ class TelethonArchiver(Archiver):
                 media.append(post)
         return media
 
-    def download(self, url, check_if_exists=False):
+    def download(self, url, check_if_exists=False, filenumber=None):
         # detect URLs that we definitely cannot handle
         matches = self.link_pattern.findall(url)
         if not len(matches):
             return False
 
         status = "success"
-        screenshot = self.get_screenshot(url)
+        screenshot = self.get_screenshot(url, filenumber)
 
+        # app will ask (stall for user input!) for phone number and auth code if anon.session not found
         with self.client.start():
             matches = list(matches[0])
             chat, post_id = matches[1], matches[2]
 
             post_id = int(post_id)
+
             try:
                 post = self.client.get_messages(chat, ids=post_id)
             except ValueError as e:
@@ -65,9 +67,13 @@ class TelethonArchiver(Archiver):
 
             if len(media_posts) > 1:
                 key = self.get_html_key(url)
-                cdn_url = self.storage.get_cdn_url(key)
+
+                if filenumber is not None:
+                    key = filenumber + "/" + key          
 
                 if check_if_exists and self.storage.exists(key):
+                     # only s3 storage supports storage.exists as not implemented on gd
+                    cdn_url = self.storage.get_cdn_url(key)
                     status = 'already archived'
                     return ArchiveResult(status='already archived', cdn_url=cdn_url, title=post.message, timestamp=post.date, screenshot=screenshot)
 
@@ -78,19 +84,26 @@ class TelethonArchiver(Archiver):
                     if len(mp.message) > len(message): message = mp.message
                     filename = self.client.download_media(mp.media, f'tmp/{chat}_{group_id}/{mp.id}')
                     key = filename.split('tmp/')[1]
+
+                    if filenumber is not None:
+                        key = filenumber + "/" + key
                     self.storage.upload(filename, key)
                     hash = self.get_hash(filename)
                     cdn_url = self.storage.get_cdn_url(key)
                     uploaded_media.append({'cdn_url': cdn_url, 'key': key, 'hash': hash})
                     os.remove(filename)
 
-                page_cdn, page_hash, _ = self.generate_media_page_html(url, uploaded_media, html.escape(str(post)))
+                page_cdn, page_hash, _ = self.generate_media_page_html(url, uploaded_media, html.escape(str(post)), filenumber=filenumber)
 
                 return ArchiveResult(status=status, cdn_url=page_cdn, title=post.message, timestamp=post.date, hash=page_hash, screenshot=screenshot)
             elif len(media_posts) == 1:
                 key = self.get_key(f'{chat}_{post_id}')
                 filename = self.client.download_media(post.media, f'tmp/{key}')
                 key = filename.split('tmp/')[1].replace(" ", "")
+
+                if filenumber is not None:
+                    key = filenumber + "/" + key
+
                 self.storage.upload(filename, key)
                 hash = self.get_hash(filename)
                 cdn_url = self.storage.get_cdn_url(key)
@@ -99,5 +112,5 @@ class TelethonArchiver(Archiver):
 
                 return ArchiveResult(status=status, cdn_url=cdn_url, title=post.message, thumbnail=key_thumb, thumbnail_index=thumb_index, timestamp=post.date, hash=hash, screenshot=screenshot)
 
-            page_cdn, page_hash, _ = self.generate_media_page_html(url, [], html.escape(str(post)))
+            page_cdn, page_hash, _ = self.generate_media_page_html(url, [], html.escape(str(post)), filenumber=filenumber)
             return ArchiveResult(status=status, cdn_url=page_cdn, title=post.message, timestamp=post.date, hash=page_hash, screenshot=screenshot)

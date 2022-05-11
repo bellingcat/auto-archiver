@@ -17,5 +17,12 @@ class Storage(ABC):
 
     def upload(self, filename: str, key: str, **kwargs):
         logger.debug(f'[{self.__class__.__name__}] uploading file {filename} with key {key}')
-        with open(filename, 'rb') as f:
-            self.uploadf(f, key, **kwargs)
+        # S3 requires an open file, GD only the filename
+        storage = type(self).__name__
+        if storage == "GDStorage":
+            self.uploadf(filename, key, **kwargs)
+        elif storage == "S3Storage":
+            with open(filename, 'rb') as f:
+                self.uploadf(f, key, **kwargs)
+        else:
+            raise ValueError('Cant get storage thrown from base_storage.py')

@@ -11,7 +11,7 @@ from .base_archiver import Archiver, ArchiveResult
 class TelegramArchiver(Archiver):
     name = "telegram"
 
-    def download(self, url, check_if_exists=False):
+    def download(self, url, check_if_exists=False, filenumber=None):
         # detect URLs that we definitely cannot handle
         if 't.me' != self.get_netloc(url):
             return False
@@ -27,7 +27,7 @@ class TelegramArchiver(Archiver):
         if url[-8:] != "?embed=1":
             url += "?embed=1"
 
-        screenshot = self.get_screenshot(url)
+        screenshot = self.get_screenshot(url, filenumber=filenumber)
 
         t = requests.get(url, headers=headers)
         s = BeautifulSoup(t.content, 'html.parser')
@@ -42,7 +42,7 @@ class TelegramArchiver(Archiver):
                 urls = [u.replace("'", "") for u in re.findall(r'url\((.*?)\)', im['style'])]
                 images += urls
 
-            page_cdn, page_hash, thumbnail = self.generate_media_page(images, url, html.escape(str(t.content)))
+            page_cdn, page_hash, thumbnail = self.generate_media_page(images, url, html.escape(str(t.content)),filenumber=filenumber)
             time_elements = s.find_all('time')
             timestamp = time_elements[0].get('datetime') if len(time_elements) else None
 
@@ -51,6 +51,9 @@ class TelegramArchiver(Archiver):
         video_url = video.get('src')
         video_id = video_url.split('/')[-1].split('?')[0]
         key = self.get_key(video_id)
+
+        if filenumber is not None:
+            key = filenumber + "/" + key
 
         filename = 'tmp/' + key
         cdn_url = self.storage.get_cdn_url(key)

@@ -15,7 +15,7 @@ class YoutubeDLArchiver(Archiver):
         super().__init__(storage, driver)
         self.fb_cookie = fb_cookie
 
-    def download(self, url, check_if_exists=False):
+    def download(self, url, check_if_exists=False, filenumber=None):
         netloc = self.get_netloc(url)
         if netloc in ['facebook.com', 'www.facebook.com']:
             logger.debug('Using Facebook cookie')
@@ -27,20 +27,23 @@ class YoutubeDLArchiver(Archiver):
 
         try:
             info = ydl.extract_info(url, download=False)
-        except yt_dlp.utils.DownloadError:
-            # no video here
+        except yt_dlp.utils.DownloadError as e:
+            logger.debug(f'No video - Youtube normal control flow: {e}')
+            return False
+        except Exception as e:
+            logger.debug(f'ytdlp exception which is normal for example a facebook page with images only will cause a IndexError: list index out of range. Exception here is: \n  {e}')
             return False
 
         if info.get('is_live', False):
             logger.warning("Live streaming media, not archiving now")
             return ArchiveResult(status="Streaming media")
+
         if 'twitter.com' in netloc:
             if 'https://twitter.com/' in info['webpage_url']:
                 logger.info('Found https://twitter.com/ in the download url from Twitter')
             else:
                 logger.info('Found a linked video probably in a link in a tweet - not getting that video as there may be images in the tweet')
                 return False
-
 
         if check_if_exists:
             if 'entries' in info:
@@ -57,6 +60,9 @@ class YoutubeDLArchiver(Archiver):
                 filename = ydl.prepare_filename(info)
 
             key = self.get_key(filename)
+
+            if filenumber is not None:
+                key = filenumber + "/" + key
 
             if self.storage.exists(key):
                 status = 'already archived'
@@ -81,12 +87,19 @@ class YoutubeDLArchiver(Archiver):
 
         if status != 'already archived':
             key = self.get_key(filename)
-            cdn_url = self.storage.get_cdn_url(key)
+            
+            if filenumber is not None:
+                key = filenumber + "/" + key
 
             self.storage.upload(filename, key)
 
+            # filename ='tmp/sDE-qZdi8p8.webm'
+            # key ='SM0022/youtube_dl_sDE-qZdi8p8.webm'
+            cdn_url = self.storage.get_cdn_url(key)
+
         hash = self.get_hash(filename)
-        screenshot = self.get_screenshot(url)
+        screenshot = self.get_screenshot(url, filenumber)
+
 
         # get duration
         duration = info.get('duration')

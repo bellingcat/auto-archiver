@@ -1,6 +1,5 @@
 from snscrape.modules.twitter import TwitterTweetScraper, Video, Gif, Photo
 from loguru import logger
-import requests
 from urllib.parse import urlparse
 
 from .base_archiver import Archiver, ArchiveResult
@@ -9,7 +8,8 @@ from .base_archiver import Archiver, ArchiveResult
 class TwitterArchiver(Archiver):
     name = "twitter"
 
-    def download(self, url, check_if_exists=False):
+    def download(self, url, check_if_exists=False, filenumber=None):
+        
         if 'twitter.com' != self.get_netloc(url):
             return False
 
@@ -24,11 +24,14 @@ class TwitterArchiver(Archiver):
 
         try:
             tweet = next(scr.get_items())
-        except:
-            logger.warning('wah wah')
+        except Exception as ex:
+            template = "TwitterArchiver cant get tweet and threw, which can happen if a media sensitive tweet. \n type: {0} occurred. \n arguments:{1!r}"
+            message = template.format(type(ex).__name__, ex.args)
+            logger.warning(message)
             return False
 
         if tweet.media is None:
+            logger.trace(f'No media found')
             return False
 
         urls = []
@@ -45,8 +48,8 @@ class TwitterArchiver(Archiver):
             else:
                 logger.warning(f"Could not get media URL of {media}")
 
-        page_cdn, page_hash, thumbnail = self.generate_media_page(urls, url, tweet.json())
+        page_cdn, page_hash, thumbnail = self.generate_media_page(urls, url, tweet.json(), filenumber)
 
-        screenshot = self.get_screenshot(url)
+        screenshot = self.get_screenshot(url, filenumber)
 
         return ArchiveResult(status="success", cdn_url=page_cdn, screenshot=screenshot, hash=page_hash, thumbnail=thumbnail, timestamp=tweet.date)
