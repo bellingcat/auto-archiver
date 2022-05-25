@@ -1,4 +1,5 @@
 tmp/
+temp/
 .env*
 .DS_Store
 expmt/
@@ -11,3 +12,4 @@ anu.html
 anon*
 config.json
 config-*.json
+logs/*

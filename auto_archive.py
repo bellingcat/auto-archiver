@@ -133,7 +133,7 @@ def main():
     mkdir_if_not_exists(c.tmp_folder)
     process_sheet(c, c.sheet, header=c.header, columns=c.column_names)
     shutil.rmtree(c.tmp_folder)
-    c.webdriver.quit()
+    c.destroy_webdriver()
 
 
 if __name__ == '__main__':
