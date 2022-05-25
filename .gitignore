@@ -1,4 +1,5 @@
 tmp/
+temp/
 .env*
 .DS_Store
 expmt/
@@ -8,5 +9,5 @@ __pycache__/
 anu.html
 *.log
 .pytest_cach
-
 anon*
+config*.json
