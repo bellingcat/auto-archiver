@@ -98,6 +98,7 @@ graph TD
 ```mermaid
 graph TD
     A(BaseStorage) -->|parent of| B(S3Storage)
+    A(BaseStorage) -->|parent of| C(GoogleDriveStorage)
 ```
 
 ## Saving into Folders
