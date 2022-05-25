@@ -8,9 +8,11 @@ from google.oauth2 import service_account
 
 import time
 
+
 @dataclass
 class GDConfig:
     root_folder_id: str
+
 
 class GDStorage(Storage):
 
@@ -42,14 +44,14 @@ class GDStorage(Storage):
             # need to lookup the id of folder eg SM0002 which should be there already as this is get_cdn_url
             results = self.service.files().list(q=f"'{self.root_folder_id}' in parents \
                                                 and name = '{foldername}' ",
-                                            spaces='drive', # ie not appDataFolder or photos
-                                            fields='files(id, name)'
-                                            ).execute()
+                                                spaces='drive',  # ie not appDataFolder or photos
+                                                fields='files(id, name)'
+                                                ).execute()
             items = results.get('files', [])
 
             for item in items:
                 logger.debug(f"found folder of {item['name']}")
-                folder_id= item['id']
+                folder_id = item['id']
                 try_again = False
 
             if folder_id is None:
@@ -72,9 +74,9 @@ class GDStorage(Storage):
             results = self.service.files().list(q=f"'{folder_id}' in parents \
                                                 and mimeType='application/vnd.google-apps.folder' \
                                                 and name = '{a}' ",
-                                            spaces='drive', # ie not appDataFolder or photos
-                                            fields='files(id, name)'
-                                            ).execute()
+                                                spaces='drive',  # ie not appDataFolder or photos
+                                                fields='files(id, name)'
+                                                ).execute()
             items = results.get('files', [])
 
             filename = None
@@ -87,47 +89,40 @@ class GDStorage(Storage):
         # get id of file inside folder (or sub folder)
         results = self.service.files().list(q=f"'{folder_id}' in parents \
                                             and name = '{filename}' ",
-                                        spaces='drive', 
-                                        fields='files(id, name)'
-                                        ).execute()
+                                            spaces='drive',
+                                            fields='files(id, name)'
+                                            ).execute()
         items = results.get('files', [])
-        
+
         file_id = None
         for item in items:
             logger.debug(f"found file of {item['name']}")
-            file_id= item['id']
+            file_id = item['id']
 
         if file_id is None:
             raise ValueError(f'Problem finding file {filename} in folder_id {folder_id}')
-            
+
         foo = "https://drive.google.com/file/d/" + file_id + "/view?usp=sharing"
         return foo
 
-    def exists(self, key):
-        # Not implemented yet
-        # Google drive will accept duplicate named filenames as it is stored as a different fileid 
-
-        # try:
-        #     self.s3.head_object(Bucket=self.bucket, Key=self._get_path(key))
-        #     return True
-        # except ClientError:
-        #     return False
+    def exists(self, _key):
+        # TODO: How to check for google drive, as it accepts different names
         return False
 
-    def uploadf(self, file, key, **kwargs):
+    def uploadf(self, file, key, **_kwargs):
         # split on first occurance of /
         # eg SM0005
         foldername = key.split('/', 1)[0]
         # eg twitter__media_asdf.jpg
         filename = key.split('/', 1)[1]
 
-         # does folder eg SM0005 exist already inside parent of Files auto-archiver
+        # does folder eg SM0005 exist already inside parent of Files auto-archiver
         results = self.service.files().list(q=f"'{self.root_folder_id}' in parents \
                                             and mimeType='application/vnd.google-apps.folder' \
                                             and name = '{foldername}' ",
-                                        spaces='drive', 
-                                        fields='files(id, name)'
-                                        ).execute()
+                                            spaces='drive',
+                                            fields='files(id, name)'
+                                            ).execute()
         items = results.get('files', [])
         folder_id_to_upload_to = None
         if len(items) > 1:
@@ -146,7 +141,7 @@ class GDStorage(Storage):
             }
             gd_file = self.service.files().create(body=file_metadata, fields='id').execute()
             folder_id_to_upload_to = gd_file.get('id')
-        
+
         # check for subfolder nema in file eg youtube_dl_sDE-qZdi8p8/out1.jpg'
         # happens doing thumbnails
 
@@ -163,9 +158,9 @@ class GDStorage(Storage):
             results = self.service.files().list(q=f"'{folder_id_to_upload_to}' in parents \
                                                 and mimeType='application/vnd.google-apps.folder' \
                                                 and name = '{a}' ",
-                                            spaces='drive', # ie not appDataFolder or photos
-                                            fields='files(id, name)'
-                                            ).execute()
+                                                spaces='drive',  # ie not appDataFolder or photos
+                                                fields='files(id, name)'
+                                                ).execute()
             items = results.get('files', [])
             sub_folder_id_to_upload_to = None
             if len(items) > 1:
@@ -188,7 +183,7 @@ class GDStorage(Storage):
             filename = b
             folder_id_to_upload_to = sub_folder_id_to_upload_to
             # back to normal control flow
-            
+
         # else:
         # upload file to gd
         file_metadata = {
@@ -198,5 +193,10 @@ class GDStorage(Storage):
         }
         media = MediaFileUpload(file, resumable=True)
         gd_file = self.service.files().create(body=file_metadata,
-                                            media_body=media,
-                                            fields='id').execute()
+                                              media_body=media,
+                                              fields='id').execute()
+
+    def upload(self, filename: str, key: str, **kwargs):
+        # GD only requires the filename not a file reader
+        logger.debug(f'[{self.__class__.__name__}] uploading file {filename} with key {key}')
+        self.uploadf(filename, key, **kwargs)
