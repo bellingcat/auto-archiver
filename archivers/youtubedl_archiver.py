@@ -7,6 +7,7 @@ from loguru import logger
 from .base_archiver import Archiver, ArchiveResult
 from storages import Storage
 
+
 class YoutubeDLArchiver(Archiver):
     name = "youtube_dl"
     ydl_opts = {'outtmpl': 'tmp/%(id)s.%(ext)s', 'quiet': False}
@@ -15,7 +16,7 @@ class YoutubeDLArchiver(Archiver):
         super().__init__(storage, driver)
         self.fb_cookie = fb_cookie
 
-    def download(self, url, check_if_exists=False, filenumber=None):
+    def download(self, url, check_if_exists=False):
         netloc = self.get_netloc(url)
         if netloc in ['facebook.com', 'www.facebook.com']:
             logger.debug('Using Facebook cookie')
@@ -61,9 +62,6 @@ class YoutubeDLArchiver(Archiver):
 
             key = self.get_key(filename)
 
-            if filenumber is not None:
-                key = filenumber + "/" + key
-
             if self.storage.exists(key):
                 status = 'already archived'
                 cdn_url = self.storage.get_cdn_url(key)
@@ -87,10 +85,6 @@ class YoutubeDLArchiver(Archiver):
 
         if status != 'already archived':
             key = self.get_key(filename)
-            
-            if filenumber is not None:
-                key = filenumber + "/" + key
-
             self.storage.upload(filename, key)
 
             # filename ='tmp/sDE-qZdi8p8.webm'
@@ -98,8 +92,7 @@ class YoutubeDLArchiver(Archiver):
             cdn_url = self.storage.get_cdn_url(key)
 
         hash = self.get_hash(filename)
-        screenshot = self.get_screenshot(url, filenumber)
-
+        screenshot = self.get_screenshot(url)
 
         # get duration
         duration = info.get('duration')
@@ -115,9 +108,9 @@ class YoutubeDLArchiver(Archiver):
 
         timestamp = datetime.datetime.utcfromtimestamp(info['timestamp']).replace(tzinfo=datetime.timezone.utc).isoformat() \
             if 'timestamp' in info else \
-                datetime.datetime.strptime(info['upload_date'], '%Y%m%d').replace(tzinfo=datetime.timezone.utc) \
+            datetime.datetime.strptime(info['upload_date'], '%Y%m%d').replace(tzinfo=datetime.timezone.utc) \
             if 'upload_date' in info and info['upload_date'] is not None else \
-                None
+            None
 
         return ArchiveResult(status=status, cdn_url=cdn_url, thumbnail=key_thumb, thumbnail_index=thumb_index, duration=duration,
                              title=info['title'] if 'title' in info else None, timestamp=timestamp, hash=hash, screenshot=screenshot)

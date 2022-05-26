@@ -9,8 +9,8 @@ class GWorksheet:
     eg: if header=4, row 5 will be the first with data. 
     """
     COLUMN_NAMES = {
-        'filenumber': 'file number',
         'url': 'link',
+        'subfolder': 'sub folder',
         'archive': 'archive location',
         'date': 'archive date',
         'status': 'archive status',
@@ -68,6 +68,15 @@ class GWorksheet:
         if col_index >= len(row):
             return ''
         return row[col_index]
+
+    def get_cell_or_default(self, row, col: str, default: str = None, fresh=False):
+        """
+        return self.get_cell or default value on error (eg: column is missing)
+        """
+        try:
+            return self.get_cell(row, col, fresh)
+        except:
+            return default
 
     def set_cell(self, row: int, col: str, val):
         # row is 1-based

@@ -8,15 +8,15 @@ from .base_archiver import Archiver, ArchiveResult
 class TwitterArchiver(Archiver):
     name = "twitter"
 
-    def download(self, url, check_if_exists=False, filenumber=None):
-        
+    def download(self, url, check_if_exists=False):
+
         if 'twitter.com' != self.get_netloc(url):
             return False
 
         tweet_id = urlparse(url).path.split('/')
         if 'status' in tweet_id:
             i = tweet_id.index('status')
-            tweet_id = tweet_id[i+1]
+            tweet_id = tweet_id[i + 1]
         else:
             return False
 
@@ -25,9 +25,7 @@ class TwitterArchiver(Archiver):
         try:
             tweet = next(scr.get_items())
         except Exception as ex:
-            template = "TwitterArchiver cant get tweet and threw, which can happen if a media sensitive tweet. \n type: {0} occurred. \n arguments:{1!r}"
-            message = template.format(type(ex).__name__, ex.args)
-            logger.warning(message)
+            logger.warning(f"can't get tweet: {type(ex).__name__} occurred. args: {ex.args}")
             return False
 
         if tweet.media is None:
@@ -48,8 +46,8 @@ class TwitterArchiver(Archiver):
             else:
                 logger.warning(f"Could not get media URL of {media}")
 
-        page_cdn, page_hash, thumbnail = self.generate_media_page(urls, url, tweet.json(), filenumber)
+        page_cdn, page_hash, thumbnail = self.generate_media_page(urls, url, tweet.json())
 
-        screenshot = self.get_screenshot(url, filenumber)
+        screenshot = self.get_screenshot(url)
 
         return ArchiveResult(status="success", cdn_url=page_cdn, screenshot=screenshot, hash=page_hash, thumbnail=thumbnail, timestamp=tweet.date)

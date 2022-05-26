@@ -14,7 +14,7 @@ class WaybackArchiver(Archiver):
         super(WaybackArchiver, self).__init__(storage, driver)
         self.seen_urls = {}
 
-    def download(self, url, check_if_exists=False, filenumber=None):
+    def download(self, url, check_if_exists=False):
         if check_if_exists and url in self.seen_urls:
             return self.seen_urls[url]
 
@@ -75,7 +75,7 @@ class WaybackArchiver(Archiver):
         except:
             title = "Could not get title"
 
-        screenshot = self.get_screenshot(url, filenumber)
+        screenshot = self.get_screenshot(url)
         result = ArchiveResult(status='Internet Archive fallback', cdn_url=archive_url, title=title, screenshot=screenshot)
         self.seen_urls[url] = result
         return result

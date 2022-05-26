@@ -18,6 +18,7 @@ from selenium.webdriver.common.by import By
 from loguru import logger
 from selenium.common.exceptions import TimeoutException
 
+
 @dataclass
 class ArchiveResult:
     status: str
@@ -42,7 +43,7 @@ class Archiver(ABC):
         return self.__class__.__name__
 
     @abstractmethod
-    def download(self, url, check_if_exists=False, filenumber=None): pass
+    def download(self, url, check_if_exists=False): pass
 
     def get_netloc(self, url):
         return urlparse(url).netloc
@@ -51,7 +52,7 @@ class Archiver(ABC):
         return self.get_key(urlparse(url).path.replace("/", "_") + ".html")
 
     # generate the html page eg SM3013/twitter__minmyatnaing13_status_1499415562937503751.html
-    def generate_media_page_html(self, url, urls_info: dict, object, thumbnail=None, filenumber=None):
+    def generate_media_page_html(self, url, urls_info: dict, object, thumbnail=None):
         page = f'''<html><head><title>{url}</title><meta charset="UTF-8"></head>
             <body>
             <h2>Archived media from {self.name}</h2>
@@ -71,10 +72,6 @@ class Archiver(ABC):
 
         page_hash = self.get_hash(page_filename)
 
-        if filenumber != None:
-            logger.trace(f'filenumber for directory is {filenumber}')
-            page_key = filenumber + "/" + page_key
-
         self.storage.upload(page_filename, page_key, extra_args={
             'ACL': 'public-read', 'ContentType': 'text/html'})
 
@@ -82,7 +79,7 @@ class Archiver(ABC):
         return (page_cdn, page_hash, thumbnail)
 
     # eg images in a tweet save to cloud storage
-    def generate_media_page(self, urls, url, object, filenumber=None):
+    def generate_media_page(self, urls, url, object):
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36'
         }
@@ -102,10 +99,6 @@ class Archiver(ABC):
             with open(filename, 'wb') as f:
                 f.write(d.content)
 
-            if filenumber is not None:
-                logger.debug(f'filenumber for directory is {filenumber}')
-                key = filenumber + "/" + key
-
             # eg filename: 'tmp/twitter__media_FM7-ggCUYAQHKWW.jpg'
             # eg key: 'twitter__media_FM7-ggCUYAQHKWW.jpg'
             # or if using filename key: 'SM3013/twitter__media_FM7-ggCUYAQHKWW.jpg'
@@ -120,7 +113,7 @@ class Archiver(ABC):
                 thumbnail = cdn_url
             uploaded_media.append({'cdn_url': cdn_url, 'key': key, 'hash': hash})
 
-        return self.generate_media_page_html(url, uploaded_media, object, thumbnail=thumbnail, filenumber=filenumber)
+        return self.generate_media_page_html(url, uploaded_media, object, thumbnail=thumbnail)
 
     def get_key(self, filename):
         """
@@ -140,16 +133,15 @@ class Archiver(ABC):
     def get_hash(self, filename):
         f = open(filename, "rb")
         bytes = f.read()  # read entire file as bytes
-        
+
+        # TODO: customizable hash
         hash = hashlib.sha256(bytes)
         # option to use SHA3_512 instead
         # hash = hashlib.sha3_512(bytes)
         f.close()
         return hash.hexdigest()
 
-    # eg SA3013/twitter__minmyatnaing13_status_14994155629375037512022-04-27T13:51:43.701962.png
-    # def get_screenshot(self, url, filenumber, storage="GD"):
-    def get_screenshot(self, url, filenumber):
+    def get_screenshot(self, url):
         key = self.get_key(urlparse(url).path.replace(
             "/", "_") + datetime.datetime.utcnow().isoformat().replace(" ", "_") + ".png")
         filename = 'tmp/' + key
@@ -158,8 +150,8 @@ class Archiver(ABC):
         if 'facebook.com' in url:
             try:
                 logger.debug(f'Trying fb click accept cookie popup for {url}')
-                self.driver.get("http://www.facebook.com") 
-                foo = self.driver.find_element(By.XPATH,"//button[@data-cookiebanner='accept_only_essential_button']")
+                self.driver.get("http://www.facebook.com")
+                foo = self.driver.find_element(By.XPATH, "//button[@data-cookiebanner='accept_only_essential_button']")
                 foo.click()
                 logger.debug(f'fb click worked')
                 # linux server needs a sleep otherwise facebook cookie wont have worked and we'll get a popup on next page
@@ -174,11 +166,6 @@ class Archiver(ABC):
             logger.info("TimeoutException loading page for screenshot")
 
         self.driver.save_screenshot(filename)
-
-        if filenumber is not None:
-            logger.debug(f'filenumber for directory is {filenumber}')
-            key = filenumber + "/" + key
-
         self.storage.upload(filename, key, extra_args={
                             'ACL': 'public-read', 'ContentType': 'image/png'})
 

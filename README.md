@@ -101,23 +101,17 @@ graph TD
     A(BaseStorage) -->|parent of| C(GoogleDriveStorage)
 ```
 
-## Saving into Folders
+## Saving into Subfolders
 
-To use a column from the spreadsheet called `File Number` eg SM001234 as a directory on the cloud storage, you need to pass in
-
-```bash
-python auto_archive.py --sheet 'Sheet Name' --use-filenumber-as-directory
-```
+You can have a column in the spreadsheet for the argument `--col-subfolder` that is passed to the storage and can specify a subfolder to put the archived link into.
 
 ## Google Drive
 
 To use Google Drive storage you need the id of the shared folder in the `.env` file which must be shared with the service account eg `autoarchiverservice@auto-archiver-111111.iam.gserviceaccount.com`
 
 ```bash
-python auto_archive.py --sheet 'Sheet Name' --use-filenumber-as-directory --storage='gd'
+python auto_archive.py --sheet 'Sheet Name' --storage='gd'
 ```
-
-Note the you must use filenumber for Google Drive Storage.
 
 ## Telethon (Telegrams API Library)
 

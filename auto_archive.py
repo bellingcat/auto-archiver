@@ -23,6 +23,7 @@ logger.add("logs/5error.log", level="ERROR")
 
 load_dotenv()
 
+
 def update_sheet(gw, row, result: archivers.ArchiveResult):
     cell_updates = []
     row_values = gw.get_row(row)
@@ -68,7 +69,7 @@ def expand_url(url):
     return url
 
 
-def process_sheet(sheet, usefilenumber=False, storage="s3", header=1, columns=GWorksheet.COLUMN_NAMES):
+def process_sheet(sheet, storage="s3", header=1, columns=GWorksheet.COLUMN_NAMES):
     gc = gspread.service_account(filename='service_account.json')
     sh = gc.open(sheet)
 
@@ -85,8 +86,6 @@ def process_sheet(sheet, usefilenumber=False, storage="s3", header=1, columns=GW
         api_id=os.getenv('TELEGRAM_API_ID'),
         api_hash=os.getenv('TELEGRAM_API_HASH')
     )
-
-    
 
     # loop through worksheets to check
     for ii, wks in enumerate(sh.worksheets()):
@@ -120,17 +119,8 @@ def process_sheet(sheet, usefilenumber=False, storage="s3", header=1, columns=GW
                 gw.set_cell(row, 'status', 'Archive in progress')
 
                 url = expand_url(url)
-                
-                if usefilenumber:
-                    filenumber = gw.get_cell(row, 'filenumber')
-                    logger.debug(f'filenumber is {filenumber}')
-                    if filenumber == "":
-                        logger.warning(f'Logic error on row {row} with url {url} - the feature flag for usefilenumber is True, yet cant find a corresponding filenumber')
-                        gw.set_cell(row, 'status', 'Missing filenumber')
-                        continue
-                else:
-                    # We will use this through the app to differentiate between where to save
-                    filenumber = None
+
+                subfolder = gw.get_cell_or_default(row, 'subfolder')
 
                 # make a new driver so each spreadsheet row is idempotent
                 options = webdriver.FirefoxOptions()
@@ -142,7 +132,7 @@ def process_sheet(sheet, usefilenumber=False, storage="s3", header=1, columns=GW
                 # in seconds, telegram screenshots catch which don't come back
                 driver.set_page_load_timeout(120)
 
-                 # client
+                # client
                 storage_client = None
                 if storage == "s3":
                     storage_client = s3_client
@@ -150,6 +140,7 @@ def process_sheet(sheet, usefilenumber=False, storage="s3", header=1, columns=GW
                     storage_client = gd_client
                 else:
                     raise ValueError(f'Cant get storage_client {storage_client}')
+                storage_client.update_properties(subfolder=subfolder)
 
                 # order matters, first to succeed excludes remaining
                 active_archivers = [
@@ -164,12 +155,12 @@ def process_sheet(sheet, usefilenumber=False, storage="s3", header=1, columns=GW
                     logger.debug(f'Trying {archiver} on row {row}')
 
                     try:
-                        if usefilenumber:
-                            # using filenumber to store in folders so not checking for existence of that url
-                            result = archiver.download(url, check_if_exists=False, filenumber=filenumber)
-                        else:
-                            result = archiver.download(url, check_if_exists=True)
-
+                        result = archiver.download(url, check_if_exists=True)
+                    except KeyboardInterrupt:
+                        logger.warning("caught interrupt")
+                        gw.set_cell(row, 'status', '')
+                        driver.quit()
+                        exit()
                     except Exception as e:
                         result = False
                         logger.error(f'Got unexpected error in row {row} with archiver {archiver} for url {url}: {e}\n{traceback.format_exc()}')
@@ -180,9 +171,9 @@ def process_sheet(sheet, usefilenumber=False, storage="s3", header=1, columns=GW
                             result.status = archiver.name + \
                                 ": " + str(result.status)
                             logger.success(
-                                 f'{archiver} succeeded on row {row}, url {url}')
+                                f'{archiver} succeeded on row {row}, url {url}')
                             break
-                        
+
                         # wayback has seen this url before so keep existing status
                         if "wayback: Internet Archive fallback" in result.status:
                             logger.success(
@@ -203,6 +194,7 @@ def process_sheet(sheet, usefilenumber=False, storage="s3", header=1, columns=GW
                     gw.set_cell(row, 'status', 'failed: no archiver')
         logger.success(f'Finshed worksheet {wks.title}')
 
+
 @logger.catch
 def main():
     logger.debug(f'Passed args:{sys.argv}')
@@ -213,27 +205,21 @@ def main():
     parser.add_argument('--header', action='store', dest='header', default=1, type=int, help='1-based index for the header row')
     parser.add_argument('--private', action='store_true', help='Store content without public access permission')
 
-    parser.add_argument('--use-filenumber-as-directory', action=argparse.BooleanOptionalAction, dest='usefilenumber',  \
-         help='Will save files into a subfolder on cloud storage which has the File Number eg SM3012')
-    parser.add_argument('--storage', action='store', dest='storage', default='s3', \
-         help='s3 or gd storage. Default is s3. NOTE GD storage supports only using filenumber')
+    parser.add_argument('--storage', action='store', dest='storage', default='s3', help='which storage to use.', choices={"s3", "gd"})
 
     for k, v in GWorksheet.COLUMN_NAMES.items():
-        parser.add_argument(f'--col-{k}', action='store', dest=k, default=v, help=f'the name of the column to fill with {k} (defaults={v})')
+        help = f"the name of the column to fill with {k} (defaults={v})"
+        if k == "subfolder":
+            help = f"the name of the column to read the {k} from (defaults={v})"
+        parser.add_argument(f'--col-{k}', action='store', dest=k, default=v, help=help)
 
     args = parser.parse_args()
     config_columns = {k: getattr(args, k).lower() for k in GWorksheet.COLUMN_NAMES.keys()}
 
-    logger.info(f'Opening document {args.sheet} for header {args.header} using filenumber: {args.usefilenumber} and storage {args.storage}')
-
-    # https://stackoverflow.com/questions/15008758/parsing-boolean-values-with-argparse
-    # args.filenumber is True (of type bool) when set or None when argument is not there
-    usefilenumber = False
-    if args.usefilenumber:
-        usefilenumber = True
+    logger.info(f'Opening document {args.sheet} for header {args.header} and storage {args.storage}')
 
     mkdir_if_not_exists('tmp')
-    process_sheet(args.sheet, usefilenumber, args.storage, args.header, config_columns)
+    process_sheet(args.sheet, args.storage, args.header, config_columns)
     shutil.rmtree('tmp')
 
 
