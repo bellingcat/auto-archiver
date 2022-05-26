@@ -2,6 +2,7 @@ import boto3
 from botocore.errorfactory import ClientError
 from .base_storage import Storage
 from dataclasses import dataclass
+from loguru import logger
 
 
 @dataclass
@@ -19,11 +20,8 @@ class S3Storage(Storage):
     def __init__(self, config: S3Config):
         self.bucket = config.bucket
         self.region = config.region
-        self.folder = config.folder
+        self.folder = self.clean_path(config.folder)
         self.private = config.private
-
-        if len(self.folder) and self.folder[-1] != '/':
-            self.folder += '/'
 
         self.s3 = boto3.client(
             's3',
@@ -34,7 +32,7 @@ class S3Storage(Storage):
         )
 
     def _get_path(self, key):
-        return self.folder + key
+        return self.folder + self.clean_path(self.subfolder) + key
 
     def get_cdn_url(self, key):
         return f'https://{self.bucket}.{self.region}.cdn.digitaloceanspaces.com/{self._get_path(key)}'
@@ -47,9 +45,9 @@ class S3Storage(Storage):
             return False
 
     def uploadf(self, file, key, **kwargs):
+        logger.debug(f'[S3 storage] uploading {file=}, {key=}')
         if self.private:
             extra_args = kwargs.get("extra_args", {})
         else:
             extra_args = kwargs.get("extra_args", {'ACL': 'public-read'})
-
         self.s3.upload_fileobj(file, Bucket=self.bucket, Key=self._get_path(key), ExtraArgs=extra_args)

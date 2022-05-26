@@ -7,6 +7,7 @@ from loguru import logger
 from .base_archiver import Archiver, ArchiveResult
 from storages import Storage
 
+
 class YoutubeDLArchiver(Archiver):
     name = "youtube_dl"
     ydl_opts = {'outtmpl': 'tmp/%(id)s.%(ext)s', 'quiet': False}
@@ -27,20 +28,23 @@ class YoutubeDLArchiver(Archiver):
 
         try:
             info = ydl.extract_info(url, download=False)
-        except yt_dlp.utils.DownloadError:
-            # no video here
+        except yt_dlp.utils.DownloadError as e:
+            logger.debug(f'No video - Youtube normal control flow: {e}')
+            return False
+        except Exception as e:
+            logger.debug(f'ytdlp exception which is normal for example a facebook page with images only will cause a IndexError: list index out of range. Exception here is: \n  {e}')
             return False
 
         if info.get('is_live', False):
             logger.warning("Live streaming media, not archiving now")
             return ArchiveResult(status="Streaming media")
+
         if 'twitter.com' in netloc:
             if 'https://twitter.com/' in info['webpage_url']:
                 logger.info('Found https://twitter.com/ in the download url from Twitter')
             else:
                 logger.info('Found a linked video probably in a link in a tweet - not getting that video as there may be images in the tweet')
                 return False
-
 
         if check_if_exists:
             if 'entries' in info:
@@ -81,9 +85,11 @@ class YoutubeDLArchiver(Archiver):
 
         if status != 'already archived':
             key = self.get_key(filename)
-            cdn_url = self.storage.get_cdn_url(key)
-
             self.storage.upload(filename, key)
+
+            # filename ='tmp/sDE-qZdi8p8.webm'
+            # key ='SM0022/youtube_dl_sDE-qZdi8p8.webm'
+            cdn_url = self.storage.get_cdn_url(key)
 
         hash = self.get_hash(filename)
         screenshot = self.get_screenshot(url)
@@ -102,9 +108,9 @@ class YoutubeDLArchiver(Archiver):
 
         timestamp = datetime.datetime.utcfromtimestamp(info['timestamp']).replace(tzinfo=datetime.timezone.utc).isoformat() \
             if 'timestamp' in info else \
-                datetime.datetime.strptime(info['upload_date'], '%Y%m%d').replace(tzinfo=datetime.timezone.utc) \
+            datetime.datetime.strptime(info['upload_date'], '%Y%m%d').replace(tzinfo=datetime.timezone.utc) \
             if 'upload_date' in info and info['upload_date'] is not None else \
-                None
+            None
 
         return ArchiveResult(status=status, cdn_url=cdn_url, thumbnail=key_thumb, thumbnail_index=thumb_index, duration=duration,
                              title=info['title'] if 'title' in info else None, timestamp=timestamp, hash=hash, screenshot=screenshot)

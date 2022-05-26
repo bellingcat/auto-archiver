@@ -54,11 +54,13 @@ class TiktokArchiver(Archiver):
                                  thumbnail_index=thumb_index, duration=info.duration, title=info.caption, timestamp=info.create.isoformat(),
                                  hash=hash, screenshot=screenshot)
 
-        except tiktok_downloader.Except.InvalidUrl:
+        except tiktok_downloader.Except.InvalidUrl as e:
             status = 'Invalid URL'
+            logger.warning(f'Invalid URL on {url}  {e}\n{traceback.format_exc()}')
             return ArchiveResult(status=status)
 
         except:
             error = traceback.format_exc()
             status = 'Other Tiktok error: ' + str(error)
+            logger.warning(f'Other Tiktok error' + str(error))
             return ArchiveResult(status=status)

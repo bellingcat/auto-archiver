@@ -1,6 +1,6 @@
 # auto-archiver
 
-This Python script will look for links to Youtube, Twitter, etc,. in a specified column of a Google Sheet, uses YoutubeDL to download the media, stores the result in a Digital Ocean space, and updates the Google Sheet with the archive location, status, and date. It can be run manually or on an automated basis.
+This Python script will look for links to Youtube, Twitter, etc,. in a specified column of a Google Sheet, uses YoutubeDL to download the media, stores the result in a Digital Ocean space or Google Drive, and updates the Google Sheet with the archive location, status, and date. It can be run manually or on an automated basis.
 
 ## Setup
 
@@ -14,7 +14,7 @@ If you are using `pipenv` (recommended), `pipenv install` is sufficient to insta
 
 [fonts-noto](https://fonts.google.com/noto) to deal with multiple unicode characters during selenium/geckodriver's screenshots: `sudo apt install fonts-noto -y`. 
 
-A `.env` file is required for saving content to a Digital Ocean space, and for archiving pages to the Internet Archive. This file should also be in the script directory, and should contain the following variables:
+A `.env` file is required for saving content to a Digital Ocean space and Google Drive, and for archiving pages to the Internet Archive. This file should also be in the script directory, and should contain the following variables:
 
 ```
 DO_SPACES_REGION=
@@ -23,7 +23,13 @@ DO_SPACES_KEY=
 DO_SPACES_SECRET=
 INTERNET_ARCHIVE_S3_KEY=
 INTERNET_ARCHIVE_S3_SECRET=
+TELEGRAM_API_ID=
+TELEGRAM_API_HASH=
+FACEBOOK_COOKIE=
+GD_ROOT_FOLDER_ID=
 ```
+
+`.example.env` is an example of this file
 
 Internet Archive credentials can be retrieved from https://archive.org/account/s3.php.
 
@@ -92,4 +98,25 @@ graph TD
 ```mermaid
 graph TD
     A(BaseStorage) -->|parent of| B(S3Storage)
+    A(BaseStorage) -->|parent of| C(GoogleDriveStorage)
 ```
+
+## Saving into Subfolders
+
+You can have a column in the spreadsheet for the argument `--col-subfolder` that is passed to the storage and can specify a subfolder to put the archived link into.
+
+## Google Drive
+
+To use Google Drive storage you need the id of the shared folder in the `.env` file which must be shared with the service account eg `autoarchiverservice@auto-archiver-111111.iam.gserviceaccount.com`
+
+```bash
+python auto_archive.py --sheet 'Sheet Name' --storage='gd'
+```
+
+## Telethon (Telegrams API Library)
+
+Put your `anon.session` in the root, so that it doesn't stall and ask for authentication
+
+
+
+
