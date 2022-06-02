@@ -6,6 +6,7 @@ from loguru import logger
 from storages import Storage
 from .base_archiver import Archiver, ArchiveResult
 from telethon.sync import TelegramClient
+from telethon.errors import ChannelInvalidError
 from configs import TelegramConfig
 
 
@@ -43,15 +44,21 @@ class TelethonArchiver(Archiver):
 
         status = "success"
 
+        # app will ask (stall for user input!) for phone number and auth code if anon.session not found
         with self.client.start():
             matches = list(matches[0])
             chat, post_id = matches[1], matches[2]
 
             post_id = int(post_id)
+
             try:
                 post = self.client.get_messages(chat, ids=post_id)
             except ValueError as e:
-                logger.warning(f'Could not fetch telegram {url} possibly it\'s private: {e}')
+                logger.error(f'Could not fetch telegram {url} possibly it\'s private: {e}')
+                return False
+            except ChannelInvalidError as e:
+                # TODO: check followup here: https://github.com/LonamiWebs/Telethon/issues/3819
+                logger.error(f'Could not fetch telegram {url} possibly it\'s private or not displayable in : {e}')
                 return False
 
             media_posts = self._get_media_posts_in_group(chat, post)
@@ -60,9 +67,10 @@ class TelethonArchiver(Archiver):
 
             if len(media_posts) > 1:
                 key = self.get_html_key(url)
-                cdn_url = self.storage.get_cdn_url(key)
 
                 if check_if_exists and self.storage.exists(key):
+                    # only s3 storage supports storage.exists as not implemented on gd
+                    cdn_url = self.storage.get_cdn_url(key)
                     status = 'already archived'
                     return ArchiveResult(status='already archived', cdn_url=cdn_url, title=post.message, timestamp=post.date, screenshot=screenshot)
 

@@ -1,6 +1,5 @@
 from snscrape.modules.twitter import TwitterTweetScraper, Video, Gif, Photo
 from loguru import logger
-import requests
 from urllib.parse import urlparse
 
 from .base_archiver import Archiver, ArchiveResult
@@ -10,13 +9,14 @@ class TwitterArchiver(Archiver):
     name = "twitter"
 
     def download(self, url, check_if_exists=False):
+
         if 'twitter.com' != self.get_netloc(url):
             return False
 
         tweet_id = urlparse(url).path.split('/')
         if 'status' in tweet_id:
             i = tweet_id.index('status')
-            tweet_id = tweet_id[i+1]
+            tweet_id = tweet_id[i + 1]
         else:
             return False
 
@@ -24,11 +24,12 @@ class TwitterArchiver(Archiver):
 
         try:
             tweet = next(scr.get_items())
-        except:
-            logger.warning('wah wah')
+        except Exception as ex:
+            logger.warning(f"can't get tweet: {type(ex).__name__} occurred. args: {ex.args}")
             return False
 
         if tweet.media is None:
+            logger.trace(f'No media found')
             return False
 
         urls = []

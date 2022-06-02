@@ -5,6 +5,8 @@ import boto3
 from botocore.errorfactory import ClientError
 
 from .base_storage import Storage
+from dataclasses import dataclass
+from loguru import logger
 
 
 @dataclass
@@ -26,19 +28,10 @@ class S3Storage(Storage):
     def __init__(self, config: S3Config):
         self.bucket = config.bucket
         self.region = config.region
+        self.folder = self.clean_path(config.folder)
         self.private = config.private
         self.cdn_url = config.cdn_url
         self.key_path = config.key_path
-
-        if config.no_folder:
-            self.folder = ""
-        else:
-            self.folder = config.folder
-            if len(self.folder) and self.folder[-1] != '/':
-                self.folder += '/'
-
-        if self.key_path == "random":
-            self.key_dict = {}  # key => randomKey
 
         self.s3 = boto3.client(
             's3',
@@ -62,6 +55,7 @@ class S3Storage(Storage):
                 self.key_dict[key] = f"{str(uuid.uuid4())}{ext}"
             final_key = self.key_dict[key]
         return self.folder + final_key
+        return self.folder + self.clean_path(self.subfolder) + key
 
     def get_cdn_url(self, key):
         return self.cdn_url.format(bucket=self.bucket, region=self.region, key=self._get_path(key))
@@ -74,9 +68,9 @@ class S3Storage(Storage):
             return False
 
     def uploadf(self, file, key, **kwargs):
+        logger.debug(f'[S3 storage] uploading {file=}, {key=}')
         if self.private:
             extra_args = kwargs.get("extra_args", {})
         else:
             extra_args = kwargs.get("extra_args", {'ACL': 'public-read'})
-
         self.s3.upload_fileobj(file, Bucket=self.bucket, Key=self._get_path(key), ExtraArgs=extra_args)

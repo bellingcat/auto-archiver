@@ -9,6 +9,11 @@ import traceback
 from archivers import TelethonArchiver, TelegramArchiver, TiktokArchiver, YoutubeDLArchiver, TwitterArchiver, WaybackArchiver, ArchiveResult
 from utils import GWorksheet, mkdir_if_not_exists, expand_url
 from configs import Config
+import archivers
+from storages import S3Storage, S3Config
+from storages.gd_storage import GDConfig, GDStorage
+from utils import GWorksheet, mkdir_if_not_exists
+import sys
 
 logger.add("logs/1trace.log", level="TRACE")
 logger.add("logs/2info.log", level="INFO")
@@ -56,6 +61,25 @@ def update_sheet(gw, row, result: ArchiveResult):
 def process_sheet(c: Config, sheet, header=1, columns=GWorksheet.COLUMN_NAMES):
     sh = c.gsheets_client.open(sheet)
 
+
+def process_sheet(sheet, storage="s3", header=1, columns=GWorksheet.COLUMN_NAMES):
+    gc = gspread.service_account(filename='service_account.json')
+    sh = gc.open(sheet)
+
+    s3_config = S3Config(
+        bucket=os.getenv('DO_BUCKET'),
+        region=os.getenv('DO_SPACES_REGION'),
+        key=os.getenv('DO_SPACES_KEY'),
+        secret=os.getenv('DO_SPACES_SECRET')
+    )
+    gd_config = GDConfig(
+        root_folder_id=os.getenv('GD_ROOT_FOLDER_ID'),
+    )
+    telegram_config = archivers.TelegramConfig(
+        api_id=os.getenv('TELEGRAM_API_ID'),
+        api_hash=os.getenv('TELEGRAM_API_HASH')
+    )
+
     # loop through worksheets to check
     for ii, wks in enumerate(sh.worksheets()):
         logger.info(f'Opening worksheet {ii=}: {wks.title=} {header=}')
@@ -75,16 +99,22 @@ def process_sheet(c: Config, sheet, header=1, columns=GWorksheet.COLUMN_NAMES):
         c.set_folder(f'{sheet.replace(" ", "_")}/{wks.title.replace(" ", "_")}/')
         storage = c.get_storage()
 
+        gd_config.folder = f'{sheet.replace(" ", "_")}/{wks.title.replace(" ", "_")}/'
+        gd_client = GDStorage(gd_config)
 
         # loop through rows in worksheet
         for row in range(1 + header, gw.count_rows() + 1):
             url = gw.get_cell(row, 'url')
             original_status = gw.get_cell(row, 'status')
             status = gw.get_cell(row, 'status', fresh=original_status in ['', None] and url != '')
+
             if url != '' and status in ['', None]:
                 gw.set_cell(row, 'status', 'Archive in progress')
 
                 url = expand_url(url)
+
+                subfolder = gw.get_cell_or_default(row, 'subfolder')
+
                 # make a new driver so each spreadsheet row is idempotent
                 c.recreate_webdriver()
 
@@ -98,16 +128,35 @@ def process_sheet(c: Config, sheet, header=1, columns=GWorksheet.COLUMN_NAMES):
                     WaybackArchiver(storage, c.webdriver, c.wayback_config)
                 ]
 
+                storage_client = None
+                if storage == "s3":
+                    storage_client = s3_client
+                elif storage == "gd":
+                    storage_client = gd_client
+                else:
+                    raise ValueError(f'Cant get storage_client {storage_client}')
+                storage_client.update_properties(subfolder=subfolder)
                 for archiver in active_archivers:
                     logger.debug(f'Trying {archiver} on row {row}')
 
                     try:
                         result = archiver.download(url, check_if_exists=True)
+                    except KeyboardInterrupt:
+                        logger.warning("caught interrupt")
+                        gw.set_cell(row, 'status', '')
+                        driver.quit()
+                        exit()
                     except Exception as e:
                         result = False
                         logger.error(f'Got unexpected error in row {row} with archiver {archiver} for url {url}: {e}\n{traceback.format_exc()}')
 
                     if result:
+                        # IA is a Success I believe - or do we want to display a logger warning for it?
+                        if result.status in ['success', 'already archived', 'Internet Archive fallback']:
+                            result.status = archiver.name + \
+                                ": " + str(result.status)
+                            logger.success(
+                                f'{archiver} succeeded on row {row}, url {url}')
                         if result.status in ['success', 'already archived']:
                             result.status = f"{archiver.name}: {result.status}"
                             logger.success(f'{archiver} succeeded on row {row}')
@@ -115,6 +164,21 @@ def process_sheet(c: Config, sheet, header=1, columns=GWorksheet.COLUMN_NAMES):
                         logger.warning(f'{archiver} did not succeed on row {row}, final status: {result.status}')
                         result.status = f"{archiver.name}: {result.status}"
 
+
+                        # wayback has seen this url before so keep existing status
+                        if "wayback: Internet Archive fallback" in result.status:
+                            logger.success(
+                                f'wayback has seen this url before so keep existing status on row {row}')
+                            result.status = result.status.replace(' (duplicate)', '')
+                            result.status = str(result.status) + " (duplicate)"
+                            break
+
+                        logger.warning(
+                            f'{archiver} did not succeed on {row=}, final status: {result.status}')
+                        result.status = archiver.name + \
+                            ": " + str(result.status)
+                # get rid of driver so can reload on next row
+                driver.quit()
                 if result:
                     update_sheet(gw, row, result)
                 else:
@@ -129,11 +193,24 @@ def main():
     c.parse()
 
     logger.info(f'Opening document {c.sheet} for header {c.header}')
+    parser.add_argument('--storage', action='store', dest='storage', default='s3', help='which storage to use.', choices={"s3", "gd"})
+
+    for k, v in GWorksheet.COLUMN_NAMES.items():
+        help = f"the name of the column to fill with {k} (defaults={v})"
+        if k == "subfolder":
+            help = f"the name of the column to read the {k} from (defaults={v})"
+        parser.add_argument(f'--col-{k}', action='store', dest=k, default=v, help=help)
 
     mkdir_if_not_exists(c.tmp_folder)
     process_sheet(c, c.sheet, header=c.header, columns=c.column_names)
     shutil.rmtree(c.tmp_folder)
     c.destroy_webdriver()
+
+    logger.info(f'Opening document {args.sheet} for header {args.header}')
+
+    mkdir_if_not_exists('tmp')
+    process_sheet(args.sheet, header=args.header, columns=config_columns)
+    shutil.rmtree('tmp')
 
 
 if __name__ == '__main__':

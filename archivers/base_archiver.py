@@ -14,6 +14,10 @@ from selenium.common.exceptions import TimeoutException
 from storages import Storage
 from utils import mkdir_if_not_exists
 
+from selenium.webdriver.common.by import By
+from loguru import logger
+from selenium.common.exceptions import TimeoutException
+
 
 @dataclass
 class ArchiveResult:
@@ -47,6 +51,7 @@ class Archiver(ABC):
     def get_html_key(self, url):
         return self.get_key(urlparse(url).path.replace("/", "_") + ".html")
 
+    # generate the html page eg SM3013/twitter__minmyatnaing13_status_1499415562937503751.html
     def generate_media_page_html(self, url, urls_info: dict, object, thumbnail=None):
         page = f'''<html><head><title>{url}</title><meta charset="UTF-8"></head>
             <body>
@@ -70,8 +75,11 @@ class Archiver(ABC):
 
         self.storage.upload(page_filename, page_key, extra_args={
             'ACL': 'public-read', 'ContentType': 'text/html'})
+
+        page_cdn = self.storage.get_cdn_url(page_key)
         return (page_cdn, page_hash, thumbnail)
 
+    # eg images in a tweet save to cloud storage
     def generate_media_page(self, urls, url, object):
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36'
@@ -87,12 +95,19 @@ class Archiver(ABC):
 
             filename = Storage.TMP_FOLDER + key
 
+            # eg media_url: https://pbs.twimg.com/media/FM7-ggCUYAQHKWW?format=jpg&name=orig
             d = requests.get(media_url, headers=headers)
             with open(filename, 'wb') as f:
                 f.write(d.content)
 
+            # eg filename: 'tmp/twitter__media_FM7-ggCUYAQHKWW.jpg'
+            # eg key: 'twitter__media_FM7-ggCUYAQHKWW.jpg'
+            # or if using filename key: 'SM3013/twitter__media_FM7-ggCUYAQHKWW.jpg'
             self.storage.upload(filename, key)
+
             hash = self.get_hash(filename)
+
+            # eg 'https://testhashing.fra1.cdn.digitaloceanspaces.com/Test_Hashing/Sheet1/twitter__media_FM7-ggCUYAQHKWW.jpg'
             cdn_url = self.storage.get_cdn_url(key)
 
             if thumbnail is None:
@@ -119,7 +134,11 @@ class Archiver(ABC):
     def get_hash(self, filename):
         f = open(filename, "rb")
         bytes = f.read()  # read entire file as bytes
+
+        # TODO: customizable hash
         hash = hashlib.sha256(bytes)
+        # option to use SHA3_512 instead
+        # hash = hashlib.sha3_512(bytes)
         f.close()
         return hash.hexdigest()
 
@@ -127,6 +146,19 @@ class Archiver(ABC):
         key = self.get_key(urlparse(url).path.replace(
             "/", "_") + datetime.datetime.utcnow().isoformat().replace(" ", "_") + ".png")
         filename = Storage.TMP_FOLDER + key
+
+        # Accept cookies popup dismiss for ytdlp video
+        if 'facebook.com' in url:
+            try:
+                logger.debug(f'Trying fb click accept cookie popup for {url}')
+                self.driver.get("http://www.facebook.com")
+                foo = self.driver.find_element(By.XPATH, "//button[@data-cookiebanner='accept_only_essential_button']")
+                foo.click()
+                logger.debug(f'fb click worked')
+                # linux server needs a sleep otherwise facebook cookie wont have worked and we'll get a popup on next page
+                time.sleep(2)
+            except:
+                logger.warning(f'Failed on fb accept cookies for url {url}')
 
         try:
             self.driver.get(url)
@@ -137,6 +169,7 @@ class Archiver(ABC):
         self.driver.save_screenshot(filename)
         self.storage.upload(filename, key, extra_args={
                             'ACL': 'public-read', 'ContentType': 'image/png'})
+
         return self.storage.get_cdn_url(key)
 
     def get_thumbnails(self, filename, key, duration=None):
@@ -167,10 +200,9 @@ class Archiver(ABC):
                 thumbnail_filename = thumbnails_folder + fname
                 key = key_folder + fname
 
-                cdn_url = self.storage.get_cdn_url(key)
-
                 self.storage.upload(thumbnail_filename, key)
 
+                cdn_url = self.storage.get_cdn_url(key)
                 cdn_urls.append(cdn_url)
 
         if len(cdn_urls) == 0:
