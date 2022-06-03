@@ -53,6 +53,9 @@ class Archiver(ABC):
 
     # generate the html page eg SM3013/twitter__minmyatnaing13_status_1499415562937503751.html
     def generate_media_page_html(self, url, urls_info: dict, object, thumbnail=None):
+        """
+        Generates an index.html page where each @urls_info is displayed
+        """
         page = f'''<html><head><title>{url}</title><meta charset="UTF-8"></head>
             <body>
             <h2>Archived media from {self.name}</h2>
@@ -81,6 +84,10 @@ class Archiver(ABC):
 
     # eg images in a tweet save to cloud storage
     def generate_media_page(self, urls, url, object):
+        """
+        For a list of media urls, fetch them, upload them
+        and call self.generate_media_page_html with them
+        """
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36'
         }
@@ -95,19 +102,12 @@ class Archiver(ABC):
 
             filename = Storage.TMP_FOLDER + key
 
-            # eg media_url: https://pbs.twimg.com/media/FM7-ggCUYAQHKWW?format=jpg&name=orig
             d = requests.get(media_url, headers=headers)
             with open(filename, 'wb') as f:
                 f.write(d.content)
 
-            # eg filename: 'tmp/twitter__media_FM7-ggCUYAQHKWW.jpg'
-            # eg key: 'twitter__media_FM7-ggCUYAQHKWW.jpg'
-            # or if using filename key: 'SM3013/twitter__media_FM7-ggCUYAQHKWW.jpg'
             self.storage.upload(filename, key)
-
             hash = self.get_hash(filename)
-
-            # eg 'https://testhashing.fra1.cdn.digitaloceanspaces.com/Test_Hashing/Sheet1/twitter__media_FM7-ggCUYAQHKWW.jpg'
             cdn_url = self.storage.get_cdn_url(key)
 
             if thumbnail is None:
@@ -132,14 +132,12 @@ class Archiver(ABC):
         return f'{self.name}_{_id}{extension}'
 
     def get_hash(self, filename):
-        f = open(filename, "rb")
-        bytes = f.read()  # read entire file as bytes
-
-        # TODO: customizable hash
-        hash = hashlib.sha256(bytes)
-        # option to use SHA3_512 instead
-        # hash = hashlib.sha3_512(bytes)
-        f.close()
+        with open(filename, "rb") as f:
+            bytes = f.read()  # read entire file as bytes
+            # TODO: customizable hash
+            hash = hashlib.sha256(bytes)
+            # option to use SHA3_512 instead
+            # hash = hashlib.sha3_512(bytes)
         return hash.hexdigest()
 
     def get_screenshot(self, url):
@@ -155,7 +153,7 @@ class Archiver(ABC):
                 foo = self.driver.find_element(By.XPATH, "//button[@data-cookiebanner='accept_only_essential_button']")
                 foo.click()
                 logger.debug(f'fb click worked')
-                # linux server needs a sleep otherwise facebook cookie wont have worked and we'll get a popup on next page
+                # linux server needs a sleep otherwise facebook cookie won't have worked and we'll get a popup on next page
                 time.sleep(2)
             except:
                 logger.warning(f'Failed on fb accept cookies for url {url}')
