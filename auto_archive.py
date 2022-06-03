@@ -9,8 +9,7 @@ import traceback
 from archivers import TelethonArchiver, TelegramArchiver, TiktokArchiver, YoutubeDLArchiver, TwitterArchiver, WaybackArchiver, ArchiveResult
 from utils import GWorksheet, mkdir_if_not_exists, expand_url
 from configs import Config
-import archivers
-from storages import S3Storage, S3Config
+
 from storages.gd_storage import GDConfig, GDStorage
 from utils import GWorksheet, mkdir_if_not_exists
 import sys
@@ -20,9 +19,6 @@ logger.add("logs/2info.log", level="INFO")
 logger.add("logs/3success.log", level="SUCCESS")
 logger.add("logs/4warning.log", level="WARNING")
 logger.add("logs/5error.log", level="ERROR")
-
-load_dotenv()
-
 
 def update_sheet(gw, row, result: ArchiveResult):
     cell_updates = []
@@ -61,25 +57,6 @@ def update_sheet(gw, row, result: ArchiveResult):
 def process_sheet(c: Config, sheet, header=1, columns=GWorksheet.COLUMN_NAMES):
     sh = c.gsheets_client.open(sheet)
 
-
-def process_sheet(sheet, storage="s3", header=1, columns=GWorksheet.COLUMN_NAMES):
-    gc = gspread.service_account(filename='service_account.json')
-    sh = gc.open(sheet)
-
-    s3_config = S3Config(
-        bucket=os.getenv('DO_BUCKET'),
-        region=os.getenv('DO_SPACES_REGION'),
-        key=os.getenv('DO_SPACES_KEY'),
-        secret=os.getenv('DO_SPACES_SECRET')
-    )
-    gd_config = GDConfig(
-        root_folder_id=os.getenv('GD_ROOT_FOLDER_ID'),
-    )
-    telegram_config = archivers.TelegramConfig(
-        api_id=os.getenv('TELEGRAM_API_ID'),
-        api_hash=os.getenv('TELEGRAM_API_HASH')
-    )
-
     # loop through worksheets to check
     for ii, wks in enumerate(sh.worksheets()):
         logger.info(f'Opening worksheet {ii=}: {wks.title=} {header=}')
@@ -98,9 +75,6 @@ def process_sheet(sheet, storage="s3", header=1, columns=GWorksheet.COLUMN_NAMES
         # archives will be in a folder 'doc_name/worksheet_name'
         c.set_folder(f'{sheet.replace(" ", "_")}/{wks.title.replace(" ", "_")}/')
         storage = c.get_storage()
-
-        gd_config.folder = f'{sheet.replace(" ", "_")}/{wks.title.replace(" ", "_")}/'
-        gd_client = GDStorage(gd_config)
 
         # loop through rows in worksheet
         for row in range(1 + header, gw.count_rows() + 1):
@@ -188,7 +162,6 @@ def process_sheet(sheet, storage="s3", header=1, columns=GWorksheet.COLUMN_NAMES
 
 @logger.catch
 def main():
-    logger.debug(f'Passed args:{sys.argv}')
     c = Config()
     c.parse()
 
