@@ -1,22 +1,15 @@
-import os
-import ffmpeg
-import datetime
-import shutil
+import os, datetime, shutil, hashlib, time, requests
 from dataclasses import dataclass
 from abc import ABC, abstractmethod
 from urllib.parse import urlparse
-import hashlib
-import time
-import requests
+
+import ffmpeg
 from loguru import logger
 from selenium.common.exceptions import TimeoutException
+from selenium.webdriver.common.by import By
 
 from storages import Storage
 from utils import mkdir_if_not_exists
-
-from selenium.webdriver.common.by import By
-from loguru import logger
-from selenium.common.exceptions import TimeoutException
 
 
 @dataclass

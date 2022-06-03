@@ -2,6 +2,6 @@
 from dataclasses import dataclass
 
 @dataclass
-class TelegramConfig:
+class TelethonConfig:
     api_id: str
     api_hash: str

@@ -1,6 +1,6 @@
 
-import os
-import datetime
+import os, datetime
+
 import yt_dlp
 from loguru import logger
 

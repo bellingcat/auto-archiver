@@ -5,6 +5,7 @@ from loguru import logger
 from .base_archiver import Archiver, ArchiveResult
 from storages import Storage
 
+
 class TiktokArchiver(Archiver):
     name = "tiktok"
 

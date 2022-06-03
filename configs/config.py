@@ -7,7 +7,7 @@ from dataclasses import dataclass
 
 from utils.gworksheet import GWorksheet
 from .wayback_config import WaybackConfig
-from .telegram_config import TelegramConfig
+from .telethon_config import TelethonConfig
 from storages import Storage, S3Config, S3Storage, GDStorage, GDConfig, LocalStorage
 
 
@@ -131,7 +131,7 @@ class Config:
 
         # telethon config
         if "telegram" in secrets:
-            self.telegram_config = TelegramConfig(
+            self.telegram_config = TelethonConfig(
                 api_id=secrets["telegram"]["api_id"],
                 api_hash=secrets["telegram"]["api_hash"]
             )

@@ -1,11 +1,12 @@
 import time, requests
+
+from loguru import logger
 from bs4 import BeautifulSoup
 
 from storages import Storage
 from .base_archiver import Archiver, ArchiveResult
-
 from configs import WaybackConfig
-from loguru import logger
+
 
 
 class WaybackArchiver(Archiver):

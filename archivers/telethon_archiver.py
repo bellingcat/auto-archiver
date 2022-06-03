@@ -1,20 +1,20 @@
-import os
-import re
+import os, re
+
 import html
 from loguru import logger
+from telethon.sync import TelegramClient
+from telethon.errors import ChannelInvalidError
 
 from storages import Storage
 from .base_archiver import Archiver, ArchiveResult
-from telethon.sync import TelegramClient
-from telethon.errors import ChannelInvalidError
-from configs import TelegramConfig
+from configs import TelethonConfig
 
 
 class TelethonArchiver(Archiver):
     name = "telethon"
     link_pattern = re.compile(r"https:\/\/t\.me(\/c){0,1}\/(.+)\/(.+)")
 
-    def __init__(self, storage: Storage, driver, config: TelegramConfig):
+    def __init__(self, storage: Storage, driver, config: TelethonConfig):
         super().__init__(storage, driver)
         self.client = TelegramClient("./anon", config.api_id, config.api_hash)
 
@@ -62,7 +62,7 @@ class TelethonArchiver(Archiver):
                 return False
 
             media_posts = self._get_media_posts_in_group(chat, post)
-            
+
             screenshot = self.get_screenshot(url)
 
             if len(media_posts) > 1:

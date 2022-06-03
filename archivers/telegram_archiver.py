@@ -1,9 +1,8 @@
-import os
-import requests
+import os, requests, re
+
+import html
 from bs4 import BeautifulSoup
 from loguru import logger
-import re
-import html
 
 from .base_archiver import Archiver, ArchiveResult
 from storages import Storage
