@@ -12,14 +12,16 @@ import time
 @dataclass
 class GDConfig:
     root_folder_id: str
-    default_upload_folder_name: str = "default"
+    default_folder: str = "default"
+    service_account: str = "service_account.json"
 
 
 class GDStorage(Storage):
     def __init__(self, config: GDConfig):
-        self.default_upload_folder_name = config.default_upload_folder_name
+        self.default_folder = config.default_folder
         self.root_folder_id = config.root_folder_id
-        creds = service_account.Credentials.from_service_account_file('service_account.json', scopes=['https://www.googleapis.com/auth/drive'])
+        creds = service_account.Credentials.from_service_account_file(
+            config.service_account, scopes=['https://www.googleapis.com/auth/drive'])
         self.service = build('drive', 'v3', credentials=creds)
 
     def get_cdn_url(self, key):
@@ -27,7 +29,7 @@ class GDStorage(Storage):
         only support files saved in a folder for GD
         S3 supports folder and all stored in the root
         """
-        self.subfolder = self._clean_path(self.subfolder, self.default_upload_folder_name, False)
+        self.subfolder = self._clean_path(self.subfolder, self.default_folder, False)
         filename = key
         logger.debug(f'Looking for {self.subfolder} and filename: {filename} on GD')
 
