@@ -54,11 +54,11 @@ class TelethonArchiver(Archiver):
             try:
                 post = self.client.get_messages(chat, ids=post_id)
             except ValueError as e:
-                logger.error(f'Could not fetch telegram {url} possibly it\'s private: {e}')
+                logger.error(f"Could not fetch telegram {url} possibly it's private: {e}")
                 return False
             except ChannelInvalidError as e:
                 # TODO: check followup here: https://github.com/LonamiWebs/Telethon/issues/3819
-                logger.error(f'Could not fetch telegram {url} possibly it\'s private or not displayable in : {e}')
+                logger.error(f"Could not fetch telegram {url} possibly it's private or not displayable in : {e}")
                 return False
 
             media_posts = self._get_media_posts_in_group(chat, post)
