@@ -6,7 +6,6 @@ name = "pypi"
 [packages]
 gspread = "*"
 boto3 = "*"
-python-dotenv = "*"
 argparse = "*"
 beautifulsoup4 = "*"
 tiktok-downloader = {git = "https://github.com/msramalho/tiktok-downloader"}

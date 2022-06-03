@@ -37,6 +37,14 @@ class Config:
     def __init__(self):
         self.parser = self.get_argument_parser()
         self.folder = ""
+        self.set_log_files()
+
+    def set_log_files(self):
+        logger.add("logs/1trace.log", level="TRACE")
+        logger.add("logs/2info.log", level="INFO")
+        logger.add("logs/3success.log", level="SUCCESS")
+        logger.add("logs/4warning.log", level="WARNING")
+        logger.add("logs/5error.log", level="ERROR")
 
     def parse(self):
         self.args = self.parser.parse_args()
@@ -145,7 +153,10 @@ class Config:
         parser.add_argument('--s3-private', action='store_true', help='Store content without public access permission (only for storage=s3) [secrets.s3.private in config.json]')
 
         for k, v in GWorksheet.COLUMN_NAMES.items():
-            parser.add_argument(f'--col-{k}', action='store', dest=k, help=f"name of the column to fill with {k} (default='{v}')")
+            help = f"the name of the column to FILL WITH {k} (default='{v}')"
+            if k in ["url", "subfolder"]:
+                help = f"the name of the column to READ {k} FROM (default='{v}')"
+            parser.add_argument(f'--col-{k}', action='store', dest=k, help=help)
 
         return parser
 

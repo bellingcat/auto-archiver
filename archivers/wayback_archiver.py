@@ -78,6 +78,6 @@ class WaybackArchiver(Archiver):
             title = "Could not get title"
 
         screenshot = self.get_screenshot(url)
-        result = ArchiveResult(status='Internet Archive fallback', cdn_url=archive_url, title=title, screenshot=screenshot)
+        result = ArchiveResult(status='success', cdn_url=archive_url, title=title, screenshot=screenshot)
         self.seen_urls[url] = result
         return result

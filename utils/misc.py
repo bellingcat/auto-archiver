@@ -13,7 +13,8 @@ def expand_url(url):
     if 'https://t.co/' in url:
         try:
             r = requests.get(url)
-            url = r.url
+            logger.debug(f'Expanded url {url} to {r.url}')
+            return r.url
         except:
             logger.error(f'Failed to expand url {url}')
     return url
