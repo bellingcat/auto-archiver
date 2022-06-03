@@ -24,8 +24,7 @@ class Config:
     Usage:
       c = Config() # initializes the argument parser
       c.parse() # parses the values and initializes the Services and API clients
-      # you can then access the Services and APIs like
-      c.s3_config
+      # you can then access the Services and APIs like 'c.s3_config'
     All the configurations available as cmd line options, when included, will 
     override the configurations in the config.json file.
     Configurations are split between:
