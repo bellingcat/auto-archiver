@@ -1,4 +1,5 @@
 # we need to explicitly expose the available imports here
-from .base_storage import *
-from .local_storage import *
-from .s3_storage import *
+from .base_storage import Storage
+from .local_storage import LocalStorage
+from .s3_storage import S3Config, S3Storage
+from .gd_storage import GDConfig, GDStorage
