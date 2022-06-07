@@ -6,45 +6,103 @@ This Python script will look for links to Youtube, Twitter, etc,. in a specified
 
 If you are using `pipenv` (recommended), `pipenv install` is sufficient to install Python prerequisites.
 
-[A Google Service account is necessary for use with `gspread`.](https://gspread.readthedocs.io/en/latest/oauth2.html#for-bots-using-service-account) Credentials for this account should be stored in `service_account.json`, in the same directory as the script.
+You also need:
+1. [A Google Service account is necessary for use with `gspread`.](https://gspread.readthedocs.io/en/latest/oauth2.html#for-bots-using-service-account) Credentials for this account should be stored in `service_account.json`, in the same directory as the script.
+1. [ffmpeg](https://www.ffmpeg.org/) must also be installed locally for this tool to work. 
+1. [firefox](https://www.mozilla.org/en-US/firefox/new/) and [geckodriver](https://github.com/mozilla/geckodriver/releases) on a path folder like `/usr/local/bin`. 
+1. [fonts-noto](https://fonts.google.com/noto) to deal with multiple unicode characters during selenium/geckodriver's screenshots: `sudo apt install fonts-noto -y`. 
+1. Internet Archive credentials can be retrieved from https://archive.org/account/s3.php.
 
-[ffmpeg](https://www.ffmpeg.org/) must also be installed locally for this tool to work. 
+### Configuration file
+Configuration is done via a config.json file (see [example.config.json](example.config.json)) and some properties of that file can be overwritten via command line arguments. Here is the current result from running the `python auto_archive.py --help`:
 
-[firefox](https://www.mozilla.org/en-US/firefox/new/) and [geckodriver](https://github.com/mozilla/geckodriver/releases) on a path folder like `/usr/local/bin`. 
+<details><summary><code>python auto_archive.py --help</code></summary>
 
-[fonts-noto](https://fonts.google.com/noto) to deal with multiple unicode characters during selenium/geckodriver's screenshots: `sudo apt install fonts-noto -y`. 
 
-A `.env` file is required for saving content to a Digital Ocean space and Google Drive, and for archiving pages to the Internet Archive. This file should also be in the script directory, and should contain the following variables:
 
+```js
+usage: auto_archive.py [-h] [--config CONFIG] [--storage {s3,local,gd}] [--sheet SHEET] [--header HEADER] [--s3-private] [--col-url URL] [--col-folder FOLDER] [--col-archive ARCHIVE] [--col-date DATE] [--col-status STATUS] [--col-thumbnail THUMBNAIL] [--col-thumbnail_index THUMBNAIL_INDEX] [--col-timestamp TIMESTAMP] [--col-title TITLE] [--col-duration DURATION] [--col-screenshot SCREENSHOT] [--col-hash HASH]
+
+Automatically archive social media posts, videos, and images from a Google Sheets document. The command line arguments will always override the configurations in the provided JSON config
+file (--config), only some high-level options are allowed via the command line and the JSON configuration file is the preferred method.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --config CONFIG       the filename of the JSON configuration file (defaults to 'config.json')
+  --storage {s3,local,gd}
+                        which storage to use [execution.storage in config.json]
+  --sheet SHEET         the name of the google sheets document [execution.sheet in config.json]
+  --header HEADER       1-based index for the header row [execution.header in config.json]
+  --s3-private          Store content without public access permission (only for storage=s3) [secrets.s3.private in config.json]
+  --col-url URL         the name of the column to READ url FROM (default='link')
+  --col-folder FOLDER   the name of the column to READ folder FROM (default='destination folder')
+  --col-archive ARCHIVE
+                        the name of the column to FILL WITH archive (default='archive location')
+  --col-date DATE       the name of the column to FILL WITH date (default='archive date')
+  --col-status STATUS   the name of the column to FILL WITH status (default='archive status')
+  --col-thumbnail THUMBNAIL 
+                        the name of the column to FILL WITH thumbnail (default='thumbnail')
+  --col-thumbnail_index THUMBNAIL_INDEX
+                        the name of the column to FILL WITH thumbnail_index (default='thumbnail index')
+  --col-timestamp TIMESTAMP
+                        the name of the column to FILL WITH timestamp (default='upload timestamp')
+  --col-title TITLE     the name of the column to FILL WITH title (default='upload title')
+  --col-duration DURATION
+                        the name of the column to FILL WITH duration (default='duration')
+  --col-screenshot SCREENSHOT
+                        the name of the column to FILL WITH screenshot (default='screenshot')
+  --col-hash HASH       the name of the column to FILL WITH hash (default='hash')
 ```
-DO_SPACES_REGION=
-DO_BUCKET=
-DO_SPACES_KEY=
-DO_SPACES_SECRET=
-INTERNET_ARCHIVE_S3_KEY=
-INTERNET_ARCHIVE_S3_SECRET=
-TELEGRAM_API_ID=
-TELEGRAM_API_HASH=
-FACEBOOK_COOKIE=
-GD_ROOT_FOLDER_ID=
+
+</details><br/>
+
+#### Example invocations
+All the configurations can be specified in the JSON config file, but sometimes it is useful to override only some of those like the sheet that we are running the archival on, here are some examples (possibly prepended by `pipenv run`):
+
+```bash
+# all the configurations come from config.json
+python auto_archive.py
+
+# all the configurations come from my_config.json
+python auto_archive.py --config my_config.json
+
+# reads the configurations but saves archived content to google drive instead
+python auto_archive.py --config my_config.json --storage gd
+
+# uses the configurations but for another google docs sheet 
+# with a header on row 2 and with some different column names
+python auto_archive.py --config my_config.json --sheet="use it on another sheets doc" --header=2 --col-link="put urls here"
+
+# all the configurations come from config.json and specifies that s3 files should be private
+python auto_archive.py --s3-private
 ```
 
-`.example.env` is an example of this file
+### Extra notes on configuration
+#### Google Drive
+To use Google Drive storage you need the id of the shared folder in the `config.json` file which must be shared with the service account eg `autoarchiverservice@auto-archiver-111111.iam.gserviceaccount.com` and then you can use `--storage=gd`
 
-Internet Archive credentials can be retrieved from https://archive.org/account/s3.php.
+#### Telethon (Telegrams API Library)
+The first time you run, you will be prompted to do a authentication with the phone number associated, alternativelly you can put your `anon.session` in the root.
+
 
 ## Running
-
-There is just one necessary command line flag, `--sheet name` which the name of the Google Sheet to check for URLs. This sheet must have been shared with the Google Service account used by `gspread`. This sheet must also have specific columns in the first row:
-* `Media URL` (required): the location of the media to be archived. This is the only column that should be supplied with data initially
+The `--sheet name` property (or `execution.sheet` in the JSON file) is the name of the Google Sheet to check for URLs. 
+This sheet must have been shared with the Google Service account used by `gspread`. 
+This sheet must also have specific columns (case-insensitive) in the `header` row (see `COLUMN_NAMES` in [gworksheet.py](utils/gworksheet.py)):
+* `Link` (required): the location of the media to be archived. This is the only column that should be supplied with data initially
+* `Destination folder`: (optional) by default files are saved to a folder called `name-of-sheets-document/name-of-sheets-tab/` using this option you can organize documents into folder from the sheet. 
 * `Archive status` (required): the status of the auto archiver script. Any row with text in this column will be skipped automatically.
-* `Archive location` (required): the location of the archived version. For files that were not able to be auto archived, this can be manually updated.
+* `Archive location`: the location of the archived version. For files that were not able to be auto archived, this can be manually updated.
 * `Archive date`: the date that the auto archiver script ran for this file
 * `Upload timestamp`: the timestamp extracted from the video. (For YouTube, this unfortunately does not currently include the time)
-* `Duration`: the duration of the video
 * `Upload title`: the "title" of the video from the original source
-* `Thumbnail`: an image thumbnail of the video (resize row height to make this more visible)
-* `Thumbnail index`: a link to a page that shows many thumbnails for the video, useful for quickly seeing video content
+* `Hash`: a hash of the first video or image found
+* `Screenshot`: a screenshot taken with from a browser view of opening the page
+* in case of videos
+  * `Duration`: duration in seconds
+  * `Thumbnail`: an image thumbnail of the video (resize row height to make this more visible)
+  * `Thumbnail index`: a link to a page that shows many thumbnails for the video, useful for quickly seeing video content
+
 
 For example, for use with this spreadsheet:
 
@@ -88,11 +146,12 @@ Code is split into functional concepts:
 ### Current Archivers
 ```mermaid
 graph TD
-    A(Archiver) -->|parent of| B(TelegramArchiver)
+    A(Archiver) -->|parent of| B(YoutubeDLArchiver)
     A -->|parent of| C(TikTokArchiver)
-    A -->|parent of| D(YoutubeDLArchiver)
-    A -->|parent of| E(WaybackArchiver)
-    A -->|parent of| F(TwitterArchiver)
+    A -->|parent of| D(TwitterArchiver)
+    A -->|parent of| E(TelegramArchiver)
+    A -->|parent of| F(TelethonArchiver)
+    A -->|parent of| G(WaybackArchiver)
 ```
 ### Current Storages
 ```mermaid
@@ -101,23 +160,6 @@ graph TD
     C(BaseStorage) -->|parent of| C(LocalStorage)
     A(BaseStorage) -->|parent of| C(GoogleDriveStorage)
 ```
-
-## Saving into Subfolders
-
-You can have a column in the spreadsheet for the argument `--col-subfolder` that is passed to the storage and can specify a subfolder to put the archived link into.
-
-## Google Drive
-
-To use Google Drive storage you need the id of the shared folder in the `.env` file which must be shared with the service account eg `autoarchiverservice@auto-archiver-111111.iam.gserviceaccount.com`
-
-```bash
-python auto_archive.py --sheet 'Sheet Name' --storage='gd'
-```
-
-## Telethon (Telegrams API Library)
-
-Put your `anon.session` in the root, so that it doesn't stall and ask for authentication
-
 
 
 
