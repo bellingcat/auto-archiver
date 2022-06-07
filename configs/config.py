@@ -3,12 +3,12 @@ import argparse, json
 import gspread
 from loguru import logger
 from selenium import webdriver
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 
-from utils.gworksheet import GWorksheet
+from utils import GWorksheet, getattr_or
 from .wayback_config import WaybackConfig
 from .telethon_config import TelethonConfig
-from storages import Storage, S3Config, S3Storage, GDStorage, GDConfig, LocalStorage
+from storages import Storage, S3Config, S3Storage, GDStorage, GDConfig, LocalStorage, LocalConfig
 
 
 @dataclass
@@ -39,6 +39,7 @@ class Config:
         self.set_log_files()
 
     def set_log_files(self):
+        # TODO: isolate to config
         logger.add("logs/1trace.log", level="TRACE")
         logger.add("logs/2info.log", level="INFO")
         logger.add("logs/3success.log", level="SUCCESS")
@@ -59,21 +60,18 @@ class Config:
         # ----------------------EXECUTION - execution configurations
         execution = self.config.get("execution", {})
 
-        self.sheet = getattr(self.args, "sheet", execution.get("sheet"))
+        self.sheet = getattr_or(self.args, "sheet", execution.get("sheet"))
         assert self.sheet is not None, "'sheet' must be provided either through command line or configuration file"
-        self.header = int(getattr(self.args, "header", execution.get("header", 1)))
+        self.header = int(getattr_or(self.args, "header", execution.get("header", 1)))
         Storage.TMP_FOLDER = execution.get("tmp_folder", Storage.TMP_FOLDER)
-        self.storage = getattr(self.args, "storage", execution.get("storage", "s3"))
-
-        for key, name in [("s3", "s3"), ("gd", "google_drive")]:
-            assert self.storage != key or name in secrets, f"selected storage '{key}' requires secrets.'{name}' in {self.config_file}"
+        self.storage = getattr_or(self.args, "storage", execution.get("storage", "s3"))
 
         # Column names come from config and can be overwritten by CMD
         # in the end all are considered as lower case
         config_column_names = execution.get("column_names", {})
         self.column_names = {}
         for k in GWorksheet.COLUMN_NAMES.keys():
-            self.column_names[k] = getattr(self.args, k, config_column_names.get(k, GWorksheet.COLUMN_NAMES[k])).lower()
+            self.column_names[k] = getattr_or(self.args, k, config_column_names.get(k, GWorksheet.COLUMN_NAMES[k])).lower()
 
         # selenium driver
         selenium_configs = execution.get("selenium", {})
@@ -86,6 +84,10 @@ class Config:
 
         # ---------------------- SECRETS - APIs and service configurations
         secrets = self.config.get("secrets", {})
+
+        # assert selected storage credentials exist
+        for key, name in [("s3", "s3"), ("gd", "google_drive"), ("local", "local")]:
+            assert self.storage != key or name in secrets, f"selected storage '{key}' requires secrets.'{name}' in {self.config_file}"
 
         # google sheets config
         self.gsheets_client = gspread.service_account(
@@ -106,8 +108,7 @@ class Config:
                 endpoint_url=s3.get("endpoint_url", S3Config.endpoint_url),
                 cdn_url=s3.get("cdn_url", S3Config.cdn_url),
                 key_path=s3.get("key_path", S3Config.key_path),
-                private=getattr(self.args, "s3-private", s3.get("private", S3Config.private)),
-                no_folder=s3.get("no_folder", S3Config.no_folder),
+                private=getattr_or(self.args, "s3-private", s3.get("private", S3Config.private))
             )
 
         # GDrive config
@@ -115,8 +116,12 @@ class Config:
             gd = secrets["google_drive"]
             self.gd_config = GDConfig(
                 root_folder_id=gd.get("root_folder_id"),
-                default_folder=gd.get("default_folder", GDConfig.default_folder),
-                service_account=gd.get("service_account", GDConfig.service_account),
+                service_account=gd.get("service_account", GDConfig.service_account)
+            )
+
+        if "local" in secrets:
+            self.local_config = LocalConfig(
+                save_to=secrets["local"].get("save_to", LocalConfig.save_to),
             )
 
         # wayback machine config
@@ -153,30 +158,40 @@ class Config:
 
         for k, v in GWorksheet.COLUMN_NAMES.items():
             help = f"the name of the column to FILL WITH {k} (default='{v}')"
-            if k in ["url", "subfolder"]:
+            if k in ["url", "folder"]:
                 help = f"the name of the column to READ {k} FROM (default='{v}')"
             parser.add_argument(f'--col-{k}', action='store', dest=k, help=help)
 
         return parser
 
     def set_folder(self, folder):
-        # update the folder in each of the storages
+        """
+        update the folder in each of the storages
+        """
         self.folder = folder
-        if self.s3_config:
-            self.s3_config.folder = folder
-        if self.gd_config:
-            self.gd_config.default_folder = folder
+        # s3
+        if hasattr(self, "s3_config"): self.s3_config.folder = folder
+        if hasattr(self, "s3_storage"): self.s3_storage.folder = folder
+        # gdrive
+        if hasattr(self, "gd_config"): self.gd_config.folder = folder
+        if hasattr(self, "gd_storage"): self.gd_storage.folder = folder
+        # local
+        if hasattr(self, "local_config"): self.local_config.folder = folder
+        if hasattr(self, "local_storage"): self.local_storage.folder = folder
 
     def get_storage(self):
         """
-        creates and returns the configured type of storage
+        returns the configured type of storage, creating if needed
         """
         if self.storage == "s3":
-            return S3Storage(self.s3_config)
+            self.s3_storage = getattr_or(self, "s3_storage", S3Storage(self.s3_config))
+            return self.s3_storage
         elif self.storage == "gd":
-            return GDStorage(self.gd_config)
+            self.gd_storage = getattr_or(self, "gd_storage", GDStorage(self.gd_config))
+            return self.gd_storage
         elif self.storage == "local":
-            return LocalStorage(self.folder)
+            self.local_storage = getattr_or(self, "local_storage", LocalStorage(self.local_config))
+            return self.local_storage
         raise f"storage {self.storage} not implemented, available: {Config.AVAILABLE_STORAGES}"
 
     def destroy_webdriver(self):
@@ -197,12 +212,13 @@ class Config:
         return json.dumps({
             "config_file": self.config_file,
             "sheet": self.sheet,
+            "storage": self.storage,
             "header": self.header,
             "tmp_folder": Storage.TMP_FOLDER,
-            "selenium_config": self.selenium_config,
+            "selenium_config": asdict(self.selenium_config),
             "selenium_webdriver": self.webdriver != None,
             "s3_config": self.s3_config != None,
-            "s3_private": getattr(self.s3_config, "private", None),
+            "s3_private": getattr_or(self.s3_config, "private", None),
             "wayback_config": self.wayback_config != None,
             "telegram_config": self.telegram_config != None,
             "gsheets_client": self.gsheets_client != None,

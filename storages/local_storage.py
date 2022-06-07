@@ -1,13 +1,26 @@
 import os
-from .base_storage import Storage
 
+from dataclasses import dataclass
+
+from .base_storage import Storage
+from utils import mkdir_if_not_exists
+
+
+@dataclass
+class LocalConfig:
+    folder: str = ""
+    save_to: str = "./"
 
 class LocalStorage(Storage):
-    def __init__(self, folder):
-        self.folder = self._clean_path(folder)
+    def __init__(self, config:LocalConfig):
+        self.folder = self._clean_path(config.folder)
+        self.save_to = self._clean_path(config.save_to)
+        mkdir_if_not_exists(self.save_to)
 
     def get_cdn_url(self, key):
-        return self.folder + self._clean_path(self.subfolder) + key
+        full_path = os.path.join(self.save_to, self.folder, key)
+        mkdir_if_not_exists(os.path.join(*full_path.split(os.path.sep)[0:-1]))
+        return os.path.abspath(full_path)
 
     def exists(self, key):
         return os.path.isfile(self.get_cdn_url(key))

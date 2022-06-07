@@ -10,10 +10,10 @@ class GWorksheet:
     """
     COLUMN_NAMES = {
         'url': 'link',
-        'subfolder': 'sub folder',
+        'status': 'archive status',
+        'folder': 'destination folder',
         'archive': 'archive location',
         'date': 'archive date',
-        'status': 'archive status',
         'thumbnail': 'thumbnail',
         'thumbnail_index': 'thumbnail index',
         'timestamp': 'upload timestamp',
@@ -72,12 +72,15 @@ class GWorksheet:
             return ''
         return row[col_index]
 
-    def get_cell_or_default(self, row, col: str, default: str = None, fresh=False):
+    def get_cell_or_default(self, row, col: str, default: str = None, fresh=False, when_empty_use_default=True):
         """
         return self.get_cell or default value on error (eg: column is missing)
         """
         try:
-            return self.get_cell(row, col, fresh)
+            val = self.get_cell(row, col, fresh)
+            if when_empty_use_default and val.strip() == "":
+                return default
+            return val
         except:
             return default
 

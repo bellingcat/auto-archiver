@@ -20,8 +20,6 @@ class S3Config:
     cdn_url: str = "https://{bucket}.{region}.cdn.digitaloceanspaces.com/{key}"
     private: bool = False
     key_path: str = "default"  # 'default' uses full naming, 'random' uses generated uuid
-    no_folder: bool = False  # when true folders are not used for url path
-
 
 class S3Storage(Storage):
 
@@ -54,7 +52,7 @@ class S3Storage(Storage):
                 ext = os.path.splitext(key)[1]
                 self.key_dict[key] = f"{str(uuid.uuid4())}{ext}"
             final_key = self.key_dict[key]
-        return self.folder + self._clean_path(self.subfolder) + final_key
+        return os.path.join(self.folder, final_key)
 
     def get_cdn_url(self, key):
         return self.cdn_url.format(bucket=self.bucket, region=self.region, key=self._get_path(key))

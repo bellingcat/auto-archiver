@@ -35,6 +35,9 @@ class Archiver(ABC):
     def __str__(self):
         return self.__class__.__name__
 
+    def __repr__(self):
+        return self.__str__()
+
     @abstractmethod
     def download(self, url, check_if_exists=False): pass
 
@@ -134,6 +137,7 @@ class Archiver(ABC):
         return hash.hexdigest()
 
     def get_screenshot(self, url):
+        logger.debug(f"getting screenshot for {url=}")
         key = self.get_key(urlparse(url).path.replace(
             "/", "_") + datetime.datetime.utcnow().isoformat().replace(" ", "_") + ".png")
         filename = Storage.TMP_FOLDER + key

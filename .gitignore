@@ -13,3 +13,4 @@ anon*
 config.json
 config-*.json
 logs/*
+local_archive/

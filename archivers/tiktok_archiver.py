@@ -18,8 +18,8 @@ class TiktokArchiver(Archiver):
         try:
             info = tiktok_downloader.info_post(url)
             key = self.get_key(f'{info.id}.mp4')
-            cdn_url = self.storage.get_cdn_url(key)
             filename = Storage.TMP_FOLDER + key
+            logger.info(f'found video {key=}')
 
             if check_if_exists and self.storage.exists(key):
                 status = 'already archived'
@@ -28,13 +28,15 @@ class TiktokArchiver(Archiver):
 
             if len(media) <= 0:
                 if status == 'already archived':
-                    return ArchiveResult(status='Could not download media, but already archived', cdn_url=cdn_url)
+                    return ArchiveResult(status='Could not download media, but already archived', cdn_url=self.storage.get_cdn_url(key))
                 else:
                     return ArchiveResult(status='Could not download media')
 
+            logger.info(f'downloading video {key=}')
             media[0].download(filename)
 
             if status != 'already archived':
+                logger.info(f'uploading video {key=}')
                 self.storage.upload(filename, key)
 
             try:
@@ -50,6 +52,7 @@ class TiktokArchiver(Archiver):
             try: os.remove(filename)
             except FileNotFoundError:
                 logger.info(f'tmp file not found thus not deleted {filename}')
+            cdn_url = self.storage.get_cdn_url(key)
 
             return ArchiveResult(status=status, cdn_url=cdn_url, thumbnail=key_thumb,
                                  thumbnail_index=thumb_index, duration=info.duration, title=info.caption, timestamp=info.create.isoformat(),

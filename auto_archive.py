@@ -1,11 +1,12 @@
-import datetime
-import shutil
-import traceback
+import os, datetime, shutil, traceback
+
 from loguru import logger
+from slugify import slugify
 
 from archivers import TelethonArchiver, TelegramArchiver, TiktokArchiver, YoutubeDLArchiver, TwitterArchiver, WaybackArchiver, ArchiveResult
 from utils import GWorksheet, mkdir_if_not_exists, expand_url
 from configs import Config
+from storages import Storage
 
 
 def update_sheet(gw, row, result: ArchiveResult):
@@ -42,12 +43,12 @@ def update_sheet(gw, row, result: ArchiveResult):
 
 
 def missing_required_columns(gw: GWorksheet):
-    required_found = True
+    missing = False
     for required_col in ['url', 'status']:
         if not gw.col_exists(required_col):
-            logger.warning(f'Required column for {required_col}: "{gw.columns[required_col]}" not found, skipping worksheet {gw.worksheet.title}')
-            required_found = False
-    return required_found
+            logger.warning(f'Required column for {required_col}: "{gw.columns[required_col]}" not found, skipping worksheet {gw.wks.title}')
+            missing = True
+    return missing
 
 
 def process_sheet(c: Config):
@@ -60,9 +61,9 @@ def process_sheet(c: Config):
 
         if missing_required_columns(gw): continue
 
-        # archives will be in a folder 'doc_name/worksheet_name'
-        # TODO: use slugify lib
-        c.set_folder(f'{c.sheet.replace(" ", "_")}/{wks.title.replace(" ", "_")}/')
+        # archives will default to being in a folder 'doc_name/worksheet_name'
+        default_folder = os.path.join(slugify(c.sheet), slugify(wks.title))
+        c.set_folder(default_folder)
         storage = c.get_storage()
 
         # loop through rows in worksheet
@@ -76,7 +77,7 @@ def process_sheet(c: Config):
             # All checks done - archival process starts here
             gw.set_cell(row, 'status', 'Archive in progress')
             url = expand_url(url)
-            storage.update_properties(subfolder=gw.get_cell_or_default(row, 'subfolder'))
+            c.set_folder(gw.get_cell_or_default(row, 'folder', default_folder, when_empty_use_default=True))
 
             # make a new driver so each spreadsheet row is idempotent
             c.recreate_webdriver()
@@ -92,26 +93,27 @@ def process_sheet(c: Config):
             ]
 
             for archiver in active_archivers:
-                logger.debug(f'Trying {archiver=} on {row=}')
+                logger.debug(f'Trying {archiver} on {row=}')
 
                 try:
                     result = archiver.download(url, check_if_exists=True)
                 except KeyboardInterrupt:
                     # catches keyboard interruptions to do a clean exit
-                    logger.warning(f"caught interrupt for {archiver=} on {row=}")
+                    logger.warning(f"caught interrupt for {archiver} on {row=}")
                     gw.set_cell(row, 'status', '')
                     c.destroy_webdriver()
                     exit()
                 except Exception as e:
                     result = False
-                    logger.error(f'Got unexpected error in row {row} with {archiver=} for {url=}: {e}\n{traceback.format_exc()}')
+                    logger.error(f'Got unexpected error in row {row} with {archiver.name} for {url=}: {e}\n{traceback.format_exc()}')
 
                 if result:
+                    success = result.status in ['success', 'already archived']
                     result.status = f"{archiver.name}: {result.status}"
-                    if result.status in ['success', 'already archived']:
-                        logger.success(f'{archiver=} succeeded on {row=}, {url=}')
+                    if success:
+                        logger.success(f'{archiver.name} succeeded on {row=}, {url=}')
                         break
-                    logger.warning(f'{archiver} did not succeed on {row=}, final status: {result.status}')
+                    logger.warning(f'{archiver.name} did not succeed on {row=}, final status: {result.status}')
 
             if result:
                 update_sheet(gw, row, result)
@@ -125,10 +127,10 @@ def main():
     c = Config()
     c.parse()
     logger.info(f'Opening document {c.sheet} for header {c.header}')
-    mkdir_if_not_exists(c.tmp_folder)
+    mkdir_if_not_exists(Storage.TMP_FOLDER)
     process_sheet(c)
     c.destroy_webdriver()
-    shutil.rmtree(c.tmp_folder)
+    shutil.rmtree(Storage.TMP_FOLDER)
 
 
 if __name__ == '__main__':
