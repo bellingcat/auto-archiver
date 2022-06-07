@@ -8,7 +8,7 @@ gspread = "*"
 boto3 = "*"
 argparse = "*"
 beautifulsoup4 = "*"
-tiktok-downloader = {git = "https://github.com/msramalho/tiktok-downloader"}
+tiktok-downloader = "*"
 bs4 = "*"
 loguru = "*"
 ffmpeg-python = "*"
@@ -20,6 +20,7 @@ google-api-python-client = "*"
 google-auth-httplib2 = "*"
 google-auth-oauthlib = "*"
 oauth2client = "*"
+python-slugify = "*"
 
 [requires]
 python_version = "3.9"
