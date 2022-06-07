@@ -144,6 +144,7 @@ Code is split into functional concepts:
    1. [GWorksheet](utils/gworksheet.py) - facilitates some of the reading/writing tasks for a Google Worksheet
 
 ### Current Archivers
+Archivers are tested in a meaningful order with Wayback Machine being the default, that can easily be changed in the code. 
 ```mermaid
 graph TD
     A(Archiver) -->|parent of| B(YoutubeDLArchiver)
@@ -157,8 +158,8 @@ graph TD
 ```mermaid
 graph TD
     A(BaseStorage) -->|parent of| B(S3Storage)
-    C(BaseStorage) -->|parent of| C(LocalStorage)
-    A(BaseStorage) -->|parent of| C(GoogleDriveStorage)
+    A(BaseStorage) -->|parent of| C(LocalStorage)
+    A(BaseStorage) -->|parent of| D(GoogleDriveStorage)
 ```
 
 
