@@ -1,0 +1,60 @@
+{
+    "secrets": {
+        "s3": {// for storage=s3
+            "region": "s3 region like fra1",
+            "bucket": "s3 bucket name like my-bucket",
+            "key": "s3 API key",
+            "secret": "s3 API secret",
+            "endpoint_url": "use region format like such: https://{region}.digitaloceanspaces.com",
+            "cdn_url": "use bucket, region, and key (key is the archived file path generated when executing) format like such: https://{bucket}.{region}.cdn.digitaloceanspaces.com/{key}",
+            "private": false, // if true S3 urls will not be readable online
+            "key_path": "random" // you can generate a random UUID for the URL instead of a predictable path, useful to still have public but unlisted files
+        },
+        "wayback": {
+            "key": "your API key, visit https://archive.org/account/s3.php",
+            "secret": "your API secret"
+        },
+        "telegram": {
+            "api_id": "your API key, see https://telegra.ph/How-to-get-Telegram-APP-ID--API-HASH-05-27",
+            "api_hash": "your API hash"
+        },
+        "google_sheets": {
+            "service_account": "normally service_account.json, see https://gspread.readthedocs.io/en/latest/oauth2.html#for-bots-using-service-account"
+        },
+        "google_drive": { // for storage=gd
+            "service_account": "can be the same or different file from google_sheets defaults to service_account.json",
+            "root_folder_id": "copy XXXX from https://drive.google.com/drive/folders/XXXX"
+        },
+        "local":{ // for storage=local
+            "save_to": "local path to save files in ./local_archive"
+        },
+        "facebook": { 
+            "cookie": "optional facebook cookie to have more access to content"
+        }
+    },
+    "execution": {
+        "sheet": "your-sheet-name", // can be overwritten with CMD --sheet=
+        "header": 1, //which row of your tabs contains the header, can be overwritten with CMD --header=
+        "storage": "s3", // which storage to use, can be overwritten with CMD --storage=
+        "selenium": { // optional configurations for the selenium browser that takes screenshots, these are the defaults
+            "timeout_seconds": 120, // values under 10s might mean screenshots fail to grab
+            "window_width": 1400,
+            "window_height": 2000
+        },
+        "tmp_folder": "tmp/", // local tmp folder to save files before uploading to storage
+        "column_names": { // custom column names, only needed if different from default, can be overwritten with CMD --col-NAME="VALUE"
+            "url": "link",
+            "archive": "archive location",
+            "folder": "folder",
+            "date": "archive date",
+            "status": "archive status",
+            "thumbnail": "thumbnail",
+            "thumbnail_index": "thumbnail index",
+            "timestamp": "upload timestamp",
+            "title": "upload title",
+            "duration": "duration",
+            "screenshot": "screenshot",
+            "hash": "hash"
+        }
+    }
+}
