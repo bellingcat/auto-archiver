@@ -29,7 +29,7 @@
             "save_to": "local path to save files in ./local_archive"
         },
         "facebook": { 
-            "cookie": "optional facebook cookie to have more access to content"
+            "cookie": "optional facebook cookie to have more access to content, from browser, looks like 'cookie: datr= xxxx'"
         }
     },
     "execution": {
