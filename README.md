@@ -1,6 +1,5 @@
 # auto-archiver
-
-This Python script will look for links to Youtube, Twitter, etc,. in a specified column of a Google Sheet, uses YoutubeDL to download the media, stores the result in a Digital Ocean space or Google Drive, and updates the Google Sheet with the archive location, status, and date. It can be run manually or on an automated basis.
+Python script to automatically archive social media posts, videos, and images from a Google Sheets document. Uses different archivers depending on the platform, and can save content to local storage, S3 bucket (Digital Ocean Spaces, AWS, ...), and Google Drive. The Google Sheets where the links come from is updated with information about the archived content. It can be run manually or on an automated basis.
 
 ## Setup
 
