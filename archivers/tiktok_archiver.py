@@ -53,10 +53,11 @@ class TiktokArchiver(Archiver):
             except FileNotFoundError:
                 logger.info(f'tmp file not found thus not deleted {filename}')
             cdn_url = self.storage.get_cdn_url(key)
+            timestamp = info.create.isoformat() if hasattr(info, "create") else None
 
             return ArchiveResult(status=status, cdn_url=cdn_url, thumbnail=key_thumb,
-                                 thumbnail_index=thumb_index, duration=info.duration, title=info.caption, timestamp=info.create.isoformat(),
-                                 hash=hash, screenshot=screenshot)
+                                 thumbnail_index=thumb_index, duration=getattr(info, "duration", 0), title=getattr(info, "caption", ""),
+                                 timestamp=timestamp, hash=hash, screenshot=screenshot)
 
         except tiktok_downloader.Except.InvalidUrl as e:
             status = 'Invalid URL'
