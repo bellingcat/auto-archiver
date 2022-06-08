@@ -63,6 +63,7 @@ class WaybackArchiver(Archiver):
 
         status_json = status_r.json()
         if status_json['status'] != 'success':
+            # TODO: if "please try again" in str(status_json).lower() then this can be retried in the future
             return ArchiveResult(status='Internet Archive failed: ' + str(status_json))
 
         archive_url = f"https://web.archive.org/web/{status_json['timestamp']}/{status_json['original_url']}"
