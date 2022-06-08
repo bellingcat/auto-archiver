@@ -36,15 +36,6 @@ class Config:
     def __init__(self):
         self.parser = self.get_argument_parser()
         self.folder = ""
-        self.set_log_files()
-
-    def set_log_files(self):
-        # TODO: isolate to config
-        logger.add("logs/1trace.log", level="TRACE")
-        logger.add("logs/2info.log", level="INFO")
-        logger.add("logs/3success.log", level="SUCCESS")
-        logger.add("logs/4warning.log", level="WARNING")
-        logger.add("logs/5error.log", level="ERROR")
 
     def parse(self):
         self.args = self.parser.parse_args()
@@ -65,6 +56,8 @@ class Config:
         self.header = int(getattr_or(self.args, "header", execution.get("header", 1)))
         Storage.TMP_FOLDER = execution.get("tmp_folder", Storage.TMP_FOLDER)
         self.storage = getattr_or(self.args, "storage", execution.get("storage", "s3"))
+        if getattr_or(self.args, "save_logs", False):
+            self.set_log_files()
 
         # Column names come from config and can be overwritten by CMD
         # in the end all are considered as lower case
@@ -80,7 +73,7 @@ class Config:
             window_width=int(selenium_configs.get("window_width", SeleniumConfig.window_width)),
             window_height=int(selenium_configs.get("window_height", SeleniumConfig.window_height))
         )
-        self.webdriver = "not initalized"
+        self.webdriver = "not initialized"
 
         # ---------------------- SECRETS - APIs and service configurations
         secrets = self.config.get("secrets", {})
@@ -143,6 +136,14 @@ class Config:
             logger.debug(f"'telegram' key not present in the {self.config_file=}")
 
         del self.config["secrets"]  # delete to prevent leaks
+
+    def set_log_files(self):
+        # called only when config.execution.save_logs=true
+        logger.add("logs/1trace.log", level="TRACE")
+        logger.add("logs/2info.log", level="INFO")
+        logger.add("logs/3success.log", level="SUCCESS")
+        logger.add("logs/4warning.log", level="WARNING")
+        logger.add("logs/5error.log", level="ERROR")
 
     def get_argument_parser(self):
         """

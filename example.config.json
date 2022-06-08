@@ -42,6 +42,7 @@
             "window_height": 2000
         },
         "tmp_folder": "tmp/", // local tmp folder to save files before uploading to storage
+        "save_logs": true, // puts execution logs into /logs folder, defaults to false
         "column_names": { // custom column names, only needed if different from default, can be overwritten with CMD --col-NAME="VALUE"
             "url": "link",
             "archive": "archive location",
