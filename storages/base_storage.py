@@ -22,9 +22,3 @@ class Storage(ABC):
         logger.debug(f'[{self.__class__.__name__}] uploading file {filename} with key {key}')
         with open(filename, 'rb') as f:
             self.uploadf(f, key, **kwargs)
-
-    #TODO: is this really necessary if only use os.path operations
-    def _clean_path(self, folder, default="", add_forward_slash=True):
-        if folder is None or type(folder) != str or len(folder.strip()) == 0:
-            return default
-        return str(Path(folder)) + ("/" if add_forward_slash else "")

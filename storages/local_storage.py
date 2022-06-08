@@ -13,8 +13,8 @@ class LocalConfig:
 
 class LocalStorage(Storage):
     def __init__(self, config:LocalConfig):
-        self.folder = self._clean_path(config.folder)
-        self.save_to = self._clean_path(config.save_to)
+        self.folder = config.folder
+        self.save_to = config.save_to
         mkdir_if_not_exists(self.save_to)
 
     def get_cdn_url(self, key):
