@@ -79,7 +79,8 @@ class TelethonArchiver(Archiver):
                 message = post.message
                 for mp in media_posts:
                     if len(mp.message) > len(message): message = mp.message
-                    filename = self.client.download_media(mp.media, f'{Storage.TMP_FOLDER}{chat}_{group_id}/{mp.id}')
+                    filename_dest = os.path.join(Storage.TMP_FOLDER, f'{chat}_{group_id}', mp.id)
+                    filename = self.client.download_media(mp.media, filename_dest)
                     key = filename.split(Storage.TMP_FOLDER)[1]
                     self.storage.upload(filename, key)
                     hash = self.get_hash(filename)
@@ -92,7 +93,7 @@ class TelethonArchiver(Archiver):
                 return ArchiveResult(status=status, cdn_url=page_cdn, title=message, timestamp=post.date, hash=page_hash, screenshot=screenshot)
             elif len(media_posts) == 1:
                 key = self.get_key(f'{chat}_{post_id}')
-                filename = self.client.download_media(post.media, f'{Storage.TMP_FOLDER}{key}')
+                filename = self.client.download_media(post.media, os.path.join(Storage.TMP_FOLDER,key))
                 key = filename.split(Storage.TMP_FOLDER)[1].replace(" ", "")
                 self.storage.upload(filename, key)
                 hash = self.get_hash(filename)

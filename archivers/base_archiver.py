@@ -64,7 +64,7 @@ class Archiver(ABC):
         page += f"</body></html>"
 
         page_key = self.get_key(urlparse(url).path.replace("/", "_") + ".html")
-        page_filename = Storage.TMP_FOLDER + page_key
+        page_filename = os.path.join(Storage.TMP_FOLDER, page_key)
         page_cdn = self.storage.get_cdn_url(page_key)
 
         with open(page_filename, "w") as f:
@@ -95,8 +95,8 @@ class Archiver(ABC):
             key = self.get_key(path.replace("/", "_"))
             if '.' not in path:
                 key += '.jpg'
-
-            filename = Storage.TMP_FOLDER + key
+                
+            filename = os.path.join(Storage.TMP_FOLDER, key)
 
             d = requests.get(media_url, headers=headers)
             with open(filename, 'wb') as f:
@@ -140,7 +140,7 @@ class Archiver(ABC):
         logger.debug(f"getting screenshot for {url=}")
         key = self.get_key(urlparse(url).path.replace(
             "/", "_") + datetime.datetime.utcnow().isoformat().replace(" ", "_") + ".png")
-        filename = Storage.TMP_FOLDER + key
+        filename = os.path.join(Storage.TMP_FOLDER, key)
 
         # Accept cookies popup dismiss for ytdlp video
         if 'facebook.com' in url:

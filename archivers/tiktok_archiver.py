@@ -18,7 +18,7 @@ class TiktokArchiver(Archiver):
         try:
             info = tiktok_downloader.info_post(url)
             key = self.get_key(f'{info.id}.mp4')
-            filename = Storage.TMP_FOLDER + key
+            filename = os.path.join(Storage.TMP_FOLDER, key)
             logger.info(f'found video {key=}')
 
             if check_if_exists and self.storage.exists(key):
