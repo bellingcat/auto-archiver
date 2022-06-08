@@ -131,7 +131,7 @@ class Config:
             self.telegram_config = TelethonConfig(
                 api_id=secrets["telegram"]["api_id"],
                 api_hash=secrets["telegram"]["api_hash"],
-                bot_token=getattr_or(secrets["telegram"], "bot_token")
+                bot_token=secrets["telegram"].get("bot_token", None)
             )
         else:
             logger.debug(f"'telegram' key not present in the {self.config_file=}")
