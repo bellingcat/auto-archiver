@@ -40,10 +40,7 @@ class WaybackArchiver(Archiver):
             return ArchiveResult(status="Internet archive failed", screenshot=screenshot)
 
         if 'job_id' not in r.json() and 'message' in r.json():
-            if "please try again" in str(r.json()).lower():
-                return self.signal_retry_in(screenshot=screenshot)
-            logger.warning(f"Internet archive failed json \n {r.json()}")
-            return ArchiveResult(status=f"Internet archive failed: {r.json()['message']}", screenshot=screenshot)
+            return self.custom_retry(r.json(), screenshot=screenshot)
 
         job_id = r.json()['job_id']
         logger.debug(f"GETting status for {job_id=} on {url=}")
@@ -66,10 +63,7 @@ class WaybackArchiver(Archiver):
 
         status_json = status_r.json()
         if status_json['status'] != 'success':
-            logger.info(f'please try again" in str(status_json).lower(): {("please try again" in str(status_json).lower())}')
-            if "please try again" in str(status_json).lower():
-                return self.signal_retry_in(screenshot=screenshot)
-            return ArchiveResult(status='Internet Archive failed: ' + str(status_json), screenshot=screenshot)
+            return self.custom_retry(status_json, screenshot=screenshot)
 
         archive_url = f"https://web.archive.org/web/{status_json['timestamp']}/{status_json['original_url']}"
         return self.if_archived_return_with_screenshot(archive_url)
@@ -87,3 +81,11 @@ class WaybackArchiver(Archiver):
         screenshot = screenshot or self.get_screenshot(url)
         self.seen_urls[url] = ArchiveResult(status=status, cdn_url=archive_url, title=title, screenshot=screenshot)
         return self.seen_urls[url]
+
+    def custom_retry(self, json_data, **kwargs):
+        logger.warning(f"Internet archive failed json \n {json_data}")
+        if "please try again" in str(json_data).lower():
+            return self.signal_retry_in(**kwargs)
+        if "this host has been already captured" in str(json_data).lower():
+            return self.signal_retry_in(**kwargs, min_seconds=86400, max_seconds=129600)  # 24h to 36h later
+        return ArchiveResult(status=f"Internet archive failed: {json_data}", **kwargs)
