@@ -229,14 +229,14 @@ class Archiver(ABC):
 
         return (key_thumb, thumb_index_cdn_url)
 
-    def signal_retry_in(self, min_seconds=1800, max_seconds=7200):
+    def signal_retry_in(self, min_seconds=1800, max_seconds=7200, **kwargs):
         """
         sets state to retry in random between (min_seconds, max_seconds)
         """
         now = datetime.datetime.now().timestamp()
         retry_at = int(now + randrange(min_seconds, max_seconds))
         logger.debug(f"signaling {retry_at=}")
-        return ArchiveResult(status=f'retrying at {retry_at}')
+        return ArchiveResult(status=f'retrying at {retry_at}', **kwargs)
 
     def is_retry(status):
         return re.search(Archiver.retry_regex, status) is not None

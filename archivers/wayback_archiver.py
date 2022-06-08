@@ -27,6 +27,7 @@ class WaybackArchiver(Archiver):
             if req.status_code == 200:
                 return self.if_archived_return_with_screenshot(url, archive_url, req=req, status='already archived')
 
+        screenshot = self.get_screenshot(url)
         logger.debug(f"POSTing {url=} to web.archive.org")
         ia_headers = {
             "Accept": "application/json",
@@ -36,11 +37,13 @@ class WaybackArchiver(Archiver):
 
         if r.status_code != 200:
             logger.warning(f"Internet archive failed with status of {r.status_code}")
-            return ArchiveResult(status="Internet archive failed")
+            return ArchiveResult(status="Internet archive failed", screenshot=screenshot)
 
         if 'job_id' not in r.json() and 'message' in r.json():
+            if "please try again" in str(r.json()).lower():
+                return self.signal_retry_in(screenshot=screenshot)
             logger.warning(f"Internet archive failed json \n {r.json()}")
-            return ArchiveResult(status=f"Internet archive failed: {r.json()['message']}")
+            return ArchiveResult(status=f"Internet archive failed: {r.json()['message']}", screenshot=screenshot)
 
         job_id = r.json()['job_id']
         logger.debug(f"GETting status for {job_id=} on {url=}")
@@ -59,18 +62,19 @@ class WaybackArchiver(Archiver):
             retries += 1
 
         if status_r.status_code != 200:
-            return ArchiveResult(status="Internet archive failed")
+            return ArchiveResult(status="Internet archive failed", screenshot=screenshot)
 
         status_json = status_r.json()
         if status_json['status'] != 'success':
+            logger.info(f'please try again" in str(status_json).lower(): {("please try again" in str(status_json).lower())}')
             if "please try again" in str(status_json).lower():
-                return self.signal_retry_in()
-            return ArchiveResult(status='Internet Archive failed: ' + str(status_json))
+                return self.signal_retry_in(screenshot=screenshot)
+            return ArchiveResult(status='Internet Archive failed: ' + str(status_json), screenshot=screenshot)
 
         archive_url = f"https://web.archive.org/web/{status_json['timestamp']}/{status_json['original_url']}"
         return self.if_archived_return_with_screenshot(archive_url)
 
-    def if_archived_return_with_screenshot(self, url, archive_url, req=None, status='success'):
+    def if_archived_return_with_screenshot(self, url, archive_url, screenshot=None, req=None, status='success'):
         try:
             if req is None:
                 req = requests.get(archive_url)
@@ -80,6 +84,6 @@ class WaybackArchiver(Archiver):
                 title = 'Could not get title'
         except:
             title = "Could not get title"
-        screenshot = self.get_screenshot(url)
+        screenshot = screenshot or self.get_screenshot(url)
         self.seen_urls[url] = ArchiveResult(status=status, cdn_url=archive_url, title=title, screenshot=screenshot)
         return self.seen_urls[url]

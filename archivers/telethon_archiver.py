@@ -80,7 +80,7 @@ class TelethonArchiver(Archiver):
                 message = post.message
                 for mp in media_posts:
                     if len(mp.message) > len(message): message = mp.message
-                    filename_dest = os.path.join(Storage.TMP_FOLDER, f'{chat}_{group_id}', mp.id)
+                    filename_dest = os.path.join(Storage.TMP_FOLDER, f'{chat}_{group_id}', str(mp.id))
                     filename = self.client.download_media(mp.media, filename_dest)
                     key = filename.split(Storage.TMP_FOLDER)[1]
                     self.storage.upload(filename, key)
