@@ -1,12 +1,14 @@
-import os, datetime, shutil, traceback
+import os, datetime, shutil, traceback, random
 
 from loguru import logger
 from slugify import slugify
 
-from archivers import TelethonArchiver, TelegramArchiver, TiktokArchiver, YoutubeDLArchiver, TwitterArchiver, WaybackArchiver, ArchiveResult
+from archivers import TelethonArchiver, TelegramArchiver, TiktokArchiver, YoutubeDLArchiver, TwitterArchiver, WaybackArchiver, ArchiveResult, Archiver
 from utils import GWorksheet, mkdir_if_not_exists, expand_url
 from configs import Config
 from storages import Storage
+
+random.seed()
 
 
 def update_sheet(gw, row, result: ArchiveResult):
@@ -72,7 +74,10 @@ def process_sheet(c: Config):
             original_status = gw.get_cell(row, 'status')
             status = gw.get_cell(row, 'status', fresh=original_status in ['', None] and url != '')
 
-            if url == '' or status not in ['', None]: continue
+            is_retry = False
+            if url == '' or status not in ['', None]:
+                is_retry = Archiver.should_retry_from_status(status)
+                if not is_retry: continue
 
             # All checks done - archival process starts here
             gw.set_cell(row, 'status', 'Archive in progress')
@@ -85,9 +90,9 @@ def process_sheet(c: Config):
             # order matters, first to succeed excludes remaining
             active_archivers = [
                 TelethonArchiver(storage, c.webdriver, c.telegram_config),
-                TelegramArchiver(storage, c.webdriver),
                 TiktokArchiver(storage, c.webdriver),
                 YoutubeDLArchiver(storage, c.webdriver, c.facebook_cookie),
+                TelegramArchiver(storage, c.webdriver),
                 TwitterArchiver(storage, c.webdriver),
                 WaybackArchiver(storage, c.webdriver, c.wayback_config)
             ]
@@ -113,6 +118,9 @@ def process_sheet(c: Config):
                     if success:
                         logger.success(f'{archiver.name} succeeded on {row=}, {url=}')
                         break
+                    # only 1 retry possible for now
+                    if is_retry and Archiver.is_retry(result.status):
+                        result.status = Archiver.remove_retry(result.status)
                     logger.warning(f'{archiver.name} did not succeed on {row=}, final status: {result.status}')
 
             if result:

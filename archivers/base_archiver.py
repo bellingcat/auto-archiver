@@ -1,7 +1,8 @@
-import os, datetime, shutil, hashlib, time, requests
+import os, datetime, shutil, hashlib, time, requests, re
 from dataclasses import dataclass
 from abc import ABC, abstractmethod
 from urllib.parse import urlparse
+from random import randrange
 
 import ffmpeg
 from loguru import logger
@@ -27,6 +28,7 @@ class ArchiveResult:
 
 class Archiver(ABC):
     name = "default"
+    retry_regex = r"retrying at (\d+)$"
 
     def __init__(self, storage: Storage, driver):
         self.storage = storage
@@ -95,7 +97,7 @@ class Archiver(ABC):
             key = self.get_key(path.replace("/", "_"))
             if '.' not in path:
                 key += '.jpg'
-                
+
             filename = os.path.join(Storage.TMP_FOLDER, key)
 
             d = requests.get(media_url, headers=headers)
@@ -226,3 +228,38 @@ class Archiver(ABC):
         thumb_index_cdn_url = self.storage.get_cdn_url(thumb_index)
 
         return (key_thumb, thumb_index_cdn_url)
+
+    def signal_retry_in(self, min_seconds=1800, max_seconds=7200):
+        """
+        sets state to retry in random between (min_seconds, max_seconds)
+        """
+        now = datetime.datetime.now().timestamp()
+        retry_at = int(now + randrange(min_seconds, max_seconds))
+        logger.debug(f"signaling {retry_at=}")
+        return ArchiveResult(status=f'retrying at {retry_at}')
+
+    def is_retry(status):
+        return re.search(Archiver.retry_regex, status) is not None
+
+    def should_retry_from_status(status):
+        """
+        checks status against message in signal_retry_in
+        returns true if enough time has elapsed, false otherwise
+        """
+        match = re.search(Archiver.retry_regex, status)
+        if match:
+            retry_at = int(match.group(1))
+            now = datetime.datetime.now().timestamp()
+            should_retry = now >= retry_at
+            logger.debug(f"{should_retry=} as {now=} >= {retry_at=}")
+            return should_retry
+        return False
+
+    def remove_retry(status):
+        """
+        transforms the status from retry into something else
+        """
+        new_status = re.sub(Archiver.retry_regex, "failed: too many retries", status, 0)
+        logger.debug(f"removing retry message at {status=}, got {new_status=}")
+        return new_status
+
