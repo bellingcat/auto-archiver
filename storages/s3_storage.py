@@ -26,10 +26,11 @@ class S3Storage(Storage):
     def __init__(self, config: S3Config):
         self.bucket = config.bucket
         self.region = config.region
-        self.folder = self._clean_path(config.folder)
+        self.folder = config.folder
         self.private = config.private
         self.cdn_url = config.cdn_url
         self.key_path = config.key_path
+        self.key_dict = {}
 
         self.s3 = boto3.client(
             's3',
@@ -65,7 +66,6 @@ class S3Storage(Storage):
             return False
 
     def uploadf(self, file, key, **kwargs):
-        logger.debug(f'[S3 storage] uploading {file=}, {key=}')
         if self.private:
             extra_args = kwargs.get("extra_args", {})
         else:
