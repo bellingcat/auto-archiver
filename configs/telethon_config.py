@@ -5,3 +5,4 @@ from dataclasses import dataclass
 class TelethonConfig:
     api_id: str
     api_hash: str
+    bot_token: str

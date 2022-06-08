@@ -16,7 +16,8 @@
         },
         "telegram": {
             "api_id": "your API key, see https://telegra.ph/How-to-get-Telegram-APP-ID--API-HASH-05-27",
-            "api_hash": "your API hash"
+            "api_hash": "your API hash",
+            "bot_token": "optional, but allows access to more content such as large videos, talk to @botfather"
         },
         "google_sheets": {
             "service_account": "normally service_account.json, see https://gspread.readthedocs.io/en/latest/oauth2.html#for-bots-using-service-account"

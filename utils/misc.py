@@ -19,7 +19,7 @@ def expand_url(url):
             logger.error(f'Failed to expand url {url}')
     return url
 
-def getattr_or(o: object, prop: str, default: None = None):
+def getattr_or(o: object, prop: str, default = None):
     try: 
         res = getattr(o, prop)
         if res is None: raise
