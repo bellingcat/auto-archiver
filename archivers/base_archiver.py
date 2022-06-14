@@ -65,9 +65,9 @@ class Archiver(ABC):
         page += f"</ul><h2>{self.name} object data:</h2><code>{object}</code>"
         page += f"</body></html>"
 
+        #TODO: slugify
         page_key = self.get_key(urlparse(url).path.replace("/", "_") + ".html")
         page_filename = os.path.join(Storage.TMP_FOLDER, page_key)
-        page_cdn = self.storage.get_cdn_url(page_key)
 
         with open(page_filename, "w") as f:
             f.write(page)
@@ -94,6 +94,7 @@ class Archiver(ABC):
         uploaded_media = []
         for media_url in urls:
             path = urlparse(media_url).path
+            #TODO: slugify
             key = self.get_key(path.replace("/", "_"))
             if '.' not in path:
                 key += '.jpg'
