@@ -7,10 +7,10 @@ If you are using `pipenv` (recommended), `pipenv install` is sufficient to insta
 
 You also need:
 1. [A Google Service account is necessary for use with `gspread`.](https://gspread.readthedocs.io/en/latest/oauth2.html#for-bots-using-service-account) Credentials for this account should be stored in `service_account.json`, in the same directory as the script.
-1. [ffmpeg](https://www.ffmpeg.org/) must also be installed locally for this tool to work. 
-1. [firefox](https://www.mozilla.org/en-US/firefox/new/) and [geckodriver](https://github.com/mozilla/geckodriver/releases) on a path folder like `/usr/local/bin`. 
-1. [fonts-noto](https://fonts.google.com/noto) to deal with multiple unicode characters during selenium/geckodriver's screenshots: `sudo apt install fonts-noto -y`. 
-1. Internet Archive credentials can be retrieved from https://archive.org/account/s3.php.
+2. [ffmpeg](https://www.ffmpeg.org/) must also be installed locally for this tool to work. 
+3. [firefox](https://www.mozilla.org/en-US/firefox/new/) and [geckodriver](https://github.com/mozilla/geckodriver/releases) on a path folder like `/usr/local/bin`. 
+4. [fonts-noto](https://fonts.google.com/noto) to deal with multiple unicode characters during selenium/geckodriver's screenshots: `sudo apt install fonts-noto -y`. 
+5. Internet Archive credentials can be retrieved from https://archive.org/account/s3.php.
 
 ### Configuration file
 Configuration is done via a config.json file (see [example.config.json](example.config.json)) and some properties of that file can be overwritten via command line arguments. Here is the current result from running the `python auto_archive.py --help`:
