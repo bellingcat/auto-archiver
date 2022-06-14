@@ -8,6 +8,7 @@ import ffmpeg
 from loguru import logger
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.by import By
+from slugify import slugify
 
 from storages import Storage
 from utils import mkdir_if_not_exists
@@ -46,9 +47,6 @@ class Archiver(ABC):
     def get_netloc(self, url):
         return urlparse(url).netloc
 
-    def get_html_key(self, url):
-        return self.get_key(urlparse(url).path.replace("/", "_") + ".html")
-
     # generate the html page eg SM3013/twitter__minmyatnaing13_status_1499415562937503751.html
     def generate_media_page_html(self, url, urls_info: dict, object, thumbnail=None):
         """
@@ -65,8 +63,7 @@ class Archiver(ABC):
         page += f"</ul><h2>{self.name} object data:</h2><code>{object}</code>"
         page += f"</body></html>"
 
-        #TODO: slugify
-        page_key = self.get_key(urlparse(url).path.replace("/", "_") + ".html")
+        page_key = self.get_html_key(url)
         page_filename = os.path.join(Storage.TMP_FOLDER, page_key)
 
         with open(page_filename, "w") as f:
@@ -93,11 +90,7 @@ class Archiver(ABC):
         thumbnail = None
         uploaded_media = []
         for media_url in urls:
-            path = urlparse(media_url).path
-            #TODO: slugify
-            key = self.get_key(path.replace("/", "_"))
-            if '.' not in path:
-                key += '.jpg'
+            key = self._get_key_from_url(media_url, ".jpg")
 
             filename = os.path.join(Storage.TMP_FOLDER, key)
 
@@ -130,6 +123,23 @@ class Archiver(ABC):
 
         return f'{self.name}_{_id}{extension}'
 
+    def get_html_key(self, url):
+        return self._get_key_from_url(url, ".html")
+
+    def _get_key_from_url(self, url, with_extension: str = None, append_datetime: bool = False):
+        """
+        Receives a URL and returns a slugified version of the URL path
+        if a string is passed in @with_extension the slug is appended with it if there is no "." in the slug
+        if @append_date is true, the key adds a timestamp after the URL slug and before the extension
+        """
+        slug = slugify(urlparse(url).path)
+        if append_datetime:
+            slug += "-" + slugify(datetime.datetime.utcnow().isoformat())
+        if with_extension is not None:
+            if "." not in slug:
+                slug += with_extension
+        return self.get_key(slug)
+
     def get_hash(self, filename):
         with open(filename, "rb") as f:
             bytes = f.read()  # read entire file as bytes
@@ -141,8 +151,7 @@ class Archiver(ABC):
 
     def get_screenshot(self, url):
         logger.debug(f"getting screenshot for {url=}")
-        key = self.get_key(urlparse(url).path.replace(
-            "/", "_") + datetime.datetime.utcnow().isoformat().replace(" ", "_") + ".png")
+        key = self._get_key_from_url(url, ".png", append_datetime=True)
         filename = os.path.join(Storage.TMP_FOLDER, key)
 
         # Accept cookies popup dismiss for ytdlp video
@@ -263,4 +272,3 @@ class Archiver(ABC):
         new_status = re.sub(Archiver.retry_regex, "failed: too many retries", status, 0)
         logger.debug(f"removing retry message at {status=}, got {new_status=}")
         return new_status
-
