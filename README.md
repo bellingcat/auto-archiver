@@ -20,26 +20,31 @@ Configuration is done via a config.yaml file (see [example.config.yaml](example.
 
 
 ```js
-usage: auto_archive.py [-h] [--config CONFIG] [--storage {s3,local,gd}] [--sheet SHEET] [--header HEADER] [--s3-private] [--col-url URL] [--col-folder FOLDER] [--col-archive ARCHIVE] [--col-date DATE] [--col-status STATUS] [--col-thumbnail THUMBNAIL] [--col-thumbnail_index THUMBNAIL_INDEX] [--col-timestamp TIMESTAMP] [--col-title TITLE] [--col-duration DURATION] [--col-screenshot SCREENSHOT] [--col-hash HASH]
+usage: auto_archive.py [-h] [--config CONFIG] [--storage {s3,local,gd}] [--sheet SHEET] [--header HEADER] [--check-if-exists] [--save-logs] [--s3-private] [--col-url URL] [--col-status STATUS] [--col-folder FOLDER]
+                       [--col-archive ARCHIVE] [--col-date DATE] [--col-thumbnail THUMBNAIL] [--col-thumbnail_index THUMBNAIL_INDEX] [--col-timestamp TIMESTAMP] [--col-title TITLE] [--col-duration DURATION]
+                       [--col-screenshot SCREENSHOT] [--col-hash HASH]
 
-Automatically archive social media posts, videos, and images from a Google Sheets document. The command line arguments will always override the configurations in the provided JSON config
-file (--config), only some high-level options are allowed via the command line and the JSON configuration file is the preferred method.
+Automatically archive social media posts, videos, and images from a Google Sheets document. 
+The command line arguments will always override the configurations in the provided YAML config file (--config), only some high-level options
+are allowed via the command line and the YAML configuration file is the preferred method. The sheet must have the "url" and "status" for the archiver to work.
 
 optional arguments:
   -h, --help            show this help message and exit
-  --config CONFIG       the filename of the JSON configuration file (defaults to 'config.json')
+  --config CONFIG       the filename of the YAML configuration file (defaults to 'config.yaml')
   --storage {s3,local,gd}
-                        which storage to use [execution.storage in config.json]
-  --sheet SHEET         the name of the google sheets document [execution.sheet in config.json]
-  --header HEADER       1-based index for the header row [execution.header in config.json]
-  --s3-private          Store content without public access permission (only for storage=s3) [secrets.s3.private in config.json]
+                        which storage to use [execution.storage in config.yaml]
+  --sheet SHEET         the name of the google sheets document [execution.sheet in config.yaml]
+  --header HEADER       1-based index for the header row [execution.header in config.yaml]
+  --check-if-exists     when possible checks if the URL has been archived before and does not archive the same URL twice [exceution.check_if_exists]
+  --save-logs           creates or appends execution logs to files logs/LEVEL.log [exceution.save_logs]
+  --s3-private          Store content without public access permission (only for storage=s3) [secrets.s3.private in config.yaml]
   --col-url URL         the name of the column to READ url FROM (default='link')
+  --col-status STATUS   the name of the column to FILL WITH status (default='archive status')
   --col-folder FOLDER   the name of the column to READ folder FROM (default='destination folder')
   --col-archive ARCHIVE
                         the name of the column to FILL WITH archive (default='archive location')
   --col-date DATE       the name of the column to FILL WITH date (default='archive date')
-  --col-status STATUS   the name of the column to FILL WITH status (default='archive status')
-  --col-thumbnail THUMBNAIL 
+  --col-thumbnail THUMBNAIL
                         the name of the column to FILL WITH thumbnail (default='thumbnail')
   --col-thumbnail_index THUMBNAIL_INDEX
                         the name of the column to FILL WITH thumbnail_index (default='thumbnail index')
@@ -61,6 +66,10 @@ All the configurations can be specified in the YAML config file, but sometimes i
 ```bash
 # all the configurations come from config.yaml
 python auto_archive.py
+
+# all the configurations come from config.yaml,
+# checks if URL is not archived twice and saves logs to logs/ folder
+python auto_archive.py --check-if-exists --save_logs
 
 # all the configurations come from my_config.yaml
 python auto_archive.py --config my_config.yaml
