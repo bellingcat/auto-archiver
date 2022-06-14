@@ -32,7 +32,7 @@ class GDStorage(Storage):
         parent_id, folder_id = self.root_folder_id, None
         path_parts = full_name.split(os.path.sep)
         filename = path_parts[-1]
-        logger.info(f"looking for folders for {path_parts=} before uploading {filename=}")
+        logger.info(f"looking for folders for {path_parts[0:-1]} before uploading {filename=}")
         for folder in path_parts[0:-1]:
             folder_id = self._get_id_from_parent_and_name(parent_id, folder, use_mime_type=True, raise_on_missing=True)
             parent_id = folder_id
