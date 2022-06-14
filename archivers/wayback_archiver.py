@@ -9,6 +9,10 @@ from configs import WaybackConfig
 
 
 class WaybackArchiver(Archiver):
+    """
+    This archiver could implement a check_if_exists by going to "https://web.archive.org/web/{url}"
+    but that might not be desirable since the webpage might have been archived a long time ago and thus have changed
+    """
     name = "wayback"
 
     def __init__(self, storage: Storage, driver, config: WaybackConfig):
@@ -20,12 +24,6 @@ class WaybackArchiver(Archiver):
     def download(self, url, check_if_exists=False):
         if check_if_exists:
             if url in self.seen_urls: return self.seen_urls[url]
-
-            logger.debug(f"checking if {url=} already on archive.org")
-            archive_url = f"https://web.archive.org/web/{url}"
-            req = requests.get(archive_url)
-            if req.status_code == 200:
-                return self.if_archived_return_with_screenshot(url, archive_url, req=req, status='already archived')
 
         screenshot = self.get_screenshot(url)
         logger.debug(f"POSTing {url=} to web.archive.org")
@@ -66,20 +64,17 @@ class WaybackArchiver(Archiver):
             return self.custom_retry(status_json, screenshot=screenshot)
 
         archive_url = f"https://web.archive.org/web/{status_json['timestamp']}/{status_json['original_url']}"
-        return self.if_archived_return_with_screenshot(url, archive_url)
 
-    def if_archived_return_with_screenshot(self, url, archive_url, screenshot=None, req=None, status='success'):
         try:
-            if req is None:
-                req = requests.get(archive_url)
+            req = requests.get(archive_url)
             parsed = BeautifulSoup(req.content, 'html.parser')
             title = parsed.find_all('title')[0].text
             if title == 'Wayback Machine':
                 title = 'Could not get title'
         except:
             title = "Could not get title"
-        screenshot = screenshot or self.get_screenshot(url)
-        self.seen_urls[url] = ArchiveResult(status=status, cdn_url=archive_url, title=title, screenshot=screenshot)
+        screenshot = self.get_screenshot(url)
+        self.seen_urls[url] = ArchiveResult(status='success', cdn_url=archive_url, title=title, screenshot=screenshot)
         return self.seen_urls[url]
 
     def custom_retry(self, json_data, **kwargs):
