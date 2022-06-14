@@ -102,7 +102,7 @@ def process_sheet(c: Config):
                     logger.debug(f'Trying {archiver} on {row=}')
 
                     try:
-                        result = archiver.download(url, check_if_exists=True)
+                        result = archiver.download(url, check_if_exists=c.check_if_exists)
                     except KeyboardInterrupt as e: raise e # so the higher level catch can catch it
                     except Exception as e:
                         result = False

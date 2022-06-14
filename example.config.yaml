@@ -53,6 +53,8 @@ execution:
   header: 1
   # which storage to use, can be overwritten with CMD --storage=
   storage: s3
+  # defaults to false, when true will try to avoid duplicate URL archives
+  check_if_exists: true
   # optional configurations for the selenium browser that takes screenshots, these are the defaults
   selenium:
     # values under 10s might mean screenshots fail to grab screenshot

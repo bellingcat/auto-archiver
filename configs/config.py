@@ -50,8 +50,10 @@ class Config:
         self.header = int(getattr_or(self.args, "header", execution.get("header", 1)))
         Storage.TMP_FOLDER = execution.get("tmp_folder", Storage.TMP_FOLDER)
         self.storage = getattr_or(self.args, "storage", execution.get("storage", "s3"))
-        if getattr_or(self.args, "save_logs", False):
+        self.save_logs = getattr(self.args, "save_logs") or execution.get("save_logs", False)
+        if self.save_logs:
             self.set_log_files()
+        self.check_if_exists = getattr(self.args, "check_if_exists") or execution.get("check_if_exists", False)
 
         # Column names come from config and can be overwritten by CMD
         # in the end all are considered as lower case
@@ -150,6 +152,8 @@ class Config:
         parser.add_argument('--storage', action='store', dest='storage', help='which storage to use [execution.storage in config.yaml]', choices=Config.AVAILABLE_STORAGES)
         parser.add_argument('--sheet', action='store', dest='sheet', help='the name of the google sheets document [execution.sheet in config.yaml]')
         parser.add_argument('--header', action='store', dest='header', help='1-based index for the header row [execution.header in config.yaml]')
+        parser.add_argument('--check-if-exists', action='store_true', dest='check_if_exists', help='when possible checks if the URL has been archived before and does not archive the same URL twice [exceution.check_if_exists]')
+        parser.add_argument('--save-logs', action='store_true', dest='save_logs', help='creates or appends execution logs to files logs/LEVEL.log [exceution.save_logs]')
         parser.add_argument('--s3-private', action='store_true', help='Store content without public access permission (only for storage=s3) [secrets.s3.private in config.yaml]')
 
         for k, v in GWorksheet.COLUMN_NAMES.items():
@@ -210,6 +214,8 @@ class Config:
             "sheet": self.sheet,
             "storage": self.storage,
             "header": self.header,
+            "check_if_exists": self.check_if_exists,
+            "save_logs": self.save_logs,
             "tmp_folder": Storage.TMP_FOLDER,
             "selenium_config": asdict(self.selenium_config),
             "selenium_webdriver": self.webdriver != None,
