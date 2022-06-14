@@ -13,7 +13,7 @@ You also need:
 5. Internet Archive credentials can be retrieved from https://archive.org/account/s3.php.
 
 ### Configuration file
-Configuration is done via a config.json file (see [example.config.json](example.config.json)) and some properties of that file can be overwritten via command line arguments. Here is the current result from running the `python auto_archive.py --help`:
+Configuration is done via a config.yaml file (see [example.config.yaml](example.config.yaml)) and some properties of that file can be overwritten via command line arguments. Here is the current result from running the `python auto_archive.py --help`:
 
 <details><summary><code>python auto_archive.py --help</code></summary>
 
@@ -56,36 +56,36 @@ optional arguments:
 </details><br/>
 
 #### Example invocations
-All the configurations can be specified in the JSON config file, but sometimes it is useful to override only some of those like the sheet that we are running the archival on, here are some examples (possibly prepended by `pipenv run`):
+All the configurations can be specified in the YAML config file, but sometimes it is useful to override only some of those like the sheet that we are running the archival on, here are some examples (possibly prepended by `pipenv run`):
 
 ```bash
-# all the configurations come from config.json
+# all the configurations come from config.yaml
 python auto_archive.py
 
-# all the configurations come from my_config.json
-python auto_archive.py --config my_config.json
+# all the configurations come from my_config.yaml
+python auto_archive.py --config my_config.yaml
 
 # reads the configurations but saves archived content to google drive instead
-python auto_archive.py --config my_config.json --storage gd
+python auto_archive.py --config my_config.yaml --storage gd
 
 # uses the configurations but for another google docs sheet 
 # with a header on row 2 and with some different column names
-python auto_archive.py --config my_config.json --sheet="use it on another sheets doc" --header=2 --col-link="put urls here"
+python auto_archive.py --config my_config.yaml --sheet="use it on another sheets doc" --header=2 --col-link="put urls here"
 
-# all the configurations come from config.json and specifies that s3 files should be private
+# all the configurations come from config.yaml and specifies that s3 files should be private
 python auto_archive.py --s3-private
 ```
 
 ### Extra notes on configuration
 #### Google Drive
-To use Google Drive storage you need the id of the shared folder in the `config.json` file which must be shared with the service account eg `autoarchiverservice@auto-archiver-111111.iam.gserviceaccount.com` and then you can use `--storage=gd`
+To use Google Drive storage you need the id of the shared folder in the `config.yaml` file which must be shared with the service account eg `autoarchiverservice@auto-archiver-111111.iam.gserviceaccount.com` and then you can use `--storage=gd`
 
 #### Telethon (Telegrams API Library)
 The first time you run, you will be prompted to do a authentication with the phone number associated, alternatively you can put your `anon.session` in the root.
 
 
 ## Running
-The `--sheet name` property (or `execution.sheet` in the JSON file) is the name of the Google Sheet to check for URLs. 
+The `--sheet name` property (or `execution.sheet` in the YAML file) is the name of the Google Sheet to check for URLs. 
 This sheet must have been shared with the Google Service account used by `gspread`. 
 This sheet must also have specific columns (case-insensitive) in the `header` row (see `COLUMN_NAMES` in [gworksheet.py](utils/gworksheet.py)), only the `link` and `status` columns are mandatory:
 * `Link` (required): the location of the media to be archived. This is the only column that should be supplied with data initially

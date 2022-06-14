@@ -1,5 +1,5 @@
 
-import argparse, json
+import argparse, yaml, json
 import gspread
 from loguru import logger
 from selenium import webdriver
@@ -26,7 +26,7 @@ class Config:
       c.parse() # parses the values and initializes the Services and API clients
       # you can then access the Services and APIs like 'c.s3_config'
     All the configurations available as cmd line options, when included, will 
-    override the configurations in the config.json file.
+    override the configurations in the config.yaml file.
     Configurations are split between:
     1. "secrets" containing API keys for generating services - not kept in memory
     2. "execution" containing specific execution configurations
@@ -41,12 +41,12 @@ class Config:
         self.args = self.parser.parse_args()
         logger.success(f'Command line arguments parsed successfully')
         self.config_file = self.args.config
-        self.read_config_json()
+        self.read_config_yaml()
         logger.info(f'APIs and Services initialized:\n{self}')
 
-    def read_config_json(self):
+    def read_config_yaml(self):
         with open(self.config_file, "r", encoding="utf-8") as inf:
-            self.config = json.load(inf)
+            self.config = yaml.safe_load(inf)
 
         # ----------------------EXECUTION - execution configurations
         execution = self.config.get("execution", {})
@@ -150,13 +150,13 @@ class Config:
         """
         Creates the CMD line arguments. 'python auto_archive.py --help'
         """
-        parser = argparse.ArgumentParser(description='Automatically archive social media posts, videos, and images from a Google Sheets document. The command line arguments will always override the configurations in the provided JSON config file (--config), only some high-level options are allowed via the command line and the JSON configuration file is the preferred method. The sheet must have the "url" and "status" for the archiver to work. ')
+        parser = argparse.ArgumentParser(description='Automatically archive social media posts, videos, and images from a Google Sheets document. The command line arguments will always override the configurations in the provided YAML config file (--config), only some high-level options are allowed via the command line and the YAML configuration file is the preferred method. The sheet must have the "url" and "status" for the archiver to work. ')
 
-        parser.add_argument('--config', action='store', dest='config', help='the filename of the JSON configuration file (defaults to \'config.json\')', default='config.json')
-        parser.add_argument('--storage', action='store', dest='storage', help='which storage to use [execution.storage in config.json]', choices=Config.AVAILABLE_STORAGES)
-        parser.add_argument('--sheet', action='store', dest='sheet', help='the name of the google sheets document [execution.sheet in config.json]')
-        parser.add_argument('--header', action='store', dest='header', help='1-based index for the header row [execution.header in config.json]')
-        parser.add_argument('--s3-private', action='store_true', help='Store content without public access permission (only for storage=s3) [secrets.s3.private in config.json]')
+        parser.add_argument('--config', action='store', dest='config', help='the filename of the YAML configuration file (defaults to \'config.yaml\')', default='config.yaml')
+        parser.add_argument('--storage', action='store', dest='storage', help='which storage to use [execution.storage in config.yaml]', choices=Config.AVAILABLE_STORAGES)
+        parser.add_argument('--sheet', action='store', dest='sheet', help='the name of the google sheets document [execution.sheet in config.yaml]')
+        parser.add_argument('--header', action='store', dest='header', help='1-based index for the header row [execution.header in config.yaml]')
+        parser.add_argument('--s3-private', action='store_true', help='Store content without public access permission (only for storage=s3) [secrets.s3.private in config.yaml]')
 
         for k, v in GWorksheet.COLUMN_NAMES.items():
             help = f"the name of the column to FILL WITH {k} (default='{v}')"

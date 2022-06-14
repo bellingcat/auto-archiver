@@ -1,0 +1,81 @@
+---
+secrets:
+  # needed if you use storage=s3
+  s3:
+    # contains S3 info on region, bucket, key and secret
+    region: reg1
+    bucket: my-bucket
+    key: "s3 API key"
+    secret: "s3 API secret"
+    # use region format like such
+    endpoint_url: 'https://{region}.digitaloceanspaces.com'
+    #use bucket, region, and key (key is the archived file path generated when executing) format like such as:
+    cdn_url: "https://{bucket}.{region}.cdn.digitaloceanspaces.com/{key}"
+    # if private:true S3 urls will not be readable online
+    private: false
+    # with 'random' you can generate a random UUID for the URL instead of a predictable path, useful to still have public but unlisted files, alternative is 'default' or not omitted from config
+    key_path: random
+
+  # needed if you use storage=gd
+  google_drive:
+    # local filename can be the same or different file from google_sheets.service_account, defaults to service_account.json
+    service_account: "service_account.json"
+    root_folder_id: copy XXXX from https://drive.google.com/drive/folders/XXXX
+
+  # needed if you use storage=local
+  local:
+    # local path to save files in 
+    save_to: "./local_archive"
+
+  wayback:
+    # to get credentials visit https://archive.org/account/s3.php
+    key: your API key
+    secret: your API secret
+
+  telegram:
+    # to get credentials see: https://telegra.ph/How-to-get-Telegram-APP-ID--API-HASH-05-27
+    api_id: your API key, see 
+    api_hash: your API hash
+    # optional, but allows access to more content such as large videos, talk to @botfather
+    bot_token: your bot-token
+
+  google_sheets:
+    # local filename: defaults to service_account.json, see https://gspread.readthedocs.io/en/latest/oauth2.html#for-bots-using-service-account
+    service_account: "service_account.json"
+
+  facebook:
+  # optional facebook cookie to have more access to content, from browser, looks like 'cookie: datr= xxxx'
+    cookie: ""
+execution:
+  # can be overwritten with CMD --sheet=
+  sheet: your-sheet-name
+  # which row of your tabs contains the header, can be overwritten with CMD --header=
+  header: 1
+  # which storage to use, can be overwritten with CMD --storage=
+  storage: s3
+  # optional configurations for the selenium browser that takes screenshots, these are the defaults
+  selenium:
+    # values under 10s might mean screenshots fail to grab screenshot
+    timeout_seconds: 120
+    window_width: 1400
+    window_height: 2000
+  # local tmp folder to save files before uploading to storage
+  tmp_folder: tmp/
+  # puts execution logs into /logs folder, defaults to false
+  save_logs: true
+  # custom column names, only needed if different from default, can be overwritten with CMD --col-NAME="VALUE"
+  # url and status are the only columns required to be present in the google sheet
+  column_names:
+    url: link
+    status: archive status
+    archive: archive location
+    # use this column to override default location data
+    folder: folder
+    date: archive date
+    thumbnail: thumbnail
+    thumbnail_index: thumbnail index
+    timestamp: upload timestamp
+    title: upload title
+    duration: duration
+    screenshot: screenshot
+    hash: hash

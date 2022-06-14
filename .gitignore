@@ -12,5 +12,7 @@ anu.html
 anon*
 config.json
 config-*.json
+config.yaml
+config-*.yaml
 logs/*
 local_archive/

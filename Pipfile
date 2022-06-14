@@ -21,6 +21,7 @@ google-auth-httplib2 = "*"
 google-auth-oauthlib = "*"
 oauth2client = "*"
 python-slugify = "*"
+pyyaml = "*"
 
 [requires]
 python_version = "3.9"
