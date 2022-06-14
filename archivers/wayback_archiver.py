@@ -66,7 +66,7 @@ class WaybackArchiver(Archiver):
             return self.custom_retry(status_json, screenshot=screenshot)
 
         archive_url = f"https://web.archive.org/web/{status_json['timestamp']}/{status_json['original_url']}"
-        return self.if_archived_return_with_screenshot(archive_url)
+        return self.if_archived_return_with_screenshot(url, archive_url)
 
     def if_archived_return_with_screenshot(self, url, archive_url, screenshot=None, req=None, status='success'):
         try:
