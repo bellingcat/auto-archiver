@@ -150,7 +150,7 @@ class Config:
         """
         Creates the CMD line arguments. 'python auto_archive.py --help'
         """
-        parser = argparse.ArgumentParser(description='Automatically archive social media posts, videos, and images from a Google Sheets document. The command line arguments will always override the configurations in the provided JSON config file (--config), only some high-level options are allowed via the command line and the JSON configuration file is the preferred method. ')
+        parser = argparse.ArgumentParser(description='Automatically archive social media posts, videos, and images from a Google Sheets document. The command line arguments will always override the configurations in the provided JSON config file (--config), only some high-level options are allowed via the command line and the JSON configuration file is the preferred method. The sheet must have the "url" and "status" for the archiver to work. ')
 
         parser.add_argument('--config', action='store', dest='config', help='the filename of the JSON configuration file (defaults to \'config.json\')', default='config.json')
         parser.add_argument('--storage', action='store', dest='storage', help='which storage to use [execution.storage in config.json]', choices=Config.AVAILABLE_STORAGES)

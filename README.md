@@ -81,16 +81,16 @@ python auto_archive.py --s3-private
 To use Google Drive storage you need the id of the shared folder in the `config.json` file which must be shared with the service account eg `autoarchiverservice@auto-archiver-111111.iam.gserviceaccount.com` and then you can use `--storage=gd`
 
 #### Telethon (Telegrams API Library)
-The first time you run, you will be prompted to do a authentication with the phone number associated, alternativelly you can put your `anon.session` in the root.
+The first time you run, you will be prompted to do a authentication with the phone number associated, alternatively you can put your `anon.session` in the root.
 
 
 ## Running
 The `--sheet name` property (or `execution.sheet` in the JSON file) is the name of the Google Sheet to check for URLs. 
 This sheet must have been shared with the Google Service account used by `gspread`. 
-This sheet must also have specific columns (case-insensitive) in the `header` row (see `COLUMN_NAMES` in [gworksheet.py](utils/gworksheet.py)):
+This sheet must also have specific columns (case-insensitive) in the `header` row (see `COLUMN_NAMES` in [gworksheet.py](utils/gworksheet.py)), only the `link` and `status` columns are mandatory:
 * `Link` (required): the location of the media to be archived. This is the only column that should be supplied with data initially
-* `Destination folder`: (optional) by default files are saved to a folder called `name-of-sheets-document/name-of-sheets-tab/` using this option you can organize documents into folder from the sheet. 
 * `Archive status` (required): the status of the auto archiver script. Any row with text in this column will be skipped automatically.
+* `Destination folder`: (optional) by default files are saved to a folder called `name-of-sheets-document/name-of-sheets-tab/` using this option you can organize documents into folder from the sheet. 
 * `Archive location`: the location of the archived version. For files that were not able to be auto archived, this can be manually updated.
 * `Archive date`: the date that the auto archiver script ran for this file
 * `Upload timestamp`: the timestamp extracted from the video. (For YouTube, this unfortunately does not currently include the time)
