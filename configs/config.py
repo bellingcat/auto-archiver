@@ -3,19 +3,13 @@ import argparse, yaml, json
 import gspread
 from loguru import logger
 from selenium import webdriver
-from dataclasses import dataclass, asdict
+from dataclasses import asdict
 
 from utils import GWorksheet, getattr_or
 from .wayback_config import WaybackConfig
 from .telethon_config import TelethonConfig
+from .selenium_config import SeleniumConfig
 from storages import Storage, S3Config, S3Storage, GDStorage, GDConfig, LocalStorage, LocalConfig
-
-
-@dataclass
-class SeleniumConfig:
-    timeout_seconds: int = 120
-    window_width: int = 1400
-    window_height: int = 2000
 
 
 class Config:
