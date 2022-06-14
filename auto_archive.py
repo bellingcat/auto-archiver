@@ -80,54 +80,59 @@ def process_sheet(c: Config):
                 if not is_retry: continue
 
             # All checks done - archival process starts here
-            gw.set_cell(row, 'status', 'Archive in progress')
-            url = expand_url(url)
-            c.set_folder(gw.get_cell_or_default(row, 'folder', default_folder, when_empty_use_default=True))
+            try: 
+                gw.set_cell(row, 'status', 'Archive in progress')
+                url = expand_url(url)
+                c.set_folder(gw.get_cell_or_default(row, 'folder', default_folder, when_empty_use_default=True))
 
-            # make a new driver so each spreadsheet row is idempotent
-            c.recreate_webdriver()
+                # make a new driver so each spreadsheet row is idempotent
+                c.recreate_webdriver()
 
-            # order matters, first to succeed excludes remaining
-            active_archivers = [
-                TelethonArchiver(storage, c.webdriver, c.telegram_config),
-                TiktokArchiver(storage, c.webdriver),
-                YoutubeDLArchiver(storage, c.webdriver, c.facebook_cookie),
-                TelegramArchiver(storage, c.webdriver),
-                TwitterArchiver(storage, c.webdriver),
-                WaybackArchiver(storage, c.webdriver, c.wayback_config)
-            ]
+                # order matters, first to succeed excludes remaining
+                active_archivers = [
+                    TelethonArchiver(storage, c.webdriver, c.telegram_config),
+                    TiktokArchiver(storage, c.webdriver),
+                    YoutubeDLArchiver(storage, c.webdriver, c.facebook_cookie),
+                    TelegramArchiver(storage, c.webdriver),
+                    TwitterArchiver(storage, c.webdriver),
+                    WaybackArchiver(storage, c.webdriver, c.wayback_config)
+                ]
 
-            for archiver in active_archivers:
-                logger.debug(f'Trying {archiver} on {row=}')
+                for archiver in active_archivers:
+                    logger.debug(f'Trying {archiver} on {row=}')
 
-                try:
-                    result = archiver.download(url, check_if_exists=True)
-                except KeyboardInterrupt:
-                    # catches keyboard interruptions to do a clean exit
-                    logger.warning(f"caught interrupt for {archiver} on {row=}")
-                    gw.set_cell(row, 'status', '')
-                    c.destroy_webdriver()
-                    exit()
-                except Exception as e:
-                    result = False
-                    logger.error(f'Got unexpected error in row {row} with {archiver.name} for {url=}: {e}\n{traceback.format_exc()}')
+                    try:
+                        result = archiver.download(url, check_if_exists=True)
+                    except KeyboardInterrupt as e: raise e # so the higher level catch can catch it
+                    except Exception as e:
+                        result = False
+                        logger.error(f'Got unexpected error in row {row} with {archiver.name} for {url=}: {e}\n{traceback.format_exc()}')
+
+                    if result:
+                        success = result.status in ['success', 'already archived']
+                        result.status = f"{archiver.name}: {result.status}"
+                        if success:
+                            logger.success(f'{archiver.name} succeeded on {row=}, {url=}')
+                            break
+                        # only 1 retry possible for now
+                        if is_retry and Archiver.is_retry(result.status):
+                            result.status = Archiver.remove_retry(result.status)
+                        logger.warning(f'{archiver.name} did not succeed on {row=}, final status: {result.status}')
 
                 if result:
-                    success = result.status in ['success', 'already archived']
-                    result.status = f"{archiver.name}: {result.status}"
-                    if success:
-                        logger.success(f'{archiver.name} succeeded on {row=}, {url=}')
-                        break
-                    # only 1 retry possible for now
-                    if is_retry and Archiver.is_retry(result.status):
-                        result.status = Archiver.remove_retry(result.status)
-                    logger.warning(f'{archiver.name} did not succeed on {row=}, final status: {result.status}')
-
-            if result:
-                update_sheet(gw, row, result)
-            else:
-                gw.set_cell(row, 'status', 'failed: no archiver')
-        logger.success(f'Finshed worksheet {wks.title}')
+                    update_sheet(gw, row, result)
+                else:
+                    gw.set_cell(row, 'status', 'failed: no archiver')
+            except KeyboardInterrupt:
+                # catches keyboard interruptions to do a clean exit
+                logger.warning(f"caught interrupt on {row=}, {url=}")
+                gw.set_cell(row, 'status', '')
+                c.destroy_webdriver()
+                exit()
+            except Exception as e:
+                logger.error(f'Got unexpected error in row {row} for {url=}: {e}\n{traceback.format_exc()}')
+                gw.set_cell(row, 'status', 'failed: unexpected error (see logs)')
+        logger.success(f'Finished worksheet {wks.title}')
 
 
 @logger.catch
