@@ -18,10 +18,12 @@ class WaybackArchiver(Archiver):
     def __init__(self, storage: Storage, driver, config: WaybackConfig):
         super(WaybackArchiver, self).__init__(storage, driver)
         self.config = config
-        # TODO: this logic should live at the auto-archiver level
         self.seen_urls = {}
 
     def download(self, url, check_if_exists=False):
+        if self.config is None:
+            logger.error('Missing Wayback config')
+            return False
         if check_if_exists:
             if url in self.seen_urls: return self.seen_urls[url]
 
@@ -57,7 +59,7 @@ class WaybackArchiver(Archiver):
             retries += 1
 
         if status_r.status_code != 200:
-            return ArchiveResult(status="Internet archive failed", screenshot=screenshot)
+            return ArchiveResult(status=f"Internet archive failed: check https://web.archive.org/save/status/{job_id}", screenshot=screenshot)
 
         status_json = status_r.json()
         if status_json['status'] != 'success':
