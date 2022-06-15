@@ -52,12 +52,13 @@ class VkArchiver(Archiver):
         headers = {"access_token": self.vk_session.token["access_token"], "photos": photo_id.replace("photo", ""), "extended": "1", "v": self.vk_session.api_version}
         req = requests.get("https://api.vk.com/method/photos.getById", headers)
         res = req.json()["response"][0]
+        title = res["text"][:200] # more on the page
         img_url = res["orig_photo"]["url"]
         time = dateparser.parse(str(res["date"]), settings={"RETURN_AS_TIMEZONE_AWARE": True, "TO_TIMEZONE": "UTC"})
 
         page_cdn, page_hash, thumbnail = self.generate_media_page([img_url], photo_url, res)
         screenshot = self.get_screenshot(photo_url)
-        return ArchiveResult(status="success", cdn_url=page_cdn, screenshot=screenshot, hash=page_hash, thumbnail=thumbnail, timestamp=time)
+        return ArchiveResult(status="success", cdn_url=page_cdn, screenshot=screenshot, hash=page_hash, thumbnail=thumbnail, timestamp=time, title=title)
 
     def archive_wall(self, wall_url, wall_id):
         headers = {"access_token": self.vk_session.token["access_token"], "posts": wall_id.replace("wall", ""), "extended": "1", "copy_history_depth": "2", "v": self.vk_session.api_version}
@@ -65,7 +66,7 @@ class VkArchiver(Archiver):
         res = req.json()["response"]
         wall = res["items"][0]
         img_urls = [p[p["type"]]["sizes"][-1]["url"] for p in wall["attachments"]] if "attachments" in wall else []
-        title = wall["text"][0:200]  # more on the page
+        title = wall["text"][:200] # more on the page
         time = dateparser.parse(str(wall["date"]), settings={"RETURN_AS_TIMEZONE_AWARE": True, "TO_TIMEZONE": "UTC"})
 
         page_cdn, page_hash, thumbnail = self.generate_media_page(img_urls, wall_url, res)
