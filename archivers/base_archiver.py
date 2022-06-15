@@ -95,7 +95,7 @@ class Archiver(ABC):
 
     # eg images in a tweet save to cloud storage
 
-    def generate_media_page(self, urls, url, object, requester=requests):
+    def generate_media_page(self, urls, url, object):
         """
         For a list of media urls, fetch them, upload them
         and call self.generate_media_page_html with them
@@ -111,7 +111,7 @@ class Archiver(ABC):
 
             filename = os.path.join(Storage.TMP_FOLDER, key)
 
-            d = requester.get(media_url, headers=headers)
+            d = requests.get(media_url, headers=headers)
             with open(filename, 'wb') as f:
                 f.write(d.content)
 
