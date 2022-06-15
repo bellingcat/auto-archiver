@@ -27,13 +27,11 @@ class VkArchiver(Archiver):
 
     def download(self, url, check_if_exists=False):
         # detect URLs that this archiver can handle
-        has_wall = self.wall_pattern.search(url)
-        has_photo = self.photo_pattern.search(url)
         _id, method = None, None
-        if has_wall:
+        if has_wall := self.wall_pattern.search(url):
             _id = has_wall[0]
             method = self.archive_wall
-        elif has_photo:
+        elif has_photo := self.photo_pattern.search(url):
             _id = has_photo[0]
             method = self.archive_photo
         else: return False
