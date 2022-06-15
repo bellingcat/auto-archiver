@@ -46,13 +46,17 @@ class VkArchiver(Archiver):
             cdn_url = self.storage.get_cdn_url(key)
             return ArchiveResult(status="already archived", cdn_url=cdn_url, screenshot=screenshot)
 
-        return method(proper_url, _id)
+        try:
+            return method(proper_url, _id)
+        except Exception as e:
+            logger.error(f"something went wrong with vk archive, possibly 404 causing index out of range, or missing key: {e}")
+        return False
 
     def archive_photo(self, photo_url, photo_id):
         headers = {"access_token": self.vk_session.token["access_token"], "photos": photo_id.replace("photo", ""), "extended": "1", "v": self.vk_session.api_version}
         req = requests.get("https://api.vk.com/method/photos.getById", headers)
         res = req.json()["response"][0]
-        title = res["text"][:200] # more on the page
+        title = res["text"][:200]  # more on the page
         img_url = res["orig_photo"]["url"]
         time = dateparser.parse(str(res["date"]), settings={"RETURN_AS_TIMEZONE_AWARE": True, "TO_TIMEZONE": "UTC"})
 
@@ -66,10 +70,9 @@ class VkArchiver(Archiver):
         res = req.json()["response"]
         wall = res["items"][0]
         img_urls = [p[p["type"]]["sizes"][-1]["url"] for p in wall["attachments"]] if "attachments" in wall else []
-        title = wall["text"][:200] # more on the page
+        title = wall["text"][:200]  # more on the page
         time = dateparser.parse(str(wall["date"]), settings={"RETURN_AS_TIMEZONE_AWARE": True, "TO_TIMEZONE": "UTC"})
 
         page_cdn, page_hash, thumbnail = self.generate_media_page(img_urls, wall_url, res)
         screenshot = self.get_screenshot(wall_url)
         return ArchiveResult(status="success", cdn_url=page_cdn, screenshot=screenshot, hash=page_hash, thumbnail=thumbnail, timestamp=time, title=title)
-
