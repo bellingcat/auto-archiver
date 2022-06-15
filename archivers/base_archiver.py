@@ -225,7 +225,6 @@ class Archiver(ABC):
                 key = key_folder + fname
 
                 self.storage.upload(thumbnail_filename, key)
-
                 cdn_url = self.storage.get_cdn_url(key)
                 cdn_urls.append(cdn_url)
 

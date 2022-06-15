@@ -28,12 +28,21 @@ class VkArchiver(Archiver):
         # detect URLs that this archiver can handle
         has_wall = self.wall_pattern.search(url)
         if has_wall:
-            wall_url = f'https://vk.com/{has_wall[0]}'
-            logger.info(f"found valid wall id from {url=} : {wall_url=}")
-            return self.archive_wall(wall_url, check_if_exists)
+            wall_id = has_wall[0]
+            wall_url = f'https://vk.com/{wall_id}'
+            logger.info(f"found valid wall id from {url=} : {wall_id=}")
+            key = self.get_html_key(wall_url)
+
+            # if check if exists will not download again
+            if check_if_exists and self.storage.exists(key):
+                screenshot = self.get_screenshot(wall_url)
+                cdn_url = self.storage.get_cdn_url(key)
+                return ArchiveResult(status="already archived", cdn_url=cdn_url, screenshot=screenshot)
+
+            return self.archive_wall(wall_url)
         return False
 
-    def archive_wall(self, wall_url, check_if_exists):
+    def archive_wall(self, wall_url):
         res = self.vk_session.http.get(wall_url).text
         soup = BeautifulSoup(res, "html.parser")
         image_urls = []
