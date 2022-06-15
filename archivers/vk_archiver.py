@@ -69,7 +69,18 @@ class VkArchiver(Archiver):
         req = requests.get("https://api.vk.com/method/wall.getById", headers)
         res = req.json()["response"]
         wall = res["items"][0]
-        img_urls = [p[p["type"]]["sizes"][-1]["url"] for p in wall["attachments"]] if "attachments" in wall else []
+        img_urls = []
+        if "attachments" in wall:
+            for a in wall["attachments"]:
+                attachment = a[a["type"]]
+                if "thumb" in attachment:
+                    attachment = attachment["thumb"]
+                if "sizes" in attachment:
+                    try: img_urls.append(attachment["sizes"][-1]["url"])
+                    except Exception as e: 
+                        logger.warning(f"could not get image from attachment: {e}")
+                        
+
         title = wall["text"][:200]  # more on the page
         time = dateparser.parse(str(wall["date"]), settings={"RETURN_AS_TIMEZONE_AWARE": True, "TO_TIMEZONE": "UTC"})
 
