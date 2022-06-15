@@ -16,8 +16,9 @@ class TelethonArchiver(Archiver):
 
     def __init__(self, storage: Storage, driver, config: TelethonConfig):
         super().__init__(storage, driver)
-        self.client = TelegramClient("./anon", config.api_id, config.api_hash)
-        self.bot_token = config.bot_token
+        if config:
+            self.client = TelegramClient("./anon", config.api_id, config.api_hash)
+            self.bot_token = config.bot_token
 
     def _get_media_posts_in_group(self, chat, original_post, max_amp=10):
         """
@@ -38,6 +39,10 @@ class TelethonArchiver(Archiver):
         return media
 
     def download(self, url, check_if_exists=False):
+        if not hasattr(self, "client"):
+            logger.error('Missing Telethon config')
+            return False
+
         # detect URLs that we definitely cannot handle
         matches = self.link_pattern.findall(url)
         if not len(matches):
