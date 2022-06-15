@@ -9,6 +9,7 @@ from utils import GWorksheet, getattr_or
 from .wayback_config import WaybackConfig
 from .telethon_config import TelethonConfig
 from .selenium_config import SeleniumConfig
+from .vk_config import VkConfig
 from storages import Storage, S3Config, S3Storage, GDStorage, GDConfig, LocalStorage, LocalConfig
 
 
@@ -120,6 +121,7 @@ class Config:
                 secret=secrets["wayback"]["secret"],
             )
         else:
+            self.wayback_config = None
             logger.debug(f"'wayback' key not present in the {self.config_file=}")
 
         # telethon config
@@ -130,7 +132,18 @@ class Config:
                 bot_token=secrets["telegram"].get("bot_token", None)
             )
         else:
+            self.telegram_config = None
             logger.debug(f"'telegram' key not present in the {self.config_file=}")
+
+        # vk config
+        if "vk" in secrets:
+            self.vk_config = VkConfig(
+                username=secrets["vk"]["username"],
+                password=secrets["vk"]["password"]
+            )
+        else:
+            self.vk_config = None
+            logger.debug(f"'vk' key not present in the {self.config_file=}")
 
         del self.config["secrets"]  # delete to prevent leaks
 
@@ -225,6 +238,7 @@ class Config:
             "local_config": hasattr(self, "local_config"),
             "wayback_config": self.wayback_config != None,
             "telegram_config": self.telegram_config != None,
+            "vk_config": self.vk_config != None,
             "gsheets_client": self.gsheets_client != None,
             "column_names": self.column_names,
         }, ensure_ascii=False, indent=4)

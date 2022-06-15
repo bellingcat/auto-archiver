@@ -6,3 +6,4 @@ from .tiktok_archiver import TiktokArchiver
 from .wayback_archiver import WaybackArchiver
 from .youtubedl_archiver import YoutubeDLArchiver
 from .twitter_archiver import TwitterArchiver
+from .vk_archiver import VkArchiver

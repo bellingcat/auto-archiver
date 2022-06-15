@@ -3,7 +3,7 @@ import os, datetime, shutil, traceback, random
 from loguru import logger
 from slugify import slugify
 
-from archivers import TelethonArchiver, TelegramArchiver, TiktokArchiver, YoutubeDLArchiver, TwitterArchiver, WaybackArchiver, ArchiveResult, Archiver
+from archivers import TelethonArchiver, TelegramArchiver, TiktokArchiver, YoutubeDLArchiver, TwitterArchiver, VkArchiver, WaybackArchiver, ArchiveResult, Archiver
 from utils import GWorksheet, mkdir_if_not_exists, expand_url
 from configs import Config
 from storages import Storage
@@ -95,6 +95,7 @@ def process_sheet(c: Config):
                     YoutubeDLArchiver(storage, c.webdriver, c.facebook_cookie),
                     TelegramArchiver(storage, c.webdriver),
                     TwitterArchiver(storage, c.webdriver),
+                    VkArchiver(storage,  c.webdriver, c.vk_config),
                     WaybackArchiver(storage, c.webdriver, c.wayback_config)
                 ]
 
