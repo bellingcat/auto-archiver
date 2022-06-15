@@ -58,12 +58,12 @@ class Archiver(ABC):
             <h3><a href="{url}">{url}</a></h3><ul>'''
 
         for url_info in urls_info:
-            mime_global, mime_type = self._guess_file_type(url_info["key"])
+            mime_global = self._guess_file_type(url_info["key"])
             preview = ""
             if mime_global == "image":
-                preview = f'<img src="{url_info["cdn_url"]}" style="max-height:200px;max-width:200px;"></img>'
+                preview = f'<img src="{url_info["cdn_url"]}" style="max-height:200px;max-width:400px;"></img>'
             elif mime_global == "video":
-                preview = f'<video controls style="max-height:200px;max-width:200px;"><source src="{url_info["cdn_url"]}" type="{mime_type}"></source></video>'
+                preview = f'<video src="{url_info["cdn_url"]}" controls style="max-height:400px;max-width:400px;"></video>'
             page += f'''<li><a href="{url_info['cdn_url']}">{preview}{url_info['key']}</a>: {url_info['hash']}</li>'''
 
         page += f"</ul><h2>{self.name} object data:</h2><code>{object}</code>"
@@ -83,19 +83,18 @@ class Archiver(ABC):
         page_cdn = self.storage.get_cdn_url(page_key)
         return (page_cdn, page_hash, thumbnail)
 
-    def _guess_file_type(self, path:str):
+    def _guess_file_type(self, path: str):
         """
-        Receives a URL or filename and returns global mimetype like 'image' or 'video' and the specific mimetype as a tuple
+        Receives a URL or filename and returns global mimetype like 'image' or 'video'
         see https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
-        ex: ('audio', 'audio/mp3')
         """
         mime = mimetypes.guess_type(path)[0]
         if mime is not None:
-            return mime.split("/")[0], mime
-        return "", ""
-
+            return mime.split("/")[0]
+        return ""
 
     # eg images in a tweet save to cloud storage
+
     def generate_media_page(self, urls, url, object, requester=requests):
         """
         For a list of media urls, fetch them, upload them
