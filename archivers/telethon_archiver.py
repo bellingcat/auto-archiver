@@ -13,7 +13,7 @@ from utils import getattr_or
 
 class TelethonArchiver(Archiver):
     name = "telethon"
-    link_pattern = re.compile(r"https:\/\/t\.me(\/c){0,1}\/(.+)\/(.+)")
+    link_pattern = re.compile(r"https:\/\/t\.me(\/c){0,1}\/(.+)\/(\d+)")
 
     def __init__(self, storage: Storage, driver, config: TelethonConfig):
         super().__init__(storage, driver)
