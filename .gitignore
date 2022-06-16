@@ -1,4 +1,4 @@
-tmp/
+tmp*/
 temp/
 .env*
 .DS_Store

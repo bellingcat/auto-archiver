@@ -66,8 +66,6 @@ execution:
     timeout_seconds: 120
     window_width: 1400
     window_height: 2000
-  # local tmp folder to save files before uploading to storage
-  tmp_folder: tmp/
   # puts execution logs into /logs folder, defaults to false
   save_logs: true
   # custom column names, only needed if different from default, can be overwritten with CMD --col-NAME="VALUE"
