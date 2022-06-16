@@ -1,4 +1,4 @@
-import os, datetime, shutil, traceback, random
+import os, datetime, shutil, traceback, random, tempfile
 
 from loguru import logger
 from slugify import slugify
@@ -141,10 +141,10 @@ def main():
     c = Config()
     c.parse()
     logger.info(f'Opening document {c.sheet} for header {c.header}')
-    mkdir_if_not_exists(Storage.TMP_FOLDER)
-    process_sheet(c)
-    c.destroy_webdriver()
-    shutil.rmtree(Storage.TMP_FOLDER)
+    with tempfile.TemporaryDirectory(dir="./") as tmpdir:
+        Storage.TMP_FOLDER = tmpdir
+        process_sheet(c)
+        c.destroy_webdriver()
 
 
 if __name__ == '__main__':

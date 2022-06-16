@@ -50,7 +50,6 @@ class Config:
         self.sheet = getattr_or(self.args, "sheet", execution.get("sheet"))
         assert self.sheet is not None, "'sheet' must be provided either through command line or configuration file"
         self.header = int(getattr_or(self.args, "header", execution.get("header", 1)))
-        Storage.TMP_FOLDER = execution.get("tmp_folder", Storage.TMP_FOLDER)
         self.storage = getattr_or(self.args, "storage", execution.get("storage", "s3"))
         self.save_logs = getattr(self.args, "save_logs") or execution.get("save_logs", False)
         if self.save_logs:
@@ -238,7 +237,6 @@ class Config:
             "header": self.header,
             "check_if_exists": self.check_if_exists,
             "save_logs": self.save_logs,
-            "tmp_folder": Storage.TMP_FOLDER,
             "selenium_config": asdict(self.selenium_config),
             "selenium_webdriver": self.webdriver != None,
             "s3_config": hasattr(self, "s3_config"),
