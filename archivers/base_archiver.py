@@ -277,7 +277,7 @@ class Archiver(ABC):
             retry_at = int(match.group(1))
             now = datetime.datetime.now().timestamp()
             should_retry = now >= retry_at
-            logger.debug(f"{should_retry=} as {now=} >= {retry_at=}")
+            logger.debug(f"{should_retry=} since {now=} and {retry_at=}")
             return should_retry
         return False
 
