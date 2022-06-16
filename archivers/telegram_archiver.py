@@ -1,11 +1,11 @@
-import os
-import requests
+import os, requests, re
+
+import html
 from bs4 import BeautifulSoup
 from loguru import logger
-import re
-import html
 
 from .base_archiver import Archiver, ArchiveResult
+from storages import Storage
 
 
 class TelegramArchiver(Archiver):
@@ -52,8 +52,7 @@ class TelegramArchiver(Archiver):
         video_id = video_url.split('/')[-1].split('?')[0]
         key = self.get_key(video_id)
 
-        filename = 'tmp/' + key
-        cdn_url = self.storage.get_cdn_url(key)
+        filename = os.path.join(Storage.TMP_FOLDER, key)
 
         if check_if_exists and self.storage.exists(key):
             status = 'already archived'
@@ -84,5 +83,6 @@ class TelegramArchiver(Archiver):
             filename, key, duration=duration)
         os.remove(filename)
 
+        cdn_url = self.storage.get_cdn_url(key)
         return ArchiveResult(status=status, cdn_url=cdn_url, thumbnail=key_thumb, thumbnail_index=thumb_index,
                              duration=duration, title=original_url, timestamp=s.find_all('time')[1].get('datetime'), hash=hash, screenshot=screenshot)

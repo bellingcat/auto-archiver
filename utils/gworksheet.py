@@ -10,10 +10,10 @@ class GWorksheet:
     """
     COLUMN_NAMES = {
         'url': 'link',
-        'subfolder': 'sub folder',
+        'status': 'archive status',
+        'folder': 'destination folder',
         'archive': 'archive location',
         'date': 'archive date',
-        'status': 'archive status',
         'thumbnail': 'thumbnail',
         'thumbnail_index': 'thumbnail index',
         'timestamp': 'upload timestamp',
@@ -25,9 +25,12 @@ class GWorksheet:
 
     def __init__(self, worksheet, columns=COLUMN_NAMES, header_row=1):
         self.wks = worksheet
-        self.values = self.wks.get_values()
-        self.headers = [v.lower() for v in self.values[header_row - 1]]
         self.columns = columns
+        self.values = self.wks.get_values()
+        if len(self.values) > 0:
+            self.headers = [v.lower() for v in self.values[header_row - 1]]
+        else:
+            self.headers = []
 
     def _check_col_exists(self, col: str):
         if col not in self.columns:
@@ -69,12 +72,15 @@ class GWorksheet:
             return ''
         return row[col_index]
 
-    def get_cell_or_default(self, row, col: str, default: str = None, fresh=False):
+    def get_cell_or_default(self, row, col: str, default: str = None, fresh=False, when_empty_use_default=True):
         """
         return self.get_cell or default value on error (eg: column is missing)
         """
         try:
-            return self.get_cell(row, col, fresh)
+            val = self.get_cell(row, col, fresh)
+            if when_empty_use_default and val.strip() == "":
+                return default
+            return val
         except:
             return default
 

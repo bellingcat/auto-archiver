@@ -1,6 +1,6 @@
 
-import os
-import datetime
+import os, datetime
+
 import yt_dlp
 from loguru import logger
 
@@ -10,7 +10,7 @@ from storages import Storage
 
 class YoutubeDLArchiver(Archiver):
     name = "youtube_dl"
-    ydl_opts = {'outtmpl': 'tmp/%(id)s.%(ext)s', 'quiet': False}
+    ydl_opts = {'outtmpl': f'{Storage.TMP_FOLDER}%(id)s.%(ext)s', 'quiet': False}
 
     def __init__(self, storage: Storage, driver, fb_cookie):
         super().__init__(storage, driver)
@@ -18,7 +18,7 @@ class YoutubeDLArchiver(Archiver):
 
     def download(self, url, check_if_exists=False):
         netloc = self.get_netloc(url)
-        if netloc in ['facebook.com', 'www.facebook.com']:
+        if netloc in ['facebook.com', 'www.facebook.com'] and self.fb_cookie:
             logger.debug('Using Facebook cookie')
             yt_dlp.utils.std_headers['cookie'] = self.fb_cookie
 
@@ -106,11 +106,11 @@ class YoutubeDLArchiver(Archiver):
 
         os.remove(filename)
 
-        timestamp = datetime.datetime.utcfromtimestamp(info['timestamp']).replace(tzinfo=datetime.timezone.utc).isoformat() \
-            if 'timestamp' in info else \
-            datetime.datetime.strptime(info['upload_date'], '%Y%m%d').replace(tzinfo=datetime.timezone.utc) \
-            if 'upload_date' in info and info['upload_date'] is not None else \
-            None
+        timestamp = None
+        if 'timestamp' in info and info['timestamp'] is not None:
+            timestamp = datetime.datetime.utcfromtimestamp(info['timestamp']).replace(tzinfo=datetime.timezone.utc).isoformat()
+        elif 'upload_date' in info and info['upload_date'] is not None:
+            timestamp = datetime.datetime.strptime(info['upload_date'], '%Y%m%d').replace(tzinfo=datetime.timezone.utc)
 
         return ArchiveResult(status=status, cdn_url=cdn_url, thumbnail=key_thumb, thumbnail_index=thumb_index, duration=duration,
                              title=info['title'] if 'title' in info else None, timestamp=timestamp, hash=hash, screenshot=screenshot)
