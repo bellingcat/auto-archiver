@@ -74,7 +74,7 @@ class TelethonArchiver(Archiver):
 
             screenshot = self.get_screenshot(url)
 
-            if len(media_posts) > 1:
+            if len(media_posts) > 0:
                 key = self.get_html_key(url)
 
                 if check_if_exists and self.storage.exists(key):
@@ -86,7 +86,7 @@ class TelethonArchiver(Archiver):
                 group_id = post.grouped_id if post.grouped_id is not None else post.id
                 uploaded_media = []
                 message = post.message
-                for mp in media_posts:
+                for i, mp in enumerate(media_posts):
                     if len(mp.message) > len(message): message = mp.message
                     filename_dest = os.path.join(Storage.TMP_FOLDER, f'{chat}_{group_id}', str(mp.id))
                     filename = self.client.download_media(mp.media, filename_dest)
@@ -95,22 +95,13 @@ class TelethonArchiver(Archiver):
                     hash = self.get_hash(filename)
                     cdn_url = self.storage.get_cdn_url(key)
                     uploaded_media.append({'cdn_url': cdn_url, 'key': key, 'hash': hash})
+                    if i == 0:
+                        key_thumb, thumb_index = self.get_thumbnails(filename, key)
                     os.remove(filename)
 
                 page_cdn, page_hash, _ = self.generate_media_page_html(url, uploaded_media, html.escape(str(post)))
 
-                return ArchiveResult(status=status, cdn_url=page_cdn, title=message, timestamp=post.date, hash=page_hash, screenshot=screenshot)
-            elif len(media_posts) == 1:
-                key = self.get_key(f'{chat}_{post_id}')
-                filename = self.client.download_media(post.media, os.path.join(Storage.TMP_FOLDER, key))
-                key = filename.split(Storage.TMP_FOLDER)[1].replace(" ", "")
-                self.storage.upload(filename, key)
-                hash = self.get_hash(filename)
-                cdn_url = self.storage.get_cdn_url(key)
-                key_thumb, thumb_index = self.get_thumbnails(filename, key)
-                os.remove(filename)
-
-                return ArchiveResult(status=status, cdn_url=cdn_url, title=post.message, thumbnail=key_thumb, thumbnail_index=thumb_index, timestamp=post.date, hash=hash, screenshot=screenshot)
+                return ArchiveResult(status=status, cdn_url=page_cdn, title=message, timestamp=post.date, hash=page_hash, screenshot=screenshot, thumbnail=key_thumb, thumbnail_index=thumb_index)
 
             page_cdn, page_hash, _ = self.generate_media_page_html(url, [], html.escape(str(post)))
             return ArchiveResult(status=status, cdn_url=page_cdn, title=post.message, timestamp=getattr_or(post, "date"), hash=page_hash, screenshot=screenshot)
