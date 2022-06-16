@@ -22,6 +22,8 @@ google-auth-oauthlib = "*"
 oauth2client = "*"
 python-slugify = "*"
 pyyaml = "*"
+vk-api = "*"
+dateparser = "*"
 
 [requires]
 python_version = "3.9"

@@ -106,11 +106,11 @@ class YoutubeDLArchiver(Archiver):
 
         os.remove(filename)
 
-        timestamp = datetime.datetime.utcfromtimestamp(info['timestamp']).replace(tzinfo=datetime.timezone.utc).isoformat() \
-            if 'timestamp' in info else \
-            datetime.datetime.strptime(info['upload_date'], '%Y%m%d').replace(tzinfo=datetime.timezone.utc) \
-            if 'upload_date' in info and info['upload_date'] is not None else \
-            None
+        timestamp = None
+        if 'timestamp' in info and info['timestamp'] is not None:
+            timestamp = datetime.datetime.utcfromtimestamp(info['timestamp']).replace(tzinfo=datetime.timezone.utc).isoformat()
+        elif 'upload_date' in info and info['upload_date'] is not None:
+            timestamp = datetime.datetime.strptime(info['upload_date'], '%Y%m%d').replace(tzinfo=datetime.timezone.utc)
 
         return ArchiveResult(status=status, cdn_url=cdn_url, thumbnail=key_thumb, thumbnail_index=thumb_index, duration=duration,
                              title=info['title'] if 'title' in info else None, timestamp=timestamp, hash=hash, screenshot=screenshot)

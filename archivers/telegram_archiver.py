@@ -53,7 +53,6 @@ class TelegramArchiver(Archiver):
         key = self.get_key(video_id)
 
         filename = os.path.join(Storage.TMP_FOLDER, key)
-        cdn_url = self.storage.get_cdn_url(key)
 
         if check_if_exists and self.storage.exists(key):
             status = 'already archived'
@@ -84,5 +83,6 @@ class TelegramArchiver(Archiver):
             filename, key, duration=duration)
         os.remove(filename)
 
+        cdn_url = self.storage.get_cdn_url(key)
         return ArchiveResult(status=status, cdn_url=cdn_url, thumbnail=key_thumb, thumbnail_index=thumb_index,
                              duration=duration, title=original_url, timestamp=s.find_all('time')[1].get('datetime'), hash=hash, screenshot=screenshot)

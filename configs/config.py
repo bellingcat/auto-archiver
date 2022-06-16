@@ -4,11 +4,13 @@ import gspread
 from loguru import logger
 from selenium import webdriver
 from dataclasses import asdict
+from selenium.common.exceptions import TimeoutException
 
 from utils import GWorksheet, getattr_or
 from .wayback_config import WaybackConfig
 from .telethon_config import TelethonConfig
 from .selenium_config import SeleniumConfig
+from .vk_config import VkConfig
 from storages import Storage, S3Config, S3Storage, GDStorage, GDConfig, LocalStorage, LocalConfig
 
 
@@ -120,6 +122,7 @@ class Config:
                 secret=secrets["wayback"]["secret"],
             )
         else:
+            self.wayback_config = None
             logger.debug(f"'wayback' key not present in the {self.config_file=}")
 
         # telethon config
@@ -130,7 +133,18 @@ class Config:
                 bot_token=secrets["telegram"].get("bot_token", None)
             )
         else:
+            self.telegram_config = None
             logger.debug(f"'telegram' key not present in the {self.config_file=}")
+
+        # vk config
+        if "vk" in secrets:
+            self.vk_config = VkConfig(
+                username=secrets["vk"]["username"],
+                password=secrets["vk"]["password"]
+            )
+        else:
+            self.vk_config = None
+            logger.debug(f"'vk' key not present in the {self.config_file=}")
 
         del self.config["secrets"]  # delete to prevent leaks
 
@@ -197,16 +211,23 @@ class Config:
     def destroy_webdriver(self):
         if self.webdriver is not None and type(self.webdriver) != str:
             self.webdriver.quit()
+            del self.webdriver
 
     def recreate_webdriver(self):
-        self.destroy_webdriver()
         options = webdriver.FirefoxOptions()
         options.headless = True
         options.set_preference('network.protocol-handler.external.tg', False)
-        self.webdriver = webdriver.Firefox(options=options)
-        self.webdriver.set_window_size(self.selenium_config.window_width,
+        try:
+            new_webdriver = webdriver.Firefox(options=options)
+            # only destroy if creation is successful
+            self.destroy_webdriver()
+            self.webdriver = new_webdriver
+            self.webdriver.set_window_size(self.selenium_config.window_width,
                                        self.selenium_config.window_height)
-        self.webdriver.set_page_load_timeout(self.selenium_config.timeout_seconds)
+            self.webdriver.set_page_load_timeout(self.selenium_config.timeout_seconds)
+        except TimeoutException as e:
+            logger.error(f"failed to get new webdriver, possibly due to insufficient system resources or timeout settings: {e}")
+
 
     def __str__(self) -> str:
         return json.dumps({
@@ -225,6 +246,7 @@ class Config:
             "local_config": hasattr(self, "local_config"),
             "wayback_config": self.wayback_config != None,
             "telegram_config": self.telegram_config != None,
+            "vk_config": self.vk_config != None,
             "gsheets_client": self.gsheets_client != None,
             "column_names": self.column_names,
         }, ensure_ascii=False, indent=4)
