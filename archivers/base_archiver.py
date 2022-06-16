@@ -229,7 +229,7 @@ class Archiver(ABC):
                 cdn_urls.append(cdn_url)
 
         if len(cdn_urls) == 0:
-            return ('None', 'None')
+            return ('', '')
 
         key_thumb = cdn_urls[int(len(cdn_urls) * 0.1)]
 
