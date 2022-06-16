@@ -140,7 +140,7 @@ With this configuration, the archiver should archive and store all media added t
 
 # auto_auto_archiver
 
-To make it easier to set up new auto-archiver sheets, the auto-auto-archiver will look at a particular sheet and run the auto-archiver on every sheet name in column A, starting from row 11. (It starts here to support instructional text in the first rows of the sheet, as shown below.) This script takes one command line argument, with `--sheet`, the name of the sheet. It must be shared with the same service account.
+To make it easier to set up new auto-archiver sheets, the auto-auto-archiver will look at a particular sheet and run the auto-archiver on every sheet name in column A, starting from row 11. (It starts here to support instructional text in the first rows of the sheet, as shown below.) You can simply use your default config as for `auto_archiver.py` but use `--sheet` to specify the name of the sheet that lists the names of sheets to archive.It must be shared with the same service account.
 
 ![A screenshot of a Google Spreadsheet configured to show instructional text and a list of sheet names to check with auto-archiver.](docs/auto-auto.png)
 
@@ -152,15 +152,16 @@ Code is split into functional concepts:
    1. [GWorksheet](utils/gworksheet.py) - facilitates some of the reading/writing tasks for a Google Worksheet
 
 ### Current Archivers
-Archivers are tested in a meaningful order with Wayback Machine being the default, that can easily be changed in the code. 
+Archivers are tested in a meaningful order with Wayback Machine being the failsafe, that can easily be changed in the code. 
 ```mermaid
 graph TD
-    A(Archiver) -->|parent of| B(YoutubeDLArchiver)
-    A -->|parent of| C(TikTokArchiver)
-    A -->|parent of| D(TwitterArchiver)
+    A(Archiver) -->|parent of| B(TelethonArchiver)
+    A -->|parent of| C(TiktokArchiver)
+    A -->|parent of| D(YoutubeDLArchiver)
     A -->|parent of| E(TelegramArchiver)
-    A -->|parent of| F(TelethonArchiver)
-    A -->|parent of| G(WaybackArchiver)
+    A -->|parent of| F(TwitterArchiver)
+    A -->|parent of| G(VkArchiver)
+    A -->|parent of| H(WaybackArchiver)
 ```
 ### Current Storages
 ```mermaid
