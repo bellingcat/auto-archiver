@@ -1,28 +1,17 @@
-import os
-import datetime
-import argparse
-import requests
-import shutil
-import gspread
+import os, datetime, shutil, traceback, random
+
 from loguru import logger
-from dotenv import load_dotenv
-from selenium import webdriver
-import traceback
+from slugify import slugify
 
-import archivers
-from storages import S3Storage, S3Config
-from utils import GWorksheet, mkdir_if_not_exists
-import sys
+from archivers import TelethonArchiver, TelegramArchiver, TiktokArchiver, YoutubeDLArchiver, TwitterArchiver, VkArchiver, WaybackArchiver, ArchiveResult, Archiver
+from utils import GWorksheet, mkdir_if_not_exists, expand_url
+from configs import Config
+from storages import Storage
 
-logger.add("logs/1trace.log", level="TRACE")
-logger.add("logs/2info.log", level="INFO")
-logger.add("logs/3success.log", level="SUCCESS")
-logger.add("logs/4warning.log", level="WARNING")
-logger.add("logs/5error.log", level="ERROR")
+random.seed()
 
-load_dotenv()
 
-def update_sheet(gw, row, result: archivers.ArchiveResult):
+def update_sheet(gw, row, result: ArchiveResult):
     cell_updates = []
     row_values = gw.get_row(row)
 
@@ -35,8 +24,7 @@ def update_sheet(gw, row, result: archivers.ArchiveResult):
 
     batch_if_valid('archive', result.cdn_url)
     batch_if_valid('date', True, datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc).isoformat())
-    batch_if_valid('thumbnail', result.thumbnail,
-                   f'=IMAGE("{result.thumbnail}")')
+    batch_if_valid('thumbnail', result.thumbnail, f'=IMAGE("{result.thumbnail}")')
     batch_if_valid('thumbnail_index', result.thumbnail_index)
     batch_if_valid('title', result.title)
     batch_if_valid('duration', result.duration, str(result.duration))
@@ -56,131 +44,107 @@ def update_sheet(gw, row, result: archivers.ArchiveResult):
     gw.batch_set_cell(cell_updates)
 
 
-def expand_url(url):
-    # expand short URL links
-    if 'https://t.co/' in url:
-        try:
-            r = requests.get(url)
-            url = r.url
-        except:
-            logger.error(f'Failed to expand url {url}')
-    return url
+def missing_required_columns(gw: GWorksheet):
+    missing = False
+    for required_col in ['url', 'status']:
+        if not gw.col_exists(required_col):
+            logger.warning(f'Required column for {required_col}: "{gw.columns[required_col]}" not found, skipping worksheet {gw.wks.title}')
+            missing = True
+    return missing
 
 
-def process_sheet(sheet, header=1, columns=GWorksheet.COLUMN_NAMES):
-    gc = gspread.service_account(filename='service_account.json')
-    sh = gc.open(sheet)
-
-    s3_config = S3Config(
-        bucket=os.getenv('DO_BUCKET'),
-        region=os.getenv('DO_SPACES_REGION'),
-        key=os.getenv('DO_SPACES_KEY'),
-        secret=os.getenv('DO_SPACES_SECRET')
-    )
-    telegram_config = archivers.TelegramConfig(
-        api_id=os.getenv('TELEGRAM_API_ID'),
-        api_hash=os.getenv('TELEGRAM_API_HASH')
-    )
-
-    
+def process_sheet(c: Config):
+    sh = c.gsheets_client.open(c.sheet)
 
     # loop through worksheets to check
     for ii, wks in enumerate(sh.worksheets()):
-        logger.info(f'Opening worksheet {ii=}: {wks.title=} {header=}')
-        gw = GWorksheet(wks, header_row=header, columns=columns)
+        logger.info(f'Opening worksheet {ii=}: {wks.title=} {c.header=}')
+        gw = GWorksheet(wks, header_row=c.header, columns=c.column_names)
 
-        if not gw.col_exists('url'):
-            logger.warning(
-                f'No "{columns["url"]}" column found, skipping worksheet {wks.title}')
-            continue
+        if missing_required_columns(gw): continue
 
-        if not gw.col_exists('status'):
-            logger.warning(
-                f'No "{columns["status"]}" column found, skipping worksheet {wks.title}')
-            continue
-
-        # archives will be in a folder 'doc_name/worksheet_name'
-        s3_config.folder = f'{sheet.replace(" ", "_")}/{wks.title.replace(" ", "_")}/'
-        s3_client = S3Storage(s3_config)
-
-        # order matters, first to succeed excludes remaining
-        active_archivers = [
-            archivers.TelethonArchiver(s3_client, driver, telegram_config),
-            archivers.TelegramArchiver(s3_client, driver),
-            archivers.TiktokArchiver(s3_client, driver),
-            archivers.YoutubeDLArchiver(s3_client, driver, os.getenv('FACEBOOK_COOKIE')),
-            archivers.TwitterArchiver(s3_client, driver),
-            archivers.WaybackArchiver(s3_client, driver)
-        ]
+        # archives will default to being in a folder 'doc_name/worksheet_name'
+        default_folder = os.path.join(slugify(c.sheet), slugify(wks.title))
+        c.set_folder(default_folder)
+        storage = c.get_storage()
 
         # loop through rows in worksheet
-        for row in range(1 + header, gw.count_rows() + 1):
+        for row in range(1 + c.header, gw.count_rows() + 1):
             url = gw.get_cell(row, 'url')
             original_status = gw.get_cell(row, 'status')
             status = gw.get_cell(row, 'status', fresh=original_status in ['', None] and url != '')
-            if url != '' and status in ['', None]:
-                gw.set_cell(row, 'status', 'Archive in progress')
 
+            is_retry = False
+            if url == '' or status not in ['', None]:
+                is_retry = Archiver.should_retry_from_status(status)
+                if not is_retry: continue
+
+            # All checks done - archival process starts here
+            try: 
+                gw.set_cell(row, 'status', 'Archive in progress')
                 url = expand_url(url)
-                
+                c.set_folder(gw.get_cell_or_default(row, 'folder', default_folder, when_empty_use_default=True))
 
                 # make a new driver so each spreadsheet row is idempotent
-                options = webdriver.FirefoxOptions()
-                options.headless = True
-                options.set_preference('network.protocol-handler.external.tg', False)
+                c.recreate_webdriver()
 
-                driver = webdriver.Firefox(options=options)
-                driver.set_window_size(1400, 2000)
-                # in seconds, telegram screenshots catch which don't come back
-                driver.set_page_load_timeout(120)
+                # order matters, first to succeed excludes remaining
+                active_archivers = [
+                    TelethonArchiver(storage, c.webdriver, c.telegram_config),
+                    TiktokArchiver(storage, c.webdriver),
+                    YoutubeDLArchiver(storage, c.webdriver, c.facebook_cookie),
+                    TelegramArchiver(storage, c.webdriver),
+                    TwitterArchiver(storage, c.webdriver),
+                    VkArchiver(storage,  c.webdriver, c.vk_config),
+                    WaybackArchiver(storage, c.webdriver, c.wayback_config)
+                ]
+
                 for archiver in active_archivers:
-                    logger.debug(f'Trying {archiver} on row {row}')
+                    logger.debug(f'Trying {archiver} on {row=}')
 
                     try:
-                        result = archiver.download(url, check_if_exists=True)
+                        result = archiver.download(url, check_if_exists=c.check_if_exists)
+                    except KeyboardInterrupt as e: raise e # so the higher level catch can catch it
                     except Exception as e:
                         result = False
-                        logger.error(f'Got unexpected error in row {row} with archiver {archiver} for url {url}: {e}\n{traceback.format_exc()}')
+                        logger.error(f'Got unexpected error in row {row} with {archiver.name} for {url=}: {e}\n{traceback.format_exc()}')
 
                     if result:
-                        if result.status in ['success', 'already archived']:
-                            result.status = archiver.name + \
-                                ": " + str(result.status)
-                            logger.success(
-                                f'{archiver} succeeded on row {row}')
+                        success = result.status in ['success', 'already archived']
+                        result.status = f"{archiver.name}: {result.status}"
+                        if success:
+                            logger.success(f'{archiver.name} succeeded on {row=}, {url=}')
                             break
-                        logger.warning(
-                            f'{archiver} did not succeed on row {row}, final status: {result.status}')
-                        result.status = archiver.name + \
-                            ": " + str(result.status)
-                # get rid of driver so can reload on next row
-                driver.quit()
+                        # only 1 retry possible for now
+                        if is_retry and Archiver.is_retry(result.status):
+                            result.status = Archiver.remove_retry(result.status)
+                        logger.warning(f'{archiver.name} did not succeed on {row=}, final status: {result.status}')
+
                 if result:
                     update_sheet(gw, row, result)
                 else:
                     gw.set_cell(row, 'status', 'failed: no archiver')
-        logger.success(f'Finshed worksheet {wks.title}')
+            except KeyboardInterrupt:
+                # catches keyboard interruptions to do a clean exit
+                logger.warning(f"caught interrupt on {row=}, {url=}")
+                gw.set_cell(row, 'status', '')
+                c.destroy_webdriver()
+                exit()
+            except Exception as e:
+                logger.error(f'Got unexpected error in row {row} for {url=}: {e}\n{traceback.format_exc()}')
+                gw.set_cell(row, 'status', 'failed: unexpected error (see logs)')
+        logger.success(f'Finished worksheet {wks.title}')
+
 
 @logger.catch
 def main():
-    logger.debug(f'Passed args:{sys.argv}')
-    parser = argparse.ArgumentParser(
-        description='Automatically archive social media videos from a Google Sheets document')
-    parser.add_argument('--sheet', action='store', dest='sheet', help='the name of the google sheets document', required=True)
-    parser.add_argument('--header', action='store', dest='header', default=1, type=int, help='1-based index for the header row')
-    parser.add_argument('--private', action='store_true', help='Store content without public access permission')
-
-    for k, v in GWorksheet.COLUMN_NAMES.items():
-        parser.add_argument(f'--col-{k}', action='store', dest=k, default=v, help=f'the name of the column to fill with {k} (defaults={v})')
-
-    args = parser.parse_args()
-    config_columns = {k: getattr(args, k).lower() for k in GWorksheet.COLUMN_NAMES.keys()}
-
-    logger.info(f'Opening document {args.sheet} for header {args.header}')
-
-    mkdir_if_not_exists('tmp')
-    process_sheet(args.sheet, header=args.header, columns=config_columns)
-    shutil.rmtree('tmp')
+    c = Config()
+    c.parse()
+    logger.info(f'Opening document {c.sheet} for header {c.header}')
+    mkdir_if_not_exists(Storage.TMP_FOLDER)
+    process_sheet(c)
+    c.destroy_webdriver()
+    shutil.rmtree(Storage.TMP_FOLDER)
 
 
 if __name__ == '__main__':

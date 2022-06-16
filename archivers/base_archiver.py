@@ -1,15 +1,14 @@
-import os
-import ffmpeg
-import datetime
-import shutil
+import os, datetime, shutil, hashlib, time, requests, re, mimetypes
 from dataclasses import dataclass
 from abc import ABC, abstractmethod
 from urllib.parse import urlparse
-import hashlib
-import time
-import requests
+from random import randrange
+
+import ffmpeg
 from loguru import logger
 from selenium.common.exceptions import TimeoutException
+from selenium.webdriver.common.by import By
+from slugify import slugify
 
 from storages import Storage
 from utils import mkdir_if_not_exists
@@ -30,6 +29,7 @@ class ArchiveResult:
 
 class Archiver(ABC):
     name = "default"
+    retry_regex = r"retrying at (\d+)$"
 
     def __init__(self, storage: Storage, driver):
         self.storage = storage
@@ -38,30 +38,39 @@ class Archiver(ABC):
     def __str__(self):
         return self.__class__.__name__
 
+    def __repr__(self):
+        return self.__str__()
+
     @abstractmethod
     def download(self, url, check_if_exists=False): pass
 
     def get_netloc(self, url):
         return urlparse(url).netloc
 
-    def get_html_key(self, url):
-        return self.get_key(urlparse(url).path.replace("/", "_") + ".html")
-
+    # generate the html page eg SM3013/twitter__minmyatnaing13_status_1499415562937503751.html
     def generate_media_page_html(self, url, urls_info: dict, object, thumbnail=None):
+        """
+        Generates an index.html page where each @urls_info is displayed
+        """
         page = f'''<html><head><title>{url}</title><meta charset="UTF-8"></head>
             <body>
             <h2>Archived media from {self.name}</h2>
             <h3><a href="{url}">{url}</a></h3><ul>'''
 
         for url_info in urls_info:
-            page += f'''<li><a href="{url_info['cdn_url']}">{url_info['key']}</a>: {url_info['hash']}</li>'''
+            mime_global = self._guess_file_type(url_info["key"])
+            preview = ""
+            if mime_global == "image":
+                preview = f'<img src="{url_info["cdn_url"]}" style="max-height:200px;max-width:400px;"></img>'
+            elif mime_global == "video":
+                preview = f'<video src="{url_info["cdn_url"]}" controls style="max-height:400px;max-width:400px;"></video>'
+            page += f'''<li><a href="{url_info['cdn_url']}">{preview}{url_info['key']}</a>: {url_info['hash']}</li>'''
 
         page += f"</ul><h2>{self.name} object data:</h2><code>{object}</code>"
         page += f"</body></html>"
 
-        page_key = self.get_key(urlparse(url).path.replace("/", "_") + ".html")
-        page_filename = 'tmp/' + page_key
-        page_cdn = self.storage.get_cdn_url(page_key)
+        page_key = self.get_html_key(url)
+        page_filename = os.path.join(Storage.TMP_FOLDER, page_key)
 
         with open(page_filename, "w") as f:
             f.write(page)
@@ -70,9 +79,27 @@ class Archiver(ABC):
 
         self.storage.upload(page_filename, page_key, extra_args={
             'ACL': 'public-read', 'ContentType': 'text/html'})
+
+        page_cdn = self.storage.get_cdn_url(page_key)
         return (page_cdn, page_hash, thumbnail)
 
+    def _guess_file_type(self, path: str):
+        """
+        Receives a URL or filename and returns global mimetype like 'image' or 'video'
+        see https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
+        """
+        mime = mimetypes.guess_type(path)[0]
+        if mime is not None:
+            return mime.split("/")[0]
+        return ""
+
+    # eg images in a tweet save to cloud storage
+
     def generate_media_page(self, urls, url, object):
+        """
+        For a list of media urls, fetch them, upload them
+        and call self.generate_media_page_html with them
+        """
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36'
         }
@@ -80,12 +107,9 @@ class Archiver(ABC):
         thumbnail = None
         uploaded_media = []
         for media_url in urls:
-            path = urlparse(media_url).path
-            key = self.get_key(path.replace("/", "_"))
-            if '.' not in path:
-                key += '.jpg'
+            key = self._get_key_from_url(media_url, ".jpg")
 
-            filename = 'tmp/' + key
+            filename = os.path.join(Storage.TMP_FOLDER, key)
 
             d = requests.get(media_url, headers=headers)
             with open(filename, 'wb') as f:
@@ -116,17 +140,49 @@ class Archiver(ABC):
 
         return f'{self.name}_{_id}{extension}'
 
+    def get_html_key(self, url):
+        return self._get_key_from_url(url, ".html")
+
+    def _get_key_from_url(self, url, with_extension: str = None, append_datetime: bool = False):
+        """
+        Receives a URL and returns a slugified version of the URL path
+        if a string is passed in @with_extension the slug is appended with it if there is no "." in the slug
+        if @append_date is true, the key adds a timestamp after the URL slug and before the extension
+        """
+        slug = slugify(urlparse(url).path)
+        if append_datetime:
+            slug += "-" + slugify(datetime.datetime.utcnow().isoformat())
+        if with_extension is not None:
+            if "." not in slug:
+                slug += with_extension
+        return self.get_key(slug)
+
     def get_hash(self, filename):
-        f = open(filename, "rb")
-        bytes = f.read()  # read entire file as bytes
-        hash = hashlib.sha256(bytes)
-        f.close()
+        with open(filename, "rb") as f:
+            bytes = f.read()  # read entire file as bytes
+            # TODO: customizable hash
+            hash = hashlib.sha256(bytes)
+            # option to use SHA3_512 instead
+            # hash = hashlib.sha3_512(bytes)
         return hash.hexdigest()
 
     def get_screenshot(self, url):
-        key = self.get_key(urlparse(url).path.replace(
-            "/", "_") + datetime.datetime.utcnow().isoformat().replace(" ", "_") + ".png")
-        filename = 'tmp/' + key
+        logger.debug(f"getting screenshot for {url=}")
+        key = self._get_key_from_url(url, ".png", append_datetime=True)
+        filename = os.path.join(Storage.TMP_FOLDER, key)
+
+        # Accept cookies popup dismiss for ytdlp video
+        if 'facebook.com' in url:
+            try:
+                logger.debug(f'Trying fb click accept cookie popup for {url}')
+                self.driver.get("http://www.facebook.com")
+                foo = self.driver.find_element(By.XPATH, "//button[@data-cookiebanner='accept_only_essential_button']")
+                foo.click()
+                logger.debug(f'fb click worked')
+                # linux server needs a sleep otherwise facebook cookie won't have worked and we'll get a popup on next page
+                time.sleep(2)
+            except:
+                logger.warning(f'Failed on fb accept cookies for url {url}')
 
         try:
             self.driver.get(url)
@@ -137,6 +193,7 @@ class Archiver(ABC):
         self.driver.save_screenshot(filename)
         self.storage.upload(filename, key, extra_args={
                             'ACL': 'public-read', 'ContentType': 'image/png'})
+
         return self.storage.get_cdn_url(key)
 
     def get_thumbnails(self, filename, key, duration=None):
@@ -167,14 +224,12 @@ class Archiver(ABC):
                 thumbnail_filename = thumbnails_folder + fname
                 key = key_folder + fname
 
-                cdn_url = self.storage.get_cdn_url(key)
-
                 self.storage.upload(thumbnail_filename, key)
-
+                cdn_url = self.storage.get_cdn_url(key)
                 cdn_urls.append(cdn_url)
 
         if len(cdn_urls) == 0:
-            return ('None', 'None')
+            return ('', '')
 
         key_thumb = cdn_urls[int(len(cdn_urls) * 0.1)]
 
@@ -199,3 +254,37 @@ class Archiver(ABC):
         thumb_index_cdn_url = self.storage.get_cdn_url(thumb_index)
 
         return (key_thumb, thumb_index_cdn_url)
+
+    def signal_retry_in(self, min_seconds=1800, max_seconds=7200, **kwargs):
+        """
+        sets state to retry in random between (min_seconds, max_seconds)
+        """
+        now = datetime.datetime.now().timestamp()
+        retry_at = int(now + randrange(min_seconds, max_seconds))
+        logger.debug(f"signaling {retry_at=}")
+        return ArchiveResult(status=f'retrying at {retry_at}', **kwargs)
+
+    def is_retry(status):
+        return re.search(Archiver.retry_regex, status) is not None
+
+    def should_retry_from_status(status):
+        """
+        checks status against message in signal_retry_in
+        returns true if enough time has elapsed, false otherwise
+        """
+        match = re.search(Archiver.retry_regex, status)
+        if match:
+            retry_at = int(match.group(1))
+            now = datetime.datetime.now().timestamp()
+            should_retry = now >= retry_at
+            logger.debug(f"{should_retry=} as {now=} >= {retry_at=}")
+            return should_retry
+        return False
+
+    def remove_retry(status):
+        """
+        transforms the status from retry into something else
+        """
+        new_status = re.sub(Archiver.retry_regex, "failed: too many retries", status, 0)
+        logger.debug(f"removing retry message at {status=}, got {new_status=}")
+        return new_status

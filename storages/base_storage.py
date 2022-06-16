@@ -1,8 +1,11 @@
 from loguru import logger
 from abc import ABC, abstractmethod
+from pathlib import Path
 
 
 class Storage(ABC):
+    TMP_FOLDER = "tmp/"
+
     @abstractmethod
     def __init__(self, config): pass
 

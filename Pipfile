@@ -6,10 +6,9 @@ name = "pypi"
 [packages]
 gspread = "*"
 boto3 = "*"
-python-dotenv = "*"
 argparse = "*"
 beautifulsoup4 = "*"
-tiktok-downloader = {git = "https://github.com/msramalho/tiktok-downloader"}
+tiktok-downloader = "*"
 bs4 = "*"
 loguru = "*"
 ffmpeg-python = "*"
@@ -17,8 +16,14 @@ selenium = "*"
 snscrape = "*"
 yt-dlp = "*"
 telethon = "*"
-
-[dev-packages]
+google-api-python-client = "*"
+google-auth-httplib2 = "*"
+google-auth-oauthlib = "*"
+oauth2client = "*"
+python-slugify = "*"
+pyyaml = "*"
+vk-api = "*"
+dateparser = "*"
 
 [requires]
 python_version = "3.9"

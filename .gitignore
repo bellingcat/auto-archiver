@@ -1,4 +1,5 @@
 tmp/
+temp/
 .env*
 .DS_Store
 expmt/
@@ -9,3 +10,10 @@ anu.html
 *.log
 .pytest_cach
 anon*
+config.json
+config-*.json
+config.yaml
+config-*.yaml
+logs/*
+local_archive/
+vk_config*.json
