@@ -1,4 +1,4 @@
-import os, datetime, shutil, traceback, random, tempfile
+import os, datetime, traceback, random, tempfile
 
 from loguru import logger
 from slugify import slugify
