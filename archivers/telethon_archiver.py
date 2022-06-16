@@ -28,7 +28,7 @@ class TelethonArchiver(Archiver):
         Returns a list of [post] where each post has media and is in the same grouped_id
         """
         if not hasattr(original_post, "grouped_id") or original_post.grouped_id is None:
-            return [original_post] if original_post.media is not None else []
+            return [original_post] if hasattr(original_post, "media") and original_post.media is not None else []
 
         search_ids = [i for i in range(original_post.id - max_amp, original_post.id + max_amp + 1)]
         posts = self.client.get_messages(chat, ids=search_ids)
