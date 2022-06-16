@@ -8,6 +8,7 @@ from telethon.errors import ChannelInvalidError
 from storages import Storage
 from .base_archiver import Archiver, ArchiveResult
 from configs import TelethonConfig
+from utils import getattr_or
 
 
 class TelethonArchiver(Archiver):
@@ -27,8 +28,8 @@ class TelethonArchiver(Archiver):
         of `max_amp` both ways
         Returns a list of [post] where each post has media and is in the same grouped_id
         """
-        if not hasattr(original_post, "grouped_id") or original_post.grouped_id is None:
-            return [original_post] if hasattr(original_post, "media") and original_post.media is not None else []
+        if getattr_or(original_post, "grouped_id") is not None:
+            return [original_post] if getattr_or(original_post, "media") is not None else []
 
         search_ids = [i for i in range(original_post.id - max_amp, original_post.id + max_amp + 1)]
         posts = self.client.get_messages(chat, ids=search_ids)
@@ -110,4 +111,4 @@ class TelethonArchiver(Archiver):
                 return ArchiveResult(status=status, cdn_url=cdn_url, title=post.message, thumbnail=key_thumb, thumbnail_index=thumb_index, timestamp=post.date, hash=hash, screenshot=screenshot)
 
             page_cdn, page_hash, _ = self.generate_media_page_html(url, [], html.escape(str(post)))
-            return ArchiveResult(status=status, cdn_url=page_cdn, title=post.message, timestamp=post.date, hash=page_hash, screenshot=screenshot)
+            return ArchiveResult(status=status, cdn_url=page_cdn, title=getattr_or(post, "message", ""), timestamp=getattr_or(post, "date"), hash=page_hash, screenshot=screenshot)
