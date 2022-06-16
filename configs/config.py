@@ -210,6 +210,7 @@ class Config:
 
     def destroy_webdriver(self):
         if self.webdriver is not None and type(self.webdriver) != str:
+            self.webdriver.close()
             self.webdriver.quit()
             del self.webdriver
 
