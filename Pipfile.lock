@@ -875,7 +875,6 @@
             "version": "==2022.3.2"
         },
         "requests": {
-            "extras": [],
             "hashes": [
                 "sha256:bc7861137fbce630f17b03d3ad02ad0bf978c844f3536d0edda6499dafce2b6f",
                 "sha256:d568723a7ebd25875d8d1eaf5dfa068cd2fc8194b2e483d7b1f7c81918dbec6b"
@@ -1039,7 +1038,10 @@
             "version": "==4.1.1"
         },
         "urllib3": {
-            "extras": [],
+            "extras": [
+                "secure",
+                "socks"
+            ],
             "hashes": [
                 "sha256:44ece4d53fb1706f667c9bd1c648f5469a2ec925fcf3a776667042d645472c14",
                 "sha256:aabaf16477806a5e1dd19aa41f8c2b7950dd3c746362d7e3223dbe6de6ac448e"
@@ -1056,11 +1058,11 @@
         },
         "vk-url-scraper": {
             "hashes": [
-                "sha256:1d98d593c6e5960b2b3334b3f34676a4315da480a3f76a417606e14558c392d7",
-                "sha256:4c47b251e1cd1b58b385b2002d3a6afadc0397991615139814dd6fbfaa2f529b"
+                "sha256:1747e926dfa5f802b4960347db0d5f7425f69838d1444d2bbee6b5b168524e43",
+                "sha256:7539df9de4f6c70db303efc52557582eae7fc3c85b34dc7137e75d4928598078"
             ],
             "index": "pypi",
-            "version": "==0.2.1"
+            "version": "==0.2.4"
         },
         "websockets": {
             "hashes": [
