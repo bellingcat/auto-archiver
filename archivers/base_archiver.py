@@ -199,7 +199,6 @@ class Archiver(ABC):
     def get_thumbnails(self, filename, key, duration=None):
         thumbnails_folder = os.path.splitext(filename)[0] + os.path.sep
         key_folder = key.split('.')[0] + os.path.sep
-        logger.info(f"{filename=} {thumbnails_folder=} {key_folder=} ")
 
         mkdir_if_not_exists(thumbnails_folder)
 
