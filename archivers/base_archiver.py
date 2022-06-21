@@ -197,8 +197,8 @@ class Archiver(ABC):
         return self.storage.get_cdn_url(key)
 
     def get_thumbnails(self, filename, key, duration=None):
-        thumbnails_folder = filename.split('.')[0] + '/'
-        key_folder = key.split('.')[0] + '/'
+        thumbnails_folder = os.path.splitext(filename)[0] + os.path.sep
+        key_folder = key.split('.')[0] + os.path.sep
 
         mkdir_if_not_exists(thumbnails_folder)
 
@@ -222,7 +222,7 @@ class Archiver(ABC):
         for fname in thumbnails:
             if fname[-3:] == 'jpg':
                 thumbnail_filename = thumbnails_folder + fname
-                key = key_folder + fname
+                key = os.path.join(key_folder, fname)
 
                 self.storage.upload(thumbnail_filename, key)
                 cdn_url = self.storage.get_cdn_url(key)
