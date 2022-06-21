@@ -1,4 +1,4 @@
-import re, json, mimetypes
+import re, json, mimetypes, os
 
 from loguru import logger
 from vk_url_scraper import VkScraper, DateTimeEncoder
@@ -28,10 +28,10 @@ class VkArchiver(Archiver):
             return False
 
         key = self.get_html_key(url)
-        if check_if_exists and self.storage.exists(key):
-            screenshot = self.get_screenshot(url)
-            cdn_url = self.storage.get_cdn_url(key)
-            return ArchiveResult(status="already archived", cdn_url=cdn_url, screenshot=screenshot)
+        # if check_if_exists and self.storage.exists(key):
+        #     screenshot = self.get_screenshot(url)
+        #     cdn_url = self.storage.get_cdn_url(key)
+        #     return ArchiveResult(status="already archived", cdn_url=cdn_url, screenshot=screenshot)
 
         results = self.vks.scrape(url)  # some urls can contain multiple wall/photo/... parts and all will be fetched
         if len(results) == 0:
@@ -49,7 +49,7 @@ class VkArchiver(Archiver):
                 urls_found.extend(attachments)
 
         # we don't call generate_media_page which downloads urls because it cannot download vk video urls
-        thumbnail = None
+        thumbnail, thumbnail_index = None, None
         uploaded_media = []
         filenames = self.vks.download_media(results, Storage.TMP_FOLDER)
         for filename in filenames:
@@ -58,12 +58,16 @@ class VkArchiver(Archiver):
             hash = self.get_hash(filename)
             cdn_url = self.storage.get_cdn_url(key)
             try:
-                if mimetypes.guess_type(filename)[0].split("/")[0] == "image" and thumbnail is None:
+                _type = mimetypes.guess_type(filename)[0].split("/")[0]
+                if _type == "image" and thumbnail is None:
                     thumbnail = cdn_url
-            except: pass
+                if _type == "video" and (thumbnail is None or thumbnail_index is None):
+                    thumbnail, thumbnail_index = self.get_thumbnails(filename, key)
+            except Exception as e:
+                logger.warning(f"failed to get thumb for {filename=} with {e=}")
             uploaded_media.append({'cdn_url': cdn_url, 'key': key, 'hash': hash})
 
         page_cdn, page_hash, thumbnail = self.generate_media_page_html(url, uploaded_media, textual_output, thumbnail=thumbnail)
         # # if multiple wall/photos/videos are present the screenshot will only grab the 1st
         screenshot = self.get_screenshot(url)
-        return ArchiveResult(status="success", cdn_url=page_cdn, screenshot=screenshot, hash=page_hash, thumbnail=thumbnail, timestamp=datetime, title=title)
+        return ArchiveResult(status="success", cdn_url=page_cdn, screenshot=screenshot, hash=page_hash, thumbnail=thumbnail, thumbnail_index=thumbnail_index, timestamp=datetime, title=title)

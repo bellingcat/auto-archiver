@@ -1038,10 +1038,7 @@
             "version": "==4.1.1"
         },
         "urllib3": {
-            "extras": [
-                "secure",
-                "socks"
-            ],
+            "extras": [],
             "hashes": [
                 "sha256:44ece4d53fb1706f667c9bd1c648f5469a2ec925fcf3a776667042d645472c14",
                 "sha256:aabaf16477806a5e1dd19aa41f8c2b7950dd3c746362d7e3223dbe6de6ac448e"
@@ -1058,11 +1055,11 @@
         },
         "vk-url-scraper": {
             "hashes": [
-                "sha256:1747e926dfa5f802b4960347db0d5f7425f69838d1444d2bbee6b5b168524e43",
-                "sha256:7539df9de4f6c70db303efc52557582eae7fc3c85b34dc7137e75d4928598078"
+                "sha256:181c8a4b69e395a68bdf00e3dc1717e5218960c9fda6e90eea9633ff26fc9257",
+                "sha256:9cfc6bc3d7259f18508c3822955efac21ff9bad5bd886010b10f098ea10ad551"
             ],
             "index": "pypi",
-            "version": "==0.2.4"
+            "version": "==0.3.2"
         },
         "websockets": {
             "hashes": [
