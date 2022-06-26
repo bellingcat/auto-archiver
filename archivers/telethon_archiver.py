@@ -41,7 +41,7 @@ class TelethonArchiver(Archiver):
 
     def download(self, url, check_if_exists=False):
         if not hasattr(self, "client"):
-            logger.error('Missing Telethon config')
+            logger.warning('Missing Telethon config')
             return False
 
         # detect URLs that we definitely cannot handle
@@ -80,7 +80,6 @@ class TelethonArchiver(Archiver):
                 if check_if_exists and self.storage.exists(key):
                     # only s3 storage supports storage.exists as not implemented on gd
                     cdn_url = self.storage.get_cdn_url(key)
-                    status = 'already archived'
                     return ArchiveResult(status='already archived', cdn_url=cdn_url, title=post.message, timestamp=post.date, screenshot=screenshot)
 
                 group_id = post.grouped_id if post.grouped_id is not None else post.id

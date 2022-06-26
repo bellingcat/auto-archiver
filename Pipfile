@@ -24,6 +24,7 @@ python-slugify = "*"
 pyyaml = "*"
 dateparser = "*"
 vk-url-scraper = "*"
+python-twitter-v2 = "*"
 
 [requires]
 python_version = "3.9"

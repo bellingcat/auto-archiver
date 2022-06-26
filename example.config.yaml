@@ -8,7 +8,7 @@ secrets:
     key: "s3 API key"
     secret: "s3 API secret"
     # use region format like such
-    endpoint_url: 'https://{region}.digitaloceanspaces.com'
+    endpoint_url: "https://{region}.digitaloceanspaces.com"
     #use bucket, region, and key (key is the archived file path generated when executing) format like such as:
     cdn_url: "https://{bucket}.{region}.cdn.digitaloceanspaces.com/{key}"
     # if private:true S3 urls will not be readable online
@@ -24,7 +24,7 @@ secrets:
 
   # needed if you use storage=local
   local:
-    # local path to save files in 
+    # local path to save files in
     save_to: "./local_archive"
 
   wayback:
@@ -34,10 +34,19 @@ secrets:
 
   telegram:
     # to get credentials see: https://telegra.ph/How-to-get-Telegram-APP-ID--API-HASH-05-27
-    api_id: your API key, see 
+    api_id: your API key, see
     api_hash: your API hash
     # optional, but allows access to more content such as large videos, talk to @botfather
     bot_token: your bot-token
+
+  twitter:
+    # twitter configuration - API V2 only - either bearer_token only
+    bearer_token: ""
+    # OR all of the below
+    consumer_key: ""
+    consumer_secret: ""
+    access_token: ""
+    access_secret: ""
 
   # vkontakte (vk.com) credentials
   vk:
@@ -49,7 +58,7 @@ secrets:
     service_account: "service_account.json"
 
   facebook:
-  # optional facebook cookie to have more access to content, from browser, looks like 'cookie: datr= xxxx'
+    # optional facebook cookie to have more access to content, from browser, looks like 'cookie: datr= xxxx'
     cookie: ""
 execution:
   # can be overwritten with CMD --sheet=

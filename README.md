@@ -160,6 +160,7 @@ graph TD
     A -->|parent of| F(TwitterArchiver)
     A -->|parent of| G(VkArchiver)
     A -->|parent of| H(WaybackArchiver)
+    F -->|parent of| I(TwitterApiArchiver)
 ```
 ### Current Storages
 ```mermaid

@@ -11,7 +11,8 @@ from .wayback_config import WaybackConfig
 from .telethon_config import TelethonConfig
 from .selenium_config import SeleniumConfig
 from .vk_config import VkConfig
-from storages import Storage, S3Config, S3Storage, GDStorage, GDConfig, LocalStorage, LocalConfig
+from .twitter_api_config import TwitterApiConfig
+from storages import S3Config, S3Storage, GDStorage, GDConfig, LocalStorage, LocalConfig
 
 
 class Config:
@@ -135,6 +136,19 @@ class Config:
             self.telegram_config = None
             logger.debug(f"'telegram' key not present in the {self.config_file=}")
 
+        # twitter config
+        if "twitter" in secrets:
+            self.twitter_config = TwitterApiConfig(
+                bearer_token=secrets["twitter"].get("bearer_token"),
+                consumer_key=secrets["twitter"].get("consumer_key"),
+                consumer_secret=secrets["twitter"].get("consumer_secret"),
+                access_token=secrets["twitter"].get("access_token"),
+                access_secret=secrets["twitter"].get("access_secret"),
+            )
+        else:
+            self.twitter_config = None
+            logger.debug(f"'twitter' key not present in the {self.config_file=}")
+
         # vk config
         if "vk" in secrets:
             self.vk_config = VkConfig(
@@ -223,11 +237,10 @@ class Config:
             self.destroy_webdriver()
             self.webdriver = new_webdriver
             self.webdriver.set_window_size(self.selenium_config.window_width,
-                                       self.selenium_config.window_height)
+                                           self.selenium_config.window_height)
             self.webdriver.set_page_load_timeout(self.selenium_config.timeout_seconds)
         except TimeoutException as e:
             logger.error(f"failed to get new webdriver, possibly due to insufficient system resources or timeout settings: {e}")
-
 
     def __str__(self) -> str:
         return json.dumps({
@@ -245,6 +258,7 @@ class Config:
             "local_config": hasattr(self, "local_config"),
             "wayback_config": self.wayback_config != None,
             "telegram_config": self.telegram_config != None,
+            "twitter_config": self.twitter_config != None,
             "vk_config": self.vk_config != None,
             "gsheets_client": self.gsheets_client != None,
             "column_names": self.column_names,

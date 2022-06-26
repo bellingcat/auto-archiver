@@ -149,9 +149,13 @@ class Archiver(ABC):
         if a string is passed in @with_extension the slug is appended with it if there is no "." in the slug
         if @append_date is true, the key adds a timestamp after the URL slug and before the extension
         """
-        slug = slugify(urlparse(url).path)
+        url_path = urlparse(url).path
+        path, ext = os.path.splitext(url_path)
+        slug = slugify(path)
         if append_datetime:
             slug += "-" + slugify(datetime.datetime.utcnow().isoformat())
+        if len(ext):
+            slug += ext
         if with_extension is not None:
             if "." not in slug:
                 slug += with_extension
