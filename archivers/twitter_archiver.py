@@ -59,6 +59,7 @@ class TwitterArchiver(Archiver):
         return ArchiveResult(status="success", cdn_url=page_cdn, screenshot=screenshot, hash=page_hash, thumbnail=thumbnail, timestamp=tweet.date, title=tweet.content)
 
     def download_alternative(self, url, tweet_id):
+        # https://stackoverflow.com/a/71867055/6196010
         logger.debug(f"Trying twitter hack for {url=}")
         hack_url = f"https://cdn.syndication.twimg.com/tweet?id={tweet_id}"
         r = requests.get(hack_url)
