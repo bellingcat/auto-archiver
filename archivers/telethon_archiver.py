@@ -41,7 +41,7 @@ class TelethonArchiver(Archiver):
 
     def download(self, url, check_if_exists=False):
         if not hasattr(self, "client"):
-            logger.error('Missing Telethon config')
+            logger.warning('Missing Telethon config')
             return False
 
         # detect URLs that we definitely cannot handle
@@ -80,22 +80,40 @@ class TelethonArchiver(Archiver):
                 if check_if_exists and self.storage.exists(key):
                     # only s3 storage supports storage.exists as not implemented on gd
                     cdn_url = self.storage.get_cdn_url(key)
-                    status = 'already archived'
                     return ArchiveResult(status='already archived', cdn_url=cdn_url, title=post.message, timestamp=post.date, screenshot=screenshot)
 
+                key_thumb, thumb_index = None, None
                 group_id = post.grouped_id if post.grouped_id is not None else post.id
                 uploaded_media = []
                 message = post.message
-                for i, mp in enumerate(media_posts):
+                for mp in media_posts:
                     if len(mp.message) > len(message): message = mp.message
+
+                    # media can also be in entities
+                    if mp.entities:
+                        other_media_urls = [e.url for e in mp.entities if hasattr(e, "url") and e.url and self._guess_file_type(e.url) in ["video", "image"]]
+                        logger.debug(f"Got {len(other_media_urls)} other medial urls from {mp.id=}: {other_media_urls}")
+                        for om_url in other_media_urls:
+                            filename = os.path.join(Storage.TMP_FOLDER, f'{chat}_{group_id}_{self._get_key_from_url(om_url)}')
+                            self.download_from_url(om_url, filename)
+                            key = filename.split(Storage.TMP_FOLDER)[1]
+                            self.storage.upload(filename, key)
+                            hash = self.get_hash(filename)
+                            cdn_url = self.storage.get_cdn_url(key)
+                            uploaded_media.append({'cdn_url': cdn_url, 'key': key, 'hash': hash})
+
                     filename_dest = os.path.join(Storage.TMP_FOLDER, f'{chat}_{group_id}', str(mp.id))
                     filename = self.client.download_media(mp.media, filename_dest)
+                    if not filename:
+                        logger.debug(f"Empty media found, skipping {str(mp)=}")
+                        continue
+
                     key = filename.split(Storage.TMP_FOLDER)[1]
                     self.storage.upload(filename, key)
                     hash = self.get_hash(filename)
                     cdn_url = self.storage.get_cdn_url(key)
                     uploaded_media.append({'cdn_url': cdn_url, 'key': key, 'hash': hash})
-                    if i == 0:
+                    if key_thumb is None:
                         key_thumb, thumb_index = self.get_thumbnails(filename, key)
                     os.remove(filename)
 

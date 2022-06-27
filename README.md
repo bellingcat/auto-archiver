@@ -151,6 +151,9 @@ Code is split into functional concepts:
 
 ### Current Archivers
 Archivers are tested in a meaningful order with Wayback Machine being the failsafe, that can easily be changed in the code. 
+
+> Note: We have 2 Twitter Archivers (`TwitterArchiver`, `TwitterApiArchiver`) because one requires Twitter API V2 credentials and has better results and the other does not rely on official APIs and misses out on some content. 
+
 ```mermaid
 graph TD
     A(Archiver) -->|parent of| B(TelethonArchiver)
@@ -160,6 +163,7 @@ graph TD
     A -->|parent of| F(TwitterArchiver)
     A -->|parent of| G(VkArchiver)
     A -->|parent of| H(WaybackArchiver)
+    F -->|parent of| I(TwitterApiArchiver)
 ```
 ### Current Storages
 ```mermaid

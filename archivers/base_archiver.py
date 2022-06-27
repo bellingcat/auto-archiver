@@ -93,16 +93,19 @@ class Archiver(ABC):
             return mime.split("/")[0]
         return ""
 
-    # eg images in a tweet save to cloud storage
+    def download_from_url(self, url, to_filename):
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36'
+        }
+        d = requests.get(url, headers=headers)
+        with open(to_filename, 'wb') as f:
+            f.write(d.content)
 
     def generate_media_page(self, urls, url, object):
         """
         For a list of media urls, fetch them, upload them
         and call self.generate_media_page_html with them
         """
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36'
-        }
 
         thumbnail = None
         uploaded_media = []
@@ -110,11 +113,7 @@ class Archiver(ABC):
             key = self._get_key_from_url(media_url, ".jpg")
 
             filename = os.path.join(Storage.TMP_FOLDER, key)
-
-            d = requests.get(media_url, headers=headers)
-            with open(filename, 'wb') as f:
-                f.write(d.content)
-
+            self.download_from_url(media_url, filename)
             self.storage.upload(filename, key)
             hash = self.get_hash(filename)
             cdn_url = self.storage.get_cdn_url(key)
@@ -149,9 +148,13 @@ class Archiver(ABC):
         if a string is passed in @with_extension the slug is appended with it if there is no "." in the slug
         if @append_date is true, the key adds a timestamp after the URL slug and before the extension
         """
-        slug = slugify(urlparse(url).path)
+        url_path = urlparse(url).path
+        path, ext = os.path.splitext(url_path)
+        slug = slugify(path)
         if append_datetime:
             slug += "-" + slugify(datetime.datetime.utcnow().isoformat())
+        if len(ext):
+            slug += ext
         if with_extension is not None:
             if "." not in slug:
                 slug += with_extension
