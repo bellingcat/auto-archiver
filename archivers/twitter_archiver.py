@@ -75,8 +75,9 @@ class TwitterArchiver(Archiver):
             urls.append(p["url"])
 
         # 1 tweet has 1 video max
-        v = tweet["video"]
-        urls.append(self.choose_variant(v.get("variants", [])))
+        if "video" in tweet:
+            v = tweet["video"]
+            urls.append(self.choose_variant(v.get("variants", [])))
 
         logger.debug(f"Twitter hack got {urls=}")
 
