@@ -65,6 +65,14 @@ secrets:
 execution:
   # can be overwritten with CMD --sheet=
   sheet: your-sheet-name
+
+  # only check this worksheet rather than iterating through all worksheets in the spreadsheet. If whitelist is used then blacklist is ignored as whitelist is more restrictive.
+  # worksheet_whitelist: Sheet1
+
+  # worksheet to blacklist. Leave blank which is default for none. Useful if users want a MASTERSHEET exact copy of the working worksheet
+  # worksheet_blacklist: MASTERSHEET
+
+
   # which row of your tabs contains the header, can be overwritten with CMD --header=
   header: 1
   # which storage to use, can be overwritten with CMD --storage=

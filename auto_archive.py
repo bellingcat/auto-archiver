@@ -58,6 +58,19 @@ def process_sheet(c: Config):
 
     # loop through worksheets to check
     for ii, wks in enumerate(sh.worksheets()):
+
+        whitelist = c.worksheet_whitelist
+        if whitelist is not None:
+            if wks.title != whitelist: 
+                logger.debug(f'Ignoring worksheet {wks.title} as not in whitelist which is specified as {whitelist}')
+                continue
+
+        blacklist = c.worksheet_blacklist
+        if blacklist is not None:
+            if wks.title == blacklist: 
+                logger.debug(f'Ignoring worksheet {wks.title} as in blacklist')
+                continue
+
         logger.info(f'Opening worksheet {ii=}: {wks.title=} {c.header=}')
         gw = GWorksheet(wks, header_row=c.header, columns=c.column_names)
 

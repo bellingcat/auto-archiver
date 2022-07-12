@@ -50,6 +50,10 @@ class Config:
 
         self.sheet = getattr_or(self.args, "sheet", execution.get("sheet"))
         assert self.sheet is not None, "'sheet' must be provided either through command line or configuration file"
+
+        self.worksheet_whitelist = execution.get("worksheet_whitelist")
+        self.worksheet_blacklist = execution.get("worksheet_blacklist")
+
         self.header = int(getattr_or(self.args, "header", execution.get("header", 1)))
         self.storage = getattr_or(self.args, "storage", execution.get("storage", "s3"))
         self.save_logs = getattr(self.args, "save_logs") or execution.get("save_logs", False)
