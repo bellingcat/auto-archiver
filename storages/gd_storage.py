@@ -28,6 +28,12 @@ class GDStorage(Storage):
         only support files saved in a folder for GD
         S3 supports folder and all stored in the root
         """
+        # doesn't work if key starts with / which can happen from telethon
+        if key.startswith('/'):
+            # remove first character ie /
+            logger.debug(f'CDN: Found and fixing leading / on uploading a file with {key=}')
+            key = key[1:]
+
         full_name = os.path.join(self.folder, key)
         parent_id, folder_id = self.root_folder_id, None
         path_parts = full_name.split(os.path.sep)
@@ -52,6 +58,13 @@ class GDStorage(Storage):
         1. for each sub-folder in the path check if exists or create
         2. upload file to root_id/other_paths.../filename
         """
+        # doesn't work if key starts with / which can happen from telethon
+        if key.startswith('/'):
+            # remove first character ie /
+            logger.debug(f'UPLOADF: Found and fixing a leading / on uploading a file with {key=}')
+            key = key[1:]
+
+        
         full_name = os.path.join(self.folder, key)
         parent_id, upload_to = self.root_folder_id, None
         path_parts = full_name.split(os.path.sep)
