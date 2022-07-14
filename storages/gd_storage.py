@@ -28,6 +28,8 @@ class GDStorage(Storage):
         only support files saved in a folder for GD
         S3 supports folder and all stored in the root
         """
+        key = self.clean_key(key)
+
         full_name = os.path.join(self.folder, key)
         parent_id, folder_id = self.root_folder_id, None
         path_parts = full_name.split(os.path.sep)
@@ -52,6 +54,8 @@ class GDStorage(Storage):
         1. for each sub-folder in the path check if exists or create
         2. upload file to root_id/other_paths.../filename
         """
+        key = self.clean_key(key)
+
         full_name = os.path.join(self.folder, key)
         parent_id, upload_to = self.root_folder_id, None
         path_parts = full_name.split(os.path.sep)
@@ -76,6 +80,13 @@ class GDStorage(Storage):
     def upload(self, filename: str, key: str, **kwargs):
         # GD only requires the filename not a file reader
         self.uploadf(filename, key, **kwargs)
+
+    def clean_key(self, key):
+        # GDrive does not work well with trailing forward slashes and some keys come with that
+        if key.startswith('/'):
+            logger.debug(f'Found and fixed a leading "/" for {key=}')
+            return key[1:]
+        return key
 
     def _get_id_from_parent_and_name(self, parent_id: str, name: str, retries: int = 1, sleep_seconds: int = 10, use_mime_type: bool = False, raise_on_missing: bool = True, use_cache=True):
         """
