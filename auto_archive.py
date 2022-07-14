@@ -53,11 +53,25 @@ def missing_required_columns(gw: GWorksheet):
     return missing
 
 
+def should_process_sheet(c, sheet_name):
+    if len(c.worksheet_allow) and sheet_name not in c.worksheet_allow:
+        # ALLOW rules exist AND sheet name not explicitly allowed
+        return False
+    if len(c.worksheet_block) and sheet_name in c.worksheet_block:
+        # BLOCK rules exist AND sheet name is blocked
+        return False
+    return True
+
+
 def process_sheet(c: Config):
     sh = c.gsheets_client.open(c.sheet)
 
     # loop through worksheets to check
     for ii, wks in enumerate(sh.worksheets()):
+        if not should_process_sheet(c, wks.title):
+            logger.info(f'Ignoring worksheet "{wks.title}" due to allow/block configurations')
+            continue
+
         logger.info(f'Opening worksheet {ii=}: {wks.title=} {c.header=}')
         gw = GWorksheet(wks, header_row=c.header, columns=c.column_names)
 
@@ -80,7 +94,7 @@ def process_sheet(c: Config):
                 if not is_retry: continue
 
             # All checks done - archival process starts here
-            try: 
+            try:
                 gw.set_cell(row, 'status', 'Archive in progress')
                 url = expand_url(url)
                 c.set_folder(gw.get_cell_or_default(row, 'folder', default_folder, when_empty_use_default=True))
@@ -96,7 +110,7 @@ def process_sheet(c: Config):
                     YoutubeDLArchiver(storage, c.webdriver, c.facebook_cookie),
                     TelegramArchiver(storage, c.webdriver),
                     TwitterArchiver(storage, c.webdriver),
-                    VkArchiver(storage,  c.webdriver, c.vk_config),
+                    VkArchiver(storage, c.webdriver, c.vk_config),
                     WaybackArchiver(storage, c.webdriver, c.wayback_config)
                 ]
 
@@ -105,7 +119,7 @@ def process_sheet(c: Config):
 
                     try:
                         result = archiver.download(url, check_if_exists=c.check_if_exists)
-                    except KeyboardInterrupt as e: raise e # so the higher level catch can catch it
+                    except KeyboardInterrupt as e: raise e  # so the higher level catch can catch it
                     except Exception as e:
                         result = False
                         logger.error(f'Got unexpected error in row {row} with {archiver.name} for {url=}: {e}\n{traceback.format_exc()}')

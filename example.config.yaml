@@ -65,6 +65,15 @@ secrets:
 execution:
   # can be overwritten with CMD --sheet=
   sheet: your-sheet-name
+
+  # block or allow worksheets by name, instead of defaulting to checking all worksheets in a Spreadsheet
+  # worksheet_allow and worksheet_block can be single values or lists
+  # if worksheet_allow is specified, worksheet_block is ignored
+  # worksheet_allow:
+  #   - Sheet1
+  #   - "Sheet 2"
+  # worksheet_block: BlockedSheet
+
   # which row of your tabs contains the header, can be overwritten with CMD --header=
   header: 1
   # which storage to use, can be overwritten with CMD --storage=
