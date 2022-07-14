@@ -52,6 +52,7 @@ class Config:
         assert self.sheet is not None, "'sheet' must be provided either through command line or configuration file"
 
         def ensure_set(l):
+            # always returns a set of strings, can receive a set or a string
             l = l if isinstance(l, list) else [l]
             return set([x for x in l if isinstance(x, str) and len(x) > 0])
         self.worksheet_allow = ensure_set(execution.get("worksheet_allow", []))
