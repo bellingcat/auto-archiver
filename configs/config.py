@@ -81,6 +81,8 @@ class Config:
         )
         self.webdriver = "not initialized"
 
+        self.hash_algorithm = execution.get("hash_algorithm")
+
         # ---------------------- SECRETS - APIs and service configurations
         secrets = self.config.get("secrets", {})
 

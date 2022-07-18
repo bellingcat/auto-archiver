@@ -31,9 +31,10 @@ class Archiver(ABC):
     name = "default"
     retry_regex = r"retrying at (\d+)$"
 
-    def __init__(self, storage: Storage, driver):
+    def __init__(self, storage: Storage, driver, hash_algorithm):
         self.storage = storage
         self.driver = driver
+        self.hash_algorithm = hash_algorithm
 
     def __str__(self):
         return self.__class__.__name__
@@ -163,10 +164,13 @@ class Archiver(ABC):
     def get_hash(self, filename):
         with open(filename, "rb") as f:
             bytes = f.read()  # read entire file as bytes
-            # TODO: customizable hash
-            hash = hashlib.sha256(bytes)
-            # option to use SHA3_512 instead
-            # hash = hashlib.sha3_512(bytes)
+            ha = self.hash_algorithm
+            logger.debug(f'Hash algorithm is {ha}')
+
+            if ha == "SHA3_512": hash = hashlib.sha3_512(bytes)
+            elif ha == "SHA256": hash = hashlib.sha256(bytes)
+            else: raise Exception("Unknown Hash Algorithm of {ha}")
+
         return hash.hexdigest()
 
     def get_screenshot(self, url):

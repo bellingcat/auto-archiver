@@ -17,8 +17,8 @@ class VkArchiver(Archiver):
     wall_pattern = re.compile(r"(wall.{0,1}\d+_\d+)")
     photo_pattern = re.compile(r"(photo.{0,1}\d+_\d+)")
 
-    def __init__(self, storage: Storage, driver, config: VkConfig):
-        super().__init__(storage, driver)
+    def __init__(self, storage: Storage, driver, config: VkConfig, hash_algorithm):
+        super().__init__(storage, driver, hash_algorithm)
         if config != None:
             self.vks = VkScraper(config.username, config.password)
 

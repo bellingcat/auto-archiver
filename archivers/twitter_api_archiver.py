@@ -13,8 +13,8 @@ from .twitter_archiver import TwitterArchiver
 class TwitterApiArchiver(TwitterArchiver):
     name = "twitter_api"
 
-    def __init__(self, storage: Storage, driver, config: TwitterApiConfig):
-        super().__init__(storage, driver)
+    def __init__(self, storage: Storage, driver, config: TwitterApiConfig, hash_algorithm):
+        super().__init__(storage, driver, hash_algorithm)
 
         if config.bearer_token:
             self.api = Api(bearer_token=config.bearer_token)
@@ -54,7 +54,7 @@ class TwitterApiArchiver(TwitterArchiver):
 
             for u in urls:
                 if u is None:
-                    logger.error(f"Should not have gotten None url for {tweet.includes.media=}")
+                    logger.debug(f"Should not have gotten None url for {tweet.includes.media=} so going to download_alternative in twitter_archiver")
                     return self.download_alternative(url, tweet_id)
         logger.debug(f"found {urls=}")
 

@@ -15,8 +15,8 @@ class TelethonArchiver(Archiver):
     name = "telethon"
     link_pattern = re.compile(r"https:\/\/t\.me(\/c){0,1}\/(.+)\/(\d+)")
 
-    def __init__(self, storage: Storage, driver, config: TelethonConfig):
-        super().__init__(storage, driver)
+    def __init__(self, storage: Storage, driver, config: TelethonConfig, hash_algorithm):
+        super().__init__(storage, driver, hash_algorithm)
         if config:
             self.client = TelegramClient("./anon", config.api_id, config.api_hash)
             self.bot_token = config.bot_token

@@ -12,8 +12,8 @@ class YoutubeDLArchiver(Archiver):
     name = "youtube_dl"
     ydl_opts = {'outtmpl': f'{Storage.TMP_FOLDER}%(id)s.%(ext)s', 'quiet': False}
 
-    def __init__(self, storage: Storage, driver, fb_cookie):
-        super().__init__(storage, driver)
+    def __init__(self, storage: Storage, driver, fb_cookie, hash_algorithm):
+        super().__init__(storage, driver, hash_algorithm)
         self.fb_cookie = fb_cookie
 
     def download(self, url, check_if_exists=False):

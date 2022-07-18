@@ -104,3 +104,8 @@ execution:
     duration: duration
     screenshot: screenshot
     hash: hash
+
+  # Must be either SHA256 or SHA3_512
+  hash_algorithm: SHA3_512
+  # hash_algorithm: SHA256
+
