@@ -18,8 +18,16 @@ secrets:
 
   # needed if you use storage=gd
   google_drive:
-    # local filename can be the same or different file from google_sheets.service_account, defaults to service_account.json
-    service_account: "service_account.json"
+    # 1.service account to write to google storage - be aware of 15GB limit. Recommend using OAuth user.
+    # filename can be the same or different file from google_sheets.service_account
+    # service_account: "service_account.json"
+
+    # 2.token (only 1. or 2. - if both specified then this 2. token takes precedence)
+    # will need to have write access on the server so refresh flow works
+    # run the file `create_update_test_oauth_token.py` to create the token and save in a secrets directory so 
+    # it is not checked into source control
+    oauth_token_file_path_and_name: "secrets/token-davemateer-gmail.json"
+
     root_folder_id: copy XXXX from https://drive.google.com/drive/folders/XXXX
 
   # needed if you use storage=local
