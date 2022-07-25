@@ -18,8 +18,19 @@ secrets:
 
   # needed if you use storage=gd
   google_drive:
-    # local filename can be the same or different file from google_sheets.service_account, defaults to service_account.json
-    service_account: "service_account.json"
+    # To authenticate with google you have two options (1. service account OR 2. OAuth token)
+
+    # 1. service account - storage space will count towards the developer account
+    # filename can be the same or different file from google_sheets.service_account, defaults to "service_account.json"
+    # service_account: "service_account.json"
+
+    # 2. OAuth token  - storage space will count towards the owner of the GDrive folder
+    # (only 1. or 2. - if both specified then this 2. takes precedence)
+    # needs write access on the server so refresh flow works
+    # To get the token, run the file `create_update_test_oauth_token.py`
+    # you can edit that file if you want a different token filename, default is "gd-token.json"
+    oauth_token_filename: "gd-token.json"
+
     root_folder_id: copy XXXX from https://drive.google.com/drive/folders/XXXX
 
   # needed if you use storage=local

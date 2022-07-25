@@ -118,6 +118,7 @@ class Config:
             gd = secrets["google_drive"]
             self.gd_config = GDConfig(
                 root_folder_id=gd.get("root_folder_id"),
+                oauth_token_filename=gd.get("oauth_token_filename"),
                 service_account=gd.get("service_account", GDConfig.service_account)
             )
 

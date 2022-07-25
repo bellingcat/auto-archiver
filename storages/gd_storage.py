@@ -8,19 +8,54 @@ from googleapiclient.http import MediaFileUpload
 from google.oauth2 import service_account
 
 
+from google.oauth2.credentials import Credentials
+from google.auth.transport.requests import Request
+
 @dataclass
 class GDConfig:
     root_folder_id: str
-    folder: str = "default"
+    oauth_token_filename: str
     service_account: str = "service_account.json"
-
+    folder: str = "default"
 
 class GDStorage(Storage):
     def __init__(self, config: GDConfig):
         self.folder = config.folder
         self.root_folder_id = config.root_folder_id
-        creds = service_account.Credentials.from_service_account_file(
-            config.service_account, scopes=['https://www.googleapis.com/auth/drive'])
+        
+        SCOPES=['https://www.googleapis.com/auth/drive']
+        
+        token_file = config.oauth_token_filename
+        if token_file is not None:
+            """
+            Tokens are refreshed after 1 hour 
+            however keep working for 7 days (tbc)
+            so as long as the job doesn't last for 7 days
+            then this method of refreshing only once per run will work
+            see this link for details on the token
+            https://davemateer.com/2022/04/28/google-drive-with-python#tokens
+            """
+            logger.debug(f'Using GD OAuth token {token_file}')
+            creds = Credentials.from_authorized_user_file(token_file, SCOPES)
+
+            if not creds or not creds.valid:
+                if creds and creds.expired and creds.refresh_token:
+                    logger.debug('Requesting new GD OAuth token')
+                    creds.refresh(Request())
+                else:
+                    raise Exception("Problem with creds - create the token again")
+
+                # Save the credentials for the next run
+                with open(token_file, 'w') as token:
+                    logger.debug('Saving new GD OAuth token')
+                    token.write(creds.to_json())
+            else:
+                logger.debug('GD OAuth Token valid')
+        else:
+            gd_service_account = config.service_account
+            logger.debug(f'Using GD Service Account {gd_service_account}')
+            creds = service_account.Credentials.from_service_account_file(gd_service_account, scopes=SCOPES)
+
         self.service = build('drive', 'v3', credentials=creds)
 
     def get_cdn_url(self, key):
@@ -88,13 +123,18 @@ class GDStorage(Storage):
             return key[1:]
         return key
 
-    def _get_id_from_parent_and_name(self, parent_id: str, name: str, retries: int = 1, sleep_seconds: int = 10, use_mime_type: bool = False, raise_on_missing: bool = True, use_cache=True):
+    # gets the Drive folderID if it is there
+    def _get_id_from_parent_and_name(self, parent_id: str, name: str, retries: int = 1, sleep_seconds: int = 10, use_mime_type: bool = False, raise_on_missing: bool = True, use_cache=False):
         """
         Retrieves the id of a folder or file from its @name and the @parent_id folder
         Optionally does multiple @retries and sleeps @sleep_seconds between them
         If @use_mime_type will restrict search to "mimeType='application/vnd.google-apps.folder'"
         If @raise_on_missing will throw error when not found, or returns None
         Will remember previous calls to avoid duplication if @use_cache
+        DM - caching giving a perf improvement in order of 41s to 46s
+          So I prefer not to use yet, purely as caching notoriously hard in terms of edge cases
+          and pro's don't outweigh cons for me (yet)
+          to be fair I just need to test this and make sure it always runs well!
         Returns the id of the file or folder from its name as a string
         """
         # cache logic
@@ -107,7 +147,7 @@ class GDStorage(Storage):
 
         # API logic
         debug_header: str = f"[searching {name=} in {parent_id=}]"
-        query_string = f"'{parent_id}' in parents and name = '{name}' "
+        query_string = f"'{parent_id}' in parents and name = '{name}' and trashed = false "
         if use_mime_type:
             query_string += f" and mimeType='application/vnd.google-apps.folder' "
 

@@ -17,4 +17,6 @@ config-*.yaml
 logs/*
 local_archive/
 vk_config*.json
+gd-token.json
+credentials.json
 secrets/*
