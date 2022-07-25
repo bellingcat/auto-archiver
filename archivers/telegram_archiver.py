@@ -11,9 +11,6 @@ from storages import Storage
 class TelegramArchiver(Archiver):
     name = "telegram"
 
-    def __init__(self, storage: Storage, driver):
-        super().__init__(storage, driver)
-
     def download(self, url, check_if_exists=False):
         # detect URLs that we definitely cannot handle
         if 't.me' != self.get_netloc(url):
