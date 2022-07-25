@@ -15,8 +15,8 @@ class WaybackArchiver(Archiver):
     """
     name = "wayback"
 
-    def __init__(self, storage: Storage, driver, config: WaybackConfig, hash_algorithm):
-        super(WaybackArchiver, self).__init__(storage, driver, hash_algorithm)
+    def __init__(self, storage: Storage, driver, config: WaybackConfig):
+        super(WaybackArchiver, self).__init__(storage, driver)
         self.config = config
         self.seen_urls = {}
 

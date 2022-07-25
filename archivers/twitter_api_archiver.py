@@ -13,8 +13,8 @@ from .twitter_archiver import TwitterArchiver
 class TwitterApiArchiver(TwitterArchiver):
     name = "twitter_api"
 
-    def __init__(self, storage: Storage, driver, config: TwitterApiConfig, hash_algorithm):
-        super().__init__(storage, driver, hash_algorithm)
+    def __init__(self, storage: Storage, driver, config: TwitterApiConfig):
+        super().__init__(storage, driver)
 
         if config.bearer_token:
             self.api = Api(bearer_token=config.bearer_token)

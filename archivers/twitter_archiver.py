@@ -12,8 +12,8 @@ class TwitterArchiver(Archiver):
     This Twitter Archiver uses unofficial scraping methods, and it works as 
     an alternative to TwitterApiArchiver when no API credentials are provided.
     """
-    def __init__(self, storage: Storage, driver, hash_algorithm):
-        super().__init__(storage, driver, hash_algorithm)
+    def __init__(self, storage: Storage, driver):
+        super().__init__(storage, driver)
 
     name = "twitter"
     link_pattern = re.compile(r"twitter.com\/(?:\#!\/)?(\w+)\/status(?:es)?\/(\d+)")

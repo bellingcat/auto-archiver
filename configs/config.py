@@ -1,5 +1,6 @@
 
 import argparse, yaml, json
+from archivers.base_archiver import Archiver
 import gspread
 from loguru import logger
 from selenium import webdriver
@@ -81,7 +82,7 @@ class Config:
         )
         self.webdriver = "not initialized"
 
-        self.hash_algorithm = execution.get("hash_algorithm", "SHA-256")
+        Archiver.HASH_ALGORITHM = execution.get("hash_algorithm", Archiver.HASH_ALGORITHM)
 
         # ---------------------- SECRETS - APIs and service configurations
         secrets = self.config.get("secrets", {})
@@ -261,7 +262,7 @@ class Config:
             "storage": self.storage,
             "header": self.header,
             "check_if_exists": self.check_if_exists,
-            "hash_algorithm": self.hash_algorithm,
+            "hash_algorithm": Archiver.HASH_ALGORITHM,
             "save_logs": self.save_logs,
             "selenium_config": asdict(self.selenium_config),
             "selenium_webdriver": self.webdriver != None,
