@@ -117,8 +117,8 @@ class Config:
             gd = secrets["google_drive"]
             self.gd_config = GDConfig(
                 root_folder_id=gd.get("root_folder_id"),
-                oauth_token_file_path_and_name=gd.get("oauth_token_file_path_and_name"),
-                service_account=gd.get("service_account")
+                oauth_token_filename=gd.get("oauth_token_filename"),
+                service_account=gd.get("service_account", GDConfig.service_account)
             )
 
         if "local" in secrets:

@@ -14,8 +14,8 @@ from google.auth.transport.requests import Request
 @dataclass
 class GDConfig:
     root_folder_id: str
-    oauth_token_file_path_and_name: str
-    service_account: str 
+    oauth_token_filename: str
+    service_account: str = "service_account.json"
     folder: str = "default"
 
 class GDStorage(Storage):
@@ -25,7 +25,7 @@ class GDStorage(Storage):
         
         SCOPES=['https://www.googleapis.com/auth/drive']
         
-        token_file = config.oauth_token_file_path_and_name
+        token_file = config.oauth_token_filename
         if token_file is not None:
             """
             Tokens are refreshed after 1 hour

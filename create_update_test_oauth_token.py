@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 import os.path
 
 from google.auth.transport.requests import Request
@@ -8,23 +6,20 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
-from googleapiclient.http import MediaFileUpload
-
-# If creating for first time download the json `credentials.json` from https://console.cloud.google.com/apis/credentials OAuth 2.0 Client IDs
+# If creating for first time download the OAuth Client Ids json `credentials.json` from https://console.cloud.google.com/apis/credentials OAuth 2.0 Client IDs
+# add "http://localhost:55192/" to the list of "Authorised redirect URIs"
 # https://davemateer.com/2022/04/28/google-drive-with-python for more information
 
-# Can run this code to get a new token and verify the token is the correct user
-# and it will refresh the token accordingly
+# You can run this code to get a new token and verify it belongs to the correct user
+# This token will be refresh automatically by the auto-archiver
 
 # Code below from https://developers.google.com/drive/api/quickstart/python
 
 SCOPES = ['https://www.googleapis.com/auth/drive']
 
+
 def main():
-    # token_file = 'gd-token.json'
-
-    token_file = 'secrets/token-davemateer-gmail.json'
-
+    token_file = 'gd-token.json'
     creds = None
 
     # The file token.json stores the user's access and refresh tokens, and is
@@ -42,7 +37,7 @@ def main():
             print('First run through so putting up login dialog')
             # credentials.json downloaded from https://console.cloud.google.com/apis/credentials
             flow = InstalledAppFlow.from_client_secrets_file('credentials.json', SCOPES)
-            creds = flow.run_local_server(port=0)
+            creds = flow.run_local_server(port=55192)
         # Save the credentials for the next run
         with open(token_file, 'w') as token:
             print('Saving new token')
@@ -72,6 +67,7 @@ def main():
 
     except HttpError as error:
         print(f'An error occurred: {error}')
+
 
 if __name__ == '__main__':
     main()
