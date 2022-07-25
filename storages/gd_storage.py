@@ -28,7 +28,7 @@ class GDStorage(Storage):
         token_file = config.oauth_token_filename
         if token_file is not None:
             """
-            Tokens are refreshed after 1 hour
+            Tokens are refreshed after 1 hour 
             however keep working for 7 days (tbc)
             so as long as the job doesn't last for 7 days
             then this method of refreshing only once per run will work
