@@ -26,8 +26,8 @@ class ArchiveResult:
     screenshot: str = None
     hash: str = None
 
-
 class Archiver(ABC):
+    HASH_ALGORITHM="SHA-256" # can be overwritten by user configs
     name = "default"
     retry_regex = r"retrying at (\d+)$"
 
@@ -47,7 +47,6 @@ class Archiver(ABC):
     def get_netloc(self, url):
         return urlparse(url).netloc
 
-    # generate the html page eg SM3013/twitter__minmyatnaing13_status_1499415562937503751.html
     def generate_media_page_html(self, url, urls_info: dict, object, thumbnail=None):
         """
         Generates an index.html page where each @urls_info is displayed
@@ -163,10 +162,12 @@ class Archiver(ABC):
     def get_hash(self, filename):
         with open(filename, "rb") as f:
             bytes = f.read()  # read entire file as bytes
-            # TODO: customizable hash
-            hash = hashlib.sha256(bytes)
-            # option to use SHA3_512 instead
-            # hash = hashlib.sha3_512(bytes)
+            logger.debug(f'Hash algorithm is {self.HASH_ALGORITHM}')
+
+            if self.HASH_ALGORITHM == "SHA-256": hash = hashlib.sha256(bytes)
+            elif self.HASH_ALGORITHM == "SHA3-512": hash = hashlib.sha3_512(bytes)
+            else: raise Exception(f"Unknown Hash Algorithm of {self.HASH_ALGORITHM}")
+
         return hash.hexdigest()
 
     def get_screenshot(self, url):
