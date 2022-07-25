@@ -91,6 +91,10 @@ execution:
   storage: s3
   # defaults to false, when true will try to avoid duplicate URL archives
   check_if_exists: true
+
+  # choose a hash algorithm (either SHA-256 or SHA3-512, defaults to SHA-256)
+  # hash_algorithm: SHA-256
+
   # optional configurations for the selenium browser that takes screenshots, these are the defaults
   selenium:
     # values under 10s might mean screenshots fail to grab screenshot
@@ -115,8 +119,4 @@ execution:
     duration: duration
     screenshot: screenshot
     hash: hash
-
-  # Must be either SHA256 or SHA3_512
-  hash_algorithm: SHA3_512
-  # hash_algorithm: SHA256
 

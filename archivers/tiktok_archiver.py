@@ -15,9 +15,6 @@ class TiktokArchiver(Archiver):
 
         status = 'success'
 
-        def __init__(self, storage: Storage, driver, hash_algorithm):
-            super().__init__(storage, driver, hash_algorithm)
-
         try:
             info = tiktok_downloader.info_post(url)
             key = self.get_key(f'{info.id}.mp4')
