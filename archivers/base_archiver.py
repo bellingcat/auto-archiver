@@ -167,8 +167,8 @@ class Archiver(ABC):
             ha = self.hash_algorithm
             logger.debug(f'Hash algorithm is {ha}')
 
-            if ha == "SHA3_512": hash = hashlib.sha3_512(bytes)
-            elif ha == "SHA256": hash = hashlib.sha256(bytes)
+            if ha == "SHA3-512": hash = hashlib.sha3_512(bytes)
+            elif ha == "SHA-256": hash = hashlib.sha256(bytes)
             else: raise Exception("Unknown Hash Algorithm of {ha}")
 
         return hash.hexdigest()

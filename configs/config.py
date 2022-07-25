@@ -81,7 +81,7 @@ class Config:
         )
         self.webdriver = "not initialized"
 
-        self.hash_algorithm = execution.get("hash_algorithm")
+        self.hash_algorithm = execution.get("hash_algorithm", "SHA-256")
 
         # ---------------------- SECRETS - APIs and service configurations
         secrets = self.config.get("secrets", {})
@@ -261,6 +261,7 @@ class Config:
             "storage": self.storage,
             "header": self.header,
             "check_if_exists": self.check_if_exists,
+            "hash_algorithm": self.hash_algorithm,
             "save_logs": self.save_logs,
             "selenium_config": asdict(self.selenium_config),
             "selenium_webdriver": self.webdriver != None,
