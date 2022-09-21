@@ -130,11 +130,7 @@ class GDStorage(Storage):
         Optionally does multiple @retries and sleeps @sleep_seconds between them
         If @use_mime_type will restrict search to "mimeType='application/vnd.google-apps.folder'"
         If @raise_on_missing will throw error when not found, or returns None
-        Will remember previous calls to avoid duplication if @use_cache
-        DM - caching giving a perf improvement in order of 41s to 46s
-          So I prefer not to use yet, purely as caching notoriously hard in terms of edge cases
-          and pro's don't outweigh cons for me (yet)
-          to be fair I just need to test this and make sure it always runs well!
+        Will remember previous calls to avoid duplication if @use_cache - might not have all edge cases tested, so use at own risk
         Returns the id of the file or folder from its name as a string
         """
         # cache logic
