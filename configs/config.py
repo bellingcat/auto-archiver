@@ -1,5 +1,6 @@
 
 import argparse, yaml, json
+from archivers.base_archiver import Archiver
 import gspread
 from loguru import logger
 from selenium import webdriver
@@ -50,6 +51,14 @@ class Config:
 
         self.sheet = getattr_or(self.args, "sheet", execution.get("sheet"))
         assert self.sheet is not None, "'sheet' must be provided either through command line or configuration file"
+
+        def ensure_set(l):
+            # always returns a set of strings, can receive a set or a string
+            l = l if isinstance(l, list) else [l]
+            return set([x for x in l if isinstance(x, str) and len(x) > 0])
+        self.worksheet_allow = ensure_set(execution.get("worksheet_allow", []))
+        self.worksheet_block = ensure_set(execution.get("worksheet_block", []))
+
         self.header = int(getattr_or(self.args, "header", execution.get("header", 1)))
         self.storage = getattr_or(self.args, "storage", execution.get("storage", "s3"))
         self.save_logs = getattr(self.args, "save_logs") or execution.get("save_logs", False)
@@ -72,6 +81,8 @@ class Config:
             window_height=int(selenium_configs.get("window_height", SeleniumConfig.window_height))
         )
         self.webdriver = "not initialized"
+
+        Archiver.HASH_ALGORITHM = execution.get("hash_algorithm", Archiver.HASH_ALGORITHM)
 
         # ---------------------- SECRETS - APIs and service configurations
         secrets = self.config.get("secrets", {})
@@ -107,6 +118,7 @@ class Config:
             gd = secrets["google_drive"]
             self.gd_config = GDConfig(
                 root_folder_id=gd.get("root_folder_id"),
+                oauth_token_filename=gd.get("oauth_token_filename"),
                 service_account=gd.get("service_account", GDConfig.service_account)
             )
 
@@ -246,9 +258,12 @@ class Config:
         return json.dumps({
             "config_file": self.config_file,
             "sheet": self.sheet,
+            "worksheet_allow": list(self.worksheet_allow),
+            "worksheet_block": list(self.worksheet_block),
             "storage": self.storage,
             "header": self.header,
             "check_if_exists": self.check_if_exists,
+            "hash_algorithm": Archiver.HASH_ALGORITHM,
             "save_logs": self.save_logs,
             "selenium_config": asdict(self.selenium_config),
             "selenium_webdriver": self.webdriver != None,

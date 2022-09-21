@@ -5,12 +5,12 @@ from snscrape.modules.twitter import TwitterTweetScraper, Video, Gif, Photo
 
 from .base_archiver import Archiver, ArchiveResult
 
-
 class TwitterArchiver(Archiver):
     """
     This Twitter Archiver uses unofficial scraping methods, and it works as 
     an alternative to TwitterApiArchiver when no API credentials are provided.
     """
+
     name = "twitter"
     link_pattern = re.compile(r"twitter.com\/(?:\#!\/)?(\w+)\/status(?:es)?\/(\d+)")
 

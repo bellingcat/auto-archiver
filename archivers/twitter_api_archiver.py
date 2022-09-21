@@ -54,7 +54,7 @@ class TwitterApiArchiver(TwitterArchiver):
 
             for u in urls:
                 if u is None:
-                    logger.error(f"Should not have gotten None url for {tweet.includes.media=}")
+                    logger.debug(f"Should not have gotten None url for {tweet.includes.media=} so going to download_alternative in twitter_archiver")
                     return self.download_alternative(url, tweet_id)
         logger.debug(f"found {urls=}")
 

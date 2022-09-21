@@ -1,4 +1,4 @@
-import uuid, os
+import uuid, os, mimetypes
 from dataclasses import dataclass
 
 import boto3
@@ -20,6 +20,7 @@ class S3Config:
     cdn_url: str = "https://{bucket}.{region}.cdn.digitaloceanspaces.com/{key}"
     private: bool = False
     key_path: str = "default"  # 'default' uses full naming, 'random' uses generated uuid
+
 
 class S3Storage(Storage):
 
@@ -70,4 +71,5 @@ class S3Storage(Storage):
             extra_args = kwargs.get("extra_args", {})
         else:
             extra_args = kwargs.get("extra_args", {'ACL': 'public-read'})
+        extra_args['ContentType'] = mimetypes.guess_type(key)[0]
         self.s3.upload_fileobj(file, Bucket=self.bucket, Key=self._get_path(key), ExtraArgs=extra_args)

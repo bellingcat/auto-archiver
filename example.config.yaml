@@ -18,8 +18,19 @@ secrets:
 
   # needed if you use storage=gd
   google_drive:
-    # local filename can be the same or different file from google_sheets.service_account, defaults to service_account.json
-    service_account: "service_account.json"
+    # To authenticate with google you have two options (1. service account OR 2. OAuth token)
+
+    # 1. service account - storage space will count towards the developer account
+    # filename can be the same or different file from google_sheets.service_account, defaults to "service_account.json"
+    # service_account: "service_account.json"
+
+    # 2. OAuth token  - storage space will count towards the owner of the GDrive folder
+    # (only 1. or 2. - if both specified then this 2. takes precedence)
+    # needs write access on the server so refresh flow works
+    # To get the token, run the file `create_update_test_oauth_token.py`
+    # you can edit that file if you want a different token filename, default is "gd-token.json"
+    oauth_token_filename: "gd-token.json"
+
     root_folder_id: copy XXXX from https://drive.google.com/drive/folders/XXXX
 
   # needed if you use storage=local
@@ -65,12 +76,25 @@ secrets:
 execution:
   # can be overwritten with CMD --sheet=
   sheet: your-sheet-name
+
+  # block or allow worksheets by name, instead of defaulting to checking all worksheets in a Spreadsheet
+  # worksheet_allow and worksheet_block can be single values or lists
+  # if worksheet_allow is specified, worksheet_block is ignored
+  # worksheet_allow:
+  #   - Sheet1
+  #   - "Sheet 2"
+  # worksheet_block: BlockedSheet
+
   # which row of your tabs contains the header, can be overwritten with CMD --header=
   header: 1
   # which storage to use, can be overwritten with CMD --storage=
   storage: s3
   # defaults to false, when true will try to avoid duplicate URL archives
   check_if_exists: true
+
+  # choose a hash algorithm (either SHA-256 or SHA3-512, defaults to SHA-256)
+  # hash_algorithm: SHA-256
+
   # optional configurations for the selenium browser that takes screenshots, these are the defaults
   selenium:
     # values under 10s might mean screenshots fail to grab screenshot
@@ -95,3 +119,4 @@ execution:
     duration: duration
     screenshot: screenshot
     hash: hash
+
