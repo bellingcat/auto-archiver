@@ -93,6 +93,7 @@ class YoutubeDLArchiver(Archiver):
 
         hash = self.get_hash(filename)
         screenshot = self.get_screenshot(url)
+        wacz = self.get_wacz(url)
 
         # get duration
         duration = info.get('duration')
@@ -113,4 +114,4 @@ class YoutubeDLArchiver(Archiver):
             timestamp = datetime.datetime.strptime(info['upload_date'], '%Y%m%d').replace(tzinfo=datetime.timezone.utc)
 
         return ArchiveResult(status=status, cdn_url=cdn_url, thumbnail=key_thumb, thumbnail_index=thumb_index, duration=duration,
-                             title=info['title'] if 'title' in info else None, timestamp=timestamp, hash=hash, screenshot=screenshot)
+                             title=info['title'] if 'title' in info else None, timestamp=timestamp, hash=hash, screenshot=screenshot, wacz=wacz)

@@ -28,6 +28,7 @@ class TelegramArchiver(Archiver):
             url += "?embed=1"
 
         screenshot = self.get_screenshot(url)
+        wacz = self.get_wacz(url)
 
         t = requests.get(url, headers=headers)
         s = BeautifulSoup(t.content, 'html.parser')
@@ -46,7 +47,7 @@ class TelegramArchiver(Archiver):
             time_elements = s.find_all('time')
             timestamp = time_elements[0].get('datetime') if len(time_elements) else None
 
-            return ArchiveResult(status="success", cdn_url=page_cdn, screenshot=screenshot, hash=page_hash, thumbnail=thumbnail, timestamp=timestamp)
+            return ArchiveResult(status="success", cdn_url=page_cdn, screenshot=screenshot, hash=page_hash, thumbnail=thumbnail, timestamp=timestamp, wacz=wacz)
 
         video_url = video.get('src')
         video_id = video_url.split('/')[-1].split('?')[0]

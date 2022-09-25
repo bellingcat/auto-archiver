@@ -30,6 +30,7 @@ def update_sheet(gw, row, result: ArchiveResult):
     batch_if_valid('duration', result.duration, str(result.duration))
     batch_if_valid('screenshot', result.screenshot)
     batch_if_valid('hash', result.hash)
+    batch_if_valid('wacz', result.wacz)
 
     if result.timestamp is not None:
         if type(result.timestamp) == int:

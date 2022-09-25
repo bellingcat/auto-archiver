@@ -119,4 +119,5 @@ execution:
     duration: duration
     screenshot: screenshot
     hash: hash
+    wacz: wacz
 

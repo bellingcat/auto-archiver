@@ -71,5 +71,8 @@ class S3Storage(Storage):
             extra_args = kwargs.get("extra_args", {})
         else:
             extra_args = kwargs.get("extra_args", {'ACL': 'public-read'})
-        extra_args['ContentType'] = mimetypes.guess_type(key)[0]
+        if key.endswith('.wacz'):
+            extra_args['ContentType'] = "application/zip"
+        else:
+            extra_args['ContentType'] = mimetypes.guess_type(key)[0]
         self.s3.upload_fileobj(file, Bucket=self.bucket, Key=self._get_path(key), ExtraArgs=extra_args)

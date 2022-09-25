@@ -1,4 +1,4 @@
-import os, datetime, shutil, hashlib, time, requests, re, mimetypes
+import os, datetime, shutil, hashlib, time, requests, re, mimetypes, subprocess
 from dataclasses import dataclass
 from abc import ABC, abstractmethod
 from urllib.parse import urlparse
@@ -24,6 +24,7 @@ class ArchiveResult:
     title: str = None
     timestamp: datetime.datetime = None
     screenshot: str = None
+    wacz: str = None
     hash: str = None
 
 class Archiver(ABC):
@@ -197,6 +198,41 @@ class Archiver(ABC):
         self.driver.save_screenshot(filename)
         self.storage.upload(filename, key, extra_args={
                             'ACL': 'public-read', 'ContentType': 'image/png'})
+
+        return self.storage.get_cdn_url(key)
+
+    def get_wacz(self, url):
+        logger.debug(f"getting wacz for {url}")
+        key = self._get_key_from_url(url, ".wacz", append_datetime=True)
+        collection = key.replace(".wacz", "").replace("-", "")
+
+        cwd = os.getcwd()
+        cmd = [
+            "docker", "run",
+            "-v", f"{cwd}/browsertrix:/crawls/",
+            "-it",
+            "webrecorder/browsertrix-crawler", "crawl",
+            "--url", url,
+            "--scopeType", "page",
+            "--generateWACZ",
+            "--text",
+            "--collection", collection,
+            "--behaviors", "autoscroll,autoplay,autofetch,siteSpecific",
+            "--behaviorTimeout", "90"
+        ]
+        try:
+            subprocess.run(cmd, check=True)
+        except Exception as e:
+            logger.error(f"wacz generation failed: {e}")
+            return
+
+        filename = os.path.join(cwd, "browsertrix", "collections", collection, f"{collection}.wacz")
+
+        self.storage.upload(filename, key, extra_args={
+                            'ACL': 'public-read', 'ContentType': 'application/zip'})
+
+        # TODO: remove wacz collection, waiting for resolution on: 
+        # https://github.com/webrecorder/browsertrix-crawler/issues/170
 
         return self.storage.get_cdn_url(key)
 

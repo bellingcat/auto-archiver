@@ -28,6 +28,8 @@ class WaybackArchiver(Archiver):
             if url in self.seen_urls: return self.seen_urls[url]
 
         screenshot = self.get_screenshot(url)
+        wacz = self.get_wacz(url)
+
         logger.debug(f"POSTing {url=} to web.archive.org")
         ia_headers = {
             "Accept": "application/json",
@@ -37,10 +39,10 @@ class WaybackArchiver(Archiver):
 
         if r.status_code != 200:
             logger.warning(f"Internet archive failed with status of {r.status_code}")
-            return ArchiveResult(status="Internet archive failed", screenshot=screenshot)
+            return ArchiveResult(status="Internet archive failed", screenshot=screenshot, wacz=wacz)
 
         if 'job_id' not in r.json() and 'message' in r.json():
-            return self.custom_retry(r.json(), screenshot=screenshot)
+            return self.custom_retry(r.json(), screenshot=screenshot, wacz=wacz)
 
         job_id = r.json()['job_id']
         logger.debug(f"GETting status for {job_id=} on {url=}")
@@ -63,7 +65,7 @@ class WaybackArchiver(Archiver):
 
         status_json = status_r.json()
         if status_json['status'] != 'success':
-            return self.custom_retry(status_json, screenshot=screenshot)
+            return self.custom_retry(status_json, screenshot=screenshot, wacz=wacz)
 
         archive_url = f"https://web.archive.org/web/{status_json['timestamp']}/{status_json['original_url']}"
 
@@ -75,8 +77,7 @@ class WaybackArchiver(Archiver):
                 title = 'Could not get title'
         except:
             title = "Could not get title"
-        screenshot = self.get_screenshot(url)
-        self.seen_urls[url] = ArchiveResult(status='success', cdn_url=archive_url, title=title, screenshot=screenshot)
+        self.seen_urls[url] = ArchiveResult(status='success', cdn_url=archive_url, title=title, screenshot=screenshot, wacz=wacz)
         return self.seen_urls[url]
 
     def custom_retry(self, json_data, **kwargs):
