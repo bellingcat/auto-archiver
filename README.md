@@ -1,7 +1,14 @@
-# auto-archiver
+# Auto Archiver
+Read the [article about Auto Archiver on bellingcat.com](https://www.bellingcat.com/resources/2022/09/22/preserve-vital-online-content-with-bellingcats-auto-archiver-tool/).
+
+
 Python script to automatically archive social media posts, videos, and images from a Google Sheets document. Uses different archivers depending on the platform, and can save content to local storage, S3 bucket (Digital Ocean Spaces, AWS, ...), and Google Drive. The Google Sheets where the links come from is updated with information about the archived content. It can be run manually or on an automated basis.
 
 ## Setup
+
+Check this [tutorial video](https://youtu.be/VfAhcuV2tLQ).
+
+
 
 If you are using `pipenv` (recommended), `pipenv install` is sufficient to install Python prerequisites.
 
