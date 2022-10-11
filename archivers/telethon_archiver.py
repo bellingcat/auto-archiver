@@ -7,7 +7,7 @@ from telethon.errors import ChannelInvalidError
 
 from storages import Storage
 from .base_archiver import Archiver, ArchiveResult
-from configs import TelethonConfig
+from configs import Config
 from utils import getattr_or
 
 
@@ -15,11 +15,12 @@ class TelethonArchiver(Archiver):
     name = "telethon"
     link_pattern = re.compile(r"https:\/\/t\.me(\/c){0,1}\/(.+)\/(\d+)")
 
-    def __init__(self, storage: Storage, driver, config: TelethonConfig):
-        super().__init__(storage, driver)
-        if config:
-            self.client = TelegramClient("./anon", config.api_id, config.api_hash)
-            self.bot_token = config.bot_token
+    def __init__(self, storage: Storage, config: Config):
+        super().__init__(storage, config)
+        if config.telegram_config:
+            c = config.telegram_config
+            self.client = TelegramClient("./anon", c.api_id, c.api_hash)
+            self.bot_token = c.bot_token
 
     def _get_media_posts_in_group(self, chat, original_post, max_amp=10):
         """

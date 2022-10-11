@@ -5,7 +5,7 @@ from loguru import logger
 from pytwitter import Api
 
 from storages.base_storage import Storage
-from configs import TwitterApiConfig
+from configs import Config
 from .base_archiver import ArchiveResult
 from .twitter_archiver import TwitterArchiver
 
@@ -13,14 +13,15 @@ from .twitter_archiver import TwitterArchiver
 class TwitterApiArchiver(TwitterArchiver):
     name = "twitter_api"
 
-    def __init__(self, storage: Storage, driver, config: TwitterApiConfig):
-        super().__init__(storage, driver)
+    def __init__(self, storage: Storage, config: Config):
+        super().__init__(storage, config)
+        c = config.twitter_config
 
-        if config.bearer_token:
-            self.api = Api(bearer_token=config.bearer_token)
-        elif config.consumer_key and config.consumer_secret and config.access_token and config.access_secret:
+        if c.bearer_token:
+            self.api = Api(bearer_token=c.bearer_token)
+        elif c.consumer_key and c.consumer_secret and c.access_token and c.access_secret:
             self.api = Api(
-                consumer_key=config.consumer_key, consumer_secret=config.consumer_secret, access_token=config.access_token, access_secret=config.access_secret)
+                consumer_key=c.consumer_key, consumer_secret=c.consumer_secret, access_token=c.access_token, access_secret=c.access_secret)
 
     def download(self, url, check_if_exists=False):
         if not hasattr(self, "api"):

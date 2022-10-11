@@ -20,3 +20,4 @@ vk_config*.json
 gd-token.json
 credentials.json
 secrets/*
+browsertrix/*

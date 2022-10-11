@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup
 
 from storages import Storage
 from .base_archiver import Archiver, ArchiveResult
-from configs import WaybackConfig
+from configs import Config
 
 
 class WaybackArchiver(Archiver):
@@ -15,9 +15,9 @@ class WaybackArchiver(Archiver):
     """
     name = "wayback"
 
-    def __init__(self, storage: Storage, driver, config: WaybackConfig):
-        super(WaybackArchiver, self).__init__(storage, driver)
-        self.config = config
+    def __init__(self, storage: Storage, config: Config):
+        super(WaybackArchiver, self).__init__(storage, config)
+        self.config = config.wayback_config
         self.seen_urls = {}
 
     def download(self, url, check_if_exists=False):

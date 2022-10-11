@@ -5,7 +5,7 @@ from vk_url_scraper import VkScraper, DateTimeEncoder
 
 from storages import Storage
 from .base_archiver import Archiver, ArchiveResult
-from configs import VkConfig
+from configs import Config
 
 
 class VkArchiver(Archiver):
@@ -17,10 +17,10 @@ class VkArchiver(Archiver):
     wall_pattern = re.compile(r"(wall.{0,1}\d+_\d+)")
     photo_pattern = re.compile(r"(photo.{0,1}\d+_\d+)")
 
-    def __init__(self, storage: Storage, driver, config: VkConfig):
-        super().__init__(storage, driver)
-        if config != None:
-            self.vks = VkScraper(config.username, config.password)
+    def __init__(self, storage: Storage, config: Config): 
+        super().__init__(storage, config)
+        if config.vk_config != None:
+            self.vks = VkScraper(config.vk_config.username, config.vk_config.password)
 
     def download(self, url, check_if_exists=False):
         if not hasattr(self, "vks") or self.vks is None:

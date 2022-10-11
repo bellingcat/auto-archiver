@@ -8,7 +8,7 @@ secrets:
     key: "s3 API key"
     secret: "s3 API secret"
     # use region format like such
-    endpoint_url: "https://{region}.digitaloceanspaces.com"
+    endpoint_url: "https://s3.{region}.amazonaws.com"
     #use bucket, region, and key (key is the archived file path generated when executing) format like such as:
     cdn_url: "https://{bucket}.{region}.cdn.digitaloceanspaces.com/{key}"
     # if private:true S3 urls will not be readable online
@@ -120,4 +120,5 @@ execution:
     screenshot: screenshot
     hash: hash
     wacz: wacz
+    replaywebpage: replaywebpage
 

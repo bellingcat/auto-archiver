@@ -21,7 +21,8 @@ class GWorksheet:
         'duration': 'duration',
         'screenshot': 'screenshot',
         'hash': 'hash',
-        'wacz': 'wacz'
+        'wacz': 'wacz',
+        'replaywebpage': 'replaywebpage',
     }
 
     def __init__(self, worksheet, columns=COLUMN_NAMES, header_row=1):
