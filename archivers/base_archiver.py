@@ -231,10 +231,10 @@ class Archiver(ABC):
             cmd.extend(["--profile", "/crawls/profile.tar.gz"])
 
         try:
-            logger.info(f"running browsertrix-crawler: {' '.join(cmd)}")
+            logger.info(f"Running browsertrix-crawler: {' '.join(cmd)}")
             subprocess.run(cmd, check=True)
         except Exception as e:
-            logger.error(f"wacz generation failed: {e}")
+            logger.error(f"WACZ generation failed: {e}")
             return
 
         filename = os.path.join(browsertrix_home, "collections", collection, f"{collection}.wacz")
@@ -242,8 +242,11 @@ class Archiver(ABC):
         self.storage.upload(filename, key, extra_args={
                             'ACL': 'public-read', 'ContentType': 'application/zip'})
 
-        # TODO: remove wacz collection, waiting for resolution on: 
-        # https://github.com/webrecorder/browsertrix-crawler/issues/170
+        # clean up the local browsertrix files
+        try:
+            shutil.rmtree(browsertrix_home)
+        except PermissionError:
+            logger.warn(f"Unable to clean up browsertrix-crawler files in {browsertrix_home}")
 
         return self.storage.get_cdn_url(key)
 
