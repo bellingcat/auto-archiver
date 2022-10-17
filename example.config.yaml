@@ -9,6 +9,7 @@ secrets:
     secret: "s3 API secret"
     # use region format like such
     endpoint_url: "https://{region}.digitaloceanspaces.com"
+    # endpoint_url: "https://s3.{region}.amazonaws.com"
     #use bucket, region, and key (key is the archived file path generated when executing) format like such as:
     cdn_url: "https://{bucket}.{region}.cdn.digitaloceanspaces.com/{key}"
     # if private:true S3 urls will not be readable online
@@ -101,6 +102,11 @@ execution:
     timeout_seconds: 120
     window_width: 1400
     window_height: 2000
+
+  # optional browsertrix profile file (see https://github.com/webrecorder/browsertrix-crawler#creating-and-using-browser-profiles)
+  browsertrix:
+    profile: "./browsertrix/crawls/profile.tar.gz"
+    timeout_seconds: 90 # defaults to 90s
   # puts execution logs into /logs folder, defaults to false
   save_logs: true
   # custom column names, only needed if different from default, can be overwritten with CMD --col-NAME="VALUE"
@@ -119,4 +125,7 @@ execution:
     duration: duration
     screenshot: screenshot
     hash: hash
+    wacz: wacz
+    # if you want the replaypage to work, make sure to allow CORS on your bucket
+    replaywebpage: replaywebpage
 

@@ -2,6 +2,7 @@ import os, datetime, traceback, random, tempfile
 
 from loguru import logger
 from slugify import slugify
+from urllib.parse import quote
 
 from archivers import TelethonArchiver, TelegramArchiver, TiktokArchiver, YoutubeDLArchiver, TwitterArchiver, TwitterApiArchiver, VkArchiver, WaybackArchiver, ArchiveResult, Archiver
 from utils import GWorksheet, mkdir_if_not_exists, expand_url
@@ -11,7 +12,7 @@ from storages import Storage
 random.seed()
 
 
-def update_sheet(gw, row, result: ArchiveResult):
+def update_sheet(gw, row, url, result: ArchiveResult):
     cell_updates = []
     row_values = gw.get_row(row)
 
@@ -30,6 +31,8 @@ def update_sheet(gw, row, result: ArchiveResult):
     batch_if_valid('duration', result.duration, str(result.duration))
     batch_if_valid('screenshot', result.screenshot)
     batch_if_valid('hash', result.hash)
+    batch_if_valid('wacz', result.wacz)
+    batch_if_valid('replaywebpage', f'https://replayweb.page/?source={quote(result.wacz)}#view=pages&url={quote(url)}')
 
     if result.timestamp is not None:
         if type(result.timestamp) == int:
@@ -104,14 +107,14 @@ def process_sheet(c: Config):
 
                 # order matters, first to succeed excludes remaining
                 active_archivers = [
-                    TelethonArchiver(storage, c.webdriver, c.telegram_config),
-                    TiktokArchiver(storage, c.webdriver),
-                    TwitterApiArchiver(storage, c.webdriver, c.twitter_config),
-                    YoutubeDLArchiver(storage, c.webdriver, c.facebook_cookie),
-                    TelegramArchiver(storage, c.webdriver),
-                    TwitterArchiver(storage, c.webdriver),
-                    VkArchiver(storage, c.webdriver, c.vk_config),
-                    WaybackArchiver(storage, c.webdriver, c.wayback_config)
+                    TelethonArchiver(storage, c),
+                    TiktokArchiver(storage, c),
+                    TwitterApiArchiver(storage, c),
+                    YoutubeDLArchiver(storage, c),
+                    TelegramArchiver(storage, c),
+                    TwitterArchiver(storage, c),
+                    VkArchiver(storage, c),
+                    WaybackArchiver(storage, c)
                 ]
 
                 for archiver in active_archivers:
@@ -136,7 +139,7 @@ def process_sheet(c: Config):
                         logger.warning(f'{archiver.name} did not succeed on {row=}, final status: {result.status}')
 
                 if result:
-                    update_sheet(gw, row, result)
+                    update_sheet(gw, row, url, result)
                 else:
                     gw.set_cell(row, 'status', 'failed: no archiver')
             except KeyboardInterrupt:

@@ -20,7 +20,9 @@ class GWorksheet:
         'title': 'upload title',
         'duration': 'duration',
         'screenshot': 'screenshot',
-        'hash': 'hash'
+        'hash': 'hash',
+        'wacz': 'wacz',
+        'replaywebpage': 'replaywebpage',
     }
 
     def __init__(self, worksheet, columns=COLUMN_NAMES, header_row=1):

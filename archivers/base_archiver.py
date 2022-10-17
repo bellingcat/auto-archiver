@@ -1,4 +1,4 @@
-import os, datetime, shutil, hashlib, time, requests, re, mimetypes
+import os, datetime, shutil, hashlib, time, requests, re, mimetypes, subprocess
 from dataclasses import dataclass
 from abc import ABC, abstractmethod
 from urllib.parse import urlparse
@@ -10,6 +10,7 @@ from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.by import By
 from slugify import slugify
 
+from configs import Config
 from storages import Storage
 from utils import mkdir_if_not_exists
 
@@ -24,16 +25,18 @@ class ArchiveResult:
     title: str = None
     timestamp: datetime.datetime = None
     screenshot: str = None
+    wacz: str = None
     hash: str = None
 
 class Archiver(ABC):
-    HASH_ALGORITHM="SHA-256" # can be overwritten by user configs
     name = "default"
     retry_regex = r"retrying at (\d+)$"
 
-    def __init__(self, storage: Storage, driver):
+    def __init__(self, storage: Storage, config: Config):
         self.storage = storage
-        self.driver = driver
+        self.driver = config.webdriver
+        self.hash_algorithm = config.hash_algorithm
+        self.browsertrix = config.browsertrix_config
 
     def __str__(self):
         return self.__class__.__name__
@@ -162,11 +165,11 @@ class Archiver(ABC):
     def get_hash(self, filename):
         with open(filename, "rb") as f:
             bytes = f.read()  # read entire file as bytes
-            logger.debug(f'Hash algorithm is {self.HASH_ALGORITHM}')
+            logger.debug(f'Hash algorithm is {self.hash_algorithm}')
 
-            if self.HASH_ALGORITHM == "SHA-256": hash = hashlib.sha256(bytes)
-            elif self.HASH_ALGORITHM == "SHA3-512": hash = hashlib.sha3_512(bytes)
-            else: raise Exception(f"Unknown Hash Algorithm of {self.HASH_ALGORITHM}")
+            if self.hash_algorithm == "SHA-256": hash = hashlib.sha256(bytes)
+            elif self.hash_algorithm == "SHA3-512": hash = hashlib.sha3_512(bytes)
+            else: raise Exception(f"Unknown Hash Algorithm of {self.hash_algorithm}")
 
         return hash.hexdigest()
 
@@ -195,8 +198,54 @@ class Archiver(ABC):
             logger.info("TimeoutException loading page for screenshot")
 
         self.driver.save_screenshot(filename)
+        self.storage.upload(filename, key, extra_args={'ACL': 'public-read', 'ContentType': 'image/png'})
+
+        return self.storage.get_cdn_url(key)
+
+    def get_wacz(self, url):
+        logger.debug(f"getting wacz for {url}")
+        key = self._get_key_from_url(url, ".wacz", append_datetime=True)
+        collection = re.sub('[^0-9a-zA-Z]+', '', key.replace(".wacz", ""))
+
+        browsertrix_home = os.path.join(os.getcwd(), "browsertrix-tmp")
+        cmd = [
+            "docker", "run",
+            "-v", f"{browsertrix_home}:/crawls/",
+            "-it",
+            "webrecorder/browsertrix-crawler", "crawl",
+            "--url", url,
+            "--scopeType", "page",
+            "--generateWACZ",
+            "--text",
+            "--collection", collection,
+            "--behaviors", "autoscroll,autoplay,autofetch,siteSpecific",
+            "--behaviorTimeout", str(self.browsertrix.timeout_seconds)
+        ]
+
+        if not os.path.isdir(browsertrix_home):
+            os.mkdir(browsertrix_home)
+
+        if self.browsertrix.profile:
+            shutil.copyfile(self.browsertrix.profile, os.path.join(browsertrix_home, "profile.tar.gz"))
+            cmd.extend(["--profile", "/crawls/profile.tar.gz"])
+
+        try:
+            logger.info(f"Running browsertrix-crawler: {' '.join(cmd)}")
+            subprocess.run(cmd, check=True)
+        except Exception as e:
+            logger.error(f"WACZ generation failed: {e}")
+            return
+
+        filename = os.path.join(browsertrix_home, "collections", collection, f"{collection}.wacz")
+
         self.storage.upload(filename, key, extra_args={
-                            'ACL': 'public-read', 'ContentType': 'image/png'})
+                            'ACL': 'public-read', 'ContentType': 'application/zip'})
+
+        # clean up the local browsertrix files
+        try:
+            shutil.rmtree(browsertrix_home)
+        except PermissionError:
+            logger.warn(f"Unable to clean up browsertrix-crawler files in {browsertrix_home}")
 
         return self.storage.get_cdn_url(key)
 
