@@ -86,4 +86,4 @@ class TelegramArchiver(Archiver):
 
         cdn_url = self.storage.get_cdn_url(key)
         return ArchiveResult(status=status, cdn_url=cdn_url, thumbnail=key_thumb, thumbnail_index=thumb_index,
-                             duration=duration, title=original_url, timestamp=s.find_all('time')[1].get('datetime'), hash=hash, screenshot=screenshot)
+                             duration=duration, title=original_url, timestamp=s.find_all('time')[1].get('datetime'), hash=hash, screenshot=screenshot, wacz=wacz)

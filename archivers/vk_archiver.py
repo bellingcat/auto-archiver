@@ -70,4 +70,5 @@ class VkArchiver(Archiver):
         page_cdn, page_hash, thumbnail = self.generate_media_page_html(url, uploaded_media, textual_output, thumbnail=thumbnail)
         # # if multiple wall/photos/videos are present the screenshot will only grab the 1st
         screenshot = self.get_screenshot(url)
-        return ArchiveResult(status="success", cdn_url=page_cdn, screenshot=screenshot, hash=page_hash, thumbnail=thumbnail, thumbnail_index=thumbnail_index, timestamp=datetime, title=title)
+        wacz = self.get_wacz(url)
+        return ArchiveResult(status="success", cdn_url=page_cdn, screenshot=screenshot, hash=page_hash, thumbnail=thumbnail, thumbnail_index=thumbnail_index, timestamp=datetime, title=title, wacz=wacz)

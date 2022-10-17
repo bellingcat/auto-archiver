@@ -61,7 +61,7 @@ class WaybackArchiver(Archiver):
             retries += 1
 
         if status_r.status_code != 200:
-            return ArchiveResult(status=f"Internet archive failed: check https://web.archive.org/save/status/{job_id}", screenshot=screenshot)
+            return ArchiveResult(status=f"Internet archive failed: check https://web.archive.org/save/status/{job_id}", screenshot=screenshot, wacz=wacz)
 
         status_json = status_r.json()
         if status_json['status'] != 'success':

@@ -70,5 +70,6 @@ class TwitterApiArchiver(TwitterArchiver):
         }, ensure_ascii=False, indent=4)
 
         screenshot = self.get_screenshot(url)
+        wacz = self.get_wacz(url)
         page_cdn, page_hash, thumbnail = self.generate_media_page(urls, url, output)
-        return ArchiveResult(status="success", cdn_url=page_cdn, screenshot=screenshot, hash=page_hash, thumbnail=thumbnail, timestamp=timestamp, title=tweet.data.text)
+        return ArchiveResult(status="success", cdn_url=page_cdn, screenshot=screenshot, hash=page_hash, thumbnail=thumbnail, timestamp=timestamp, title=tweet.data.text, wacz=wacz)

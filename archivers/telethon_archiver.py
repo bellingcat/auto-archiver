@@ -74,6 +74,7 @@ class TelethonArchiver(Archiver):
             logger.debug(f'got {len(media_posts)=} for {url=}')
 
             screenshot = self.get_screenshot(url)
+            wacz = self.get_wacz(url)
 
             if len(media_posts) > 0:
                 key = self.get_html_key(url)
@@ -81,7 +82,7 @@ class TelethonArchiver(Archiver):
                 if check_if_exists and self.storage.exists(key):
                     # only s3 storage supports storage.exists as not implemented on gd
                     cdn_url = self.storage.get_cdn_url(key)
-                    return ArchiveResult(status='already archived', cdn_url=cdn_url, title=post.message, timestamp=post.date, screenshot=screenshot)
+                    return ArchiveResult(status='already archived', cdn_url=cdn_url, title=post.message, timestamp=post.date, screenshot=screenshot, wacz=wacz)
 
                 key_thumb, thumb_index = None, None
                 group_id = post.grouped_id if post.grouped_id is not None else post.id
@@ -120,7 +121,7 @@ class TelethonArchiver(Archiver):
 
                 page_cdn, page_hash, _ = self.generate_media_page_html(url, uploaded_media, html.escape(str(post)))
 
-                return ArchiveResult(status=status, cdn_url=page_cdn, title=message, timestamp=post.date, hash=page_hash, screenshot=screenshot, thumbnail=key_thumb, thumbnail_index=thumb_index)
+                return ArchiveResult(status=status, cdn_url=page_cdn, title=message, timestamp=post.date, hash=page_hash, screenshot=screenshot, thumbnail=key_thumb, thumbnail_index=thumb_index, wacz=wacz)
 
             page_cdn, page_hash, _ = self.generate_media_page_html(url, [], html.escape(str(post)))
-            return ArchiveResult(status=status, cdn_url=page_cdn, title=post.message, timestamp=getattr_or(post, "date"), hash=page_hash, screenshot=screenshot)
+            return ArchiveResult(status=status, cdn_url=page_cdn, title=post.message, timestamp=getattr_or(post, "date"), hash=page_hash, screenshot=screenshot, wacz=wacz)
