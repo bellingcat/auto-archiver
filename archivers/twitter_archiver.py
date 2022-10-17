@@ -39,8 +39,9 @@ class TwitterArchiver(Archiver):
         if tweet.media is None:
             logger.debug(f'No media found, archiving tweet text only')
             screenshot = self.get_screenshot(url)
+            wacz = self.get_wacz(url)
             page_cdn, page_hash, _ = self.generate_media_page_html(url, [], html.escape(tweet.json()))
-            return ArchiveResult(status="success", cdn_url=page_cdn, title=tweet.content, timestamp=tweet.date, hash=page_hash, screenshot=screenshot)
+            return ArchiveResult(status="success", cdn_url=page_cdn, title=tweet.content, timestamp=tweet.date, hash=page_hash, screenshot=screenshot, wacz=wacz)
 
         urls = []
 
@@ -59,8 +60,9 @@ class TwitterArchiver(Archiver):
         page_cdn, page_hash, thumbnail = self.generate_media_page(urls, url, tweet.json())
 
         screenshot = self.get_screenshot(url)
+        wacz = self.get_wacz(url)
 
-        return ArchiveResult(status="success", cdn_url=page_cdn, screenshot=screenshot, hash=page_hash, thumbnail=thumbnail, timestamp=tweet.date, title=tweet.content)
+        return ArchiveResult(status="success", cdn_url=page_cdn, screenshot=screenshot, hash=page_hash, thumbnail=thumbnail, timestamp=tweet.date, title=tweet.content, wacz=wacz)
 
     def download_alternative(self, url, tweet_id):
         # https://stackoverflow.com/a/71867055/6196010
@@ -83,8 +85,9 @@ class TwitterArchiver(Archiver):
 
         timestamp = datetime.strptime(tweet["created_at"], "%Y-%m-%dT%H:%M:%S.%fZ")
         screenshot = self.get_screenshot(url)
+        wacz = self.get_wacz(url)
         page_cdn, page_hash, thumbnail = self.generate_media_page(urls, url, r.text)
-        return ArchiveResult(status="success", cdn_url=page_cdn, screenshot=screenshot, hash=page_hash, thumbnail=thumbnail, timestamp=timestamp, title=tweet["text"])
+        return ArchiveResult(status="success", cdn_url=page_cdn, screenshot=screenshot, hash=page_hash, thumbnail=thumbnail, timestamp=timestamp, title=tweet["text"], wacz=wacz)
 
     def choose_variant(self, variants):
         # choosing the highest quality possible

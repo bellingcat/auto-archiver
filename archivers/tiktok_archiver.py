@@ -48,6 +48,7 @@ class TiktokArchiver(Archiver):
 
             hash = self.get_hash(filename)
             screenshot = self.get_screenshot(url)
+            wacz = self.get_wacz(url)
 
             try: os.remove(filename)
             except FileNotFoundError:
@@ -57,7 +58,7 @@ class TiktokArchiver(Archiver):
 
             return ArchiveResult(status=status, cdn_url=cdn_url, thumbnail=key_thumb,
                                  thumbnail_index=thumb_index, duration=getattr(info, "duration", 0), title=getattr(info, "caption", ""),
-                                 timestamp=timestamp, hash=hash, screenshot=screenshot)
+                                 timestamp=timestamp, hash=hash, screenshot=screenshot, wacz=wacz)
 
         except tiktok_downloader.Except.InvalidUrl as e:
             status = 'Invalid URL'

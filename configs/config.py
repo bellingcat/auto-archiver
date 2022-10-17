@@ -1,6 +1,4 @@
-
-import argparse, yaml, json
-from archivers.base_archiver import Archiver
+import argparse, yaml, json, os
 import gspread
 from loguru import logger
 from selenium import webdriver
@@ -13,6 +11,7 @@ from .telethon_config import TelethonConfig
 from .selenium_config import SeleniumConfig
 from .vk_config import VkConfig
 from .twitter_api_config import TwitterApiConfig
+from .browsertrix_config import BrowsertrixConfig
 from storages import S3Config, S3Storage, GDStorage, GDConfig, LocalStorage, LocalConfig
 
 
@@ -82,7 +81,16 @@ class Config:
         )
         self.webdriver = "not initialized"
 
-        Archiver.HASH_ALGORITHM = execution.get("hash_algorithm", Archiver.HASH_ALGORITHM)
+        # browsertrix config
+        browsertrix_configs = execution.get("browsertrix", {})
+        if len(browsertrix_profile := browsertrix_configs.get("profile", "")):
+            browsertrix_profile = os.path.abspath(browsertrix_profile)
+        self.browsertrix_config = BrowsertrixConfig(
+            profile=browsertrix_profile,
+            timeout_seconds=browsertrix_configs.get("timeout_seconds", "90")
+        )
+
+        self.hash_algorithm = execution.get("hash_algorithm", "SHA-256")
 
         # ---------------------- SECRETS - APIs and service configurations
         secrets = self.config.get("secrets", {})
@@ -208,6 +216,7 @@ class Config:
         update the folder in each of the storages
         """
         self.folder = folder
+        logger.info(f"setting folder to {folder}")
         # s3
         if hasattr(self, "s3_config"): self.s3_config.folder = folder
         if hasattr(self, "s3_storage"): self.s3_storage.folder = folder
@@ -263,7 +272,8 @@ class Config:
             "storage": self.storage,
             "header": self.header,
             "check_if_exists": self.check_if_exists,
-            "hash_algorithm": Archiver.HASH_ALGORITHM,
+            "hash_algorithm": self.hash_algorithm,
+            "browsertrix_config": asdict(self.browsertrix_config),
             "save_logs": self.save_logs,
             "selenium_config": asdict(self.selenium_config),
             "selenium_webdriver": self.webdriver != None,

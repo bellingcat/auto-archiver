@@ -6,15 +6,16 @@ from loguru import logger
 
 from .base_archiver import Archiver, ArchiveResult
 from storages import Storage
+from configs import Config
 
 
 class YoutubeDLArchiver(Archiver):
     name = "youtube_dl"
     ydl_opts = {'outtmpl': f'{Storage.TMP_FOLDER}%(id)s.%(ext)s', 'quiet': False}
 
-    def __init__(self, storage: Storage, driver, fb_cookie):
-        super().__init__(storage, driver)
-        self.fb_cookie = fb_cookie
+    def __init__(self, storage: Storage, config: Config):
+        super().__init__(storage, config)
+        self.fb_cookie = config.facebook_cookie
 
     def download(self, url, check_if_exists=False):
         netloc = self.get_netloc(url)
@@ -93,6 +94,7 @@ class YoutubeDLArchiver(Archiver):
 
         hash = self.get_hash(filename)
         screenshot = self.get_screenshot(url)
+        wacz = self.get_wacz(url)
 
         # get duration
         duration = info.get('duration')
@@ -113,4 +115,4 @@ class YoutubeDLArchiver(Archiver):
             timestamp = datetime.datetime.strptime(info['upload_date'], '%Y%m%d').replace(tzinfo=datetime.timezone.utc)
 
         return ArchiveResult(status=status, cdn_url=cdn_url, thumbnail=key_thumb, thumbnail_index=thumb_index, duration=duration,
-                             title=info['title'] if 'title' in info else None, timestamp=timestamp, hash=hash, screenshot=screenshot)
+                             title=info['title'] if 'title' in info else None, timestamp=timestamp, hash=hash, screenshot=screenshot, wacz=wacz)
