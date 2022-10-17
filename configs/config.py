@@ -1,5 +1,4 @@
-
-import argparse, yaml, json
+import argparse, yaml, json, os
 import gspread
 from loguru import logger
 from selenium import webdriver
@@ -84,8 +83,11 @@ class Config:
 
         # browsertrix config
         browsertrix_configs = execution.get("browsertrix", {})
+        if len(browsertrix_profile := browsertrix_configs.get("profile", "")):
+            browsertrix_profile = os.path.abspath(browsertrix_profile)
         self.browsertrix_config = BrowsertrixConfig(
-            profile=browsertrix_configs.get("profile")
+            profile=browsertrix_profile,
+            timeout_seconds=browsertrix_configs.get("timeout_seconds", "90")
         )
 
         self.hash_algorithm = execution.get("hash_algorithm", "SHA-256")
@@ -271,6 +273,7 @@ class Config:
             "header": self.header,
             "check_if_exists": self.check_if_exists,
             "hash_algorithm": self.hash_algorithm,
+            "browsertrix_config": asdict(self.browsertrix_config),
             "save_logs": self.save_logs,
             "selenium_config": asdict(self.selenium_config),
             "selenium_webdriver": self.webdriver != None,

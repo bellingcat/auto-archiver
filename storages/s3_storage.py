@@ -67,13 +67,14 @@ class S3Storage(Storage):
             return False
 
     def uploadf(self, file, key, **kwargs):
-        if self.private:
-            extra_args = kwargs.get("extra_args", {})
-        else:
-            extra_args = kwargs.get("extra_args", {'ACL': 'public-read'})
-        if key.endswith('.wacz'):
-            extra_args['ContentType'] = "application/zip"
-        else:
-            extra_args['ContentType'] = mimetypes.guess_type(key)[0]
+        extra_args = kwargs.get("extra_args", {})
+        if not self.private and 'ACL' not in extra_args:
+            extra_args['ACL'] = 'public-read'
+
+        if 'ContentType' not in extra_args:
+            try:
+                extra_args['ContentType'] = mimetypes.guess_type(key)[0]
+            except Exception as e:
+                logger.error(f"Unable to get mimetype for {key=}, error: {e}")
 
         self.s3.upload_fileobj(file, Bucket=self.bucket, Key=self._get_path(key), ExtraArgs=extra_args)

@@ -21,3 +21,4 @@ gd-token.json
 credentials.json
 secrets/*
 browsertrix/*
+browsertrix-tmp/*

@@ -198,17 +198,16 @@ class Archiver(ABC):
             logger.info("TimeoutException loading page for screenshot")
 
         self.driver.save_screenshot(filename)
-        self.storage.upload(filename, key, extra_args={
-                            'ACL': 'public-read', 'ContentType': 'image/png'})
+        self.storage.upload(filename, key, extra_args={'ACL': 'public-read', 'ContentType': 'image/png'})
 
         return self.storage.get_cdn_url(key)
 
     def get_wacz(self, url):
         logger.debug(f"getting wacz for {url}")
         key = self._get_key_from_url(url, ".wacz", append_datetime=True)
-        collection = key.replace(".wacz", "").replace("-", "")
+        collection = re.sub('[^0-9a-zA-Z]+', '', key.replace(".wacz", ""))
 
-        browsertrix_home = os.path.join(os.getcwd(), "browsertrix")
+        browsertrix_home = os.path.join(os.getcwd(), "browsertrix-tmp")
         cmd = [
             "docker", "run",
             "-v", f"{browsertrix_home}:/crawls/",
@@ -220,7 +219,7 @@ class Archiver(ABC):
             "--text",
             "--collection", collection,
             "--behaviors", "autoscroll,autoplay,autofetch,siteSpecific",
-            "--behaviorTimeout", "90"
+            "--behaviorTimeout", str(self.browsertrix.timeout_seconds)
         ]
 
         if not os.path.isdir(browsertrix_home):
