@@ -18,7 +18,7 @@ You also need:
 3. [firefox](https://www.mozilla.org/en-US/firefox/new/) and [geckodriver](https://github.com/mozilla/geckodriver/releases) on a path folder like `/usr/local/bin`. 
 4. [fonts-noto](https://fonts.google.com/noto) to deal with multiple unicode characters during selenium/geckodriver's screenshots: `sudo apt install fonts-noto -y`. 
 5. Internet Archive credentials can be retrieved from https://archive.org/account/s3.php.
-6. If you would like to take archival WACZ snapshots using [browsertrix-crawler](https://github.com/webrecorder/browsertrix-crawler)
+6. If you would like to take archival [WACZ](https://specs.webrecorder.net/wacz/1.1.1/) snapshots using [browsertrix-crawler](https://github.com/webrecorder/browsertrix-crawler)
    in addition to screenshots you will need to install [Docker](https://www.docker.com/).
 
 ### Configuration file
