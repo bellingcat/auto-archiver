@@ -215,7 +215,7 @@ class Archiver(ABC):
         cmd = [
             "docker", "run",
             "-v", f"{browsertrix_home}:/crawls/",
-            "-it",
+            # "-it", # this leads to "the input device is not a TTY"
             "webrecorder/browsertrix-crawler", "crawl",
             "--url", url,
             "--scopeType", "page",
