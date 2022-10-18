@@ -23,7 +23,11 @@ class InstagramArchiver(Archiver):
         super().__init__(storage, config)
         self.insta = instaloader.Instaloader(download_geotags=True, download_comments=True, compress_json=False, dirname_pattern=self.DOWNLOAD_FOLDER, filename_pattern="{date_utc}_UTC_{target}__{typename}")
         if config.instagram_config:
-            self.insta.login(config.instagram_config.username, config.instagram_config.password)
+            try:
+                self.insta.login(config.instagram_config.username, config.instagram_config.
+                password)
+            except Exception as e:
+                logger.error(f"Unable to finish login: {e}")
 
     def download(self, url, check_if_exists=False):
         post_matches = self.post_pattern.findall(url)
