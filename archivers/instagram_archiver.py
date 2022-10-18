@@ -1,4 +1,4 @@
-import re, os, shutil, html
+import re, os, shutil, html, traceback
 import instaloader # https://instaloader.github.io/as-module.html
 from loguru import logger
 
@@ -27,7 +27,7 @@ class InstagramArchiver(Archiver):
                 self.insta.login(config.instagram_config.username, config.instagram_config.
                 password)
             except Exception as e:
-                logger.error(f"Unable to finish login: {e}")
+                logger.error(f"Unable to finish login: {e}\n{traceback.format_exc()}")
 
     def download(self, url, check_if_exists=False):
         post_matches = self.post_pattern.findall(url)
