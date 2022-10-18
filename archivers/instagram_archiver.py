@@ -26,8 +26,16 @@ class InstagramArchiver(Archiver):
             try:
                 self.insta.login(config.instagram_config.username, config.instagram_config.
                 password)
+                #TODO: wait for this issue to be fixed https://github.com/instaloader/instaloader/issues/1758
+                self.insta.save_session_to_file(config.instagram_config.session_file)
             except Exception as e:
-                logger.error(f"Unable to finish login: {e}\n{traceback.format_exc()}")
+                logger.error(f"Unable to finish login (retrying from file): {e}\n{traceback.format_exc()}")
+                try:
+                    self.insta.load_session_from_file(config.instagram_config.username, config.instagram_config.session_file)
+                except Exception as e2:
+                    logger.error(f"Unable to login from session file: {e2}\n{traceback.format_exc()}")
+
+
 
     def download(self, url, check_if_exists=False):
         post_matches = self.post_pattern.findall(url)

@@ -185,7 +185,8 @@ class Config:
         if "instagram" in secrets:
             self.instagram_config = InstagramConfig(
                 username=secrets["instagram"]["username"],
-                password=secrets["instagram"]["password"]
+                password=secrets["instagram"]["password"],
+                session_file=secrets["instagram"].get("session_file", "instaloader.session")
             )
         else:
             self.instagram_config = None

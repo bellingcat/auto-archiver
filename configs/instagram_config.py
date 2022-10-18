@@ -6,3 +6,4 @@ from dataclasses import dataclass
 class InstagramConfig:
     username: str
     password: str
+    session_file: str
