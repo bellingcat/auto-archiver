@@ -31,8 +31,9 @@ def update_sheet(gw, row, url, result: ArchiveResult):
     batch_if_valid('duration', result.duration, str(result.duration))
     batch_if_valid('screenshot', result.screenshot)
     batch_if_valid('hash', result.hash)
-    batch_if_valid('wacz', result.wacz)
-    batch_if_valid('replaywebpage', f'https://replayweb.page/?source={quote(result.wacz)}#view=pages&url={quote(url)}')
+    if result.wacz is not None:
+        batch_if_valid('wacz', result.wacz)
+        batch_if_valid('replaywebpage', f'https://replayweb.page/?source={quote(result.wacz)}#view=pages&url={quote(url)}')
 
     if result.timestamp is not None:
         if type(result.timestamp) == int:

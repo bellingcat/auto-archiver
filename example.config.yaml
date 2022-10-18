@@ -103,10 +103,12 @@ execution:
     window_width: 1400
     window_height: 2000
 
-  # optional browsertrix profile file (see https://github.com/webrecorder/browsertrix-crawler#creating-and-using-browser-profiles)
+  # optional browsertrix configuration (for profile generation see https://github.com/webrecorder/browsertrix-crawler#creating-and-using-browser-profiles)
+  # browsertrix will capture a WACZ archive of the page which can then be seen as the original on replaywebpage
   browsertrix:
+    enabled: true # defaults to false
     profile: "./browsertrix/crawls/profile.tar.gz"
-    timeout_seconds: 90 # defaults to 90s
+    timeout_seconds: 120 # defaults to 90s
   # puts execution logs into /logs folder, defaults to false
   save_logs: true
   # custom column names, only needed if different from default, can be overwritten with CMD --col-NAME="VALUE"

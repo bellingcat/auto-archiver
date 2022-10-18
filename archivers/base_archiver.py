@@ -203,6 +203,10 @@ class Archiver(ABC):
         return self.storage.get_cdn_url(key)
 
     def get_wacz(self, url):
+        if not self.browsertrix.enabled:
+            logger.debug(f"Browsertrix WACZ generation is not enabled, skipping.")
+            return 
+
         logger.debug(f"getting wacz for {url}")
         key = self._get_key_from_url(url, ".wacz", append_datetime=True)
         collection = re.sub('[^0-9a-zA-Z]+', '', key.replace(".wacz", ""))
@@ -219,7 +223,8 @@ class Archiver(ABC):
             "--text",
             "--collection", collection,
             "--behaviors", "autoscroll,autoplay,autofetch,siteSpecific",
-            "--behaviorTimeout", str(self.browsertrix.timeout_seconds)
+            "--behaviorTimeout", str(self.browsertrix.timeout_seconds),
+            "--timeout", str(self.browsertrix.timeout_seconds)
         ]
 
         if not os.path.isdir(browsertrix_home):

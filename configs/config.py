@@ -86,6 +86,7 @@ class Config:
         if len(browsertrix_profile := browsertrix_configs.get("profile", "")):
             browsertrix_profile = os.path.abspath(browsertrix_profile)
         self.browsertrix_config = BrowsertrixConfig(
+            enabled=bool(browsertrix_configs.get("enabled", False)),
             profile=browsertrix_profile,
             timeout_seconds=browsertrix_configs.get("timeout_seconds", "90")
         )
