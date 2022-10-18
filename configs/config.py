@@ -12,6 +12,7 @@ from .selenium_config import SeleniumConfig
 from .vk_config import VkConfig
 from .twitter_api_config import TwitterApiConfig
 from .browsertrix_config import BrowsertrixConfig
+from .instagram_config import InstagramConfig
 from storages import S3Config, S3Storage, GDStorage, GDConfig, LocalStorage, LocalConfig
 
 
@@ -179,6 +180,16 @@ class Config:
         else:
             self.vk_config = None
             logger.debug(f"'vk' key not present in the {self.config_file=}")
+
+        # instagram config
+        if "instagram" in secrets:
+            self.instagram_config = InstagramConfig(
+                username=secrets["instagram"]["username"],
+                password=secrets["instagram"]["password"]
+            )
+        else:
+            self.instagram_config = None
+            logger.debug(f"'instagram' key not present in the {self.config_file=}")
 
         del self.config["secrets"]  # delete to prevent leaks
 

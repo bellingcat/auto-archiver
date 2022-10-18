@@ -1,6 +1,4 @@
-import os, re
-
-import html
+import os, re, html
 from loguru import logger
 from telethon.sync import TelegramClient
 from telethon.errors import ChannelInvalidError

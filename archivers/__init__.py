@@ -8,3 +8,4 @@ from .youtubedl_archiver import YoutubeDLArchiver
 from .twitter_archiver import TwitterArchiver
 from .vk_archiver import VkArchiver
 from .twitter_api_archiver import TwitterApiArchiver
+from .instagram_archiver import InstagramArchiver

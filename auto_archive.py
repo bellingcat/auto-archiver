@@ -4,8 +4,8 @@ from loguru import logger
 from slugify import slugify
 from urllib.parse import quote
 
-from archivers import TelethonArchiver, TelegramArchiver, TiktokArchiver, YoutubeDLArchiver, TwitterArchiver, TwitterApiArchiver, VkArchiver, WaybackArchiver, ArchiveResult, Archiver
-from utils import GWorksheet, mkdir_if_not_exists, expand_url
+from archivers import TelethonArchiver, TelegramArchiver, TiktokArchiver, YoutubeDLArchiver, TwitterArchiver, TwitterApiArchiver, VkArchiver, WaybackArchiver, InstagramArchiver, ArchiveResult, Archiver
+from utils import GWorksheet, expand_url
 from configs import Config
 from storages import Storage
 
@@ -111,6 +111,7 @@ def process_sheet(c: Config):
                     TelethonArchiver(storage, c),
                     TiktokArchiver(storage, c),
                     TwitterApiArchiver(storage, c),
+                    InstagramArchiver(storage, c),
                     YoutubeDLArchiver(storage, c),
                     TelegramArchiver(storage, c),
                     TwitterArchiver(storage, c),

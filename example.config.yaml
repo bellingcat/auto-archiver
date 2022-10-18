@@ -67,6 +67,11 @@ secrets:
     username: "phone number or email"
     password: "password"
 
+  # instagram  credentials
+  instagram:
+    username: "username"
+    password: "password"
+
   google_sheets:
     # local filename: defaults to service_account.json, see https://gspread.readthedocs.io/en/latest/oauth2.html#for-bots-using-service-account
     service_account: "service_account.json"

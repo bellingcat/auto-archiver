@@ -22,3 +22,4 @@ credentials.json
 secrets/*
 browsertrix/*
 browsertrix-tmp/*
+instaloader/*
