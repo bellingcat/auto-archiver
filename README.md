@@ -168,6 +168,7 @@ graph TD
     A(Archiver) -->|parent of| B(TelethonArchiver)
     A -->|parent of| C(TiktokArchiver)
     A -->|parent of| D(YoutubeDLArchiver)
+    A -->|parent of| D(InstagramArchiver)
     A -->|parent of| E(TelegramArchiver)
     A -->|parent of| F(TwitterArchiver)
     A -->|parent of| G(VkArchiver)
