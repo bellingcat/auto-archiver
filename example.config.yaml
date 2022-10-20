@@ -134,6 +134,6 @@ execution:
     screenshot: screenshot
     hash: hash
     wacz: wacz
-    # if you want the replaypage to work, make sure to allow CORS on your bucket
+    # if you want the replaypage to work, make sure to allow CORS on your bucket, see https://replayweb.page/docs/embedding#cors-restrictions
     replaywebpage: replaywebpage
 

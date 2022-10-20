@@ -18,8 +18,8 @@ You also need:
 3. [firefox](https://www.mozilla.org/en-US/firefox/new/) and [geckodriver](https://github.com/mozilla/geckodriver/releases) on a path folder like `/usr/local/bin`. 
 4. [fonts-noto](https://fonts.google.com/noto) to deal with multiple unicode characters during selenium/geckodriver's screenshots: `sudo apt install fonts-noto -y`. 
 5. Internet Archive credentials can be retrieved from https://archive.org/account/s3.php.
-6. If you would like to take archival [WACZ](https://specs.webrecorder.net/wacz/1.1.1/) snapshots using [browsertrix-crawler](https://github.com/webrecorder/browsertrix-crawler)
-   in addition to screenshots you will need to install [Docker](https://www.docker.com/).
+6. If you would like to take archival [WACZ](https://specs.webrecorder.net/wacz/1.1.1/) snapshots using [browsertrix-crawler](https://github.com/webrecorder/browsertrix-crawler) in addition to screenshots you will need to install [Docker](https://www.docker.com/). 
+   1. To improve the websites browsertrix can archive you can also create a custom profile by running `docker run -p 9222:9222 -p 9223:9223 -v $PWD/browsertrix/crawls/profiles:/crawls/profiles/ -it webrecorder/browsertrix-crawler create-login-profile --interactive --url "https://youtube.com"`, going to [http://localhost:9223/](http://localhost:9223/) and accepting the cookies prompt on youtube, and then navigating to other websites and logging in as per your needs, so as to access more publicly blocked content, and then specifying the created `profile.tar.gz` in your config file under `execution.browsertrix.profile`. 
 
 ### Configuration file
 Configuration is done via a config.yaml file (see [example.config.yaml](example.config.yaml)) and some properties of that file can be overwritten via command line arguments. Here is the current result from running the `python auto_archive.py --help`:
