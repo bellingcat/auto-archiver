@@ -214,6 +214,7 @@ class Archiver(ABC):
         browsertrix_home = os.path.join(os.getcwd(), "browsertrix-tmp")
         cmd = [
             "docker", "run",
+            "--rm", # delete container once it has completed running
             "-v", f"{browsertrix_home}:/crawls/",
             # "-it", # this leads to "the input device is not a TTY"
             "webrecorder/browsertrix-crawler", "crawl",
@@ -240,14 +241,6 @@ class Archiver(ABC):
         except Exception as e:
             logger.error(f"WACZ generation failed: {e}")
             return
-        try:
-            # TODO: is there a better way to manage the containers, like reusing?
-            # https://github.com/bellingcat/auto-archiver/issues/65
-            cmd_clean_docker = 'docker rm $(docker ps -a -q --filter ancestor=webrecorder/browsertrix-crawler --format="{{.ID}}")'
-            logger.info(f"Cleaning docker containers: {cmd_clean_docker}")
-            os.system(cmd_clean_docker)
-        except Exception as e:
-            logger.error(f"Could not clean dangling docker containers: {e}")
 
         filename = os.path.join(browsertrix_home, "collections", collection, f"{collection}.wacz")
 
