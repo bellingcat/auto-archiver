@@ -15,16 +15,15 @@ RUN pip install --upgrade pip && \
 
 
 # install docker for WACZ
-RUN curl -fsSL https://get.docker.com | sh
+# TODO: currently disabled see https://github.com/bellingcat/auto-archiver/issues/66
+# RUN curl -fsSL https://get.docker.com | sh
 
 # RUN git clone https://github.com/bellingcat/auto-archiver
 # TODO: avoid copying unnecessary files, including .git
-# COPY ./src/ .
 COPY Pipfile Pipfile.lock ./
 RUN pipenv install --python=3.10 --system --deploy
-# TODO: to avoid copying pipfile lock it should be on the .dockerignore
 ENV IS_DOCKER=1
-COPY . . 
+COPY ./src/ . 
 
 # CMD ["pipenv", "run", "python", "auto_archive.py"]
 ENTRYPOINT ["python", "auto_archive.py"]
