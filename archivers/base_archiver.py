@@ -244,8 +244,13 @@ class Archiver(ABC):
 
         filename = os.path.join(browsertrix_home, "collections", collection, f"{collection}.wacz")
 
-        self.storage.upload(filename, key, extra_args={
+        # do not crash if upload fails
+        try:
+            self.storage.upload(filename, key, extra_args={
                             'ACL': 'public-read', 'ContentType': 'application/zip'})
+        except FileNotFoundError as e:
+            logger.warning(f"Unable to locate and upload WACZ  {filename=}, {key=}")
+
 
         # clean up the local browsertrix files
         try:
