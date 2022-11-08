@@ -37,6 +37,7 @@ class Archiver(ABC):
         self.driver = config.webdriver
         self.hash_algorithm = config.hash_algorithm
         self.browsertrix = config.browsertrix_config
+        self.is_docker = config.is_docker
 
     def __str__(self):
         return self.__class__.__name__
@@ -205,6 +206,11 @@ class Archiver(ABC):
     def get_wacz(self, url):
         if not self.browsertrix.enabled:
             logger.debug(f"Browsertrix WACZ generation is not enabled, skipping.")
+            return 
+        if self.is_docker:
+            # TODO: figure out support for browsertrix in docker
+            # see: https://github.com/bellingcat/auto-archiver/issues/66
+            logger.warning(f"Browsertrix WACZ is not yet supported when using DOCKER.")
             return 
 
         logger.debug(f"getting wacz for {url}")
