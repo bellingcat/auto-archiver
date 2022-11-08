@@ -34,6 +34,7 @@ class Config:
     def __init__(self):
         self.parser = self.get_argument_parser()
         self.folder = ""
+        self.is_docker = bool(os.environ.get("IS_DOCKER", 0))
 
     def parse(self):
         self.args = self.parser.parse_args()
@@ -152,7 +153,8 @@ class Config:
             self.telegram_config = TelethonConfig(
                 api_id=secrets["telegram"]["api_id"],
                 api_hash=secrets["telegram"]["api_hash"],
-                bot_token=secrets["telegram"].get("bot_token", None)
+                bot_token=secrets["telegram"].get("bot_token", None),
+                session_file=secrets["telegram"].get("session_file", "./anon")
             )
         else:
             self.telegram_config = None
@@ -175,7 +177,8 @@ class Config:
         if "vk" in secrets:
             self.vk_config = VkConfig(
                 username=secrets["vk"]["username"],
-                password=secrets["vk"]["password"]
+                password=secrets["vk"]["password"],
+                session_file=secrets["vk"].get("session_file", "./vk_config.v2.json")
             )
         else:
             self.vk_config = None

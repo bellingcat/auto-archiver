@@ -6,3 +6,4 @@ from dataclasses import dataclass
 class VkConfig:
     username: str
     password: str
+    session_file: str

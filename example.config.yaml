@@ -50,6 +50,8 @@ secrets:
     api_hash: your API hash
     # optional, but allows access to more content such as large videos, talk to @botfather
     bot_token: your bot-token
+    # optional, defaults to ./anon, records the telegram login session for future usage
+    session_file: "secrets/anon"
 
   # twitter configuration - API V2 only
   # if you don't provide credentials the less-effective unofficial TwitterArchiver will be used instead
@@ -66,6 +68,8 @@ secrets:
   vk:
     username: "phone number or email"
     password: "password"
+    # optional, defaults to ./vk_config.v2.json, records VK login session for future usage
+    session_file: "secrets/vk_config.v2.json"
 
   # instagram  credentials
   instagram:
