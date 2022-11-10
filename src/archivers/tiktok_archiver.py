@@ -28,9 +28,9 @@ class TiktokArchiver(Archiver):
 
             if len(media) <= 0:
                 if status == 'already archived':
-                    return ArchiveResult(status='Could not download media, but already archived', cdn_url=self.storage.get_cdn_url(key))
+                    return self.generateArchiveResult(status='Could not download media, but already archived', cdn_url=self.storage.get_cdn_url(key))
                 else:
-                    return ArchiveResult(status='Could not download media')
+                    return self.generateArchiveResult(status='Could not download media')
 
             logger.info(f'downloading video {key=}')
             media[0].download(filename)
@@ -56,17 +56,17 @@ class TiktokArchiver(Archiver):
             cdn_url = self.storage.get_cdn_url(key)
             timestamp = info.create.isoformat() if hasattr(info, "create") else None
 
-            return ArchiveResult(status=status, cdn_url=cdn_url, thumbnail=key_thumb,
+            return self.generateArchiveResult(status=status, cdn_url=cdn_url, thumbnail=key_thumb,
                                  thumbnail_index=thumb_index, duration=getattr(info, "duration", 0), title=getattr(info, "caption", ""),
                                  timestamp=timestamp, hash=hash, screenshot=screenshot, wacz=wacz)
 
         except tiktok_downloader.Except.InvalidUrl as e:
             status = 'Invalid URL'
             logger.warning(f'Invalid URL on {url}  {e}\n{traceback.format_exc()}')
-            return ArchiveResult(status=status)
+            return self.generateArchiveResult(status=status)
 
         except:
             error = traceback.format_exc()
             status = 'Other Tiktok error: ' + str(error)
             logger.warning(f'Other Tiktok error' + str(error))
-            return ArchiveResult(status=status)
+            return self.generateArchiveResult(status=status)

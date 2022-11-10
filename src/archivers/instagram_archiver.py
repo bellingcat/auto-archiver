@@ -52,7 +52,7 @@ class InstagramArchiver(Archiver):
             cdn_url = self.storage.get_cdn_url(key)
             screenshot = self.get_screenshot(url)
             wacz = self.get_wacz(url)
-            return ArchiveResult(status='already archived', cdn_url=cdn_url, screenshot=screenshot, wacz=wacz)
+            return self.generateArchiveResult(status='already archived', cdn_url=cdn_url, screenshot=screenshot, wacz=wacz)
 
         try:
             # process if post
@@ -137,4 +137,4 @@ class InstagramArchiver(Archiver):
             screenshot = self.get_screenshot(url)
             wacz = self.get_wacz(url)
 
-            return ArchiveResult(status=status, cdn_url=page_cdn, title=title, timestamp=date, hash=page_hash, screenshot=screenshot, wacz=wacz)
+            return self.generateArchiveResult(status=status, cdn_url=page_cdn, title=title, timestamp=date, hash=page_hash, screenshot=screenshot, wacz=wacz)

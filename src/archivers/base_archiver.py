@@ -1,8 +1,9 @@
 import os, datetime, shutil, hashlib, time, requests, re, mimetypes, subprocess
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from abc import ABC, abstractmethod
 from urllib.parse import urlparse
 from random import randrange
+from collections import defaultdict
 
 import ffmpeg
 from loguru import logger
@@ -27,6 +28,7 @@ class ArchiveResult:
     screenshot: str = None
     wacz: str = None
     hash: str = None
+    media: list = field(default_factory=list)
 
 class Archiver(ABC):
     name = "default"
@@ -38,6 +40,7 @@ class Archiver(ABC):
         self.hash_algorithm = config.hash_algorithm
         self.browsertrix = config.browsertrix_config
         self.is_docker = config.is_docker
+        self.media = []
 
     def __str__(self):
         return self.__class__.__name__
@@ -48,13 +51,28 @@ class Archiver(ABC):
     @abstractmethod
     def download(self, url, check_if_exists=False): pass
 
+    def generateArchiveResult(self, **kwargs):
+        # remove duplicates
+        if "cdn_url" in kwargs:
+            self.add_to_media(kwargs["cdn_url"], None, kwargs.get("hash"))
+        kwargs["media"] = [dict(t) for t in {tuple(d.items()) for d in self.media}]
+        return ArchiveResult(**kwargs)
+
     def get_netloc(self, url):
         return urlparse(url).netloc
+
+    def add_to_media(self, cdn_url: str, key: str = None, hash: str = None):
+        media_info = {"url": cdn_url, "mime": self._guess_file_type(cdn_url) or "misc"}
+        if key: media_info["key"] = key
+        if hash: media_info["hash"] = hash
+        self.media.append(media_info)
 
     def generate_media_page_html(self, url, urls_info: dict, object, thumbnail=None):
         """
         Generates an index.html page where each @urls_info is displayed
         """
+        for ui in urls_info:
+            self.add_to_media(ui["cdn_url"], ui["key"], ui["hash"])
         page = f'''<html><head><title>{url}</title><meta charset="UTF-8"></head>
             <body>
             <h2>Archived media from {self.name}</h2>
@@ -109,6 +127,8 @@ class Archiver(ABC):
         For a list of media urls, fetch them, upload them
         and call self.generate_media_page_html with them
         """
+        for media_url in urls:
+            self.add_to_media(media_url)
 
         thumbnail = None
         uploaded_media = []
@@ -201,17 +221,20 @@ class Archiver(ABC):
         self.driver.save_screenshot(filename)
         self.storage.upload(filename, key, extra_args={'ACL': 'public-read', 'ContentType': 'image/png'})
 
-        return self.storage.get_cdn_url(key)
+        cdn_url = self.storage.get_cdn_url(key)
+        self.add_to_media(cdn_url, key)
+
+        return cdn_url
 
     def get_wacz(self, url):
         if not self.browsertrix.enabled:
             logger.debug(f"Browsertrix WACZ generation is not enabled, skipping.")
-            return 
+            return
         if self.is_docker:
             # TODO: figure out support for browsertrix in docker
             # see: https://github.com/bellingcat/auto-archiver/issues/66
             logger.warning(f"Browsertrix WACZ is not yet supported when using DOCKER.")
-            return 
+            return
 
         logger.debug(f"getting wacz for {url}")
         key = self._get_key_from_url(url, ".wacz", append_datetime=True)
@@ -220,7 +243,7 @@ class Archiver(ABC):
         browsertrix_home = os.path.join(os.getcwd(), "browsertrix-tmp")
         cmd = [
             "docker", "run",
-            "--rm", # delete container once it has completed running
+            "--rm",  # delete container once it has completed running
             "-v", f"{browsertrix_home}:/crawls/",
             # "-it", # this leads to "the input device is not a TTY"
             "webrecorder/browsertrix-crawler", "crawl",
@@ -253,10 +276,9 @@ class Archiver(ABC):
         # do not crash if upload fails
         try:
             self.storage.upload(filename, key, extra_args={
-                            'ACL': 'public-read', 'ContentType': 'application/zip'})
+                'ACL': 'public-read', 'ContentType': 'application/zip'})
         except FileNotFoundError as e:
             logger.warning(f"Unable to locate and upload WACZ  {filename=}, {key=}")
-
 
         # clean up the local browsertrix files
         try:
@@ -264,7 +286,9 @@ class Archiver(ABC):
         except PermissionError:
             logger.warn(f"Unable to clean up browsertrix-crawler files in {browsertrix_home}")
 
-        return self.storage.get_cdn_url(key)
+        cdn_url = self.storage.get_cdn_url(key)
+        self.add_to_media(cdn_url, key)
+        return cdn_url
 
     def get_thumbnails(self, filename, key, duration=None):
         thumbnails_folder = os.path.splitext(filename)[0] + os.path.sep

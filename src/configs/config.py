@@ -47,6 +47,8 @@ class Config:
         with open(self.config_file, "r", encoding="utf-8") as inf:
             self.config = yaml.safe_load(inf)
 
+        self.url = getattr_or(self.args, "url", '')
+
         # ----------------------EXECUTION - execution configurations
         execution = self.config.get("execution", {})
 
@@ -211,6 +213,7 @@ class Config:
         """
         parser = argparse.ArgumentParser(description='Automatically archive social media posts, videos, and images from a Google Sheets document. The command line arguments will always override the configurations in the provided YAML config file (--config), only some high-level options are allowed via the command line and the YAML configuration file is the preferred method. The sheet must have the "url" and "status" for the archiver to work. ')
 
+        parser.add_argument('--url', action='store', dest='url', help='single URL to archive - to use only via cli.py and not google sheets interaction')
         parser.add_argument('--config', action='store', dest='config', help='the filename of the YAML configuration file (defaults to \'config.yaml\')', default='config.yaml')
         parser.add_argument('--storage', action='store', dest='storage', help='which storage to use [execution.storage in config.yaml]', choices=Config.AVAILABLE_STORAGES)
         parser.add_argument('--sheet', action='store', dest='sheet', help='the name of the google sheets document [execution.sheet in config.yaml]')

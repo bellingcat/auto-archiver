@@ -39,7 +39,7 @@ class WaybackArchiver(Archiver):
 
         if r.status_code != 200:
             logger.warning(f"Internet archive failed with status of {r.status_code}")
-            return ArchiveResult(status="Internet archive failed", screenshot=screenshot, wacz=wacz)
+            return self.generateArchiveResult(status="Internet archive failed", screenshot=screenshot, wacz=wacz)
 
         if 'job_id' not in r.json() and 'message' in r.json():
             return self.custom_retry(r.json(), screenshot=screenshot, wacz=wacz)
@@ -61,7 +61,7 @@ class WaybackArchiver(Archiver):
             retries += 1
 
         if status_r.status_code != 200:
-            return ArchiveResult(status=f"Internet archive failed: check https://web.archive.org/save/status/{job_id}", screenshot=screenshot, wacz=wacz)
+            return self.generateArchiveResult(status=f"Internet archive failed: check https://web.archive.org/save/status/{job_id}", screenshot=screenshot, wacz=wacz)
 
         status_json = status_r.json()
         if status_json['status'] != 'success':
@@ -77,7 +77,7 @@ class WaybackArchiver(Archiver):
                 title = 'Could not get title'
         except:
             title = "Could not get title"
-        self.seen_urls[url] = ArchiveResult(status='success', cdn_url=archive_url, title=title, screenshot=screenshot, wacz=wacz)
+        self.seen_urls[url] = self.generateArchiveResult(status='success', cdn_url=archive_url, title=title, screenshot=screenshot, wacz=wacz)
         return self.seen_urls[url]
 
     def custom_retry(self, json_data, **kwargs):
@@ -86,4 +86,4 @@ class WaybackArchiver(Archiver):
             return self.signal_retry_in(**kwargs)
         if "this host has been already captured" in str(json_data).lower():
             return self.signal_retry_in(**kwargs, min_seconds=86400, max_seconds=129600)  # 24h to 36h later
-        return ArchiveResult(status=f"Internet archive failed: {json_data}", **kwargs)
+        return self.generateArchiveResult(status=f"Internet archive failed: {json_data}", **kwargs)

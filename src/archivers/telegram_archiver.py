@@ -47,7 +47,7 @@ class TelegramArchiver(Archiver):
             time_elements = s.find_all('time')
             timestamp = time_elements[0].get('datetime') if len(time_elements) else None
 
-            return ArchiveResult(status="success", cdn_url=page_cdn, screenshot=screenshot, hash=page_hash, thumbnail=thumbnail, timestamp=timestamp, wacz=wacz)
+            return self.generateArchiveResult(status="success", cdn_url=page_cdn, screenshot=screenshot, hash=page_hash, thumbnail=thumbnail, timestamp=timestamp, wacz=wacz)
 
         video_url = video.get('src')
         video_id = video_url.split('/')[-1].split('?')[0]
@@ -85,5 +85,5 @@ class TelegramArchiver(Archiver):
         os.remove(filename)
 
         cdn_url = self.storage.get_cdn_url(key)
-        return ArchiveResult(status=status, cdn_url=cdn_url, thumbnail=key_thumb, thumbnail_index=thumb_index,
+        return self.generateArchiveResult(status=status, cdn_url=cdn_url, thumbnail=key_thumb, thumbnail_index=thumb_index,
                              duration=duration, title=original_url, timestamp=s.find_all('time')[1].get('datetime'), hash=hash, screenshot=screenshot, wacz=wacz)

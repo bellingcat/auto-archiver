@@ -40,7 +40,7 @@ class TwitterApiArchiver(TwitterArchiver):
             # only s3 storage supports storage.exists as not implemented on gd
             cdn_url = self.storage.get_cdn_url(key)
             screenshot = self.get_screenshot(url)
-            return ArchiveResult(status='already archived', cdn_url=cdn_url, title=tweet.data.text, timestamp=timestamp, screenshot=screenshot)
+            return self.generateArchiveResult(status='already archived', cdn_url=cdn_url, title=tweet.data.text, timestamp=timestamp, screenshot=screenshot)
 
         urls = []
         if tweet.includes:
@@ -72,4 +72,4 @@ class TwitterApiArchiver(TwitterArchiver):
         screenshot = self.get_screenshot(url)
         wacz = self.get_wacz(url)
         page_cdn, page_hash, thumbnail = self.generate_media_page(urls, url, output)
-        return ArchiveResult(status="success", cdn_url=page_cdn, screenshot=screenshot, hash=page_hash, thumbnail=thumbnail, timestamp=timestamp, title=tweet.data.text, wacz=wacz)
+        return self.generateArchiveResult(status="success", cdn_url=page_cdn, screenshot=screenshot, hash=page_hash, thumbnail=thumbnail, timestamp=timestamp, title=tweet.data.text, wacz=wacz)
