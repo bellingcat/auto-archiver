@@ -8,14 +8,14 @@ steps:
     - twitter
     - instagram
     - webarchive # this way it runs as a failsafe only
-  enrichments:
+  enrichers:
     - screenshot
     - wacz
     - webarchive # this way it runs for every case, webarchive extends archiver and enrichment
     - thumbnails
   formatters:
     - HTMLFormater
-    - PDFFormater
+    - PdfFormater
   storages:
     - local_storage
     - s3
@@ -26,6 +26,8 @@ steps:
 
 
 configurations:
+  global:
+    - save_logs: False
   gsheets_feeder:
     - sheet: "Auto archiver"
     - header: "" # defaults to 1 in GSheetsFeeder
@@ -36,7 +38,7 @@ configurations:
     token: "here"
   screenshot:
     width: 1280
-    height: 720
+    height: 720000
   wacz:
     profile: secrets/profile.tar.gz
   webarchive:

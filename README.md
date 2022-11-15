@@ -4,15 +4,40 @@ Read the [article about Auto Archiver on bellingcat.com](https://www.bellingcat.
 
 Python script to automatically archive social media posts, videos, and images from a Google Sheets document. Uses different archivers depending on the platform, and can save content to local storage, S3 bucket (Digital Ocean Spaces, AWS, ...), and Google Drive. The Google Sheets where the links come from is updated with information about the archived content. It can be run manually or on an automated basis.
 
+
+# Requirement configurations
+# Running with docker
+# Running without docker
+
+
+
+### Setup checklist
+Use this to make sure you help making sure you did all the required steps:
+* [ ] you have a `/secrets` folder with all your configuration files including
+  * [ ] a configuration file eg: `config.yaml` pointing to the correct location of other files
+  * [ ] you have a `service_account.json` 
+  * [ ] (optional for telegram) a `anon.session` which appears after the 1st run to avoid logging into the 
+  * [ ] (optional for VK) a `vk_config.v2.json`
+  * [ ] (optional for using GoogleDrive storage) `gd-token.json`
+  * [ ] (optional for instagram) `instaloader.session` file which appears after the 1st run and login in telegram
+  * [ ] (optional for browsertrix) `profile.tar.gz` file
+
 ## Setup
+### Always required
+1. [A Google Service account is necessary for use with `gspread`.](https://gspread.readthedocs.io/en/latest/oauth2.html#for-bots-using-service-account) Credentials for this account should be stored in `service_account.json`, in the same directory as the script.
+2. A configuration file, see [Configuration file](#configuration-file).
 
-Check this [tutorial video](https://youtu.be/VfAhcuV2tLQ).
+### With docker image
+[Docker](https://www.docker.com/) is like a virtual machine program that isolates all the installation dependencies needed for the auto-archiver and it should be the only thing you need to install.
 
+<!-- TODO add further instructions for docker -->
 
+### Without docker
+Check this [tutorial video](https://youtu.be/VfAhcuV2tLQ) for setup without the docker image.
 
 If you are using `pipenv` (recommended), `pipenv install` is sufficient to install Python prerequisites.
 
-You also need:
+You need to install the following requirements on your machine:
 1. [A Google Service account is necessary for use with `gspread`.](https://gspread.readthedocs.io/en/latest/oauth2.html#for-bots-using-service-account) Credentials for this account should be stored in `service_account.json`, in the same directory as the script.
 2. [ffmpeg](https://www.ffmpeg.org/) must also be installed locally for this tool to work. 
 3. [firefox](https://www.mozilla.org/en-US/firefox/new/) and [geckodriver](https://github.com/mozilla/geckodriver/releases) on a path folder like `/usr/local/bin`. 
@@ -22,7 +47,7 @@ You also need:
    1. To improve the websites browsertrix can archive you can also create a custom profile by running `docker run -p 9222:9222 -p 9223:9223 -v $PWD/browsertrix/crawls/profiles:/crawls/profiles/ -it webrecorder/browsertrix-crawler create-login-profile --interactive --url "https://youtube.com"`, going to [http://localhost:9223/](http://localhost:9223/) and accepting the cookies prompt on youtube, and then navigating to other websites and logging in as per your needs, so as to access more publicly blocked content, and then specifying the created `profile.tar.gz` in your config file under `execution.browsertrix.profile`. 
 
 ### Configuration file
-Configuration is done via a config.yaml file (see [example.config.yaml](example.config.yaml)) and some properties of that file can be overwritten via command line arguments. Here is the current result from running the `python auto_archive.py --help`:
+Configuration is done via a config.yaml file (see [example.config.yaml](example.config.yaml)) and some properties of that file can be overwritten via command line arguments. Make a copy of that file and rename it to your liking eg. `config-test.yaml` . Here is the current result from running the `python auto_archive.py --help`:
 
 <details><summary><code>python auto_archive.py --help</code></summary>
 
@@ -150,6 +175,15 @@ With this configuration, the archiver should archive and store all media added t
 To make it easier to set up new auto-archiver sheets, the auto-auto-archiver will look at a particular sheet and run the auto-archiver on every sheet name in column A, starting from row 11. (It starts here to support instructional text in the first rows of the sheet, as shown below.) You can simply use your default config as for `auto_archiver.py` but use `--sheet` to specify the name of the sheet that lists the names of sheets to archive.It must be shared with the same service account.
 
 ![A screenshot of a Google Spreadsheet configured to show instructional text and a list of sheet names to check with auto-archiver.](docs/auto-auto.png)
+
+# Docker development
+* working with docker locally:
+  * `docker build . -t auto-archiver` to build a local image
+  * `docker run --rm -v $PWD/secrets:/app/secrets aa --config secrets/config.yaml`
+    * to use local archive, also create a volume `-v` for it by adding `-v $PWD/local_archive:/app/local_archive`
+* release to docker hub
+  * `docker image tag auto-archiver bellingcat/auto-archiver:latest`
+  * `docker push bellingcat/auto-archiver` (validate [here]())
 
 # Code structure
 Code is split into functional concepts:

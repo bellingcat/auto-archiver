@@ -1,5 +1,5 @@
-from typing import Union, Dict
 from __future__ import annotations
+from typing import Union, Dict
 from dataclasses import dataclass
 
 """
@@ -39,31 +39,31 @@ Cisticola considerations:
 2. So the auto-archiver becomes like a puzzle and fixes to Cisticola scrapers can immediately benefit it, and contributions are focused on a single source or scraping
 """
 
-@dataclass
-class Metadata:
-    # does not handle files, only primitives
-    # the only piece of logic to handle files is the archiver, enricher, and storage
-    status: str
-    # title: str
-    # url: str
-    # hash: str
-    main_file: Metadata
-    metadata: Dict[str, Metadata]
+# @dataclass
+# class Metadata:
+#     # does not handle files, only primitives
+#     # the only piece of logic to handle files is the archiver, enricher, and storage
+#     status: str
+#     # title: str
+#     # url: str
+#     # hash: str
+#     main_file: Metadata
+#     metadata: Dict[str, Metadata]
 
-    @staticmethod
-    def merge(left, right : Metadata, overwrite_left=True) -> Metadata:
-        # should return a merged version of the Metadata
-        # will work for archived() and enriched()
-        # what if 2 metadatas contain the same keys? only one can remain! : overwrite_left
-        pass
+#     @staticmethod
+#     def merge(left, right : Metadata, overwrite_left=True) -> Metadata:
+#         # should return a merged version of the Metadata
+#         # will work for archived() and enriched()
+#         # what if 2 metadatas contain the same keys? only one can remain! : overwrite_left
+#         pass
 
-    def get(self, key) -> Union[Metadata, str]:
-        # goes through metadata and returns the Metadata available
-        pass
+#     def get(self, key) -> Union[Metadata, str]:
+#         # goes through metadata and returns the Metadata available
+#         pass
 
-    def as_json(self) -> str:
-        # converts all metadata and data into JSON
-        pass
+#     def as_json(self) -> str:
+#         # converts all metadata and data into JSON
+#         pass
 
 
 """
@@ -116,27 +116,27 @@ class ArchivingOrchestrator:
         # where does that update/processing happen? in config.py
         # reflection for Archiver to know wihch child classes it has? use Archiver.__subclasses__
         self.archivers = [
-            Archiver.init(a, config.get(a))
+            Archiver.init(a, config)
             for a in config.archivers
         ]
 
-        self.enrichments = [
-            Enrichment.init(e, config.get(e))
-            for e in config.enrichments
+        self.enrichers = [
+            Enricher.init(e, config)
+            for e in config.enrichers
         ]
 
         self.formatters = [
-            Formatter.init(f, config.get(f))
+            Formatter.init(f, config)
             for f in config.formatters
         ]
 
         self.storages = [
-            Storage.init(s, config.get(s))
+            Storage.init(s, config)
             for s in config.storages
         ]
 
         self.databases = [
-            Database.init(f, config.get(f))
+            Database.init(f, config)
             for f in config.formatters
         ]
 
@@ -192,11 +192,11 @@ class ArchivingOrchestrator:
 
         # what if an archiver returns multiple entries and one is to be part of HTMLgenerator?
         # should it call the HTMLgenerator as if it's not an enrichment?
-        # eg: if it is enable: generates an HTML with all the returned media, should it include enrichments? yes
+        # eg: if it is enable: generates an HTML with all the returned media, should it include enrichers? yes
         # then how to execute it last? should there also be post-processors? are there other examples?
         # maybe as a PDF? or a Markdown file
         # side captures: screenshot, wacz, webarchive, thumbnails, HTMLgenerator
-        for e in enrichments:
+        for e in enrichers:
             result.update(e.enrich(result))
 
         # formatters, enrichers, and storages will sometimes look for specific properties: eg <li>Screenshot: <img src="{res.get("screenshot")}"> </li>
