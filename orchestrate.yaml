@@ -10,9 +10,9 @@ steps:
     - webarchive # this way it runs as a failsafe only
   enrichers:
     - screenshot
-    - wacz
-    - webarchive # this way it runs for every case, webarchive extends archiver and enrichment
-    - thumbnails
+    # - wacz
+    # - webarchive # this way it runs for every case, webarchive extends archiver and enrichment
+    # - thumbnails
   formatters:
     - HTMLFormater
     - PdfFormater
@@ -29,10 +29,32 @@ configurations:
   global:
     - save_logs: False
   gsheets_feeder:
-    - sheet: "Auto archiver"
-    - header: "" # defaults to 1 in GSheetsFeeder
-    - service_account: "secrets/service_account.json"
+    sheet: auto-archiver-test
+    header: 2 # defaults to 1 in GSheetsFeeder
+    service_account: "secrets/service_account.json"
+    allow_worksheets: "aa-refactor-tests"
+    block_worksheets: "blocked,test-cases-008"
+    columns:
+        'url': 'link'
+        'status': 'archive status'
+        'folder': 'destination folder'
+        'archive': 'archive location'
+        'date': 'archive date'
+        'thumbnail': 'thumbnail'
+        'thumbnail_index': 'thumbnail index'
+        'timestamp': 'upload timestamp'
+        'title': 'upload title'
+        'duration': 'duration'
+        'screenshot': 'screenshot'
+        'hash': 'hash'
+        'wacz': 'wacz'
+        'replaywebpage': 'replaywebpage'
   tiktok:
+    api_keys:
+      - username: 1
+        password: 2
+      - username: 3
+        password: 4
     username: "abc"
     password: "123"
     token: "here"

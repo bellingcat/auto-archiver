@@ -11,8 +11,7 @@ class Util(Step, ABC):
     def __init__(self, config: dict) -> None:
         Step.__init__(self)
         
-
-        # only for typing...
+    # only for typing...
     def init(name: str, config: dict) -> Util:
         return super().init(name, config, Util)
 

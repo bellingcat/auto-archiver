@@ -17,7 +17,7 @@ class TelethonArchiver(Archiver):
         super().__init__(storage, config)
         if config.telegram_config:
             c = config.telegram_config
-            self.client = TelegramClient("./anon", c.api_id, c.api_hash)
+            self.client = TelegramClient("./anon.session", c.api_id, c.api_hash)
             self.bot_token = c.bot_token
 
     def _get_media_posts_in_group(self, chat, original_post, max_amp=10):

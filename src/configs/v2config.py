@@ -27,8 +27,10 @@ class ConfigV2:
 
     def __init__(self) -> None:
         self.defaults = {}
+        self.cli_ops = {}
         self.config = {}
 
+    # TODO: make this work for nested props like gsheets_feeder.columns.url = "URL"
     def parse(self):
         # 1. parse CLI values
         parser = argparse.ArgumentParser(
@@ -41,27 +43,15 @@ class ConfigV2:
 
         for configurable in self.configurable_parents:
             child: Step
-            # print(f"{configurable=}")
             for child in configurable.__subclasses__():
-                # print(f"{child=} {child.configs()=}")
-
                 for config, details in child.configs().items():
-                    print(config, details)
                     assert "." not in child.name, f"class prop name cannot contain dots('.'): {child.name}"
                     assert "." not in config, f"config property cannot contain dots('.'): {config}"
-                    if (is_nested := type(details["default"]) == dict):
-                        for subconfig, subdefault in details["default"].items():
-                            assert "." not in subconfig, f"config subproperty cannot contain dots('.'): {subconfig}"
-                            config_path = f"{child.name}.{config}.{subconfig}"
-                            parser.add_argument(f'--{config_path}', action='store', dest=config_path, help=details['help'] + f"({subconfig})")
-                            self.defaults[config_path] = subdefault
-
                     config_path = f"{child.name}.{config}"
-                    print(config_path)
+                    parser.add_argument(f'--{config_path}', action='store', dest=config_path, help=details['help'])
                     self.defaults[config_path] = details["default"]
-                    if not is_nested:
-                        # nested cannot be directly set on the CLI
-                        parser.add_argument(f'--{config_path}', action='store', dest=config_path, help=details['help'])
+                    if "cli_set" in details:
+                        self.cli_ops[config_path] = details["cli_set"]
 
         args = parser.parse_args()
 
@@ -73,31 +63,14 @@ class ConfigV2:
         # 3. CONFIGS: decide value with priority: CLI >> config.yaml >> default
         self.config = defaultdict(dict)
         for config_path, default in self.defaults.items():
-            config_steps = config_path.split(".")
-            if len(config_steps) == 2:  # not nested
-                child, config = tuple(config_steps)
-                val = getattr(args, config_path, None)
-                if val is None:
-                    val = self.yaml_config.get("configurations", {}).get(child, {}).get(config, default)
-                # self.config[child][config] = val
-
-            elif len(config_steps) == 3:  # nested
-                child, config, subconfig = tuple(config_steps)
-                val = getattr(args, config_path)
-                if config not in self.config[child]:
-                    self.config[child][config] = {}
-                if val is None:
-                    val = self.yaml_config.get("configurations", {}).get(child, {}).get(config, {}).get(subconfig, default)
-                print(child, config, subconfig, val)
-                self.config[child][config][subconfig] = val
-
-            # child, config = tuple(config_path.split("."))
-            # # print(config_path)
-            # val = getattr(args, config_path)
-            # # print(child, config, val)
-            # if val is None:
-            #     val = self.yaml_config.get("configurations", {}).get(child, {}).get(config, default)
-            # self.config[child][config] = val
+            child, config = tuple(config_path.split("."))
+            val = getattr(args, config_path)
+            if val is not None and config_path in self.cli_ops:
+                val = self.cli_ops[config_path](val, default)
+            if val is None:
+                val = self.yaml_config.get("configurations", {}).get(child, {}).get(config, default)
+            # print(child, config, val)
+            self.config[child][config] = val
         self.config = dict(self.config)
 
         # 4. STEPS: read steps and validate they exist
@@ -105,11 +78,12 @@ class ConfigV2:
         assert "archivers" in steps, "your configuration steps are missing the archivers property"
         assert "storages" in steps, "your configuration steps are missing the storages property"
 
-        print("config.py", self.config)
+        # print("config.py", self.config)
 
         self.feeder = Feeder.init(steps.get("feeder", "cli_feeder"), self.config)
         self.enrichers = [Enricher.init(e, self.config) for e in steps.get("enrichers", [])]
 
+        print("feeder", self.feeder)
         print("enrichers", [e for e in self.enrichers])
 
     def validate(self):

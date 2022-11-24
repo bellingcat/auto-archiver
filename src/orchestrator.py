@@ -2,6 +2,8 @@ from __future__ import annotations
 from typing import Union, Dict
 from dataclasses import dataclass
 
+from enrichers.enricher import Enricher
+
 """
 how not to couple the different pieces of logic
 due to the use of constants for the metadata keys?
@@ -110,49 +112,47 @@ class ArchivingOrchestrator:
     def __init__(self, config) -> None:
         # in config.py we should test that the archivers exist and log mismatches (blocking execution)
         # identify each formatter, storage, database, etc
-        self.feeder = Feeder.init(config.feeder, config.get(config.feeder))
+        # self.feeder = Feeder.init(config.feeder, config.get(config.feeder))
         
         # Is it possible to overwrite config.yaml values? it could be useful: share config file and modify gsheets_feeder.sheet via CLI
         # where does that update/processing happen? in config.py
         # reflection for Archiver to know wihch child classes it has? use Archiver.__subclasses__
-        self.archivers = [
-            Archiver.init(a, config)
-            for a in config.archivers
-        ]
+        # self.archivers = [
+        #     Archiver.init(a, config)
+        #     for a in config.archivers
+        # ]
+        self.feeder = config.feeder
+        self.enrichers = config.enrichers
 
-        self.enrichers = [
-            Enricher.init(e, config)
-            for e in config.enrichers
-        ]
+        # self.formatters = [
+        #     Formatter.init(f, config)
+        #     for f in config.formatters
+        # ]
 
-        self.formatters = [
-            Formatter.init(f, config)
-            for f in config.formatters
-        ]
+        # self.storages = [
+        #     Storage.init(s, config)
+        #     for s in config.storages
+        # ]
 
-        self.storages = [
-            Storage.init(s, config)
-            for s in config.storages
-        ]
-
-        self.databases = [
-            Database.init(f, config)
-            for f in config.formatters
-        ]
+        # self.databases = [
+        #     Database.init(f, config)
+        #     for f in config.formatters
+        # ]
 
         # these rules are checked in config.py
-        assert len(archivers) > 1, "there needs to be at least one Archiver"
+        # assert len(archivers) > 1, "there needs to be at least one Archiver"
 
-    def feed(self, feeder: Feeder) -> list(ArchiveResult):
-        for next in feeder:
-            self.archive(next)
+    def feed(self) -> list(ArchiveResult):
+        for url in self.feeder:
+            print("ARCHIVING", url)
+            # self.archive(url)
             # how does this handle the parameters like folder which can be different for each archiver?
             # the storage needs to know where to archive!!
             # solution: feeders have context: extra metadata that they can read or ignore, 
             # all of it should have sensible defaults (eg: folder)
             # default feeder is a list with 1 element
 
-    def archive(url) -> Union[ArchiveResult, None]:
+    def archive(self, url) -> Union[ArchiveResult, None]:
         url = clear_url(url)
         result = Metadata(url=url)
 

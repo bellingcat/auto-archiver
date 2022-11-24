@@ -9,7 +9,8 @@ class Enricher(Step, ABC):
     name = "enricher"
 
     def __init__(self, config: dict) -> None:
-        Step.__init__(self)
+        # without this STEP.__init__ is not called
+        super().__init__(config)
         
 
     # only for typing...
