@@ -2,7 +2,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from abc import abstractmethod
 # from metadata import Metadata
-from step import Step
+from steps.step import Step
 
 
 @dataclass

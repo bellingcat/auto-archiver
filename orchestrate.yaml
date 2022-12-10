@@ -3,11 +3,11 @@ steps:
   # a feeder could be in an "infinite loop" for example: gsheets_infinite feeder which holds-> this could be an easy logic addiction by modifying for each to while not feeder.done() if it becomes necessary
   feeder: gsheets_feeder # default -> only expects URL from CLI
   archivers: # order matters
-    - tiktok
     - telethon
-    - twitter
-    - instagram
-    - webarchive # this way it runs as a failsafe only
+    # - tiktok
+    # - twitter
+    # - instagram
+    # - webarchive # this way it runs as a failsafe only
   enrichers:
     - screenshot
     # - wacz

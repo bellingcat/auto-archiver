@@ -4,7 +4,7 @@ import argparse, yaml
 from dataclasses import dataclass, field
 from typing import List
 from feeders.feeder import Feeder
-from step import Step
+from steps.step import Step
 from utils import Util
 from enrichers import Enricher
 from collections import defaultdict

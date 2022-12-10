@@ -5,15 +5,17 @@ from metadata import Metadata
 from steps.step import Step
 
 @dataclass
-class Util(Step, ABC):
-    name = "util"
+class Database(Step, ABC):
+    name = "database"
 
     def __init__(self, config: dict) -> None:
-        Step.__init__(self)
+        # without this STEP.__init__ is not called
+        super().__init__(config)
         
+
     # only for typing...
-    def init(name: str, config: dict) -> Util:
-        return super().init(name, config, Util)
+    def init(name: str, config: dict) -> Database:
+        return Step.init(name, config, Database)
 
     @abstractmethod
     def enrich(self, item: Metadata) -> Metadata: pass
