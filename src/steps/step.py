@@ -22,10 +22,10 @@ class Step(ABC):
 
     def init(name: str, config: dict, child: Type[Step]) -> Step:
         """
-        cannot find subclasses of child.subclasses
+        looks into direct subclasses of child for name and returns such ab object
+        TODO: cannot find subclasses of child.subclasses
         """
         for sub in child.__subclasses__():
             if sub.name == name:
-                print(sub.name, "CALLING NEW")
                 return sub(config)
         raise ClassFoundException(f"Unable to initialize STEP with {name=}")

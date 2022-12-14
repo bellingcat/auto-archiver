@@ -87,9 +87,11 @@ class TelethonArchiver(Archiverv2):
                     pbar.update()
 
     def download(self, item: Metadata) -> Metadata:
+        """
+        if this url is archivable will download post info and look for other posts from the same group with media.
+        can handle private/public channels
+        """
         url = item.get_url()
-
-        print(f"downloading {url=}")
         # detect URLs that we definitely cannot handle
         match = self.link_pattern.search(url)
         if not match: return False
@@ -126,8 +128,9 @@ class TelethonArchiver(Archiverv2):
 
                 # media can also be in entities
                 if mp.entities:
-                    other_media_urls = [e.url for e in mp.entities if hasattr(e, "url") and e.url and self._guess_file_type(e.url) in ["video", "image"]]
-                    logger.debug(f"Got {len(other_media_urls)} other medial urls from {mp.id=}: {other_media_urls}")
+                    other_media_urls = [e.url for e in mp.entities if hasattr(e, "url") and e.url and self._guess_file_type(e.url) in ["video", "image", "audio"]]
+                    if len(other_media_urls):
+                        logger.debug(f"Got {len(other_media_urls)} other medial urls from {mp.id=}: {other_media_urls}")
                     for om_url in other_media_urls:
                         filename = os.path.join(tmp_dir, f'{chat}_{group_id}_{self._get_key_from_url(om_url)}')
                         self.download_from_url(om_url, filename)
@@ -140,7 +143,7 @@ class TelethonArchiver(Archiverv2):
                     continue
                 result.add_media(filename)
 
-            result.set("post", post).set_title(title).set_timestamp(post.date)
+            result.set("post", str(post)).set_title(title).set_timestamp(post.date)
             return result
 
     def _get_media_posts_in_group(self, chat, original_post, max_amp=10):

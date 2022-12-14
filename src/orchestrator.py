@@ -157,8 +157,9 @@ class ArchivingOrchestrator:
         for url in self.feeder:
             print("ARCHIVING", url)
             with tempfile.TemporaryDirectory(dir="./") as tmp_dir:
-                self.archive(url, tmp_dir)
-
+                result = self.archive(url, tmp_dir)
+                print(result)
+                print(result.as_json())
                 print("holding on")
                 time.sleep(300)
             # how does this handle the parameters like folder which can be different for each archiver?
