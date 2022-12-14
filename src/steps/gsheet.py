@@ -36,7 +36,7 @@ class Gsheets(Step):
                     'wacz': 'wacz',
                     'replaywebpage': 'replaywebpage',
                 },
-                "help": "names of columns in the google sheet",
+                "help": "names of columns in the google sheet (stringified JSON object)",
                 "cli_set": lambda cli_val, cur_val: dict(cur_val, **json.loads(cli_val))
             },
         }

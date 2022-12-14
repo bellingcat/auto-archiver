@@ -1,8 +1,11 @@
 from __future__ import annotations
+from ast import List
 from typing import Union, Dict
 from dataclasses import dataclass
+from archivers.archiver import Archiverv2
 
 from enrichers.enricher import Enricher
+from metadata import Metadata
 
 """
 how not to couple the different pieces of logic
@@ -108,12 +111,13 @@ Once an archiver returns a link to a local file (for eg to a storage), how do we
 The context metadata should include a temporary folder (maybe a LocalStorage instance?)
 """
 
+
 class ArchivingOrchestrator:
     def __init__(self, config) -> None:
         # in config.py we should test that the archivers exist and log mismatches (blocking execution)
         # identify each formatter, storage, database, etc
         # self.feeder = Feeder.init(config.feeder, config.get(config.feeder))
-        
+
         # Is it possible to overwrite config.yaml values? it could be useful: share config file and modify gsheets_feeder.sheet via CLI
         # where does that update/processing happen? in config.py
         # reflection for Archiver to know wihch child classes it has? use Archiver.__subclasses__
@@ -123,7 +127,13 @@ class ArchivingOrchestrator:
         # ]
         self.feeder = config.feeder
         self.enrichers = config.enrichers
+        self.archivers: List[Archiverv2] = config.archivers
 
+        for a in self.archivers: a.setup()
+
+        self.formatters = []
+        self.storages = []
+        self.databases = []
         # self.formatters = [
         #     Formatter.init(f, config)
         #     for f in config.formatters
@@ -145,30 +155,33 @@ class ArchivingOrchestrator:
     def feed(self) -> list(ArchiveResult):
         for url in self.feeder:
             print("ARCHIVING", url)
-            # self.archive(url)
+            self.archive(url)
             # how does this handle the parameters like folder which can be different for each archiver?
             # the storage needs to know where to archive!!
-            # solution: feeders have context: extra metadata that they can read or ignore, 
+            # solution: feeders have context: extra metadata that they can read or ignore,
             # all of it should have sensible defaults (eg: folder)
             # default feeder is a list with 1 element
 
     def archive(self, url) -> Union[ArchiveResult, None]:
-        url = clear_url(url)
-        result = Metadata(url=url)
-
+        # TODO:
+        # url = clear_url(url)
+        # result = Metadata(url=url)
+        result = Metadata()
+        result.set("url", url)
 
         should_archive = True
-        for d in databases: should_archive &= d.should_process(url)
+        for d in self.databases: should_archive &= d.should_process(url)
         # should storages also be able to check?
-        for s in storages: should_archive &= s.should_process(url)
+        for s in self.storages: should_archive &= s.should_process(url)
 
         if not should_archive:
+            print("skipping")
             return "skipping"
 
         # signal to DB that archiving has started
-        for d in databases:
+        for d in self.databases:
             # are the databases to decide whether to archive?
-            # they can simply return True by default, otherwise they can avoid duplicates. should this logic be more granular, for example on the archiver level: a tweet will not need be scraped twice, whereas an instagram profile might. the archiver could not decide from the link which parts to archive, 
+            # they can simply return True by default, otherwise they can avoid duplicates. should this logic be more granular, for example on the archiver level: a tweet will not need be scraped twice, whereas an instagram profile might. the archiver could not decide from the link which parts to archive,
             # instagram profile example: it would always re-archive everything
             # maybe the database/storage could use a hash/key to decide if there's a need to re-archive
             if d.should_process(url):
@@ -180,15 +193,15 @@ class ArchivingOrchestrator:
                 return
 
         # vk, telethon, ...
-        for a in archivers:
+        for a in self.archivers:
             # with automatic try/catch in download + archived (+ the other ops below)
-            # should the archivers come with the config already? are there configs which change at runtime? 
+            # should the archivers come with the config already? are there configs which change at runtime?
             # think not, so no need to pass config as parameter
-            # do they need to be refreshed with every execution? 
+            # do they need to be refreshed with every execution?
             # this is where the Hashes come from, the place with access to all content
             # the archiver does not have access to storage
-            result.update(a.download(url))
-            if result.is_success(): break
+            result.merge(a.download(result))
+            if True or result.is_success(): break
 
         # what if an archiver returns multiple entries and one is to be part of HTMLgenerator?
         # should it call the HTMLgenerator as if it's not an enrichment?
@@ -196,20 +209,20 @@ class ArchivingOrchestrator:
         # then how to execute it last? should there also be post-processors? are there other examples?
         # maybe as a PDF? or a Markdown file
         # side captures: screenshot, wacz, webarchive, thumbnails, HTMLgenerator
-        for e in enrichers:
-            result.update(e.enrich(result))
+        for e in self.enrichers:
+            result.merge(e.enrich(result))
 
         # formatters, enrichers, and storages will sometimes look for specific properties: eg <li>Screenshot: <img src="{res.get("screenshot")}"> </li>
-        for p in formatter:
-            result.update(p.process(result))
+        for f in self.formatters:
+            result.merge(f.format(result))
 
         # storages
-        for s in storages:
+        for s in self.storages:
             for m in result.media:
-                m.update(s.store(m))
+                m.merge(s.store(m))
 
         # signal completion to databases (DBs, Google Sheets, CSV, ...)
         # a hash registration service could be one database: forensic archiving
-        for d in databases: d.done( result)
+        for d in self.databases: d.done(result)
 
         return result

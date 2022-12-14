@@ -8,8 +8,8 @@ steps:
     # - twitter
     # - instagram
     # - webarchive # this way it runs as a failsafe only
-  enrichers:
-    - screenshot
+  # enrichers:
+  #   - screenshot
     # - wacz
     # - webarchive # this way it runs for every case, webarchive extends archiver and enrichment
     # - thumbnails
@@ -29,11 +29,11 @@ configurations:
   global:
     - save_logs: False
   gsheets_feeder:
-    sheet: auto-archiver-test
+    sheet: my-auto-archiver
     header: 2 # defaults to 1 in GSheetsFeeder
     service_account: "secrets/service_account.json"
-    allow_worksheets: "aa-refactor-tests"
-    block_worksheets: "blocked,test-cases-008"
+    # allow_worksheets: "allowed"
+    # block_worksheets: "blocked1,blocked2"
     columns:
         'url': 'link'
         'status': 'archive status'
@@ -49,6 +49,16 @@ configurations:
         'hash': 'hash'
         'wacz': 'wacz'
         'replaywebpage': 'replaywebpage'
+  telethon:
+    api_id: "1234567"
+    api_hash: "examplehash"
+    session_file: "secrets/anon"
+    channel_invites:
+      - invite: https://t.me/+XXXXXXXXXXXXXX
+        id: 1000000000
+      - invite: https://t.me/joinchat/XXXXXXXXXXXXXX
+        id: 1000000001
+
   tiktok:
     api_keys:
       - username: 1
@@ -60,7 +70,7 @@ configurations:
     token: "here"
   screenshot:
     width: 1280
-    height: 720000
+    height: 4600
   wacz:
     profile: secrets/profile.tar.gz
   webarchive:

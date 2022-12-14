@@ -3,9 +3,9 @@
 import argparse, yaml
 from dataclasses import dataclass, field
 from typing import List
-from feeders.feeder import Feeder
+from archivers import Archiverv2
+from feeders import Feeder
 from steps.step import Step
-from utils import Util
 from enrichers import Enricher
 from collections import defaultdict
 
@@ -16,10 +16,11 @@ class ConfigV2:
     configurable_parents = [
         Feeder,
         Enricher,
+        Archiverv2,
         # Util
     ]
     feeder: Step  # TODO:= BaseFeeder
-    archivers: List[Step] = field(default_factory=[])  # TODO: fix type
+    archivers: List[Archiverv2] = field(default_factory=[])  # TODO: fix type
     enrichers: List[Enricher] = field(default_factory=[])
     formatters: List[Step] = field(default_factory=[])  # TODO: fix type
     storages: List[Step] = field(default_factory=[])  # TODO: fix type
@@ -48,7 +49,7 @@ class ConfigV2:
                     assert "." not in child.name, f"class prop name cannot contain dots('.'): {child.name}"
                     assert "." not in config, f"config property cannot contain dots('.'): {config}"
                     config_path = f"{child.name}.{config}"
-                    parser.add_argument(f'--{config_path}', action='store', dest=config_path, help=details['help'])
+                    parser.add_argument(f'--{config_path}', action='store', dest=config_path, help=f"{details['help']} (defaults to {details['default']})")
                     self.defaults[config_path] = details["default"]
                     if "cli_set" in details:
                         self.cli_ops[config_path] = details["cli_set"]
@@ -82,9 +83,11 @@ class ConfigV2:
 
         self.feeder = Feeder.init(steps.get("feeder", "cli_feeder"), self.config)
         self.enrichers = [Enricher.init(e, self.config) for e in steps.get("enrichers", [])]
+        self.archivers = [Archiverv2.init(e, self.config) for e in steps.get("archivers", [])]
 
         print("feeder", self.feeder)
         print("enrichers", [e for e in self.enrichers])
+        print("archivers", [e for e in self.archivers])
 
     def validate(self):
         pass

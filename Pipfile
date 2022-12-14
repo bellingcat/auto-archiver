@@ -26,6 +26,7 @@ dateparser = "*"
 vk-url-scraper = "*"
 python-twitter-v2 = "*"
 instaloader = "*"
+tqdm = "*"
 
 [requires]
 python_version = "3.9"

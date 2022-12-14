@@ -4,7 +4,7 @@ import json, gspread
 from loguru import logger
 
 # from . import Enricher
-from feeders.feeder import Feeder
+from feeders import Feeder
 from steps.gsheet import Gsheets
 from utils import GWorksheet
 
@@ -30,7 +30,7 @@ class GsheetsFeeder(Gsheets, Feeder):
                 },
                 "block_worksheets": {
                     "default": set(),
-                    "help": "(CSV) explicitly block some worksheets from being processed, defaults to empty",
+                    "help": "(CSV) explicitly block some worksheets from being processed",
                     "cli_set": lambda cli_val, cur_val: set(cli_val.split(","))
                 }
             })

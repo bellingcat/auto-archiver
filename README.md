@@ -22,6 +22,12 @@ Use this to make sure you help making sure you did all the required steps:
   * [ ] (optional for instagram) `instaloader.session` file which appears after the 1st run and login in telegram
   * [ ] (optional for browsertrix) `profile.tar.gz` file
 
+### Private telegram channels
+* Cannot use bot token
+* Should have one with bot token, one without
+* Setup join all private invite links at the start
+* 
+
 ## Setup
 ### Always required
 1. [A Google Service account is necessary for use with `gspread`.](https://gspread.readthedocs.io/en/latest/oauth2.html#for-bots-using-service-account) Credentials for this account should be stored in `service_account.json`, in the same directory as the script.

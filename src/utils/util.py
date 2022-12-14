@@ -1,11 +1,12 @@
 from __future__ import annotations
+from abc import abstractmethod
 from dataclasses import dataclass
-from abc import abstractmethod, ABC
 from metadata import Metadata
 from steps.step import Step
 
+#TODO: likely unused
 @dataclass
-class Util(Step, ABC):
+class Util(Step):
     name = "util"
 
     def __init__(self, config: dict) -> None:
