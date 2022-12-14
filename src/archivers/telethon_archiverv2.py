@@ -9,6 +9,8 @@ from loguru import logger
 from tqdm import tqdm
 import re, time, json, os
 
+from media import Media
+
 
 class TelethonArchiver(Archiverv2):
     name = "telethon"
@@ -131,17 +133,17 @@ class TelethonArchiver(Archiverv2):
                     other_media_urls = [e.url for e in mp.entities if hasattr(e, "url") and e.url and self._guess_file_type(e.url) in ["video", "image", "audio"]]
                     if len(other_media_urls):
                         logger.debug(f"Got {len(other_media_urls)} other medial urls from {mp.id=}: {other_media_urls}")
-                    for om_url in other_media_urls:
-                        filename = os.path.join(tmp_dir, f'{chat}_{group_id}_{self._get_key_from_url(om_url)}')
+                    for i, om_url in enumerate(other_media_urls):
+                        filename = os.path.join(tmp_dir, f'{chat}_{group_id}_{i}')
                         self.download_from_url(om_url, filename)
-                        result.add_media(filename)
+                        result.add_media(Media(filename))
 
                 filename_dest = os.path.join(tmp_dir, f'{chat}_{group_id}', str(mp.id))
                 filename = self.client.download_media(mp.media, filename_dest)
                 if not filename:
                     logger.debug(f"Empty media found, skipping {str(mp)=}")
                     continue
-                result.add_media(filename)
+                result.add_media(Media(filename))
 
             result.set("post", str(post)).set_title(title).set_timestamp(post.date)
             return result

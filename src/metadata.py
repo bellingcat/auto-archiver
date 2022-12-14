@@ -2,49 +2,38 @@
 from __future__ import annotations
 from ast import List
 from typing import Any, Union, Dict
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
-import json
+# import json
+
+from media import Media
 
 
 @dataclass
 class Metadata:
-    # does not handle files, only primitives
-    # the only piece of logic to handle files is the archiver, enricher, and storage
-    status: str
-    # title: str
-    # url: str
-    # hash: str
-    metadata: Dict[str, Any]
-
-    # TODO: remove and use default?
-    def __init__(self, status="") -> None:
-        self.status = status
-        self.metadata = {}
+    status: str = ""
+    metadata: Dict[str, Any]  = field(default_factory=dict)
+    media: List[Media] = field(default_factory=list)
 
     def merge(self: Metadata, right: Metadata, overwrite_left=True) -> Metadata:
         """
-        merges to Metadata instances, will overwrite according to overwrite_left flag
+        merges two Metadata instances, will overwrite according to overwrite_left flag
         """
-        res = Metadata()
         if overwrite_left:
-            res.status = right.status
-            res.metadata = dict(self.metadata)  # make a copy
+            self.status = right.status
             for k, v in right.metadata.items():
-                print(type(v), type(self.get(k)))
-                # assert type(v) == type(self.get(k))
-                if type(v) not in [dict, list, set] or k not in res.metadata:
-                    res.set(k, v)
+                assert k not in self.metadata or type(v) == type(self.get(k))
+                if type(v) not in [dict, list, set] or k not in self.metadata:
+                    self.set(k, v)
                 else:  # key conflict
-                    if type(v) in [dict, set]: res.set(k, self.get(k) | v)
-                    elif type(v) == list: res.set(k, self.get(k) + v)
+                    if type(v) in [dict, set]: self.set(k, self.get(k) | v)
+                    elif type(v) == list: self.set(k, self.get(k) + v)
+            self.media.extend(right.media)
         else:  # invert and do same logic
             return right.merge(self)
-        return res
+        return self
 
-    # TODO: setters?
     def set(self, key: str, val: Any) -> Metadata:
-        # goes through metadata and returns the Metadata available
         self.metadata[key] = val
         return self
 
@@ -65,9 +54,6 @@ class Metadata:
         assert type(url) is str and len(url) > 0, "invalid URL"
         return url
 
-    def get_media(self) -> List:
-        return self.get("media", [], create_if_missing=True)
-
     def set_content(self, content: str) -> Metadata:
         # the main textual content/information from a social media post, webpage, ...
         return self.set("content", content)
@@ -75,14 +61,17 @@ class Metadata:
     def set_title(self, title: str) -> Metadata:
         return self.set("title", title)
 
-    def set_timestamp(self, title: datetime) -> Metadata:
-        return self.set("title", title)
+    def set_timestamp(self, timestamp: datetime) -> Metadata:
+        assert type(timestamp) == datetime, "set_timestamp expects a datetime instance"
+        return self.set("timestamp", timestamp)
 
-    def add_media(self, filename: str) -> Metadata:
+    def add_media(self, media: Media) -> Metadata:
         # print(f"adding {filename} to {self.metadata.get('media')}")
         # return self.set("media", self.get_media() + [filename])
-        return self.get_media().append(filename)
+        # return self.get_media().append(media)
+        return self.media.append(media)
 
-    def as_json(self) -> str:
-        # converts all metadata and data into JSON
-        return json.dumps(self.metadata)
+    # def as_json(self) -> str:
+    #     # converts all metadata and data into JSON
+    #     return json.dumps(self.metadata)
+    #   #TODO: datetime is not serializable

@@ -153,13 +153,14 @@ class ArchivingOrchestrator:
         # these rules are checked in config.py
         # assert len(archivers) > 1, "there needs to be at least one Archiver"
 
-    def feed(self) -> list(ArchiveResult):
+    def feed(self) -> list(Metadata):
         for url in self.feeder:
             print("ARCHIVING", url)
             with tempfile.TemporaryDirectory(dir="./") as tmp_dir:
                 result = self.archive(url, tmp_dir)
+                print(type(result))
                 print(result)
-                print(result.as_json())
+                # print(result.as_json())
                 print("holding on")
                 time.sleep(300)
             # how does this handle the parameters like folder which can be different for each archiver?
@@ -170,7 +171,7 @@ class ArchivingOrchestrator:
 
     def archive(self, url: str, tmp_dir: str) -> Union[Metadata, None]:
         # TODO:
-        # url = clear_url(url)
+        # url = clear_url(url) # should we save if they differ?
         # result = Metadata(url=url)
         result = Metadata()
         result.set_url(url)
