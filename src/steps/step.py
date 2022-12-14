@@ -29,8 +29,3 @@ class Step(ABC):
                 print(sub.name, "CALLING NEW")
                 return sub(config)
         raise ClassFoundException(f"Unable to initialize STEP with {name=}")
-
-    def get_url(self, item: Metadata) -> str:
-        url = item.get("url")
-        assert type(url) is str and len(url) > 0
-        return url

@@ -6,6 +6,7 @@ from archivers.archiver import Archiverv2
 
 from enrichers.enricher import Enricher
 from metadata import Metadata
+import tempfile, time
 
 """
 how not to couple the different pieces of logic
@@ -155,19 +156,24 @@ class ArchivingOrchestrator:
     def feed(self) -> list(ArchiveResult):
         for url in self.feeder:
             print("ARCHIVING", url)
-            self.archive(url)
+            with tempfile.TemporaryDirectory(dir="./") as tmp_dir:
+                self.archive(url, tmp_dir)
+
+                print("holding on")
+                time.sleep(300)
             # how does this handle the parameters like folder which can be different for each archiver?
             # the storage needs to know where to archive!!
             # solution: feeders have context: extra metadata that they can read or ignore,
             # all of it should have sensible defaults (eg: folder)
             # default feeder is a list with 1 element
 
-    def archive(self, url) -> Union[ArchiveResult, None]:
+    def archive(self, url: str, tmp_dir: str) -> Union[Metadata, None]:
         # TODO:
         # url = clear_url(url)
         # result = Metadata(url=url)
         result = Metadata()
-        result.set("url", url)
+        result.set_url(url)
+        result.set("tmp_dir", tmp_dir)
 
         should_archive = True
         for d in self.databases: should_archive &= d.should_process(url)

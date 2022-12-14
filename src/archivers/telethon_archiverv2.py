@@ -7,8 +7,7 @@ from telethon.tl.functions.messages import ImportChatInviteRequest
 from telethon.errors.rpcerrorlist import UserAlreadyParticipantError, FloodWaitError, InviteRequestSentError, InviteHashExpiredError
 from loguru import logger
 from tqdm import tqdm
-import re, time, json
-
+import re, time, json, os
 
 
 class TelethonArchiver(Archiverv2):
@@ -38,6 +37,10 @@ class TelethonArchiver(Archiverv2):
         }
 
     def setup(self) -> None:
+        """
+        1. trigger login process for telegram or proceed if already saved in a session file
+        2. joins channel_invites where needed
+        """
         logger.info(f"SETUP {self.name} checking login...")
         with self.client.start(): pass
 
@@ -56,11 +59,11 @@ class TelethonArchiver(Archiverv2):
                     channel_id = channel_invite.get("id", False)
                     invite = channel_invite["invite"]
                     if (match := self.invite_pattern.search(invite)):
-                        try: 
+                        try:
                             if channel_id:
-                                ent = self.client.get_entity(int(channel_id)) # fails if not a member
+                                ent = self.client.get_entity(int(channel_id))  # fails if not a member
                             else:
-                                ent = self.client.get_entity(invite) # fails if not a member
+                                ent = self.client.get_entity(invite)  # fails if not a member
                                 logger.warning(f"please add the property id='{ent.id}' to the 'channel_invites' configuration where {invite=}, not doing so can lead to a minutes-long setup time due to telegram's rate limiting.")
                         except ValueError as e:
                             logger.info(f"joining new channel {invite=}")
@@ -80,35 +83,80 @@ class TelethonArchiver(Archiverv2):
                             continue
                     else:
                         logger.warning(f"Invalid invite link {invite}")
-                    i+=1
+                    i += 1
                     pbar.update()
-                            
 
     def download(self, item: Metadata) -> Metadata:
-        url = self.get_url(item)
+        url = item.get_url()
+
         print(f"downloading {url=}")
         # detect URLs that we definitely cannot handle
         match = self.link_pattern.search(url)
         if not match: return False
 
-        # app will ask (stall for user input!) for phone number and auth code if anon.session not found
-        # TODO: not using bot_token since then private channels cannot be archived
-        # with self.client.start(bot_token=self.bot_token):
-        with self.client.start():
-            # self.client(ImportChatInviteRequest('4kAkN49IKJBhZDk6'))
-            is_private = match.group(1) == "/c"
-            print(f"{is_private=}")
-            chat = int(match.group(2)) if is_private else match.group(2)
-            post_id = int(match.group(3))
+        is_private = match.group(1) == "/c"
+        chat = int(match.group(2)) if is_private else match.group(2)
+        post_id = int(match.group(3))
 
+        result = Metadata()
+
+        # NB: not using bot_token since then private channels cannot be archived: self.client.start(bot_token=self.bot_token)
+        with self.client.start():
             try:
                 post = self.client.get_messages(chat, ids=post_id)
             except ValueError as e:
                 logger.error(f"Could not fetch telegram {url} possibly it's private: {e}")
                 return False
             except ChannelInvalidError as e:
-                logger.error(f"Could not fetch telegram {url}. This error can be fixed if you setup a bot_token in addition to api_id and api_hash: {e}")
+                logger.error(f"Could not fetch telegram {url}. This error may be fixed if you setup a bot_token in addition to api_id and api_hash (but then private channels will not be archived, we need to update this logic to handle both): {e}")
                 return False
 
             if post is None: return False
-            print(post)
+            logger.info(f"fetched telegram {post.id=}")
+            
+            media_posts = self._get_media_posts_in_group(chat, post)
+            logger.debug(f'got {len(media_posts)=} for {url=}')
+
+            tmp_dir = item.get("tmp_dir")
+
+            group_id = post.grouped_id if post.grouped_id is not None else post.id
+            title = post.message
+            for mp in media_posts:
+                if len(mp.message) > len(title): title = mp.message # save the longest text found (usually only 1)
+
+                # media can also be in entities
+                if mp.entities:
+                    other_media_urls = [e.url for e in mp.entities if hasattr(e, "url") and e.url and self._guess_file_type(e.url) in ["video", "image"]]
+                    logger.debug(f"Got {len(other_media_urls)} other medial urls from {mp.id=}: {other_media_urls}")
+                    for om_url in other_media_urls:
+                        filename = os.path.join(tmp_dir, f'{chat}_{group_id}_{self._get_key_from_url(om_url)}')
+                        self.download_from_url(om_url, filename)
+                        result.add_media(filename)
+
+                filename_dest = os.path.join(tmp_dir, f'{chat}_{group_id}', str(mp.id))
+                filename = self.client.download_media(mp.media, filename_dest)
+                if not filename:
+                    logger.debug(f"Empty media found, skipping {str(mp)=}")
+                    continue
+                result.add_media(filename)
+
+            result.set("post", post).set_title(title).set_timestamp(post.date)
+            return result
+
+    def _get_media_posts_in_group(self, chat, original_post, max_amp=10):
+        """
+        Searches for Telegram posts that are part of the same group of uploads
+        The search is conducted around the id of the original post with an amplitude
+        of `max_amp` both ways
+        Returns a list of [post] where each post has media and is in the same grouped_id
+        """
+        if getattr(original_post, "grouped_id", None) is None:
+            return [original_post] if getattr(original_post, "media", False) else []
+
+        search_ids = [i for i in range(original_post.id - max_amp, original_post.id + max_amp + 1)]
+        posts = self.client.get_messages(chat, ids=search_ids)
+        media = []
+        for post in posts:
+            if post is not None and post.grouped_id == original_post.grouped_id and post.media is not None:
+                media.append(post)
+        return media
