@@ -10,8 +10,7 @@ import json
 @dataclass
 class Media:
     filename: str
-    id: str = None
-    hash: str = None
+    key: str = None
     cdn_url: str = None
-    hash: str = None
-
+    # id: str = None
+    # hash: str = None # TODO: added by enrichers

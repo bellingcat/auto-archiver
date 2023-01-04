@@ -90,11 +90,13 @@ class ConfigV2:
         self.enrichers = [Enricher.init(e, self.config) for e in steps.get("enrichers", [])]
         self.archivers = [Archiverv2.init(e, self.config) for e in steps.get("archivers", [])]
         self.databases = [Database.init(e, self.config) for e in steps.get("databases", [])]
+        self.storages = [StorageV2.init(e, self.config) for e in steps.get("storages", [])]
 
         print("feeder", self.feeder)
         print("enrichers", [e for e in self.enrichers])
         print("archivers", [e for e in self.archivers])
         print("databases", [e for e in self.databases])
+        print("storages", [e for e in self.storages])
 
     def validate(self):
         pass

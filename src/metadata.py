@@ -3,7 +3,7 @@ from __future__ import annotations
 from ast import List, Set
 from typing import Any, Union, Dict
 from dataclasses import dataclass, field
-from datetime import datetime
+import datetime
 # import json
 
 from media import Media
@@ -70,9 +70,19 @@ class Metadata:
     def set_title(self, title: str) -> Metadata:
         return self.set("title", title)
 
-    def set_timestamp(self, timestamp: datetime) -> Metadata:
-        assert type(timestamp) == datetime, "set_timestamp expects a datetime instance"
+    def get_title(self) -> str:
+        return self.get("title")
+
+    def set_timestamp(self, timestamp: datetime.datetime) -> Metadata:
+        assert type(timestamp) == datetime.datetime, "set_timestamp expects a datetime instance"
         return self.set("timestamp", timestamp)
+
+    def get_timestamp(self, utc=True, iso=True) -> datetime.datetime:
+        ts = self.get("timestamp")
+        if not ts: return ts
+        if utc: ts = ts.replace(tzinfo=datetime.timezone.utc)
+        if iso: return ts.isoformat()
+        return ts
 
     def add_media(self, media: Media) -> Metadata:
         # print(f"adding {filename} to {self.metadata.get('media')}")
@@ -80,16 +90,20 @@ class Metadata:
         # return self.get_media().append(media)
         return self.media.append(media)
 
+    def get_single_media(self) -> Media:
+        # TODO: check if formatters were applied and choose with priority
+        return self.media[0]
+
     # def as_json(self) -> str:
     #     # converts all metadata and data into JSON
     #     return json.dumps(self.metadata)
     #   #TODO: datetime is not serializable
 
     def cleanup(self) -> Metadata:
-        #TODO: refactor so it returns a JSON with all intended properties, except tmp_keys
+        # TODO: refactor so it returns a JSON with all intended properties, except tmp_keys
         # the code below leads to errors if database needs tmp_keys after they are removed
         # """removes temporary metadata fields, ideally called after all ops except writing"""
         # for tmp_key in self.tmp_keys:
-            # self.metadata.pop(tmp_key, None)
+        # self.metadata.pop(tmp_key, None)
         # self.tmp_keys = set()
         pass

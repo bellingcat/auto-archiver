@@ -30,6 +30,7 @@ class Gsheets(Step):
                     'thumbnail_index': 'thumbnail index',
                     'timestamp': 'upload timestamp',
                     'title': 'upload title',
+                    'text': 'text content',
                     'duration': 'duration',
                     'screenshot': 'screenshot',
                     'hash': 'hash',

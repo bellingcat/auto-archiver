@@ -2,13 +2,16 @@ from __future__ import annotations
 from ast import List
 from typing import Union, Dict
 from dataclasses import dataclass
-from archivers.archiver import Archiverv2
 
-from enrichers.enricher import Enricher
-from databases.database import Database
+from archivers import Archiverv2
+from storages import StorageV2
+from enrichers import Enricher
+from databases import Database
 from metadata import Metadata
+
 import tempfile, time, traceback
 from loguru import logger
+
 
 
 """
@@ -133,11 +136,11 @@ class ArchivingOrchestrator:
         self.enrichers = config.enrichers
         self.archivers: List[Archiverv2] = config.archivers
         self.databases: List[Database] = config.databases
+        self.storages: List[StorageV2] = config.storages
 
         for a in self.archivers: a.setup()
 
         self.formatters = []
-        self.storages = []
         # self.formatters = [
         #     Formatter.init(f, config)
         #     for f in config.formatters
@@ -184,7 +187,7 @@ class ArchivingOrchestrator:
 
     def archive(self, result: Metadata) -> Union[Metadata, None]:
         url = result.get_url()
-        # TODO: clean urls 
+        # TODO: clean urls
         for a in self.archivers:
             url = a.clean_url(url)
         result.set_url(url)
@@ -240,8 +243,8 @@ class ArchivingOrchestrator:
 
         # storage
         for s in self.storages:
-            for m in result.media:
-                result.merge(s.store(m))
+            for i, m in enumerate(result.media):
+                result.media[i] = s.store(m, result)
 
         # signal completion to databases (DBs, Google Sheets, CSV, ...)
         # a hash registration service could be one database: forensic archiving

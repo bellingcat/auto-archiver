@@ -1,4 +1,4 @@
-import gspread
+import gspread, os
 
 # from metadata import Metadata
 from loguru import logger
@@ -8,7 +8,7 @@ from feeders import Feeder
 from metadata import Metadata
 from steps.gsheet import Gsheets
 from utils import GWorksheet
-
+from slugify import slugify
 
 class GsheetsFeeder(Gsheets, Feeder):
     name = "gsheet_feeder"
@@ -60,7 +60,7 @@ class GsheetsFeeder(Gsheets, Feeder):
                 if status not in ['', None]: continue
 
                 # All checks done - archival process starts here
-                yield Metadata().set_url(url).set("gsheet", {"row": row, "worksheet": gw}, True)
+                yield Metadata().set_url(url).set("gsheet", {"row": row, "worksheet": gw}, True).set("folder", os.path.join(slugify(self.sheet), slugify(wks.title)), True)
                 
             logger.success(f'Finished worksheet {wks.title}')
 
