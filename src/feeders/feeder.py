@@ -1,7 +1,7 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from abc import abstractmethod
-# from metadata import Metadata
+from metadata import Metadata
 from steps.step import Step
 
 
@@ -17,7 +17,5 @@ class Feeder(Step):
         # only for code typing
         return Step.init(name, config, Feeder)
 
-    # def feed(self, item: Metadata) -> Metadata: pass
-
     @abstractmethod
-    def __iter__(self) -> Feeder: return None
+    def __iter__(self) -> Metadata: return None

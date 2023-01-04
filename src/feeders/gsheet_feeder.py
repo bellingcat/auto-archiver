@@ -1,16 +1,17 @@
-import json, gspread
+import gspread
 
 # from metadata import Metadata
 from loguru import logger
 
 # from . import Enricher
 from feeders import Feeder
+from metadata import Metadata
 from steps.gsheet import Gsheets
 from utils import GWorksheet
 
 
 class GsheetsFeeder(Gsheets, Feeder):
-    name = "gsheets_feeder"
+    name = "gsheet_feeder"
 
     def __init__(self, config: dict) -> None:
         # without this STEP.__init__ is not called
@@ -35,7 +36,7 @@ class GsheetsFeeder(Gsheets, Feeder):
                 }
             })
 
-    def __iter__(self) -> str:
+    def __iter__(self) -> Metadata:
         sh = self.gsheets_client.open(self.sheet)
         for ii, wks in enumerate(sh.worksheets()):
             if not self.should_process_sheet(wks.title):
@@ -52,17 +53,16 @@ class GsheetsFeeder(Gsheets, Feeder):
             for row in range(1 + self.header, gw.count_rows() + 1):
                 url = gw.get_cell(row, 'url').strip()
                 if not len(url): continue
-                # TODO: gsheet_db should check later if this is supposed to be archived
-                # static_status = gw.get_cell(row, 'status')
-                # status = gw.get_cell(row, 'status', fresh=static_status in ['', None] and url != '')
-                # All checks done - archival process starts here
-                yield url
-            logger.success(f'Finished worksheet {wks.title}')
 
-        # GWorksheet(self.sheet)
-        print(self.sheet)
-        for u in ["url1", "url2"]:
-            yield u
+                original_status = gw.get_cell(row, 'status')
+                status = gw.get_cell(row, 'status', fresh=original_status in ['', None])
+                # TODO: custom status parser(?) aka should_retry_from_status
+                if status not in ['', None]: continue
+
+                # All checks done - archival process starts here
+                yield Metadata().set_url(url).set("gsheet", {"row": row, "worksheet": gw}, True)
+                
+            logger.success(f'Finished worksheet {wks.title}')
 
     def should_process_sheet(self, sheet_name: str) -> bool:
         if len(self.allow_worksheets) and sheet_name not in self.allow_worksheets:

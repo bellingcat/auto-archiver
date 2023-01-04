@@ -1,2 +1,2 @@
 from .enricher import Enricher
-from .enricher_screenshot import ScreenshotEnricher 
+from .screenshot_enricher import ScreenshotEnricher 

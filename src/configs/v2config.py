@@ -5,6 +5,8 @@ from dataclasses import dataclass, field
 from typing import List
 from archivers import Archiverv2
 from feeders import Feeder
+from databases import Database
+from storages import StorageV2
 from steps.step import Step
 from enrichers import Enricher
 from collections import defaultdict
@@ -13,10 +15,13 @@ from collections import defaultdict
 @dataclass
 class ConfigV2:
     # TODO: should Config inherit from Step so it can have it's own configurations?
+    # these are only detected if they are put to the respective __init__.py
     configurable_parents = [
         Feeder,
         Enricher,
         Archiverv2,
+        Database,
+        StorageV2
         # Util
     ]
     feeder: Step  # TODO:= BaseFeeder
@@ -24,14 +29,14 @@ class ConfigV2:
     enrichers: List[Enricher] = field(default_factory=[])
     formatters: List[Step] = field(default_factory=[])  # TODO: fix type
     storages: List[Step] = field(default_factory=[])  # TODO: fix type
-    databases: List[Step] = field(default_factory=[])  # TODO: fix type
+    databases: List[Database] = field(default_factory=[])
 
     def __init__(self) -> None:
         self.defaults = {}
         self.cli_ops = {}
         self.config = {}
 
-    # TODO: make this work for nested props like gsheets_feeder.columns.url = "URL"
+    # TODO: make this work for nested props like gsheet_feeder.columns.url = "URL"
     def parse(self):
         # 1. parse CLI values
         parser = argparse.ArgumentParser(
@@ -84,10 +89,12 @@ class ConfigV2:
         self.feeder = Feeder.init(steps.get("feeder", "cli_feeder"), self.config)
         self.enrichers = [Enricher.init(e, self.config) for e in steps.get("enrichers", [])]
         self.archivers = [Archiverv2.init(e, self.config) for e in steps.get("archivers", [])]
+        self.databases = [Database.init(e, self.config) for e in steps.get("databases", [])]
 
         print("feeder", self.feeder)
         print("enrichers", [e for e in self.enrichers])
         print("archivers", [e for e in self.archivers])
+        print("databases", [e for e in self.databases])
 
     def validate(self):
         pass

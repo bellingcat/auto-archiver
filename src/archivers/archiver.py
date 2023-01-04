@@ -23,6 +23,10 @@ class Archiverv2(Step):
         # used when archivers need to login or do other one-time setup
         pass
 
+    def clean_url(self, url:str) -> str:
+        # used to clean unnecessary URL parameters
+        return url
+
     def _guess_file_type(self, path: str) -> str:
         """
         Receives a URL or filename and returns global mimetype like 'image' or 'video'

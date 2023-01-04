@@ -1,2 +1,2 @@
 from.feeder import Feeder
-from .feeder_gsheet import GsheetsFeeder
+from .gsheet_feeder import GsheetsFeeder

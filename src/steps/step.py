@@ -14,7 +14,7 @@ class Step(ABC):
     def __init__(self, config: dict) -> None:
         # reads the configs into object properties
         # self.config = config[self.name]
-        for k, v in config[self.name].items():
+        for k, v in config.get(self.name, {}).items():
             self.__setattr__(k, v)
 
     @staticmethod

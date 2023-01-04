@@ -1,7 +1,7 @@
 steps:
   # only 1 feeder allowed
   # a feeder could be in an "infinite loop" for example: gsheets_infinite feeder which holds-> this could be an easy logic addiction by modifying for each to while not feeder.done() if it becomes necessary
-  feeder: gsheets_feeder # default -> only expects URL from CLI
+  feeder: gsheet_feeder # default -> only expects URL from CLI
   archivers: # order matters
     - telethon
     # - tiktok
@@ -28,7 +28,7 @@ steps:
 configurations:
   global:
     - save_logs: False
-  gsheets_feeder:
+  gsheet_feeder:
     sheet: my-auto-archiver
     header: 2 # defaults to 1 in GSheetsFeeder
     service_account: "secrets/service_account.json"

@@ -1,6 +1,6 @@
 
 from __future__ import annotations
-from ast import List
+from ast import List, Set
 from typing import Any, Union, Dict
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -12,8 +12,14 @@ from media import Media
 @dataclass
 class Metadata:
     status: str = ""
-    metadata: Dict[str, Any]  = field(default_factory=dict)
+    metadata: Dict[str, Any] = field(default_factory=dict)
+    tmp_keys: Set[str] = field(default_factory=set)  # keys that are not to be saved in DBs
     media: List[Media] = field(default_factory=list)
+    rearchivable: bool = False
+
+    # def __init__(self, url, metadata = {}) -> None:
+    #     self.set_url(url)
+    #     self.metadata = metadata
 
     def merge(self: Metadata, right: Metadata, overwrite_left=True) -> Metadata:
         """
@@ -21,6 +27,7 @@ class Metadata:
         """
         if overwrite_left:
             self.status = right.status
+            self.rearchivable |= right.rearchivable
             for k, v in right.metadata.items():
                 assert k not in self.metadata or type(v) == type(self.get(k))
                 if type(v) not in [dict, list, set] or k not in self.metadata:
@@ -33,8 +40,10 @@ class Metadata:
             return right.merge(self)
         return self
 
-    def set(self, key: str, val: Any) -> Metadata:
+    def set(self, key: str, val: Any, is_tmp=False) -> Metadata:
+        # if not self.metadata: self.metadata = {}
         self.metadata[key] = val
+        if is_tmp: self.tmp_keys.add(key)
         return self
 
     def get(self, key: str, default: Any = None, create_if_missing=False) -> Union[Metadata, str]:
@@ -75,3 +84,12 @@ class Metadata:
     #     # converts all metadata and data into JSON
     #     return json.dumps(self.metadata)
     #   #TODO: datetime is not serializable
+
+    def cleanup(self) -> Metadata:
+        #TODO: refactor so it returns a JSON with all intended properties, except tmp_keys
+        # the code below leads to errors if database needs tmp_keys after they are removed
+        # """removes temporary metadata fields, ideally called after all ops except writing"""
+        # for tmp_key in self.tmp_keys:
+            # self.metadata.pop(tmp_key, None)
+        # self.tmp_keys = set()
+        pass

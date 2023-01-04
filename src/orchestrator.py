@@ -5,8 +5,11 @@ from dataclasses import dataclass
 from archivers.archiver import Archiverv2
 
 from enrichers.enricher import Enricher
+from databases.database import Database
 from metadata import Metadata
-import tempfile, time
+import tempfile, time, traceback
+from loguru import logger
+
 
 """
 how not to couple the different pieces of logic
@@ -119,7 +122,7 @@ class ArchivingOrchestrator:
         # identify each formatter, storage, database, etc
         # self.feeder = Feeder.init(config.feeder, config.get(config.feeder))
 
-        # Is it possible to overwrite config.yaml values? it could be useful: share config file and modify gsheets_feeder.sheet via CLI
+        # Is it possible to overwrite config.yaml values? it could be useful: share config file and modify gsheet_feeder.sheet via CLI
         # where does that update/processing happen? in config.py
         # reflection for Archiver to know wihch child classes it has? use Archiver.__subclasses__
         # self.archivers = [
@@ -129,12 +132,12 @@ class ArchivingOrchestrator:
         self.feeder = config.feeder
         self.enrichers = config.enrichers
         self.archivers: List[Archiverv2] = config.archivers
+        self.databases: List[Database] = config.databases
 
         for a in self.archivers: a.setup()
 
         self.formatters = []
         self.storages = []
-        self.databases = []
         # self.formatters = [
         #     Formatter.init(f, config)
         #     for f in config.formatters
@@ -154,51 +157,61 @@ class ArchivingOrchestrator:
         # assert len(archivers) > 1, "there needs to be at least one Archiver"
 
     def feed(self) -> list(Metadata):
-        for url in self.feeder:
-            print("ARCHIVING", url)
-            with tempfile.TemporaryDirectory(dir="./") as tmp_dir:
-                result = self.archive(url, tmp_dir)
-                print(type(result))
-                print(result)
-                # print(result.as_json())
-                print("holding on")
-                time.sleep(300)
+        for item in self.feeder:
+            print("ARCHIVING", item)
+            try:
+                with tempfile.TemporaryDirectory(dir="./") as tmp_dir:
+                    item.set("tmp_dir", tmp_dir, True)
+                    result = self.archive(item)
+                    print(result)
+            except KeyboardInterrupt:
+                # catches keyboard interruptions to do a clean exit
+                logger.warning(f"caught interrupt on {item=}")
+                for d in self.databases: d.aborted(item)
+                exit()
+            except Exception as e:
+                logger.error(f'Got unexpected error on item {item}: {e}\n{traceback.format_exc()}')
+                for d in self.databases: d.failed(item)
+
+            print("holding on 5min")
+            time.sleep(300)
+
             # how does this handle the parameters like folder which can be different for each archiver?
             # the storage needs to know where to archive!!
             # solution: feeders have context: extra metadata that they can read or ignore,
             # all of it should have sensible defaults (eg: folder)
             # default feeder is a list with 1 element
 
-    def archive(self, url: str, tmp_dir: str) -> Union[Metadata, None]:
-        # TODO:
-        # url = clear_url(url) # should we save if they differ?
-        # result = Metadata(url=url)
-        result = Metadata()
+    def archive(self, result: Metadata) -> Union[Metadata, None]:
+        url = result.get_url()
+        # TODO: clean urls 
+        for a in self.archivers:
+            url = a.clean_url(url)
         result.set_url(url)
-        result.set("tmp_dir", tmp_dir)
-
-        should_archive = True
-        for d in self.databases: should_archive &= d.should_process(url)
+        # should_archive = False
+        # for d in self.databases: should_archive |= d.should_process(url)
         # should storages also be able to check?
-        for s in self.storages: should_archive &= s.should_process(url)
+        # for s in self.storages: should_archive |= s.should_process(url)
 
-        if not should_archive:
-            print("skipping")
-            return "skipping"
+        # if not should_archive:
+        #     print("skipping")
+        #     return "skipping"
 
         # signal to DB that archiving has started
+        # and propagate already archived if it exists
+        cached_result = None
         for d in self.databases:
             # are the databases to decide whether to archive?
             # they can simply return True by default, otherwise they can avoid duplicates. should this logic be more granular, for example on the archiver level: a tweet will not need be scraped twice, whereas an instagram profile might. the archiver could not decide from the link which parts to archive,
             # instagram profile example: it would always re-archive everything
             # maybe the database/storage could use a hash/key to decide if there's a need to re-archive
-            if d.should_process(url):
-                d.started(url)
-            elif d.exists(url):
-                return d.fetch(url)
-            else:
-                print("Skipping url")
-                return
+            d.started(result)
+            if (local_result := d.fetch(result)):
+                cached_result = (cached_result or Metadata()).merge(local_result)
+        if cached_result and not cached_result.rearchivable:
+            for d in self.databases:
+                d.done(cached_result)
+            return cached_result
 
         # vk, telethon, ...
         for a in self.archivers:
@@ -209,6 +222,7 @@ class ArchivingOrchestrator:
             # this is where the Hashes come from, the place with access to all content
             # the archiver does not have access to storage
             result.merge(a.download(result))
+            # TODO: fix logic
             if True or result.is_success(): break
 
         # what if an archiver returns multiple entries and one is to be part of HTMLgenerator?
@@ -224,13 +238,14 @@ class ArchivingOrchestrator:
         for f in self.formatters:
             result.merge(f.format(result))
 
-        # storages
+        # storage
         for s in self.storages:
             for m in result.media:
-                m.merge(s.store(m))
+                result.merge(s.store(m))
 
         # signal completion to databases (DBs, Google Sheets, CSV, ...)
         # a hash registration service could be one database: forensic archiving
+        result.cleanup()
         for d in self.databases: d.done(result)
 
         return result
