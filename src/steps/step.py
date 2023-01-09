@@ -28,4 +28,4 @@ class Step(ABC):
         for sub in child.__subclasses__():
             if sub.name == name:
                 return sub(config)
-        raise ClassFoundException(f"Unable to initialize STEP with {name=}")
+        raise ClassFoundException(f"Unable to initialize STEP with {name=}, check your configuration file/step names.")

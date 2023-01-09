@@ -91,4 +91,5 @@ class GsheetsDb(Database):
     def _retrieve_gsheet(self, item: Metadata) -> Tuple[GWorksheet, int]:
         gw: GWorksheet = item.get("gsheet").get("worksheet")
         row: int = item.get("gsheet").get("row")
+        #TODO: to make gsheet_db less coupled with gsheet_feeder's "gsheet" parameter, this method could 1st try to fetch "gsheet" from item and, if missing, manage its own singleton - not needed for now
         return gw, row
