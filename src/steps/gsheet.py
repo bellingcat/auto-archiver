@@ -12,6 +12,7 @@ class Gsheets(Step):
         super().__init__(config)
         self.gsheets_client = gspread.service_account(filename=self.service_account)
         assert type(self.header) == int, f"header ({self.header}) value must be an integer not {type(self.header)}"
+        assert self.sheet is not None, "You need to define a sheet name in your orchestration file when using gsheets."
 
     @staticmethod
     def configs() -> dict:

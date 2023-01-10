@@ -3,7 +3,8 @@ from __future__ import annotations
 from ast import List, Set
 from typing import Any, Union, Dict
 from dataclasses import dataclass, field
-import datetime
+import datetime, mimetypes
+from loguru import logger
 # import json
 
 from media import Media
@@ -12,9 +13,11 @@ from media import Media
 @dataclass
 class Metadata:
     status: str = ""
+    _processed_at: datetime = datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc)
     metadata: Dict[str, Any] = field(default_factory=dict)
     tmp_keys: Set[str] = field(default_factory=set)  # keys that are not to be saved in DBs
     media: List[Media] = field(default_factory=list)
+    final_media: Media = None  # can be overwritten by formatters
     rearchivable: bool = False
 
     # def __init__(self, url, metadata = {}) -> None:
@@ -85,19 +88,32 @@ class Metadata:
         return ts
 
     def add_media(self, media: Media) -> Metadata:
-        # print(f"adding {filename} to {self.metadata.get('media')}")
-        # return self.set("media", self.get_media() + [filename])
-        # return self.get_media().append(media)
+        media.set_mimetype()
         return self.media.append(media)
 
+    def set_final_media(self, final: Media) -> Metadata:
+        if final:
+            if self.final_media:
+                logger.warning(f"overwriting final media value :{self.final_media} with {final}")
+            final.set_mimetype()
+            self.final_media = final
+        return self
+
     def get_single_media(self) -> Media:
-        # TODO: check if formatters were applied and choose with priority
+        if self.final_media:
+            return self.final_media
         return self.media[0]
 
     # def as_json(self) -> str:
     #     # converts all metadata and data into JSON
     #     return json.dumps(self.metadata)
     #   #TODO: datetime is not serializable
+
+    def get_clean_metadata(self) -> Metadata:
+        return dict(
+            {k: v for k, v in self.metadata.items() if k not in self.tmp_keys},
+            **{"processed_at": self._processed_at}  # TODO: move to enrichment
+        )
 
     def cleanup(self) -> Metadata:
         # TODO: refactor so it returns a JSON with all intended properties, except tmp_keys

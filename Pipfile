@@ -27,6 +27,8 @@ vk-url-scraper = "*"
 python-twitter-v2 = "*"
 instaloader = "*"
 tqdm = "*"
+jinja2 = "*"
+cryptography = "==38.0.4"
 
 [requires]
 python_version = "3.9"

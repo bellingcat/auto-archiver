@@ -6,6 +6,7 @@ from typing import List
 from archivers import Archiverv2
 from feeders import Feeder
 from databases import Database
+from formatters import Formatter
 from storages import StorageV2
 from steps.step import Step
 from enrichers import Enricher
@@ -21,13 +22,14 @@ class ConfigV2:
         Enricher,
         Archiverv2,
         Database,
-        StorageV2
+        StorageV2,
+        Formatter
         # Util
     ]
     feeder: Step  # TODO:= BaseFeeder
+    formatter: Formatter
     archivers: List[Archiverv2] = field(default_factory=[])  # TODO: fix type
     enrichers: List[Enricher] = field(default_factory=[])
-    formatters: List[Step] = field(default_factory=[])  # TODO: fix type
     storages: List[Step] = field(default_factory=[])  # TODO: fix type
     databases: List[Database] = field(default_factory=[])
 
@@ -50,6 +52,7 @@ class ConfigV2:
         for configurable in self.configurable_parents:
             child: Step
             for child in configurable.__subclasses__():
+                assert child.configs() is not None and type(child.configs()) == dict, f"class '{child.name}' should have a configs method returning a dict."
                 for config, details in child.configs().items():
                     assert "." not in child.name, f"class prop name cannot contain dots('.'): {child.name}"
                     assert "." not in config, f"config property cannot contain dots('.'): {config}"
@@ -87,6 +90,7 @@ class ConfigV2:
         # print("config.py", self.config)
 
         self.feeder = Feeder.init(steps.get("feeder", "cli_feeder"), self.config)
+        self.formatter = Formatter.init(steps.get("formatter", "html_formatter"), self.config)
         self.enrichers = [Enricher.init(e, self.config) for e in steps.get("enrichers", [])]
         self.archivers = [Archiverv2.init(e, self.config) for e in steps.get("archivers", [])]
         self.databases = [Database.init(e, self.config) for e in steps.get("databases", [])]
@@ -97,6 +101,7 @@ class ConfigV2:
         print("archivers", [e for e in self.archivers])
         print("databases", [e for e in self.databases])
         print("storages", [e for e in self.storages])
+        print("formatter", self.formatter)
 
     def validate(self):
         pass

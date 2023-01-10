@@ -1,0 +1,101 @@
+{# templates/results.html #}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300italic,700,700italic">
+    <title>{{ url }}</title>
+    <style>
+        html {
+            font-family: 'Roboto', sans-serif;
+        }
+
+        table {
+            table-layout: fixed;
+            width: 90%;
+        }
+
+        table td {
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            padding: 5px;
+        }
+
+        table,
+        th,
+        td {
+            border: 1px solid;
+            border-collapse: collapse;
+        }
+
+        table.metadata td:first-child {
+            text-align: center;
+        }
+
+        table.content td:nth-child(2),
+        .center {
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <h2>Archived media for <a href="{{ url }}">{{ url }}</a></h2>
+    <p>title: '<span>{{ title }}</span>'</p>
+    <h2 class="center">content {{ media | length }} item(s)</h2>
+    <table class="content">
+        <tr>
+            <th>about</th>
+            <th>preview</th>
+        </tr>
+        {% for m in media %}
+        <tr>
+            <td>
+                <ul>
+                    <li><a href="{{ m.cdn_url }}">ARCHIVE</a></li>
+                    {% if m.hash | length > 1 %}
+                    <li>hash: <span>{{ m.hash }}</span></li>
+                    {% endif %}
+                    <li>key: <span>{{ m.key }}</span></li>
+                    <li>type: <span>{{ m.mimetype }}</span></li>
+                </ul>
+
+            </td>
+            <td>
+                {% if 'image' in m.mimetype %}
+                <img src="{{ m.cdn_url }}" style="max-height:400px;max-width:400px;"></img>
+                {% elif 'video' in m.mimetype %}
+                <video src="{{ m.cdn_url }}" controls style="max-height:400px;max-width:600px;">
+                    Your browser does not support the video element.
+                </video>
+                {% elif 'audio' in m.mimetype %}
+                <audio controls>
+                    <source src="{{ m.cdn_url }}" type="{{ m.mimetype }}">
+                    Your browser does not support the audio element.
+                </audio>
+                {% else %}
+                No preview available, please open the link.
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+    <h2>metadata</h2>
+    <table class="metadata">
+        <tr>
+            <th>key</th>
+            <th>value</th>
+        </tr>
+        {% for key in metadata %}
+        <tr>
+            <td>{{ key }}</td>
+            <td>{{ metadata[key] }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+</body>
+
+</html>

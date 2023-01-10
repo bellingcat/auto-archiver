@@ -4,6 +4,8 @@ from typing import Union, Dict
 from dataclasses import dataclass
 
 from archivers import Archiverv2
+from feeders import Feeder
+from formatters import Formatter
 from storages import StorageV2
 from enrichers import Enricher
 from databases import Database
@@ -11,7 +13,6 @@ from metadata import Metadata
 
 import tempfile, time, traceback
 from loguru import logger
-
 
 
 """
@@ -132,7 +133,8 @@ class ArchivingOrchestrator:
         #     Archiver.init(a, config)
         #     for a in config.archivers
         # ]
-        self.feeder = config.feeder
+        self.feeder : Feeder = config.feeder
+        self.formatter : Formatter = config.formatter
         self.enrichers = config.enrichers
         self.archivers: List[Archiverv2] = config.archivers
         self.databases: List[Database] = config.databases
@@ -237,14 +239,21 @@ class ArchivingOrchestrator:
         for e in self.enrichers:
             result.merge(e.enrich(result))
 
-        # formatters, enrichers, and storages will sometimes look for specific properties: eg <li>Screenshot: <img src="{res.get("screenshot")}"> </li>
-        for f in self.formatters:
-            result.merge(f.format(result))
-
-        # storage
+        # store media
+        unstored_media = result.media[::]
+        result.media = []
         for s in self.storages:
-            for i, m in enumerate(result.media):
-                result.media[i] = s.store(m, result)
+            for m in unstored_media:
+                result.media.append(s.store(m, result))
+
+        # formatters, enrichers, and storages will sometimes look for specific properties: eg <li>Screenshot: <img src="{res.get("screenshot")}"> </li>
+        # TODO: should there only be 1 formatter?
+        # for f in self.formatters:
+        #     result.merge(f.format(result))
+        # final format and store it
+        if (final_media := self.formatter.format(result)):
+            for s in self.storages:
+                result.set_final_media(s.store(final_media, result))
 
         # signal completion to databases (DBs, Google Sheets, CSV, ...)
         # a hash registration service could be one database: forensic archiving
