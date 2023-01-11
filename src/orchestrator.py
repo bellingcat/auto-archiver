@@ -52,74 +52,6 @@ Cisticola considerations:
 2. So the auto-archiver becomes like a puzzle and fixes to Cisticola scrapers can immediately benefit it, and contributions are focused on a single source or scraping
 """
 
-# @dataclass
-# class Metadata:
-#     # does not handle files, only primitives
-#     # the only piece of logic to handle files is the archiver, enricher, and storage
-#     status: str
-#     # title: str
-#     # url: str
-#     # hash: str
-#     main_file: Metadata
-#     metadata: Dict[str, Metadata]
-
-#     @staticmethod
-#     def merge(left, right : Metadata, overwrite_left=True) -> Metadata:
-#         # should return a merged version of the Metadata
-#         # will work for archived() and enriched()
-#         # what if 2 metadatas contain the same keys? only one can remain! : overwrite_left
-#         pass
-
-#     def get(self, key) -> Union[Metadata, str]:
-#         # goes through metadata and returns the Metadata available
-#         pass
-
-#     def as_json(self) -> str:
-#         # converts all metadata and data into JSON
-#         pass
-
-
-"""
-@dataclass
-class ArchiveResult:
-    # maybe metadata can have status as well, eg: screenshot fails. should that be registered in the databases? likely yes
-    status: str
-    url: str
-    metadata: Metadata
-    # title, url, hash, other={}
-    # cdn_url: str = None
-    # thumbnail: str = None
-    # thumbnail_index: str = None
-    # duration: float = None
-    # title: str = None
-    # timestamp: datetime.datetime = None
-    # screenshot: str = None
-    # wacz: str = None
-    # hash: str = None
-    # media: list = field(default_factory=list)
-
-    def __init__(self) -> None: pass
-
-    def update(self, metadata) -> None:
-        # receive a Metadata instance and update itself with it!
-        pass
-
-    def as_json(self) -> str:
-        # converts all metadata and data into JSON
-        pass
-"""
-
-"""
-There is a Superclass for:
-    * Database (should_process)
-
-How can GSheets work? it needs to feed from a READER (GSheets Feeder)
-
-Once an archiver returns a link to a local file (for eg to a storage), how do we then delete the produced local files? 
-The context metadata should include a temporary folder (maybe a LocalStorage instance?)
-"""
-
-
 class ArchivingOrchestrator:
     def __init__(self, config) -> None:
         # in config.py we should test that the archivers exist and log mismatches (blocking execution)
@@ -128,7 +60,7 @@ class ArchivingOrchestrator:
 
         # Is it possible to overwrite config.yaml values? it could be useful: share config file and modify gsheet_feeder.sheet via CLI
         # where does that update/processing happen? in config.py
-        # reflection for Archiver to know wihch child classes it has? use Archiver.__subclasses__
+        # reflection for Archiver to know which child classes it has? use Archiver.__subclasses__
         # self.archivers = [
         #     Archiver.init(a, config)
         #     for a in config.archivers
@@ -166,7 +98,7 @@ class ArchivingOrchestrator:
             print("ARCHIVING", item)
             try:
                 with tempfile.TemporaryDirectory(dir="./") as tmp_dir:
-                    item.set("tmp_dir", tmp_dir, True)
+                    item.set_tmp_dir(tmp_dir)
                     result = self.archive(item)
                     print(result)
             except KeyboardInterrupt:
@@ -226,6 +158,7 @@ class ArchivingOrchestrator:
             # do they need to be refreshed with every execution?
             # this is where the Hashes come from, the place with access to all content
             # the archiver does not have access to storage
+            # a.download(result) # TODO: refactor so there's not merge here
             result.merge(a.download(result))
             # TODO: fix logic
             if True or result.is_success(): break
@@ -237,7 +170,7 @@ class ArchivingOrchestrator:
         # maybe as a PDF? or a Markdown file
         # side captures: screenshot, wacz, webarchive, thumbnails, HTMLgenerator
         for e in self.enrichers:
-            result.merge(e.enrich(result))
+            e.enrich(result)
 
         # store media
         unstored_media = result.media[::]

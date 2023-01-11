@@ -121,7 +121,7 @@ class TelethonArchiver(Archiverv2):
             media_posts = self._get_media_posts_in_group(chat, post)
             logger.debug(f'got {len(media_posts)=} for {url=}')
 
-            tmp_dir = item.get("tmp_dir")
+            tmp_dir = item.get_tmp_dir()
 
             group_id = post.grouped_id if post.grouped_id is not None else post.id
             title = post.message

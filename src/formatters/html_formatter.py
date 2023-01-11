@@ -30,7 +30,7 @@ class HtmlFormatter(Formatter):
             media=item.media,
             metadata=item.get_clean_metadata()
         )
-        html_path = os.path.join(item.get("tmp_dir"), f"formatted{str(uuid.uuid4())}.html")
+        html_path = os.path.join(item.get_tmp_dir(), f"formatted{str(uuid.uuid4())}.html")
         with open(html_path, mode="w", encoding="utf-8") as outf:
             outf.write(content)
         return Media(filename=html_path)

@@ -1,13 +1,14 @@
+from media import Media
 from utils import Webdriver
 from . import Enricher
 from metadata import Metadata
 from loguru import logger
+import time, uuid, os
 from selenium.common.exceptions import TimeoutException
-import time
 
 
 class ScreenshotEnricher(Enricher):
-    name = "screenshot"
+    name = "screenshot_enricher"
 
     @staticmethod
     def configs() -> dict:
@@ -17,16 +18,18 @@ class ScreenshotEnricher(Enricher):
             "timeout": {"default": 60, "help": "timeout for taking the screenshot"}
         }
 
-    def enrich(self, item: Metadata) -> Metadata:
-        url = self.get_url(item)
-        print(f"enriching {url=}")
-        with Webdriver(self.width, self.height, self.timeout, 'facebook.com' in url) as driver:  # TODO: make a util
+    def enrich(self, to_enrich: Metadata) -> None:
+        url = to_enrich.get_url()
+        logger.debug(f"Enriching screenshot for {url=}")
+        with Webdriver(self.width, self.height, self.timeout, 'facebook.com' in url) as driver:
             try:
                 driver.get(url)
                 time.sleep(2)
+                screenshot_file = os.path.join(to_enrich.get_tmp_dir(), f"screenshot_{str(uuid.uuid4())[0:8]}.png")
+                driver.save_screenshot(screenshot_file)
+                to_enrich.add_media(Media(filename=screenshot_file, id="screenshot"))
             except TimeoutException:
                 logger.info("TimeoutException loading page for screenshot")
-
-        #TODO: return saved object
-            driver.save_screenshot("TODO-HASH_OR_UUID.png")
-        return None
+            except Exception as e:
+                logger.error(f"Got error while loading webdriver for screenshot enricher: {e}")
+        # return None

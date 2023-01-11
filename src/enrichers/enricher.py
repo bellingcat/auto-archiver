@@ -18,4 +18,4 @@ class Enricher(Step, ABC):
         return Step.init(name, config, Enricher)
 
     @abstractmethod
-    def enrich(self, item: Metadata) -> Metadata: pass
+    def enrich(self, to_enrich: Metadata) -> None: pass

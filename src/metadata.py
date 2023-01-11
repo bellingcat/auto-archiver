@@ -28,9 +28,12 @@ class Metadata:
         """
         merges two Metadata instances, will overwrite according to overwrite_left flag
         """
+        if right is None: return self
         if overwrite_left:
-            self.status = right.status
+            if right.status and len(right.status):
+                self.status = right.status
             self.rearchivable |= right.rearchivable
+            self.tmp_keys |= right.tmp_keys
             for k, v in right.metadata.items():
                 assert k not in self.metadata or type(v) == type(self.get(k))
                 if type(v) not in [dict, list, set] or k not in self.metadata:
@@ -76,6 +79,12 @@ class Metadata:
     def get_title(self) -> str:
         return self.get("title")
 
+    def set_tmp_dir(self, tmp_dir: str) -> Metadata:
+        return self.set("tmp_dir", tmp_dir, True)
+
+    def get_tmp_dir(self) -> str:
+        return self.get("tmp_dir")
+
     def set_timestamp(self, timestamp: datetime.datetime) -> Metadata:
         assert type(timestamp) == datetime.datetime, "set_timestamp expects a datetime instance"
         return self.set("timestamp", timestamp)
@@ -88,8 +97,14 @@ class Metadata:
         return ts
 
     def add_media(self, media: Media) -> Metadata:
+        if media is None: return
         media.set_mimetype()
         return self.media.append(media)
+
+    def get_media_by_id(self, id:str) -> Media:
+        for m in self.media:
+            if m.id == id: return m
+        return None
 
     def set_final_media(self, final: Media) -> Metadata:
         if final:
@@ -100,6 +115,7 @@ class Metadata:
         return self
 
     def get_single_media(self) -> Media:
+        #TODO: could be refactored to use a custom media.id
         if self.final_media:
             return self.final_media
         return self.media[0]

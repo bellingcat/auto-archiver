@@ -60,6 +60,9 @@
                     {% endif %}
                     <li>key: <span>{{ m.key }}</span></li>
                     <li>type: <span>{{ m.mimetype }}</span></li>
+                    {% if m.id | length >0 %}
+                    <li>id: <span>{{ m.id }}</span></li>
+                    {% endif %}
                 </ul>
 
             </td>
@@ -91,11 +94,13 @@
         {% for key in metadata %}
         <tr>
             <td>{{ key }}</td>
-            <td>{{ metadata[key] }}</td>
+            <td>{{ metadata[key] | urlize }}</td>
         </tr>
         {% endfor %}
     </table>
 
+    <hr>
+    <p>made with <a href="https://github.com/bellingcat/auto-archiver">bellingcat/auto-archiver</a>, add suggestions and report issues on the project's github page</p>
 </body>
 
 </html>

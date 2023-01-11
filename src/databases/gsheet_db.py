@@ -68,13 +68,15 @@ class GsheetsDb(Database):
         batch_if_valid('title', item.get_title())
         batch_if_valid('text', item.get("content", "")[:500])
         batch_if_valid('timestamp', item.get_timestamp())
+        if (screenshot := item.get_media_by_id("screenshot")):
+            batch_if_valid('screenshot', screenshot.cdn_url)
+        # batch_if_valid('status', item.status)
 
         # TODO: AFTER ENRICHMENTS
         # batch_if_valid('hash', media.hash)
         # batch_if_valid('thumbnail', result.thumbnail, f'=IMAGE("{result.thumbnail}")')
         # batch_if_valid('thumbnail_index', result.thumbnail_index)
         # batch_if_valid('duration', result.duration, str(result.duration))
-        # batch_if_valid('screenshot', result.screenshot)
         # if result.wacz is not None:
         #     batch_if_valid('wacz', result.wacz)
         #     batch_if_valid('replaywebpage', f'https://replayweb.page/?source={quote(result.wacz)}#view=pages&url={quote(url)}')
@@ -91,5 +93,5 @@ class GsheetsDb(Database):
     def _retrieve_gsheet(self, item: Metadata) -> Tuple[GWorksheet, int]:
         gw: GWorksheet = item.get("gsheet").get("worksheet")
         row: int = item.get("gsheet").get("row")
-        #TODO: to make gsheet_db less coupled with gsheet_feeder's "gsheet" parameter, this method could 1st try to fetch "gsheet" from item and, if missing, manage its own singleton - not needed for now
+        # TODO: to make gsheet_db less coupled with gsheet_feeder's "gsheet" parameter, this method could 1st try to fetch "gsheet" from item and, if missing, manage its own singleton - not needed for now
         return gw, row
