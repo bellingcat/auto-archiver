@@ -26,6 +26,7 @@
         table,
         th,
         td {
+            margin: auto;
             border: 1px solid;
             border-collapse: collapse;
         }
@@ -43,18 +44,17 @@
 
 <body>
     <h2>Archived media for <a href="{{ url }}">{{ url }}</a></h2>
-    <p>title: '<span>{{ title }}</span>'</p>
+    <p><b>title:</b> '<span>{{ title }}</span>'</p>
     <h2 class="center">content {{ media | length }} item(s)</h2>
     <table class="content">
         <tr>
             <th>about</th>
-            <th>preview</th>
+            <th>preview(s)</th>
         </tr>
         {% for m in media %}
         <tr>
             <td>
                 <ul>
-                    <li><a href="{{ m.cdn_url }}">ARCHIVE</a></li>
                     {% if m.hash | length > 1 %}
                     <li>hash: <span>{{ m.hash }}</span></li>
                     {% endif %}
@@ -67,25 +67,28 @@
 
             </td>
             <td>
+                {% for url in m.urls %}
                 {% if 'image' in m.mimetype %}
-                <img src="{{ m.cdn_url }}" style="max-height:400px;max-width:400px;"></img>
+                <img src="{{ url }}" style="max-height:400px;max-width:400px;"></img>
                 {% elif 'video' in m.mimetype %}
-                <video src="{{ m.cdn_url }}" controls style="max-height:400px;max-width:600px;">
+                <video src="{{ url }}" controls style="max-height:400px;max-width:600px;">
                     Your browser does not support the video element.
                 </video>
                 {% elif 'audio' in m.mimetype %}
                 <audio controls>
-                    <source src="{{ m.cdn_url }}" type="{{ m.mimetype }}">
+                    <source src="{{ url }}" type="{{ m.mimetype }}">
                     Your browser does not support the audio element.
                 </audio>
                 {% else %}
                 No preview available, please open the link.
                 {% endif %}
+                <li><a href="{{ url }}">{{ url}}</a></li>
+                {% endfor %}
             </td>
         </tr>
         {% endfor %}
     </table>
-    <h2>metadata</h2>
+    <h2 class="center">metadata</h2>
     <table class="metadata">
         <tr>
             <th>key</th>
@@ -100,7 +103,7 @@
     </table>
 
     <hr>
-    <p>made with <a href="https://github.com/bellingcat/auto-archiver">bellingcat/auto-archiver</a>, add suggestions and report issues on the project's github page</p>
+    <p style="text-align:center;">Made with <a href="https://github.com/bellingcat/auto-archiver">bellingcat/auto-archiver</a></p>
 </body>
 
 </html>

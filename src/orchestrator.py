@@ -52,6 +52,7 @@ Cisticola considerations:
 2. So the auto-archiver becomes like a puzzle and fixes to Cisticola scrapers can immediately benefit it, and contributions are focused on a single source or scraping
 """
 
+
 class ArchivingOrchestrator:
     def __init__(self, config) -> None:
         # in config.py we should test that the archivers exist and log mismatches (blocking execution)
@@ -65,8 +66,8 @@ class ArchivingOrchestrator:
         #     Archiver.init(a, config)
         #     for a in config.archivers
         # ]
-        self.feeder : Feeder = config.feeder
-        self.formatter : Formatter = config.formatter
+        self.feeder: Feeder = config.feeder
+        self.formatter: Formatter = config.formatter
         self.enrichers = config.enrichers
         self.archivers: List[Archiverv2] = config.archivers
         self.databases: List[Database] = config.databases
@@ -173,11 +174,9 @@ class ArchivingOrchestrator:
             e.enrich(result)
 
         # store media
-        unstored_media = result.media[::]
-        result.media = []
         for s in self.storages:
-            for m in unstored_media:
-                result.media.append(s.store(m, result))
+            for m in result.media:
+                s.store(m, result)  # modifies media
 
         # formatters, enrichers, and storages will sometimes look for specific properties: eg <li>Screenshot: <img src="{res.get("screenshot")}"> </li>
         # TODO: should there only be 1 formatter?
@@ -186,7 +185,8 @@ class ArchivingOrchestrator:
         # final format and store it
         if (final_media := self.formatter.format(result)):
             for s in self.storages:
-                result.set_final_media(s.store(final_media, result))
+                s.store(final_media, result)
+            result.set_final_media(final_media)
 
         # signal completion to databases (DBs, Google Sheets, CSV, ...)
         # a hash registration service could be one database: forensic archiving

@@ -45,26 +45,27 @@ class S3StorageV2(StorageV2):
     def get_cdn_url(self, media: Media) -> str:
         return self.cdn_url.format(bucket=self.bucket, region=self.region, key=media.key)
 
-    def uploadf(self, file: IO[bytes], media: Media, **kwargs: dict) -> Any:
+    def uploadf(self, file: IO[bytes], media: Media, **kwargs: dict) -> None:
         extra_args = kwargs.get("extra_args", {})
         if not self.private and 'ACL' not in extra_args:
             extra_args['ACL'] = 'public-read'
 
         if 'ContentType' not in extra_args:
             try:
-                extra_args['ContentType'] = mimetypes.guess_type(media.key)[0]
+                extra_args['ContentType'] = media.mimetype
             except Exception as e:
                 logger.warning(f"Unable to get mimetype for {media.key=}, error: {e}")
 
         self.s3.upload_fileobj(file, Bucket=self.bucket, Key=media.key, ExtraArgs=extra_args)
+        return True
 
-    def exists(self, key: str) -> bool:
-        """
-        Tests if a given file with key=key exists in the bucket
-        """
-        try:
-            self.s3.head_object(Bucket=self.bucket, Key=key)
-            return True
-        except ClientError as e:
-            logger.warning(f"got a ClientError when checking if {key=} exists in bucket={self.bucket}: {e}")
-        return False
+    # def exists(self, key: str) -> bool:
+    #     """
+    #     Tests if a given file with key=key exists in the bucket
+    #     """
+    #     try:
+    #         self.s3.head_object(Bucket=self.bucket, Key=key)
+    #         return True
+    #     except ClientError as e:
+    #         logger.warning(f"got a ClientError when checking if {key=} exists in bucket={self.bucket}: {e}")
+    #     return False

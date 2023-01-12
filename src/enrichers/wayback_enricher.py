@@ -21,7 +21,7 @@ class WaybackEnricher(Enricher):
     @staticmethod
     def configs() -> dict:
         return {
-            "timeout": {"default": 5, "help": "number of seconds to wait for a response from webarchive's wayback machine, after that only job_id is saved but page will still be processed."},
+            "timeout": {"default": 15, "help": "seconds to wait for successful archive confirmation from wayback, if more than this passes the result contains the job_id so the status can later be checked manually."},
             "key": {"default": None, "help": "wayback API key. to get credentials visit https://archive.org/account/s3.php"},
             "secret": {"default": None, "help": "wayback API secret. to get credentials visit https://archive.org/account/s3.php"}
         }

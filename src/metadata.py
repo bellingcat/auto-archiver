@@ -98,7 +98,6 @@ class Metadata:
 
     def add_media(self, media: Media) -> Metadata:
         if media is None: return
-        media.set_mimetype()
         return self.media.append(media)
 
     def get_media_by_id(self, id:str) -> Media:
@@ -110,7 +109,6 @@ class Metadata:
         if final:
             if self.final_media:
                 logger.warning(f"overwriting final media value :{self.final_media} with {final}")
-            final.set_mimetype()
             self.final_media = final
         return self
 

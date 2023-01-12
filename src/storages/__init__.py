@@ -6,3 +6,4 @@ from .gd_storage import GDConfig, GDStorage
 
 from .storage import StorageV2
 from .s3 import S3StorageV2
+from .local import LocalStorageV2

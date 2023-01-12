@@ -63,13 +63,13 @@ class GsheetsDb(Database):
 
         media: Media = item.get_single_media()
 
-        batch_if_valid('archive', media.cdn_url)
+        batch_if_valid('archive', "\n".join(media.urls))
         batch_if_valid('date', True, datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc).isoformat())
         batch_if_valid('title', item.get_title())
         batch_if_valid('text', item.get("content", "")[:500])
         batch_if_valid('timestamp', item.get_timestamp())
         if (screenshot := item.get_media_by_id("screenshot")):
-            batch_if_valid('screenshot', screenshot.cdn_url)
+            batch_if_valid('screenshot', "\n".join(screenshot.urls))
         # batch_if_valid('status', item.status)
 
         # TODO: AFTER ENRICHMENTS
