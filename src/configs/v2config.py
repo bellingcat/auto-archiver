@@ -57,7 +57,7 @@ class ConfigV2:
                     assert "." not in child.name, f"class prop name cannot contain dots('.'): {child.name}"
                     assert "." not in config, f"config property cannot contain dots('.'): {config}"
                     config_path = f"{child.name}.{config}"
-                    parser.add_argument(f'--{config_path}', action='store', dest=config_path, help=f"{details['help']} (defaults to {details['default']})")
+                    parser.add_argument(f'--{config_path}', action='store', dest=config_path, help=f"{details['help']} (defaults to {details['default']})", choices=details.get("choices", None))
                     self.defaults[config_path] = details["default"]
                     if "cli_set" in details:
                         self.cli_ops[config_path] = details["cli_set"]

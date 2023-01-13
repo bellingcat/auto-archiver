@@ -8,12 +8,19 @@ import mimetypes
 
 @dataclass
 class Media:
+    # other properties eg: hash, id, exif, ...
     filename: str
     key: str = None
-    urls: List[str] = field(default_factory=list)
     _mimetype: str = None  # eg: image/jpeg
-    id: str = ""  # in case this type of media needs a special id, eg: screenshot
-    # hash: str = None # TODO: added by enrichers
+    urls: List[str] = field(default_factory=list)
+    properties: dict = field(default_factory=dict)
+
+    def set(self, key: str, value: Any) -> Media:
+        self.properties[key] = value
+        return self
+
+    def get(self, key: str, default: Any = None) -> Any:
+        return self.properties.get(key, default)
 
     def add_url(self, url: str) -> None:
         # url can be remote, local, ...

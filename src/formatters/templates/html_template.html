@@ -39,12 +39,29 @@
         .center {
             text-align: center;
         }
+
+        .copy:hover {
+            font-weight: 600;
+            cursor: copy;
+        }
+
+        #notification {
+            position: fixed;
+            right: 20px;
+            top: 20px;
+            background: aquamarine;
+            box-shadow: 6px 8px 5px 0px #000000;
+            padding: 10px;
+            font-size: large;
+            display: none;
+        }
     </style>
 </head>
 
 <body>
+    <div id="notification"></div>
     <h2>Archived media for <a href="{{ url }}">{{ url }}</a></h2>
-    <p><b>title:</b> '<span>{{ title }}</span>'</p>
+    <p><b>title:</b> '<span class="copy">{{ title }}</span>'</p>
     <h2 class="center">content {{ media | length }} item(s)</h2>
     <table class="content">
         <tr>
@@ -55,21 +72,24 @@
         <tr>
             <td>
                 <ul>
-                    {% if m.hash | length > 1 %}
-                    <li>hash: <span>{{ m.hash }}</span></li>
+                    <li><b>key:</b> <span class="copy">{{ m.key }}</span></li>
+                    <li><b>type:</b> <span class="copy">{{ m.mimetype }}</span></li>
+
+                    {% for prop in m.properties %}
+                    {% if m.properties[prop] | length > 1 %}
+                    <li><b>{{ prop }}:</b> <span class="copy">{{ m.properties[prop] }}</span></li>
                     {% endif %}
-                    <li>key: <span>{{ m.key }}</span></li>
-                    <li>type: <span>{{ m.mimetype }}</span></li>
-                    {% if m.id | length >0 %}
-                    <li>id: <span>{{ m.id }}</span></li>
-                    {% endif %}
+                    {% endfor %}
                 </ul>
 
             </td>
             <td>
                 {% for url in m.urls %}
+                {% if 'http' in url %}
                 {% if 'image' in m.mimetype %}
-                <img src="{{ url }}" style="max-height:400px;max-width:400px;"></img>
+                <a href="{{ url }}">
+                    <img src="{{ url }}" style="max-height:400px;max-width:400px;"></img>
+                </a>
                 {% elif 'video' in m.mimetype %}
                 <video src="{{ url }}" controls style="max-height:400px;max-width:600px;">
                     Your browser does not support the video element.
@@ -80,9 +100,12 @@
                     Your browser does not support the audio element.
                 </audio>
                 {% else %}
-                No preview available, please open the link.
+                No preview available.
                 {% endif %}
-                <li><a href="{{ url }}">{{ url}}</a></li>
+                {% endif %}
+                <br>
+                <a href="{{ url }}">open</a> or
+                <a href="{{ url }}" download="">download</a>
                 {% endfor %}
             </td>
         </tr>
@@ -97,7 +120,9 @@
         {% for key in metadata %}
         <tr>
             <td>{{ key }}</td>
-            <td>{{ metadata[key] | urlize }}</td>
+            <td>
+                <span class="copy">{{ metadata[key] | urlize }}</span>
+            </td>
         </tr>
         {% endfor %}
     </table>
@@ -105,5 +130,33 @@
     <hr>
     <p style="text-align:center;">Made with <a href="https://github.com/bellingcat/auto-archiver">bellingcat/auto-archiver</a></p>
 </body>
+<script defer>
+    // notification logic
+    const notification = document.getElementById("notification");
+
+    function showNotification(message, miliseconds) {
+        notification.style.display = "block";
+        notification.innerText = message;
+        setTimeout(() => {
+            notification.style.display = "none";
+            notification.innerText = "";
+        }, miliseconds || 1000)
+    }
+
+    // copy logic
+    Array.from(document.querySelectorAll(".copy")).forEach(el => {
+        el.onclick = () => {
+            document.execCommand("copy");
+        }
+        el.addEventListener("copy", (e) => {
+            e.preventDefault();
+            if (e.clipboardData) {
+                e.clipboardData.setData("text/plain", el.textContent);
+                console.log(e.clipboardData.getData("text"))
+                showNotification("copied...")
+            }
+        })
+    })
+</script>
 
 </html>

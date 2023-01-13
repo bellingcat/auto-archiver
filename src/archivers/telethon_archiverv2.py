@@ -136,7 +136,7 @@ class TelethonArchiver(Archiverv2):
                     for i, om_url in enumerate(other_media_urls):
                         filename = os.path.join(tmp_dir, f'{chat}_{group_id}_{i}')
                         self.download_from_url(om_url, filename)
-                        result.add_media(Media(filename=filename, id=f"{group_id}_{i}"))
+                        result.add_media(Media(filename=filename), id=f"{group_id}_{i}")
 
                 filename_dest = os.path.join(tmp_dir, f'{chat}_{group_id}', str(mp.id))
                 filename = self.client.download_media(mp.media, filename_dest)

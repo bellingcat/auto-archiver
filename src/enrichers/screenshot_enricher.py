@@ -27,7 +27,7 @@ class ScreenshotEnricher(Enricher):
                 time.sleep(2)
                 screenshot_file = os.path.join(to_enrich.get_tmp_dir(), f"screenshot_{str(uuid.uuid4())[0:8]}.png")
                 driver.save_screenshot(screenshot_file)
-                to_enrich.add_media(Media(filename=screenshot_file, id="screenshot"))
+                to_enrich.add_media(Media(filename=screenshot_file), id="screenshot")
             except TimeoutException:
                 logger.info("TimeoutException loading page for screenshot")
             except Exception as e:

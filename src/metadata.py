@@ -96,13 +96,16 @@ class Metadata:
         if iso: return ts.isoformat()
         return ts
 
-    def add_media(self, media: Media) -> Metadata:
+    def add_media(self, media: Media, id: str = None) -> Metadata:
+        # adds a new media, optionally including an id
         if media is None: return
-        return self.media.append(media)
+        if id is not None: media.set("id", id)
+        self.media.append(media)
+        return media
 
-    def get_media_by_id(self, id:str) -> Media:
+    def get_media_by_id(self, id: str) -> Media:
         for m in self.media:
-            if m.id == id: return m
+            if m.get("id") == id: return m
         return None
 
     def set_final_media(self, final: Media) -> Metadata:
@@ -113,7 +116,7 @@ class Metadata:
         return self
 
     def get_single_media(self) -> Media:
-        #TODO: could be refactored to use a custom media.id
+        # TODO: could be refactored to use a custom media.id
         if self.final_media:
             return self.final_media
         return self.media[0]
