@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from archivers import Archiverv2
 from feeders import Feeder
 from formatters import Formatter
+from media import Media
 from storages import StorageV2
 from enrichers import Enricher
 from databases import Database
@@ -177,6 +178,13 @@ class ArchivingOrchestrator:
         for s in self.storages:
             for m in result.media:
                 s.store(m, result)  # modifies media
+                # Media can be inside media properties, examples include transformations on original media
+                for prop in m.properties.values():
+                    if isinstance(prop, Media):
+                        s.store(prop, result)
+                    if isinstance(prop, list) and len(prop)>0 and isinstance(prop[0], Media):
+                        for prop_media in prop:
+                            s.store(prop_media, result)
 
         # formatters, enrichers, and storages will sometimes look for specific properties: eg <li>Screenshot: <img src="{res.get("screenshot")}"> </li>
         # TODO: should there only be 1 formatter?

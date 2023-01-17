@@ -1,18 +1,17 @@
 
 from __future__ import annotations
 from ast import List
-from typing import Any, Union, Dict
+from typing import Any
 from dataclasses import dataclass, field
 import mimetypes
 
 
 @dataclass
 class Media:
-    # other properties eg: hash, id, exif, ...
     filename: str
     key: str = None
-    _mimetype: str = None  # eg: image/jpeg
     urls: List[str] = field(default_factory=list)
+    _mimetype: str = None  # eg: image/jpeg
     properties: dict = field(default_factory=dict)
 
     def set(self, key: str, value: Any) -> Media:
@@ -38,4 +37,4 @@ class Media:
         self._mimetype = v
 
     def is_video(self) -> bool:
-        return self._mimetype.startswith("video")
+        return self.mimetype.startswith("video")

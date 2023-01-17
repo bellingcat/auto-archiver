@@ -37,7 +37,7 @@ class WaybackEnricher(Enricher):
         r = requests.post('https://web.archive.org/save/', headers=ia_headers, data={'url': url})
 
         if r.status_code != 200:
-            logger.error(em:=f"Internet archive failed with status of {r.status_code}: {r.json()}")
+            logger.error(em := f"Internet archive failed with status of {r.status_code}: {r.json()}")
             to_enrich.set("wayback", em)
             return
 
@@ -66,3 +66,4 @@ class WaybackEnricher(Enricher):
             to_enrich.set("wayback", wayback_url)
         else:
             to_enrich.set("wayback", {"job_id": job_id, "check_status": f'https://web.archive.org/save/status/{job_id}'})
+        to_enrich.set("wayback lookup", f"https://web.archive.org/web/*/{url}")

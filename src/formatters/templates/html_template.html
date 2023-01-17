@@ -1,5 +1,5 @@
 {# templates/results.html #}
-
+{% import 'media.html' as macros %}
 <!DOCTYPE html>
 <html lang="en">
 
@@ -55,6 +55,45 @@
             font-size: large;
             display: none;
         }
+
+        img,
+        video {
+            filter: gray;
+            -webkit-filter: grayscale(1);
+            filter: grayscale(1);
+        }
+
+        /* Disable grayscale on hover */
+        img:hover,
+        video:hover {
+            -webkit-filter: grayscale(0);
+            filter: none;
+        }
+
+        .collapsible {
+            background-color: #777;
+            color: white;
+            cursor: pointer;
+            padding: 5px;
+            margin: 10px;
+            width: 100%;
+            border: none;
+            text-align: left;
+            outline: none;
+            font-size: 15px;
+        }
+
+        .active,
+        .collapsible:hover {
+            background-color: #555;
+        }
+
+        .collapsible-content {
+            padding: 0 18px;
+            display: none;
+            overflow: hidden;
+            background-color: #f1f1f1;
+        }
     </style>
 </head>
 
@@ -76,37 +115,31 @@
                     <li><b>type:</b> <span class="copy">{{ m.mimetype }}</span></li>
 
                     {% for prop in m.properties %}
-                    {% if m.properties[prop] | length > 1 %}
+
+                    {% if m.properties[prop] | is_list %}
+                    <p></p>
+                    <div>
+                        <b class="collapsible" title="expand">{{ prop }}:</b>
+                        <div class="collapsible-content">
+                            {% for subprop in m.properties[prop] %}
+                            {% if subprop | is_media %}
+                            {{ macros.display_media(subprop) }}
+                            {% else %}
+                            {{ subprop }}
+                            {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <p></p>
+                    {% elif m.properties[prop] | length > 1 %}
                     <li><b>{{ prop }}:</b> <span class="copy">{{ m.properties[prop] }}</span></li>
                     {% endif %}
+
                     {% endfor %}
                 </ul>
-
             </td>
             <td>
-                {% for url in m.urls %}
-                {% if 'http' in url %}
-                {% if 'image' in m.mimetype %}
-                <a href="{{ url }}">
-                    <img src="{{ url }}" style="max-height:400px;max-width:400px;"></img>
-                </a>
-                {% elif 'video' in m.mimetype %}
-                <video src="{{ url }}" controls style="max-height:400px;max-width:600px;">
-                    Your browser does not support the video element.
-                </video>
-                {% elif 'audio' in m.mimetype %}
-                <audio controls>
-                    <source src="{{ url }}" type="{{ m.mimetype }}">
-                    Your browser does not support the audio element.
-                </audio>
-                {% else %}
-                No preview available.
-                {% endif %}
-                {% endif %}
-                <br>
-                <a href="{{ url }}">open</a> or
-                <a href="{{ url }}" download="">download</a>
-                {% endfor %}
+                {{ macros.display_media(m) }}
             </td>
         </tr>
         {% endfor %}
@@ -153,10 +186,27 @@
             if (e.clipboardData) {
                 e.clipboardData.setData("text/plain", el.textContent);
                 console.log(e.clipboardData.getData("text"))
-                showNotification("copied...")
+                showNotification("copied!")
             }
         })
     })
+
+    // collapsibles
+    let coll = document.getElementsByClassName("collapsible");
+    let i;
+
+    for (i = 0; i < coll.length; i++) {
+        coll[i].addEventListener("click", function() {
+            this.classList.toggle("active");
+            // let content = this.nextElementSibling;
+            let content = this.parentElement.querySelector(".collapsible-content");
+            if (content.style.display === "block") {
+                content.style.display = "none";
+            } else {
+                content.style.display = "block";
+            }
+        });
+    }
 </script>
 
 </html>

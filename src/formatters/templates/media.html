@@ -1,0 +1,28 @@
+{% macro display_media(m) -%}
+
+{% for url in m.urls %}
+{% if url | length == 0 %}
+No URL available for {{ m.key }}.
+{% elif 'http' in url %}
+{% if 'image' in m.mimetype %}
+<a href="{{ url }}">
+    <img src="{{ url }}" style="max-height:400px;max-width:400px;"></img>
+</a>
+{% elif 'video' in m.mimetype %}
+<video src="{{ url }}" controls style="max-height:400px;max-width:600px;">
+    Your browser does not support the video element.
+</video>
+{% elif 'audio' in m.mimetype %}
+<audio controls>
+    <source src="{{ url }}" type="{{ m.mimetype }}">
+    Your browser does not support the audio element.
+</audio>
+{% else %}
+No preview available for {{ m.key }}.
+{% endif %}
+{% else %}
+{{ m.url | urlize }}
+{% endif %}
+{% endfor %}
+
+{%- endmacro -%}
