@@ -1,4 +1,4 @@
-{% macro display_media(m) -%}
+{% macro display_media(m, links) -%}
 
 {% for url in m.urls %}
 {% if url | length == 0 %}
@@ -22,7 +22,12 @@ No preview available for {{ m.key }}.
 {% endif %}
 {% else %}
 {{ m.url | urlize }}
-{% endif %}
+{% endif %}                
+{% if links %}
+<br>
+<a href="{{ url }}">open</a> or
+<a href="{{ url }}" download="">download</a>
+{% endif %}                
 {% endfor %}
 
 {%- endmacro -%}

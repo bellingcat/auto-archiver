@@ -29,6 +29,7 @@
             margin: auto;
             border: 1px solid;
             border-collapse: collapse;
+            vertical-align:top;
         }
 
         table.metadata td:first-child {
@@ -120,6 +121,7 @@
                     <p></p>
                     <div>
                         <b class="collapsible" title="expand">{{ prop }}:</b>
+                        <p></p>
                         <div class="collapsible-content">
                             {% for subprop in m.properties[prop] %}
                             {% if subprop | is_media %}
@@ -139,7 +141,7 @@
                 </ul>
             </td>
             <td>
-                {{ macros.display_media(m) }}
+                {{ macros.display_media(m, true) }}
             </td>
         </tr>
         {% endfor %}
