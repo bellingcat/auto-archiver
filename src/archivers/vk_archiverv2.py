@@ -1,7 +1,5 @@
-import re, json, mimetypes, os
-
 from loguru import logger
-from vk_url_scraper import VkScraper, DateTimeEncoder
+from vk_url_scraper import VkScraper
 
 from metadata import Metadata
 from media import Media
@@ -15,8 +13,6 @@ class VkArchiver(Archiverv2):
     Currently only works for /wall posts
     """
     name = "vk_archiver"
-    wall_pattern = re.compile(r"(wall.{0,1}\d+_\d+)")
-    photo_pattern = re.compile(r"(photo.{0,1}\d+_\d+)")
 
     def __init__(self, config: dict) -> None:
         super().__init__(config)
@@ -40,6 +36,7 @@ class VkArchiver(Archiverv2):
         # some urls can contain multiple wall/photo/... parts and all will be fetched
         vk_scrapes = self.vks.scrape(url)
         if not len(vk_scrapes): return False
+        logger.debug(f"VK: got {len(vk_scrapes)} scraped instances")
 
         result = Metadata()
         for scrape in vk_scrapes:
@@ -49,16 +46,6 @@ class VkArchiver(Archiverv2):
                 result.set_timestamp(scrape["datetime"])
 
         result.set_content(dump_payload(vk_scrapes))
-
-        textual_output = ""
-        title, datetime = vk_scrapes[0]["text"], vk_scrapes[0]["datetime"]
-        urls_found = []
-        for scrape in vk_scrapes:
-            textual_output += f"id: {scrape['id']}<br>time utc: {scrape['datetime']}<br>text: {scrape['text']}<br>payload: {dump_payload(scrape['payload'])}<br><hr/><br>"
-            title = scrape["text"] if len(title) == 0 else title
-            datetime = scrape["datetime"] if not datetime else datetime
-            for attachments in scrape["attachments"].values():
-                urls_found.extend(attachments)
 
         filenames = self.vks.download_media(vk_scrapes, item.get_tmp_dir())
         for filename in filenames:
