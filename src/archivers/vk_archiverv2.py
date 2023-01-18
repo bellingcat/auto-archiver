@@ -1,9 +1,9 @@
 from loguru import logger
 from vk_url_scraper import VkScraper
 
+from utils.misc import dump_payload
 from metadata import Metadata
 from media import Media
-from utils.misc import dump_payload
 from .archiver import Archiverv2
 
 
