@@ -9,8 +9,9 @@ from .youtubedl_archiver import YoutubeDLArchiver
 # from .twitter_archiver import TwitterArchiver
 from .vk_archiver import VkArchiver
 # from .twitter_api_archiver import TwitterApiArchiver
-from .instagram_archiver import InstagramArchiver
+# from .instagram_archiver import InstagramArchiver
 
 from .telethon_archiverv2 import TelethonArchiver
 from .twitter_archiverv2 import TwitterArchiver
 from .twitter_api_archiverv2 import TwitterApiArchiver
+from .instagram_archiverv2 import InstagramArchiver

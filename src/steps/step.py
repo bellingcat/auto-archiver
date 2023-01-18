@@ -29,3 +29,11 @@ class Step(ABC):
             if sub.name == name:
                 return sub(config)
         raise ClassFoundException(f"Unable to initialize STEP with {name=}, check your configuration file/step names.")
+
+    def assert_valid_string(self, prop: str) -> None:
+        """
+        receives a property name an ensures it exists and is a valid non-empty string, raises an exception if not
+        """
+        assert hasattr(self, prop), f"property {prop} not found"
+        s = getattr(self, prop)
+        assert s is not None and type(s) == str and len(s) > 0, f"invalid property {prop} value '{s}', it should be a valid string"

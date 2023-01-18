@@ -19,8 +19,8 @@ class TelethonArchiver(Archiverv2):
 
     def __init__(self, config: dict) -> None:
         super().__init__(config)
-        assert self.api_id is not None and type(self.api_id) == str and len(self.api_id) > 0, f"invalid telethon api_id value ({self.api_id}) should be a valid string"
-        assert self.api_hash is not None and type(self.api_hash) == str and len(self.api_hash) > 0, f"invalid telethon api_hash value ({self.api_hash}) should be a valid string"
+        self.assert_valid_string("api_id")
+        self.assert_valid_string("api_hash")
 
         self.client = TelegramClient(self.session_file, self.api_id, self.api_hash)
 
