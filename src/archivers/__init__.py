@@ -7,7 +7,7 @@ from .archiver import Archiverv2
 from .wayback_archiver import WaybackArchiver
 from .youtubedl_archiver import YoutubeDLArchiver
 # from .twitter_archiver import TwitterArchiver
-from .vk_archiver import VkArchiver
+# from .vk_archiver import VkArchiver
 # from .twitter_api_archiver import TwitterApiArchiver
 # from .instagram_archiver import InstagramArchiver
 
@@ -17,3 +17,4 @@ from .twitter_api_archiverv2 import TwitterApiArchiver
 from .instagram_archiverv2 import InstagramArchiver
 from .tiktok_archiverv2 import TiktokArchiver
 from .telegram_archiverv2 import TelegramArchiver
+from .vk_archiverv2 import VkArchiver
