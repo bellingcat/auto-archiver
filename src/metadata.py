@@ -12,10 +12,10 @@ from media import Media
 
 @dataclass
 class Metadata:
-    status: str = ""
+    status: str = "no archiver"
     _processed_at: datetime = datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc)
     metadata: Dict[str, Any] = field(default_factory=dict)
-    tmp_keys: Set[str] = field(default_factory=set)  # keys that are not to be saved in DBs
+    tmp_keys: Set[str] = field(default_factory=set, repr=False)  # keys that are not to be saved in DBs
     media: List[Media] = field(default_factory=list)
     final_media: Media = None  # can be overwritten by formatters
     rearchivable: bool = False
@@ -28,7 +28,7 @@ class Metadata:
         """
         merges two Metadata instances, will overwrite according to overwrite_left flag
         """
-        if right is None: return self
+        if not right: return self
         if overwrite_left:
             if right.status and len(right.status):
                 self.status = right.status
@@ -58,7 +58,17 @@ class Metadata:
             self.metadata[key] = default
         return self.metadata.get(key, default)
 
+    def success(self, context: str = None) -> Metadata:
+        if context: self.status = f"{context}: success"
+        else: self.status = "success"
+        return self
+
+    def is_success(self) -> bool:
+        return "success" in self.status
+
+
 # custom getter/setters
+
 
     def set_url(self, url: str) -> Metadata:
         assert type(url) is str and len(url) > 0, "invalid URL"
@@ -70,7 +80,7 @@ class Metadata:
         return url
 
     def set_content(self, content: str) -> Metadata:
-        # the main textual content/information from a social media post, webpage, ...
+        # a dump with all the relevant content
         return self.set("content", content)
 
     def set_title(self, title: str) -> Metadata:

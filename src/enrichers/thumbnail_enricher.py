@@ -25,6 +25,7 @@ class ThumbnailEnricher(Enricher):
         folder = os.path.join(to_enrich.get_tmp_dir(), str(uuid.uuid4()))
         os.makedirs(folder, exist_ok=True)
         for i, m in enumerate(to_enrich.media[::]):
+            logger.info(m)
             if m.is_video():
                 logger.debug(f"generating thumbnails for {m.filename}")
                 fps, duration = 0.5, m.get("duration")

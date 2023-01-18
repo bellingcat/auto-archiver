@@ -1,5 +1,5 @@
 {# templates/results.html #}
-{% import 'media.html' as macros %}
+{% import 'macros.html' as macros %}
 <!DOCTYPE html>
 <html lang="en">
 
@@ -133,8 +133,8 @@
                         </div>
                     </div>
                     <p></p>
-                    {% elif m.properties[prop] | length > 1 %}
-                    <li><b>{{ prop }}:</b> <span class="copy">{{ m.properties[prop] }}</span></li>
+                    {% elif m.properties[prop] | string | length > 1 %}
+                    <li><b>{{ prop }}:</b> {{ macros.copy_urlize(m.properties[prop]) }}</li>
                     {% endif %}
 
                     {% endfor %}
@@ -156,7 +156,7 @@
         <tr>
             <td>{{ key }}</td>
             <td>
-                <span class="copy">{{ metadata[key] | urlize }}</span>
+                {{ macros.copy_urlize(metadata[key]) }}
             </td>
         </tr>
         {% endfor %}

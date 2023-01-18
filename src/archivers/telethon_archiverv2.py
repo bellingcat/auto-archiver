@@ -13,7 +13,7 @@ from media import Media
 
 
 class TelethonArchiver(Archiverv2):
-    name = "telethon"
+    name = "telethon_archiver"
     link_pattern = re.compile(r"https:\/\/t\.me(\/c){0,1}\/(.+)\/(\d+)")
     invite_pattern = re.compile(r"t.me(\/joinchat){0,1}\/\+?(.+)")
 
@@ -145,8 +145,8 @@ class TelethonArchiver(Archiverv2):
                     continue
                 result.add_media(Media(filename))
 
-            result.set("post", str(post)).set_title(title).set_timestamp(post.date)
-            return result
+            result.set_content(str(post)).set_title(title).set_timestamp(post.date)
+        return result.success("telethon")
 
     def _get_media_posts_in_group(self, chat, original_post, max_amp=10):
         """

@@ -31,3 +31,9 @@ No preview available for {{ m.key }}.
 {% endfor %}
 
 {%- endmacro -%}
+
+{% macro copy_urlize(val) -%}
+
+<span class="copy">{{ val | string | urlize }}</span>
+
+{%- endmacro -%}

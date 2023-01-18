@@ -112,8 +112,8 @@ class ArchivingOrchestrator:
                 logger.error(f'Got unexpected error on item {item}: {e}\n{traceback.format_exc()}')
                 for d in self.databases: d.failed(item)
 
-            print("holding on 5min")
-            time.sleep(300)
+            print("holding on 5s")
+            time.sleep(5)
 
             # how does this handle the parameters like folder which can be different for each archiver?
             # the storage needs to know where to archive!!
@@ -161,9 +161,10 @@ class ArchivingOrchestrator:
             # this is where the Hashes come from, the place with access to all content
             # the archiver does not have access to storage
             # a.download(result) # TODO: refactor so there's not merge here
+            logger.info(f"Trying archiver {a.name}")
             result.merge(a.download(result))
-            # TODO: fix logic
-            if True or result.is_success(): break
+            # TODO: fix logic to halt when done
+            if result.is_success(): break
 
         # what if an archiver returns multiple entries and one is to be part of HTMLgenerator?
         # should it call the HTMLgenerator as if it's not an enrichment?
