@@ -4,9 +4,9 @@ from ast import List, Set
 from typing import Any, Union, Dict
 from dataclasses import dataclass, field
 import datetime, mimetypes
+from urllib.parse import urlparse
 from loguru import logger
-# import json
-
+from dateutil.parser import parse as parse_dt
 from media import Media
 
 
@@ -66,6 +66,10 @@ class Metadata:
     def is_success(self) -> bool:
         return "success" in self.status
 
+    @property  # getter .netloc
+    def netloc(self) -> str:
+        return urlparse(self.get_url()).netloc
+
 
 # custom getter/setters
 
@@ -96,6 +100,8 @@ class Metadata:
         return self.get("tmp_dir")
 
     def set_timestamp(self, timestamp: datetime.datetime) -> Metadata:
+        if type(timestamp) == str:
+            timestamp = parse_dt(timestamp)
         assert type(timestamp) == datetime.datetime, "set_timestamp expects a datetime instance"
         return self.set("timestamp", timestamp)
 

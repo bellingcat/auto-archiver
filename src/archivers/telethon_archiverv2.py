@@ -117,7 +117,7 @@ class TelethonArchiver(Archiverv2):
 
             if post is None: return False
             logger.info(f"fetched telegram {post.id=}")
-            
+
             media_posts = self._get_media_posts_in_group(chat, post)
             logger.debug(f'got {len(media_posts)=} for {url=}')
 
@@ -126,7 +126,7 @@ class TelethonArchiver(Archiverv2):
             group_id = post.grouped_id if post.grouped_id is not None else post.id
             title = post.message
             for mp in media_posts:
-                if len(mp.message) > len(title): title = mp.message # save the longest text found (usually only 1)
+                if len(mp.message) > len(title): title = mp.message  # save the longest text found (usually only 1)
 
                 # media can also be in entities
                 if mp.entities:
@@ -134,8 +134,7 @@ class TelethonArchiver(Archiverv2):
                     if len(other_media_urls):
                         logger.debug(f"Got {len(other_media_urls)} other media urls from {mp.id=}: {other_media_urls}")
                     for i, om_url in enumerate(other_media_urls):
-                        filename = os.path.join(tmp_dir, f'{chat}_{group_id}_{i}')
-                        self.download_from_url(om_url, filename)
+                        filename = self.download_from_url(om_url, f'{chat}_{group_id}_{i}', item)
                         result.add_media(Media(filename=filename), id=f"{group_id}_{i}")
 
                 filename_dest = os.path.join(tmp_dir, f'{chat}_{group_id}', str(mp.id))

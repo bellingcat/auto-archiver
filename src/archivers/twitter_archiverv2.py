@@ -69,8 +69,7 @@ class TwitterArchiver(Archiverv2):
                 logger.warning(f"Could not get media URL of {tweet_media}")
                 continue
             ext = mimetypes.guess_extension(mimetype)
-            media.filename = os.path.join(item.get_tmp_dir(), f'{slugify(url)}_{i}{ext}')
-            self.download_from_url(media.get("src"), media.filename)
+            media.filename = self.download_from_url(media.get("src"), f'{slugify(url)}_{i}{ext}', item)
             result.add_media(media)
 
         return result.success("twitter")
@@ -103,8 +102,7 @@ class TwitterArchiver(Archiverv2):
         for u in urls:
             media = Media()
             media.set("src", u)
-            media.filename = os.path.join(item.get_tmp_dir(), f'{slugify(url)}_{i}')
-            self.download_from_url(u, media.filename)
+            media.filename = self.download_from_url(u, f'{slugify(url)}_{i}', item)
             result.add_media(media)
 
         # .set_title(tweet["TODO"])
