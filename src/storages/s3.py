@@ -52,7 +52,8 @@ class S3StorageV2(StorageV2):
 
         if 'ContentType' not in extra_args:
             try:
-                extra_args['ContentType'] = media.mimetype
+                if media.mimetype:
+                    extra_args['ContentType'] = media.mimetype
             except Exception as e:
                 logger.warning(f"Unable to get mimetype for {media.key=}, error: {e}")
 

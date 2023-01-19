@@ -57,7 +57,12 @@ class ConfigV2:
                     assert "." not in child.name, f"class prop name cannot contain dots('.'): {child.name}"
                     assert "." not in config, f"config property cannot contain dots('.'): {config}"
                     config_path = f"{child.name}.{config}"
-                    parser.add_argument(f'--{config_path}', action='store', dest=config_path, help=f"{details['help']} (defaults to {details['default']})", choices=details.get("choices", None))
+                    try:
+                        parser.add_argument(f'--{config_path}', action='store', dest=config_path, help=f"{details['help']} (defaults to {details['default']})", choices=details.get("choices", None))
+                    except argparse.ArgumentError:
+                        # captures cases when a Step is used in 2 flows, eg: wayback enricher vs wayback archiver
+                        pass
+
                     self.defaults[config_path] = details["default"]
                     if "cli_set" in details:
                         self.cli_ops[config_path] = details["cli_set"]
@@ -92,7 +97,7 @@ class ConfigV2:
         self.feeder = Feeder.init(steps.get("feeder", "cli_feeder"), self.config)
         self.formatter = Formatter.init(steps.get("formatter", "html_formatter"), self.config)
         self.enrichers = [Enricher.init(e, self.config) for e in steps.get("enrichers", [])]
-        self.archivers = [Archiverv2.init(e, self.config) for e in steps.get("archivers", [])]
+        self.archivers = [Archiverv2.init(e, self.config) for e in (steps.get("archivers") or [])]
         self.databases = [Database.init(e, self.config) for e in steps.get("databases", [])]
         self.storages = [StorageV2.init(e, self.config) for e in steps.get("storages", [])]
 

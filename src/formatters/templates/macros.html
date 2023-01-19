@@ -22,18 +22,29 @@ No preview available for {{ m.key }}.
 {% endif %}
 {% else %}
 {{ m.url | urlize }}
-{% endif %}                
+{% endif %}
 {% if links %}
 <br>
 <a href="{{ url }}">open</a> or
 <a href="{{ url }}" download="">download</a>
-{% endif %}                
+{% endif %}
 {% endfor %}
 
 {%- endmacro -%}
 
 {% macro copy_urlize(val) -%}
 
+{% if val is mapping %}
+<ul>
+    {% for key in val %}
+    <li>
+        <b>{{ key }}:</b> {{ copy_urlize(val[key]) }}
+    </li>
+    {% endfor %}
+</ul>
+
+{% else %}
 <span class="copy">{{ val | string | urlize }}</span>
+{% endif %}
 
 {%- endmacro -%}

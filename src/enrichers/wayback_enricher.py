@@ -1,16 +1,15 @@
-from utils import Webdriver
+from archivers.archiver import Archiverv2
 from . import Enricher
 from metadata import Metadata
 from loguru import logger
-from selenium.common.exceptions import TimeoutException
 import time, requests
 
 
-class WaybackEnricher(Enricher):
+class WaybackArchiverEnricher(Enricher, Archiverv2):
     """
     Submits the current URL to the webarchive and returns a job_id or completed archive
     """
-    name = "wayback_enricher"
+    name = "wayback_archiver_enricher"
 
     def __init__(self, config: dict) -> None:
         # without this STEP.__init__ is not called
@@ -26,9 +25,19 @@ class WaybackEnricher(Enricher):
             "secret": {"default": None, "help": "wayback API secret. to get credentials visit https://archive.org/account/s3.php"}
         }
 
-    def enrich(self, to_enrich: Metadata) -> None:
+    def download(self, item: Metadata) -> Metadata:
+        result = Metadata()
+        result.merge(item)
+        if self.enrich(result):
+            return result.success("wayback")
+
+    def enrich(self, to_enrich: Metadata) -> bool:
         url = to_enrich.get_url()
-        logger.debug(f"Enriching wayback for {url=}")
+        logger.debug(f"calling wayback for {url=}")
+
+        if to_enrich.get("wayback"):
+            logger.info(f"Wayback enricher had already been executed: {to_enrich.get('wayback')}")
+            return True
 
         ia_headers = {
             "Accept": "application/json",
@@ -39,10 +48,13 @@ class WaybackEnricher(Enricher):
         if r.status_code != 200:
             logger.error(em := f"Internet archive failed with status of {r.status_code}: {r.json()}")
             to_enrich.set("wayback", em)
-            return
+            return False
 
         # check job status
-        job_id = r.json()['job_id']
+        job_id = r.json().get('job_id')
+        if not job_id:
+            logger.error(f"Wayback failed with {r.json()}")
+            return False
 
         # waits at most timeout seconds until job is completed, otherwise only enriches the job_id information
         start_time = time.time()
@@ -50,12 +62,15 @@ class WaybackEnricher(Enricher):
         attempt = 1
         while not wayback_url and time.time() - start_time <= self.timeout:
             try:
-
                 logger.debug(f"GETting status for {job_id=} on {url=} ({attempt=})")
                 r_status = requests.get(f'https://web.archive.org/save/status/{job_id}', headers=ia_headers)
                 r_json = r_status.json()
                 if r_status.status_code == 200 and r_json['status'] == 'success':
                     wayback_url = f"https://web.archive.org/web/{r_json['timestamp']}/{r_json['original_url']}"
+                elif r_status.status_code != 200 or r_json['status'] != 'pending':
+                    logger.error(f"Wayback failed with {r_json}")
+                    return False
+
             except Exception as e:
                 logger.warning(f"error fetching status for {url=} due to: {e}")
             if not wayback_url:
@@ -66,4 +81,5 @@ class WaybackEnricher(Enricher):
             to_enrich.set("wayback", wayback_url)
         else:
             to_enrich.set("wayback", {"job_id": job_id, "check_status": f'https://web.archive.org/save/status/{job_id}'})
-        to_enrich.set("wayback lookup", f"https://web.archive.org/web/*/{url}")
+        to_enrich.set("check wayback", f"https://web.archive.org/web/*/{url}")
+        return True

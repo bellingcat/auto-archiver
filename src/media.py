@@ -30,7 +30,7 @@ class Media:
         assert self.filename is not None and len(self.filename) > 0, "cannot get mimetype from media without filename"
         if not self._mimetype:
             self._mimetype = mimetypes.guess_type(self.filename)[0]
-        return self._mimetype
+        return self._mimetype or ""
 
     @mimetype.setter  # setter .mimetype
     def mimetype(self, v: str) -> None:

@@ -15,9 +15,8 @@ class Archiverv2(Step):
         # without this STEP.__init__ is not called
         super().__init__(config)
 
-    # only for typing...
-
     def init(name: str, config: dict) -> Archiverv2:
+        # only for typing...
         return Step.init(name, config, Archiverv2)
 
     def setup(self) -> None:
@@ -58,3 +57,19 @@ class Archiverv2(Step):
 
     @abstractmethod
     def download(self, item: Metadata) -> Metadata: pass
+
+    # TODO: how to fix allow predictable key
+    # def get_key(self, filename):
+    #     """
+    #     returns a key in the format "[archiverName]_[filename]" includes extension
+    #     """
+    #     tail = os.path.split(filename)[1]  # returns filename.ext from full path
+    #     _id, extension = os.path.splitext(tail)  # returns [filename, .ext]
+    #     if 'unknown_video' in _id:
+    #         _id = _id.replace('unknown_video', 'jpg')
+
+    #     # long filenames can cause problems, so trim them if necessary
+    #     if len(_id) > 128:
+    #         _id = _id[-128:]
+
+    #     return f'{self.name}_{_id}{extension}'
