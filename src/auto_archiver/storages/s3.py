@@ -4,12 +4,12 @@ import boto3, uuid, os, mimetypes
 from botocore.errorfactory import ClientError
 from ..core import Metadata
 from ..core import Media
-from ..storages import StorageV2
+from ..storages import Storage
 from loguru import logger
 from slugify import slugify
 
 
-class S3StorageV2(StorageV2):
+class S3Storage(Storage):
     name = "s3_storage"
 
     def __init__(self, config: dict) -> None:

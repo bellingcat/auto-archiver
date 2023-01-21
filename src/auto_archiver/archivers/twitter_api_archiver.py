@@ -7,13 +7,13 @@ from loguru import logger
 from pytwitter import Api
 from slugify import slugify
 
-from . import Archiverv2
-from .twitter_archiverv2 import TwitterArchiver
+from . import Archiver
+from .twitter_archiver import TwitterArchiver
 from ..core import Metadata
 from ..core import Media
 
 
-class TwitterApiArchiver(TwitterArchiver, Archiverv2):
+class TwitterApiArchiver(TwitterArchiver, Archiver):
     name = "twitter_api_archiver"
 
     def __init__(self, config: dict) -> None:

@@ -2,10 +2,10 @@ from loguru import logger
 import time, requests
 
 from . import Enricher
-from ..archivers import Archiverv2
+from ..archivers import Archiver
 from ..core import Metadata
 
-class WaybackArchiverEnricher(Enricher, Archiverv2):
+class WaybackArchiverEnricher(Enricher, Archiver):
     """
     Submits the current URL to the webarchive and returns a job_id or completed archive
     """

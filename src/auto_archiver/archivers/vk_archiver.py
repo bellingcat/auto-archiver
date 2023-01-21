@@ -2,12 +2,12 @@ from loguru import logger
 from vk_url_scraper import VkScraper
 
 from ..utils.misc import dump_payload
-from . import Archiverv2
+from . import Archiver
 from ..core import Metadata
 from ..core import Media
 
 
-class VkArchiver(Archiverv2):
+class VkArchiver(Archiver):
     """"
     VK videos are handled by YTDownloader, this archiver gets posts text and images.
     Currently only works for /wall posts

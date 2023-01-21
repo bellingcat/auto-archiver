@@ -10,12 +10,12 @@
 # from .twitter_api_archiver import TwitterApiArchiver
 # from .instagram_archiver import InstagramArchiver
 
-from .archiver import Archiverv2
-from .telethon_archiverv2 import TelethonArchiver
-from .twitter_archiverv2 import TwitterArchiver
-from .twitter_api_archiverv2 import TwitterApiArchiver
-from .instagram_archiverv2 import InstagramArchiver
-from .tiktok_archiverv2 import TiktokArchiver
-from .telegram_archiverv2 import TelegramArchiver
-from .vk_archiverv2 import VkArchiver
-from .youtubedl_archiverv2 import YoutubeDLArchiver
+from .archiver import Archiver
+from .telethon_archiver import TelethonArchiver
+from .twitter_archiver import TwitterArchiver
+from .twitter_api_archiver import TwitterApiArchiver
+from .instagram_archiver import InstagramArchiver
+from .tiktok_archiver import TiktokArchiver
+from .telegram_archiver import TelegramArchiver
+from .vk_archiver import VkArchiver
+from .youtubedl_archiver import YoutubeDLArchiver

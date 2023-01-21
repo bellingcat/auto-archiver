@@ -4,7 +4,7 @@ from ast import List, Set
 from typing import Any, Union, Dict
 from dataclasses import dataclass, field
 from dataclasses_json import dataclass_json
-import datetime, mimetypes
+import datetime
 from urllib.parse import urlparse
 from loguru import logger
 from dateutil.parser import parse as parse_dt
@@ -17,7 +17,7 @@ class Metadata:
     status: str = "no archiver"
     _processed_at: datetime = datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc)
     metadata: Dict[str, Any] = field(default_factory=dict)
-    tmp_keys: Set[str] = field(default_factory=set, repr=False)  # keys that are not to be saved in DBs
+    tmp_keys: Set[str] = field(default_factory=set, repr=False, metadata={"exclude":True})  # keys that are not to be saved in DBs
     media: List[Media] = field(default_factory=list)
     final_media: Media = None  # can be overwritten by formatters
     rearchivable: bool = False

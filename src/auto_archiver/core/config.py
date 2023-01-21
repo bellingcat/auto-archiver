@@ -5,31 +5,31 @@ from dataclasses import dataclass, field
 from typing import List
 from collections import defaultdict
 
-from ..archivers import Archiverv2
+from ..archivers import Archiver
 from ..feeders import Feeder
 from ..databases import Database
 from ..formatters import Formatter
-from ..storages import StorageV2
+from ..storages import Storage
 from . import Step
 from ..enrichers import Enricher
 
 
 @dataclass
-class ConfigV2:
+class Config:
     # TODO: should Config inherit from Step so it can have it's own configurations?
     # these are only detected if they are put to the respective __init__.py
     configurable_parents = [
         Feeder,
         Enricher,
-        Archiverv2,
+        Archiver,
         Database,
-        StorageV2,
+        Storage,
         Formatter
         # Util
     ]
     feeder: Step  # TODO:= BaseFeeder
     formatter: Formatter
-    archivers: List[Archiverv2] = field(default_factory=[])  # TODO: fix type
+    archivers: List[Archiver] = field(default_factory=[])  # TODO: fix type
     enrichers: List[Enricher] = field(default_factory=[])
     storages: List[Step] = field(default_factory=[])  # TODO: fix type
     databases: List[Database] = field(default_factory=[])
@@ -107,9 +107,9 @@ class ConfigV2:
         self.feeder = Feeder.init(steps.get("feeder", "cli_feeder"), self.config)
         self.formatter = Formatter.init(steps.get("formatter", "html_formatter"), self.config)
         self.enrichers = [Enricher.init(e, self.config) for e in steps.get("enrichers", [])]
-        self.archivers = [Archiverv2.init(e, self.config) for e in (steps.get("archivers") or [])]
+        self.archivers = [Archiver.init(e, self.config) for e in (steps.get("archivers") or [])]
         self.databases = [Database.init(e, self.config) for e in steps.get("databases", [])]
-        self.storages = [StorageV2.init(e, self.config) for e in steps.get("storages", [])]
+        self.storages = [Storage.init(e, self.config) for e in steps.get("storages", [])]
 
         print("feeder", self.feeder)
         print("enrichers", [e for e in self.enrichers])

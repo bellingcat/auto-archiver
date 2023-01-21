@@ -2,11 +2,11 @@ import re, os, shutil, html, traceback
 import instaloader  # https://instaloader.github.io/as-module.html
 from loguru import logger
 
-from . import Archiverv2
+from . import Archiver
 from ..core import Metadata
 from ..core import Media
 
-class InstagramArchiver(Archiverv2):
+class InstagramArchiver(Archiver):
     """
     Uses Instaloader to download either a post (inc images, videos, text) or as much as possible from a profile (posts, stories, highlights, ...)
     """

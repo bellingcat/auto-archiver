@@ -8,16 +8,16 @@ from ..core import Step
 
 
 @dataclass
-class Archiverv2(Step):
+class Archiver(Step):
     name = "archiver"
 
     def __init__(self, config: dict) -> None:
         # without this STEP.__init__ is not called
         super().__init__(config)
 
-    def init(name: str, config: dict) -> Archiverv2:
+    def init(name: str, config: dict) -> Archiver:
         # only for typing...
-        return Step.init(name, config, Archiverv2)
+        return Step.init(name, config, Archiver)
 
     def setup(self) -> None:
         # used when archivers need to login or do other one-time setup

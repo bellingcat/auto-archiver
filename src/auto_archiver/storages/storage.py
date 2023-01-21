@@ -10,7 +10,7 @@ from slugify import slugify
 
 
 @dataclass
-class StorageV2(Step):
+class Storage(Step):
     name = "storage"
 
     def __init__(self, config: dict) -> None:
@@ -18,8 +18,8 @@ class StorageV2(Step):
         super().__init__(config)
 
     # only for typing...
-    def init(name: str, config: dict) -> StorageV2:
-        return Step.init(name, config, StorageV2)
+    def init(name: str, config: dict) -> Storage:
+        return Step.init(name, config, Storage)
 
     def store(self, media: Media, item: Metadata) -> None:
         self.set_key(media, item)

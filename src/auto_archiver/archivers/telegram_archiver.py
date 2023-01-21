@@ -4,12 +4,12 @@ import html
 from bs4 import BeautifulSoup
 from loguru import logger
 
-from . import Archiverv2
+from . import Archiver
 from ..core import Metadata
 from ..core import Media
 
 
-class TelegramArchiver(Archiverv2):
+class TelegramArchiver(Archiver):
     """
     Archiver for telegram that does not require login, but the telethon_archiver is much more advised, will only return if at least one image or one video is found
     """

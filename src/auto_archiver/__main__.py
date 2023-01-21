@@ -1,8 +1,8 @@
-from . import ConfigV2
+from . import Config
 from . import ArchivingOrchestrator
 
 def main():
-    config = ConfigV2()
+    config = Config()
     config.parse()
     orchestrator = ArchivingOrchestrator(config)
     orchestrator.feed()

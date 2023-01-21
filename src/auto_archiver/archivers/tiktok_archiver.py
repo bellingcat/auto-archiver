@@ -5,12 +5,12 @@ import uuid
 import tiktok_downloader
 from loguru import logger
 
-from . import Archiverv2
+from . import Archiver
 from ..core import Metadata
 from ..core import Media
 
 
-class TiktokArchiver(Archiverv2):
+class TiktokArchiver(Archiver):
     name = "tiktok_archiver"
 
     def __init__(self, config: dict) -> None:

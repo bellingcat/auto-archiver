@@ -27,3 +27,4 @@ instaloader.session
 orchestration.yaml
 auto_archiver.egg-info*
 logs*
+*.csv

@@ -1,9 +1,3 @@
-# we need to explicitly expose the available imports here
-from .base_storage import Storage
-# from .local_storage import LocalStorage, LocalConfig
-# from .s3_storage import S3Config, S3Storage
-# from .gd_storage import GDConfig, GDStorage
-
-from .storage import StorageV2
-from .s3 import S3StorageV2
-from .local import LocalStorageV2
+from .storage import Storage
+from .s3 import S3Storage
+from .local import LocalStorage

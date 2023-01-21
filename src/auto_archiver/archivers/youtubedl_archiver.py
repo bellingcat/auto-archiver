@@ -4,12 +4,12 @@ import os
 import yt_dlp
 from loguru import logger
 
-from . import Archiverv2
+from . import Archiver
 from ..core import Metadata
 from ..core import Media
 
 
-class YoutubeDLArchiver(Archiverv2):
+class YoutubeDLArchiver(Archiver):
     name = "youtubedl_enricher"
 
     def __init__(self, config: dict) -> None:

@@ -3,10 +3,10 @@ from ast import List
 from typing import Union, Dict
 from dataclasses import dataclass
 
-from ..archivers import Archiverv2
+from ..archivers import Archiver
 from ..feeders import Feeder
 from ..formatters import Formatter
-from ..storages import StorageV2
+from ..storages import Storage
 from ..enrichers import Enricher
 from ..databases import Database
 from .media import Media
@@ -59,9 +59,9 @@ class ArchivingOrchestrator:
         self.feeder: Feeder = config.feeder
         self.formatter: Formatter = config.formatter
         self.enrichers = config.enrichers
-        self.archivers: List[Archiverv2] = config.archivers
+        self.archivers: List[Archiver] = config.archivers
         self.databases: List[Database] = config.databases
-        self.storages: List[StorageV2] = config.storages
+        self.storages: List[Storage] = config.storages
 
         for a in self.archivers: a.setup()
 
@@ -69,12 +69,12 @@ class ArchivingOrchestrator:
         for item in self.feeder:
             self.feed_item(item)
 
-    def feed_item(self, item:Metadata) -> Metadata:
+    def feed_item(self, item: Metadata) -> Metadata:
         print("ARCHIVING", item)
         try:
             with tempfile.TemporaryDirectory(dir="./") as tmp_dir:
                 item.set_tmp_dir(tmp_dir)
-                result = self.archive(item)
+                return self.archive(item)
         except KeyboardInterrupt:
             # catches keyboard interruptions to do a clean exit
             logger.warning(f"caught interrupt on {item=}")
@@ -83,8 +83,6 @@ class ArchivingOrchestrator:
         except Exception as e:
             logger.error(f'Got unexpected error on item {item}: {e}\n{traceback.format_exc()}')
             for d in self.databases: d.failed(item)
-
-        return result
 
         # how does this handle the parameters like folder which can be different for each archiver?
         # the storage needs to know where to archive!!
@@ -154,7 +152,7 @@ class ArchivingOrchestrator:
                 for prop in m.properties.values():
                     if isinstance(prop, Media):
                         s.store(prop, result)
-                    if isinstance(prop, list) and len(prop)>0 and isinstance(prop[0], Media):
+                    if isinstance(prop, list) and len(prop) > 0 and isinstance(prop[0], Media):
                         for prop_media in prop:
                             s.store(prop_media, result)
 

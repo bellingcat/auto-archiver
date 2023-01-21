@@ -18,7 +18,6 @@ class Database(Step, ABC):
         # only for typing...
         return Step.init(name, config, Database)
 
-    @abstractmethod
     def started(self, item: Metadata) -> None:
         """signals the DB that the given item archival has started"""
         pass

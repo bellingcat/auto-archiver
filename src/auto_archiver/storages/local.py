@@ -8,10 +8,10 @@ from slugify import slugify
 
 from ..core import Metadata
 from ..core import Media
-from ..storages import StorageV2
+from ..storages import Storage
 
 
-class LocalStorageV2(StorageV2):
+class LocalStorage(Storage):
     name = "local_storage"
 
     def __init__(self, config: dict) -> None:

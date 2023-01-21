@@ -8,12 +8,12 @@ from loguru import logger
 from tqdm import tqdm
 import re, time, json, os
 
-from . import Archiverv2
+from . import Archiver
 from ..core import Metadata
 from ..core import Media
 
 
-class TelethonArchiver(Archiverv2):
+class TelethonArchiver(Archiver):
     name = "telethon_archiver"
     link_pattern = re.compile(r"https:\/\/t\.me(\/c){0,1}\/(.+)\/(\d+)")
     invite_pattern = re.compile(r"t.me(\/joinchat){0,1}\/\+?(.+)")

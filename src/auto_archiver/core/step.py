@@ -28,7 +28,7 @@ class Step(ABC):
         for sub in child.__subclasses__():
             if sub.name == name:
                 return sub(config)
-        raise ClassFoundException(f"Unable to initialize STEP with {name=}, check your configuration file/step names.")
+        raise ClassFoundException(f"Unable to initialize STEP with {name=}, check your configuration file/step names, and make sure you made the step discoverable by putting it into __init__.py")
 
     def assert_valid_string(self, prop: str) -> None:
         """

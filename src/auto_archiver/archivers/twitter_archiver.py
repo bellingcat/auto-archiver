@@ -7,11 +7,11 @@ from loguru import logger
 from snscrape.modules.twitter import TwitterTweetScraper, Video, Gif, Photo
 from slugify import slugify
 
-from . import Archiverv2
+from . import Archiver
 from ..core import Metadata
 from ..core import Media
 
-class TwitterArchiver(Archiverv2):
+class TwitterArchiver(Archiver):
     """
     This Twitter Archiver uses unofficial scraping methods.
     """
