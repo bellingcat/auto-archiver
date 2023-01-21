@@ -42,7 +42,6 @@ class GsheetsDb(Database):
 
     def fetch(self, item: Metadata) -> Union[Metadata, bool]:
         """check if the given item has been archived already"""
-        # TODO: this should not be done at the feeder stage then!
         return False
 
     def done(self, item: Metadata) -> None:

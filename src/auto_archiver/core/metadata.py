@@ -22,9 +22,6 @@ class Metadata:
     final_media: Media = None  # can be overwritten by formatters
     rearchivable: bool = False
 
-    # def __init__(self, url, metadata = {}) -> None:
-    #     self.set_url(url)
-    #     self.metadata = metadata
 
     def merge(self: Metadata, right: Metadata, overwrite_left=True) -> Metadata:
         """
@@ -134,15 +131,10 @@ class Metadata:
         return self
 
     def get_single_media(self) -> Media:
-        # TODO: could be refactored to use a custom media.id
+        # TODO: could be refactored to use a custom media.id or metadata
         if self.final_media:
             return self.final_media
         return self.media[0]
-
-    # def as_json(self) -> str:
-    #     # converts all metadata and data into JSON
-    #     return json.dumps(self.metadata)
-    #   #TODO: datetime is not serializable
 
     def get_clean_metadata(self) -> Metadata:
         return dict(

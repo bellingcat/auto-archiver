@@ -38,6 +38,7 @@ class Storage(Step):
             return self.uploadf(f, media, **kwargs)
 
     def set_key(self, media: Media, item: Metadata) -> None:
+        #TODO: accept options to make these predictable or random
         """takes the media and optionally item info and generates a key"""
         if media.key is not None and len(media.key) > 0: return
         folder = item.get("folder", "")

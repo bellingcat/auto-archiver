@@ -35,11 +35,6 @@ class HtmlFormatter(Formatter):
         }
 
     def format(self, item: Metadata) -> Media:
-        media = item.media
-        # thumbnails
-        # TODO: thumbnails_media work per media, gah
-        # if self.detect_thumbnails:
-
         content = self.template.render(
             url=item.get_url(),
             title=item.get_title(),

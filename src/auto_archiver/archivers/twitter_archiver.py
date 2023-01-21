@@ -105,7 +105,6 @@ class TwitterArchiver(Archiver):
             media.filename = self.download_from_url(u, f'{slugify(url)}_{i}', item)
             result.add_media(media)
 
-        # .set_title(tweet["TODO"])
         result.set_content(json.dumps(tweet, ensure_ascii=False)).set_timestamp(datetime.strptime(tweet["created_at"], "%Y-%m-%dT%H:%M:%S.%fZ"))
         return result
 

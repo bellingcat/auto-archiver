@@ -132,7 +132,6 @@ class ArchivingOrchestrator:
             # a.download(result) # TODO: refactor so there's not merge here
             logger.info(f"Trying archiver {a.name}")
             result.merge(a.download(result))
-            # TODO: fix logic to halt when done
             if result.is_success(): break
 
         # what if an archiver returns multiple entries and one is to be part of HTMLgenerator?

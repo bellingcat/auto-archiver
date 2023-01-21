@@ -6,7 +6,7 @@ from typing import List
 from collections import defaultdict
 
 from ..archivers import Archiver
-from ..feeders import Feeder
+from ..feeders import Feeder, CLIFeeder
 from ..databases import Database
 from ..formatters import Formatter
 from ..storages import Storage
@@ -16,8 +16,6 @@ from ..enrichers import Enricher
 
 @dataclass
 class Config:
-    # TODO: should Config inherit from Step so it can have it's own configurations?
-    # these are only detected if they are put to the respective __init__.py
     configurable_parents = [
         Feeder,
         Enricher,
@@ -27,18 +25,17 @@ class Config:
         Formatter
         # Util
     ]
-    feeder: Step  # TODO:= BaseFeeder
+    feeder: Feeder
     formatter: Formatter
-    archivers: List[Archiver] = field(default_factory=[])  # TODO: fix type
+    archivers: List[Archiver] = field(default_factory=[])
     enrichers: List[Enricher] = field(default_factory=[])
-    storages: List[Step] = field(default_factory=[])  # TODO: fix type
+    storages: List[Storage] = field(default_factory=[])
     databases: List[Database] = field(default_factory=[])
 
     def __init__(self) -> None:
         self.defaults = {}
         self.cli_ops = {}
         self.config = {}
-    # TODO: make this work for nested props like gsheet_feeder.columns.url = "URL"
 
     def parse(self, use_cli=True, yaml_config_filename: str = None):
         """
@@ -49,7 +46,7 @@ class Config:
         if use_cli:
             parser = argparse.ArgumentParser(
                 # prog = "auto-archiver",
-                description="Auto Archiver is a ...!",  # TODO: update
+                description="Auto Archiver is a CLI tool to archive media/metadata from online URLs; it can read URLs from many sources (Google Sheets, Command Line, ...); and write results to many destinations too (CSV, Google Sheets, MongoDB, ...)!",
                 epilog="Check the code at https://github.com/bellingcat/auto-archiver"
             )
 
@@ -63,7 +60,7 @@ class Config:
                     assert "." not in child.name, f"class prop name cannot contain dots('.'): {child.name}"
                     assert "." not in config, f"config property cannot contain dots('.'): {config}"
                     config_path = f"{child.name}.{config}"
-                    
+
                     if use_cli:
                         try:
                             parser.add_argument(f'--{config_path}', action='store', dest=config_path, help=f"{details['help']} (defaults to {details['default']})", choices=details.get("choices", None))
