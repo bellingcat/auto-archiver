@@ -29,9 +29,11 @@ instaloader = "*"
 tqdm = "*"
 jinja2 = "*"
 cryptography = "==38.0.4"
+dataclasses-json = "*"
 
 [requires]
 python_version = "3.9"
 
 [dev-packages]
 autopep8 = "*"
+setuptools-pipfile = "*"

@@ -25,3 +25,5 @@ browsertrix-tmp/*
 instaloader/*
 instaloader.session
 orchestration.yaml
+auto_archiver.egg-info*
+logs*
