@@ -14,7 +14,8 @@ class CLIFeeder(Feeder):
     def __init__(self, config: dict) -> None:
         # without this STEP.__init__ is not called
         super().__init__(config)
-        assert type(self.urls) == list and len(self.urls) > 0, "Please provide a CSV list of URL(s) to process, with --cli_feeder.urls='url1,url2,url3'"
+        if type(self.urls) != list or len(self.urls) == 0:
+            logger.info(f"CLI Feeder did not receive any URL to process")
 
     @staticmethod
     def configs() -> dict:

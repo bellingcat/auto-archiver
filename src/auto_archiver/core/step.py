@@ -18,7 +18,7 @@ class Step(ABC):
             self.__setattr__(k, v)
 
     @staticmethod
-    def configs() -> dict: {}
+    def configs() -> dict: return {}
 
     def init(name: str, config: dict, child: Type[Step]) -> Step:
         """

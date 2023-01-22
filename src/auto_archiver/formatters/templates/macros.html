@@ -1,4 +1,4 @@
-{% macro display_media(m, links) -%}
+{% macro display_media(m, links, main_url) -%}
 
 {% for url in m.urls %}
 {% if url | length == 0 %}
@@ -17,6 +17,8 @@ No URL available for {{ m.key }}.
     <source src="{{ url }}" type="{{ m.mimetype }}">
     Your browser does not support the audio element.
 </audio>
+{% elif m.filename | get_extension == ".wacz" %}
+<a href="https://replayweb.page/?source={{ url | quote }}#view=pages&url={{ main_url }}">replayweb</a>
 {% else %}
 No preview available for {{ m.key }}.
 {% endif %}

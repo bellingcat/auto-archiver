@@ -125,7 +125,7 @@
                         <div class="collapsible-content">
                             {% for subprop in m.properties[prop] %}
                             {% if subprop | is_media %}
-                            {{ macros.display_media(subprop) }}
+                            {{ macros.display_media(subprop, false, url) }}
                             {% else %}
                             {{ subprop }}
                             {% endif %}
@@ -141,7 +141,7 @@
                 </ul>
             </td>
             <td>
-                {{ macros.display_media(m, true) }}
+                {{ macros.display_media(m, true, url) }}
             </td>
         </tr>
         {% endfor %}

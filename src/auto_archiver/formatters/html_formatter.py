@@ -4,6 +4,7 @@ from abc import abstractmethod
 import mimetypes
 from jinja2 import Environment, FileSystemLoader
 import uuid, os, pathlib
+from urllib.parse import quote
 
 from ..core import Metadata
 from ..core import Media
@@ -18,12 +19,9 @@ class HtmlFormatter(Formatter):
         # without this STEP.__init__ is not called
         super().__init__(config)
         self.environment = Environment(loader=FileSystemLoader(os.path.join(pathlib.Path(__file__).parent.resolve(), "templates/")))
+        # JinjaHelper class static methods are added as filters
         self.environment.filters.update({
-            'is_list': is_list_jinja,
-            'is_video': is_video_jinja,
-            'is_image': is_image_jinja,
-            'is_audio': is_audio_jinja,
-            'is_media': is_media_jinja,
+            k: v for k, v in JinjaHelpers.__dict__.items() if isinstance(v, staticmethod)
         })
         self.template = self.environment.get_template("html_template.html")
 
@@ -49,25 +47,34 @@ class HtmlFormatter(Formatter):
 
 # JINJA helper filters
 
+class JinjaHelpers:
+    @staticmethod
+    def is_list(v) -> bool:
+        return isinstance(v, list)
 
-def is_list_jinja(v) -> bool:
-    return isinstance(v, list)
+    @staticmethod
+    def is_video(s: str) -> bool:
+        m = mimetypes.guess_type(s)[0]
+        return "video" in (m or "")
 
+    @staticmethod
+    def is_image(s: str) -> bool:
+        m = mimetypes.guess_type(s)[0]
+        return "image" in (m or "")
 
-def is_video_jinja(s: str) -> bool:
-    m = mimetypes.guess_type(s)[0]
-    return "video" in (m or "")
+    @staticmethod
+    def is_audio(s: str) -> bool:
+        m = mimetypes.guess_type(s)[0]
+        return "audio" in (m or "")
 
+    @staticmethod
+    def is_media(v) -> bool:
+        return isinstance(v, Media)
 
-def is_image_jinja(s: str) -> bool:
-    m = mimetypes.guess_type(s)[0]
-    return "image" in (m or "")
+    @staticmethod
+    def get_extension(filename: str) -> str:
+        return os.path.splitext(filename)[1]
 
-
-def is_audio_jinja(s: str) -> bool:
-    m = mimetypes.guess_type(s)[0]
-    return "audio" in (m or "")
-
-
-def is_media_jinja(v) -> bool:
-    return isinstance(v, Media)
+    @staticmethod
+    def quote(s: str) -> str:
+        return quote(s)
