@@ -11,17 +11,18 @@ from dateutil.parser import parse as parse_dt
 from .media import Media
 
 # annotation order matters
+
+
 @dataclass_json
 @dataclass
 class Metadata:
     status: str = "no archiver"
-    _processed_at: datetime = datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc)
+    _processed_at: datetime = field(default_factory=datetime.datetime.utcnow)
     metadata: Dict[str, Any] = field(default_factory=dict)
-    tmp_keys: Set[str] = field(default_factory=set, repr=False, metadata={"exclude":True})  # keys that are not to be saved in DBs
+    tmp_keys: Set[str] = field(default_factory=set, repr=False, metadata={"exclude": True})  # keys that are not to be saved in DBs
     media: List[Media] = field(default_factory=list)
     final_media: Media = None  # can be overwritten by formatters
     rearchivable: bool = False
-
 
     def merge(self: Metadata, right: Metadata, overwrite_left=True) -> Metadata:
         """

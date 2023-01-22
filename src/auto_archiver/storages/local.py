@@ -20,13 +20,15 @@ class LocalStorage(Storage):
 
     @staticmethod
     def configs() -> dict:
-        return {
-            "save_to": {"default": "./archived", "help": "folder where to save archived content"},
-            "flatten": {"default": True, "help": "if true saves all files to the root of 'save_to' directory, if false preserves subdir structure"},
-            "save_absolute": {"default": False, "help": "whether the path to the stored file is absolute or relative (leaks the file structure)"},
-        }
+        return dict(
+            Storage.configs(),
+            ** {
+                "save_to": {"default": "./archived", "help": "folder where to save archived content"},
+                "save_absolute": {"default": False, "help": "whether the path to the stored file is absolute or relative in the output result inc. formatters (WARN: leaks the file structure)"},
+            })
 
     def get_cdn_url(self, media: Media) -> str:
+        #TODO: is this viable with Storage.configs on path/filename?
         dest = os.path.join(self.save_to, media.key)
         if self.save_absolute:
             dest = os.path.abspath(dest)
@@ -34,14 +36,12 @@ class LocalStorage(Storage):
 
     def upload(self, media: Media, **kwargs) -> bool:
         # override parent so that we can use shutil.copy2 and keep metadata
-        if self.flatten:
-            dest = os.path.join(self.save_to, slugify(media.key))
-        else:
-            dest = os.path.join(self.save_to, media.key)
-
-        os.makedirs(dest, exist_ok=True)
+        dest = os.path.join(self.save_to, media.key)
+        os.makedirs(os.path.dirname(dest), exist_ok=True)
         logger.debug(f'[{self.__class__.name}] storing file {media.filename} with key {media.key} to {dest}')
-        shutil.copy2(media.filename, dest)
+        res = shutil.copy2(media.filename, dest)
+        logger.info(res)
         return True
 
+    # must be implemented even if unused
     def uploadf(self, file: IO[bytes], key: str, **kwargs: dict) -> bool: pass

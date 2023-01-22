@@ -24,23 +24,25 @@ class S3Storage(Storage):
 
     @staticmethod
     def configs() -> dict:
-        return {
-            "bucket": {"default": None, "help": "S3 bucket name"},
-            "region": {"default": None, "help": "S3 region name"},
-            "key": {"default": None, "help": "S3 API key"},
-            "secret": {"default": None, "help": "S3 API secret"},
-            # TODO: how to have sth like a custom folder? has to come from the feeders
-            "endpoint_url": {
-                "default": 'https://{region}.digitaloceanspaces.com',
-                "help": "S3 bucket endpoint, {region} are inserted at runtime"
-            },
-            "cdn_url": {
-                "default": 'https://{bucket}.{region}.cdn.digitaloceanspaces.com/{key}',
-                "help": "S3 CDN url, {bucket}, {region} and {key} are inserted at runtime"
-            },
-            "private": {"default": False, "help": "if true S3 files will not be readable online"},
-            # "key_path": {"default": "random", "help": "S3 file names are non-predictable strings, one of ['random', 'default']"},
-        }
+        return dict(
+            Storage.configs(),
+            ** {
+                "bucket": {"default": None, "help": "S3 bucket name"},
+                "region": {"default": None, "help": "S3 region name"},
+                "key": {"default": None, "help": "S3 API key"},
+                "secret": {"default": None, "help": "S3 API secret"},
+                # TODO: how to have sth like a custom folder? has to come from the feeders
+                "endpoint_url": {
+                    "default": 'https://{region}.digitaloceanspaces.com',
+                    "help": "S3 bucket endpoint, {region} are inserted at runtime"
+                },
+                "cdn_url": {
+                    "default": 'https://{bucket}.{region}.cdn.digitaloceanspaces.com/{key}',
+                    "help": "S3 CDN url, {bucket}, {region} and {key} are inserted at runtime"
+                },
+                "private": {"default": False, "help": "if true S3 files will not be readable online"},
+                # "key_path": {"default": "random", "help": "S3 file names are non-predictable strings, one of ['random', 'default']"},
+            })
 
     def get_cdn_url(self, media: Media) -> str:
         return self.cdn_url.format(bucket=self.bucket, region=self.region, key=media.key)
