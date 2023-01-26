@@ -140,7 +140,8 @@ class ArchivingOrchestrator:
         # 4 - call enrichers: have access to archived content, can generate metadata and Media
         # eg: screenshot, wacz, webarchive, thumbnails
         for e in self.enrichers:
-            e.enrich(result)
+            try: e.enrich(result)
+            except Exception as exc: logger.error(f"Unexpected error with enricher {e.name}: {exc}")
 
         # 5 - store media
         # looks for Media in result.media and also result.media[x].properties (as list or dict values)
