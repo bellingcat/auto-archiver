@@ -22,7 +22,7 @@ class Metadata:
     tmp_keys: Set[str] = field(default_factory=set, repr=False, metadata={"exclude": True})  # keys that are not to be saved in DBs
     media: List[Media] = field(default_factory=list)
     final_media: Media = None  # can be overwritten by formatters
-    rearchivable: bool = False
+    rearchivable: bool = True # defaults to true, archivers can overwrite
 
     def merge(self: Metadata, right: Metadata, overwrite_left=True) -> Metadata:
         """
@@ -140,14 +140,5 @@ class Metadata:
     def get_clean_metadata(self) -> Metadata:
         return dict(
             {k: v for k, v in self.metadata.items() if k not in self.tmp_keys},
-            **{"processed_at": self._processed_at}  # TODO: move to enrichment
+            **{"processed_at": self._processed_at}
         )
-
-    def cleanup(self) -> Metadata:
-        # TODO: refactor so it returns a JSON with all intended properties, except tmp_keys
-        # the code below leads to errors if database needs tmp_keys after they are removed
-        # """removes temporary metadata fields, ideally called after all ops except writing"""
-        # for tmp_key in self.tmp_keys:
-        # self.metadata.pop(tmp_key, None)
-        # self.tmp_keys = set()
-        pass

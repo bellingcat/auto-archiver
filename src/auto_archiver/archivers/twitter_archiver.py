@@ -11,6 +11,7 @@ from . import Archiver
 from ..core import Metadata
 from ..core import Media
 
+
 class TwitterArchiver(Archiver):
     """
     This Twitter Archiver uses unofficial scraping methods.
@@ -18,6 +19,7 @@ class TwitterArchiver(Archiver):
 
     name = "twitter_archiver"
     link_pattern = re.compile(r"twitter.com\/(?:\#!\/)?(\w+)\/status(?:es)?\/(\d+)")
+    link_clean_pattern = re.compile(r"(.+twitter\.com\/.+\/\d+)(\?)*.*")
 
     def __init__(self, config: dict) -> None:
         super().__init__(config)
@@ -25,6 +27,22 @@ class TwitterArchiver(Archiver):
     @staticmethod
     def configs() -> dict:
         return {}
+
+    def sanitize_url(self, url: str) -> str:
+        # expand URL if t.co and clean tracker GET params
+        if 'https://t.co/' in url:
+            try:
+                r = requests.get(url)
+                logger.debug(f'Expanded url {url} to {r.url}')
+                url = r.url
+            except:
+                logger.error(f'Failed to expand url {url}')
+        # https://twitter.com/MeCookieMonster/status/1617921633456640001?s=20&t=3d0g4ZQis7dCbSDg-mE7-w
+        return self.link_clean_pattern.sub("\\1", url)
+
+    def is_rearchivable(self, url: str) -> bool:
+        # Twitter posts are static
+        return False
 
     def download(self, item: Metadata) -> Metadata:
         """

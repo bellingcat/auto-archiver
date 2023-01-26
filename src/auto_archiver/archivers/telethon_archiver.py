@@ -39,6 +39,10 @@ class TelethonArchiver(Archiver):
             }
         }
 
+    def is_rearchivable(self, url: str) -> bool:
+        # telegram posts are static
+        return False
+
     def setup(self) -> None:
         """
         1. trigger login process for telegram or proceed if already saved in a session file

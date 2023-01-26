@@ -91,19 +91,19 @@ class ArchivingOrchestrator:
         # default feeder is a list with 1 element
 
     def archive(self, result: Metadata) -> Union[Metadata, None]:
-        url = result.get_url()
-        # TODO: clean urls
-        for a in self.archivers:
-            url = a.clean_url(url)
-        result.set_url(url)
-        # should_archive = False
-        # for d in self.databases: should_archive |= d.should_process(url)
-        # should storages also be able to check?
-        # for s in self.storages: should_archive |= s.should_process(url)
+        original_url = result.get_url()
 
-        # if not should_archive:
-        #     print("skipping")
-        #     return "skipping"
+        # 1 - cleanup
+        # each archiver is responsible for cleaning/expanding its own URLs
+        url = original_url
+        for a in self.archivers: url = a.sanitize_url(url)
+        result.set_url(url)
+        if original_url != url: result.set("original_url", original_url)
+
+        # 2 - rearchiving logic + notify start to DB
+        # archivers can signal whether the content is rearchivable: eg: tweet vs webpage
+        for a in self.archivers: result.rearchivable |= a.is_rearchivable(url)
+        logger.debug(f"{result.rearchivable=} for {url=}")
 
         # signal to DB that archiving has started
         # and propagate already archived if it exists
@@ -117,33 +117,33 @@ class ArchivingOrchestrator:
             if (local_result := d.fetch(result)):
                 cached_result = (cached_result or Metadata()).merge(local_result)
         if cached_result and not cached_result.rearchivable:
+            logger.debug("Found previously archived entry")
             for d in self.databases:
                 d.done(cached_result)
             return cached_result
 
-        # vk, telethon, ...
+        # 3 - call archivers until one succeeds
         for a in self.archivers:
-            # with automatic try/catch in download + archived (+ the other ops below)
-            # should the archivers come with the config already? are there configs which change at runtime?
-            # think not, so no need to pass config as parameter
-            # do they need to be refreshed with every execution?
-            # this is where the Hashes come from, the place with access to all content
-            # the archiver does not have access to storage
-            # a.download(result) # TODO: refactor so there's not merge here
             logger.info(f"Trying archiver {a.name}")
-            result.merge(a.download(result))
-            if result.is_success(): break
+            try: 
+                # Q: should this be refactored so it's just a.download(result)?
+                result.merge(a.download(result))
+                if result.is_success(): break
+            except Exception as e: logger.error(f"Unexpected error with archiver {a.name}: {e}")
 
         # what if an archiver returns multiple entries and one is to be part of HTMLgenerator?
         # should it call the HTMLgenerator as if it's not an enrichment?
         # eg: if it is enable: generates an HTML with all the returned media, should it include enrichers? yes
         # then how to execute it last? should there also be post-processors? are there other examples?
         # maybe as a PDF? or a Markdown file
-        # side captures: screenshot, wacz, webarchive, thumbnails, HTMLgenerator
+
+        # 4 - call enrichers: have access to archived content, can generate metadata and Media
+        # eg: screenshot, wacz, webarchive, thumbnails
         for e in self.enrichers:
             e.enrich(result)
 
-        # store media
+        # 5 - store media
+        # looks for Media in result.media and also result.media[x].properties (as list or dict values)
         for s in self.storages:
             for m in result.media:
                 s.store(m, result)  # modifies media
@@ -155,19 +155,14 @@ class ArchivingOrchestrator:
                         for prop_media in prop:
                             s.store(prop_media, result)
 
-        # formatters, enrichers, and storages will sometimes look for specific properties: eg <li>Screenshot: <img src="{res.get("screenshot")}"> </li>
-        # TODO: should there only be 1 formatter?
-        # for f in self.formatters:
-        #     result.merge(f.format(result))
-        # final format and store it
+        # 6 - format and store formatted if needed
+        # enrichers typically need access to already stored URLs etc
         if (final_media := self.formatter.format(result)):
             for s in self.storages:
                 s.store(final_media, result)
             result.set_final_media(final_media)
 
         # signal completion to databases (DBs, Google Sheets, CSV, ...)
-        # a hash registration service could be one database: forensic archiving
-        result.cleanup()
         for d in self.databases: d.done(result)
 
         return result

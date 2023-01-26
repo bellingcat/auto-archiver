@@ -22,6 +22,10 @@ class TelegramArchiver(Archiver):
     def configs() -> dict:
         return {}
 
+    def is_rearchivable(self, url: str) -> bool:
+        # telegram posts are static
+        return False
+
     def download(self, item: Metadata) -> Metadata:
         url = item.get_url()
         # detect URLs that we definitely cannot handle

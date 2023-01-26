@@ -23,9 +23,14 @@ class Archiver(Step):
         # used when archivers need to login or do other one-time setup
         pass
 
-    def clean_url(self, url: str) -> str:
-        # used to clean unnecessary URL parameters
+    def sanitize_url(self, url: str) -> str:
+        # used to clean unnecessary URL parameters OR unfurl redirect links
         return url
+
+    def is_rearchivable(self, url: str) -> bool:
+        # archivers can signal if it does not make sense to rearchive a piece of content
+        # default is rearchiving
+        return True
 
     def _guess_file_type(self, path: str) -> str:
         """
@@ -57,19 +62,3 @@ class Archiver(Step):
 
     @abstractmethod
     def download(self, item: Metadata) -> Metadata: pass
-
-    # TODO: how to fix allow predictable key
-    # def get_key(self, filename):
-    #     """
-    #     returns a key in the format "[archiverName]_[filename]" includes extension
-    #     """
-    #     tail = os.path.split(filename)[1]  # returns filename.ext from full path
-    #     _id, extension = os.path.splitext(tail)  # returns [filename, .ext]
-    #     if 'unknown_video' in _id:
-    #         _id = _id.replace('unknown_video', 'jpg')
-
-    #     # long filenames can cause problems, so trim them if necessary
-    #     if len(_id) > 128:
-    #         _id = _id[-128:]
-
-    #     return f'{self.name}_{_id}{extension}'
