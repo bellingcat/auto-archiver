@@ -1,7 +1,6 @@
 from __future__ import annotations
 from ast import List
-from typing import Union, Dict
-from dataclasses import dataclass
+from typing import Union
 
 from ..archivers import Archiver
 from ..feeders import Feeder
@@ -12,7 +11,7 @@ from ..databases import Database
 from .media import Media
 from .metadata import Metadata
 
-import tempfile, time, traceback
+import tempfile, traceback
 from loguru import logger
 
 

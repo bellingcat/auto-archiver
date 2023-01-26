@@ -15,7 +15,7 @@ class CLIFeeder(Feeder):
         # without this STEP.__init__ is not called
         super().__init__(config)
         if type(self.urls) != list or len(self.urls) == 0:
-            logger.info(f"CLI Feeder did not receive any URL to process")
+            raise Exception("CLI Feeder did not receive any URL to process")
 
     @staticmethod
     def configs() -> dict:

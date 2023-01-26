@@ -22,6 +22,7 @@ RUN pip install --upgrade pip && \
 COPY Pipfile Pipfile.lock ./
 RUN pipenv install --python=3.10 --system --deploy
 ENV IS_DOCKER=1
+# doing this at the end helps during development, builds are quick
 COPY ./src/ . 
 
 # TODO: figure out how to make volumes not be root, does it depend on host or dockerfile?

@@ -4,9 +4,10 @@ import argparse, yaml
 from dataclasses import dataclass, field
 from typing import List
 from collections import defaultdict
+from loguru import logger
 
 from ..archivers import Archiver
-from ..feeders import Feeder, CLIFeeder
+from ..feeders import Feeder
 from ..databases import Database
 from ..formatters import Formatter
 from ..storages import Storage
@@ -80,7 +81,6 @@ class Config:
         # 2. read YAML config file (or use provided value)
         self.yaml_config = self.read_yaml(yaml_config_filename)
 
-        # print(f"{self.yaml_config.get('configurations', {})=}")
         # 3. CONFIGS: decide value with priority: CLI >> config.yaml >> default
         self.config = defaultdict(dict)
         for config_path, default in self.defaults.items():
@@ -90,7 +90,6 @@ class Config:
                 val = self.cli_ops[config_path](val, default)
             if val is None:
                 val = self.yaml_config.get("configurations", {}).get(child, {}).get(config, default)
-            # print(child, config, val)
             self.config[child][config] = val
         self.config = dict(self.config)
 
@@ -99,21 +98,19 @@ class Config:
         assert "archivers" in steps, "your configuration steps are missing the archivers property"
         assert "storages" in steps, "your configuration steps are missing the storages property"
 
-        # print("config.py", self.config)
-
         self.feeder = Feeder.init(steps.get("feeder", "cli_feeder"), self.config)
-        self.formatter = Formatter.init(steps.get("formatter", "html_formatter"), self.config)
+        self.formatter = Formatter.init(steps.get("formatter", "mute_formatter"), self.config)
         self.enrichers = [Enricher.init(e, self.config) for e in steps.get("enrichers", [])]
         self.archivers = [Archiver.init(e, self.config) for e in (steps.get("archivers") or [])]
         self.databases = [Database.init(e, self.config) for e in steps.get("databases", [])]
         self.storages = [Storage.init(e, self.config) for e in steps.get("storages", [])]
 
-        print("feeder", self.feeder)
-        print("enrichers", [e for e in self.enrichers])
-        print("archivers", [e for e in self.archivers])
-        print("databases", [e for e in self.databases])
-        print("storages", [e for e in self.storages])
-        print("formatter", self.formatter)
+        logger.info(f"FEEDER: {self.feeder.name}")
+        logger.info(f"ENRICHERS: {[x.name for x in self.enrichers]}")
+        logger.info(f"ARCHIVERS: {[x.name for x in self.archivers]}")
+        logger.info(f"DATABASES: {[x.name for x in self.databases]}")
+        logger.info(f"STORAGES: {[x.name for x in self.storages]}")
+        logger.info(f"FORMATTER: {self.formatter.name}")
 
     def read_yaml(self, yaml_filename: str) -> dict:
         with open(yaml_filename, "r", encoding="utf-8") as inf:
