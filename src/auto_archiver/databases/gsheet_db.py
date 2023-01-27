@@ -60,7 +60,7 @@ class GsheetsDb(Database):
 
         cell_updates.append((row, 'status', item.status))
 
-        media: Media = item.get_single_media()
+        media: Media = item.get_final_media()
 
         batch_if_valid('archive', "\n".join(media.urls))
         batch_if_valid('date', True, datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc).isoformat())

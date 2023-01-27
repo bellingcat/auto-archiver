@@ -21,8 +21,7 @@ class Metadata:
     metadata: Dict[str, Any] = field(default_factory=dict)
     tmp_keys: Set[str] = field(default_factory=set, repr=False, metadata={"exclude": True})  # keys that are not to be saved in DBs
     media: List[Media] = field(default_factory=list)
-    final_media: Media = None  # can be overwritten by formatters
-    rearchivable: bool = True # defaults to true, archivers can overwrite
+    rearchivable: bool = True  # defaults to true, archivers can overwrite
 
     def merge(self: Metadata, right: Metadata, overwrite_left=True) -> Metadata:
         """
@@ -73,7 +72,6 @@ class Metadata:
 
 # custom getter/setters
 
-
     def set_url(self, url: str) -> Metadata:
         assert type(url) is str and len(url) > 0, "invalid URL"
         return self.set("url", url)
@@ -115,27 +113,24 @@ class Metadata:
     def add_media(self, media: Media, id: str = None) -> Metadata:
         # adds a new media, optionally including an id
         if media is None: return
-        if id is not None: media.set("id", id)
+        if id is not None:
+            assert not len([1 for m in self.media if m.get("id") == id]), f"cannot add 2 pieces of media with the same id {id}"
+            media.set("id", id)
         self.media.append(media)
         return media
 
-    def get_media_by_id(self, id: str) -> Media:
+    def get_media_by_id(self, id: str, default=None) -> Media:
         for m in self.media:
             if m.get("id") == id: return m
-        return None
+        return default
 
     def set_final_media(self, final: Media) -> Metadata:
-        if final:
-            if self.final_media:
-                logger.warning(f"overwriting final media value :{self.final_media} with {final}")
-            self.final_media = final
-        return self
+        """final media is a special type of media: if you can show only 1 this is it, it's useful for some DBs like GsheetDb"""
+        self.add_media(final, "_final_media")
 
-    def get_single_media(self) -> Media:
-        # TODO: could be refactored to use a custom media.id or metadata
-        if self.final_media:
-            return self.final_media
-        return self.media[0]
+    def get_final_media(self) -> Media:
+        _default = self.media[0] if len(self.media) else None
+        return self.get_media_by_id("_final_media", _default)
 
     def get_clean_metadata(self) -> Metadata:
         return dict(

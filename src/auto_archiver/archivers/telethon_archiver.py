@@ -32,6 +32,7 @@ class TelethonArchiver(Archiver):
             "api_hash": {"default": None, "help": "telegram API_HASH value, go to https://my.telegram.org/apps"},
             # "bot_token": {"default": None, "help": "optional, but allows access to more content such as large videos, talk to @botfather"},
             "session_file": {"default": "secrets/anon", "help": "optional, records the telegram login session for future usage"},
+            "join_channels": {"default": True, "help": "disables the initial setup with channel_invites config, useful if you have a lot and get stuck"},
             "channel_invites": {
                 "default": {},
                 "help": "(JSON string) private channel invite links (format: t.me/joinchat/HASH OR t.me/+HASH) and (optional but important to avoid hanging for minutes on startup) channel id (format: CHANNEL_ID taken from a post url like https://t.me/c/CHANNEL_ID/1), the telegram account will join any new channels on setup",
@@ -51,7 +52,7 @@ class TelethonArchiver(Archiver):
         logger.info(f"SETUP {self.name} checking login...")
         with self.client.start(): pass
 
-        if len(self.channel_invites):
+        if self.join_channels and len(self.channel_invites):
             logger.info(f"SETUP {self.name} joining channels...")
             with self.client.start():
                 # get currently joined channels
