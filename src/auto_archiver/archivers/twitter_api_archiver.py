@@ -1,16 +1,13 @@
 
-import json
+import json, mimetypes
 from datetime import datetime
-import mimetypes
-import os
 from loguru import logger
 from pytwitter import Api
 from slugify import slugify
 
 from . import Archiver
 from .twitter_archiver import TwitterArchiver
-from ..core import Metadata
-from ..core import Media
+from ..core import Metadata,Media
 
 
 class TwitterApiArchiver(TwitterArchiver, Archiver):

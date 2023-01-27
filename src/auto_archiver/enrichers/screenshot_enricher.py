@@ -4,8 +4,7 @@ from selenium.common.exceptions import TimeoutException
 
 from . import Enricher
 from ..utils import Webdriver
-from ..core import Media
-from ..core import Metadata
+from ..core import Media, Metadata
 
 class ScreenshotEnricher(Enricher):
     name = "screenshot_enricher"

@@ -1,10 +1,11 @@
 import os
 from loguru import logger
+from csv import DictWriter
+from dataclasses import asdict
 
 from . import Database
 from ..core import Metadata
-from csv import DictWriter
-from dataclasses import asdict
+
 
 class CSVDb(Database):
     """

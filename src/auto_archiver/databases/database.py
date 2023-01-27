@@ -2,8 +2,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from abc import abstractmethod, ABC
 from typing import Union
-from ..core import Metadata
-from ..core import Step
+
+from ..core import Metadata, Step
 
 
 @dataclass

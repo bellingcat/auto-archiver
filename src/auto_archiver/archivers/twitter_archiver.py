@@ -1,15 +1,11 @@
-import html, re, requests
-import mimetypes
-import json
-import os
+import re, requests, mimetypes, json
 from datetime import datetime
 from loguru import logger
 from snscrape.modules.twitter import TwitterTweetScraper, Video, Gif, Photo
 from slugify import slugify
 
 from . import Archiver
-from ..core import Metadata
-from ..core import Media
+from ..core import Metadata, Media
 
 
 class TwitterArchiver(Archiver):

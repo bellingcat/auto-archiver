@@ -1,12 +1,9 @@
-import requests, re
-
-import html
+import requests, re, html
 from bs4 import BeautifulSoup
 from loguru import logger
 
 from . import Archiver
-from ..core import Metadata
-from ..core import Media
+from ..core import Metadata, Media
 
 
 class TelegramArchiver(Archiver):

@@ -1,12 +1,7 @@
-import os
-import shutil
-import subprocess
-import uuid
+import os, shutil, subprocess, uuid
 from loguru import logger
-import time, requests
 
-from ..core import Media
-from ..core import Metadata
+from ..core import Media, Metadata
 from . import Enricher
 
 

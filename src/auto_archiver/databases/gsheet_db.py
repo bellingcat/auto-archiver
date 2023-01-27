@@ -1,5 +1,5 @@
 from typing import Union, Tuple
-import gspread, datetime
+import datetime
 
 # from metadata import Metadata
 from loguru import logger
@@ -8,7 +8,6 @@ from loguru import logger
 from . import Database
 from ..core import Metadata
 from ..core import Media
-from ..utils import Gsheets
 from ..utils import GWorksheet
 
 

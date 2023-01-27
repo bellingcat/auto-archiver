@@ -1,8 +1,7 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from abc import abstractmethod, ABC
-from ..core import Metadata
-from ..core import Step
+from ..core import Metadata, Step
 
 @dataclass
 class Enricher(Step, ABC):

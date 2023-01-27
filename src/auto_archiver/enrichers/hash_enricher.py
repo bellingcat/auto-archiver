@@ -1,10 +1,7 @@
 import hashlib
 from loguru import logger
-from selenium.common.exceptions import TimeoutException
-import time, requests
 
 from . import Enricher
-from ..utils import Webdriver
 from ..core import Metadata
 
 

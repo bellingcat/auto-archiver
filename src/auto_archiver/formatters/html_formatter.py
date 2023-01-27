@@ -1,12 +1,10 @@
 from __future__ import annotations
 from dataclasses import dataclass
-import mimetypes
+import mimetypes, uuid, os, pathlib
 from jinja2 import Environment, FileSystemLoader
-import uuid, os, pathlib
 from urllib.parse import quote
 
-from ..core import Metadata
-from ..core import Media
+from ..core import Metadata, Media
 from . import Formatter
 
 

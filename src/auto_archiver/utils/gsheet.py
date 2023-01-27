@@ -1,6 +1,5 @@
 import json, gspread
 
-from loguru import logger
 from ..core import Step
 
 

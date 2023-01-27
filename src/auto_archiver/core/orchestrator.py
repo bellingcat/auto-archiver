@@ -15,49 +15,11 @@ import tempfile, traceback
 from loguru import logger
 
 
-"""
-how not to couple the different pieces of logic
-due to the use of constants for the metadata keys?
-perhaps having methods on the Metadata level that can be used to fetch a limited number of
-keys, never using strings but rather methods?
-eg: m = Metadata() 
-    m.get("screenshot") vs m.get_all()
-    m.get_url()
-    m.get_hash()
-    m.get_main_file().get_title()
-    m.get_screenshot() # this method should only exist because of the Screenshot Enricher
-    # maybe there is a way for Archivers and Enrichers and Storages to add their own methdods
-    # which raises still the Q of how the database, eg., knows they exist? 
-    # maybe there's a function to fetch them all, and each Database can register wathever they get
-    # for eg the GoogleSheets will only register based on the available column names, it knows what it wants
-    # and if it's there: great, otherwise business as usual.
-    # and a MongoDatabase could register all data, for example.
-    # 
-How are Orchestrators created? from a configuration file?
-    orchestrator = ArchivingOrchestrator(config)
-        # Config contains 1 URL, or URLs, from the command line
-        # OR a feeder which is described in the config file
-        # config.get_feeder() # if called as docker run --url "http...." then the uses the default filter
-        # if config.yaml says config
-    orchestrator.start()
-
-
-Example applications:
-1. auto-archiver for GSheets
-2. archiver for URL: feeder is CLIFeeder(config.cli.urls="") # --urls="u1,u2"
-3. archiver backend for a UI that implements a REST API, the API calls CLI
-
-Cisticola considerations:
-1. By isolating the archiving logic into "Archiving only pieces of logic" these could simply call cisticola.tiktok_scraper(user, pass)
-2. So the auto-archiver becomes like a puzzle and fixes to Cisticola scrapers can immediately benefit it, and contributions are focused on a single source or scraping
-"""
-
-
 class ArchivingOrchestrator:
     def __init__(self, config) -> None:
         self.feeder: Feeder = config.feeder
         self.formatter: Formatter = config.formatter
-        self.enrichers = config.enrichers
+        self.enrichers: List[Enricher] = config.enrichers
         self.archivers: List[Archiver] = config.archivers
         self.databases: List[Database] = config.databases
         self.storages: List[Storage] = config.storages
@@ -124,7 +86,7 @@ class ArchivingOrchestrator:
         # 3 - call archivers until one succeeds
         for a in self.archivers:
             logger.info(f"Trying archiver {a.name}")
-            try: 
+            try:
                 # Q: should this be refactored so it's just a.download(result)?
                 result.merge(a.download(result))
                 if result.is_success(): break

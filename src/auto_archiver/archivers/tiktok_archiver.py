@@ -1,13 +1,9 @@
-import json
-import os, traceback
-import re
-import uuid
+import json, os, traceback, uuid
 import tiktok_downloader
 from loguru import logger
 
 from . import Archiver
-from ..core import Metadata
-from ..core import Media
+from ..core import Metadata, Media
 
 
 class TiktokArchiver(Archiver):
@@ -19,7 +15,7 @@ class TiktokArchiver(Archiver):
     @staticmethod
     def configs() -> dict:
         return {}
-    
+
     def is_rearchivable(self, url: str) -> bool:
         # TikTok posts are static
         return False
@@ -43,7 +39,6 @@ class TiktokArchiver(Archiver):
         except:
             error = traceback.format_exc()
             logger.warning(f'Other Tiktok error {error}')
-
 
         try:
             filename = os.path.join(item.get_tmp_dir(), f'{str(uuid.uuid4())[0:8]}.mp4')

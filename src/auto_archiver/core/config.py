@@ -11,8 +11,8 @@ from ..feeders import Feeder
 from ..databases import Database
 from ..formatters import Formatter
 from ..storages import Storage
-from . import Step
 from ..enrichers import Enricher
+from . import Step
 
 
 @dataclass

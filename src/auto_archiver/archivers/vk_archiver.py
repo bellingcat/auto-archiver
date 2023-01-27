@@ -3,8 +3,7 @@ from vk_url_scraper import VkScraper
 
 from ..utils.misc import dump_payload
 from . import Archiver
-from ..core import Metadata
-from ..core import Media
+from ..core import Metadata, Media
 
 
 class VkArchiver(Archiver):

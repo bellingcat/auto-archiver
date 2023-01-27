@@ -1,12 +1,8 @@
-import datetime
-import os
-
-import yt_dlp
+import datetime, os, yt_dlp
 from loguru import logger
 
 from . import Archiver
-from ..core import Metadata
-from ..core import Media
+from ..core import Metadata, Media
 
 
 class YoutubeDLArchiver(Archiver):
@@ -22,6 +18,7 @@ class YoutubeDLArchiver(Archiver):
         }
 
     def download(self, item: Metadata) -> Metadata:
+        #TODO: yt-dlp for transcripts?
         url = item.get_url()
 
         if item.netloc in ['facebook.com', 'www.facebook.com'] and self.facebook_cookie:

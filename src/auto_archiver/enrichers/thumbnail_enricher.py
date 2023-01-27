@@ -1,10 +1,9 @@
-import uuid
+import ffmpeg, os, uuid
 from loguru import logger
-import ffmpeg, os
 
 from . import Enricher
-from ..core import Media
-from ..core import Metadata
+from ..core import Media, Metadata
+
 
 class ThumbnailEnricher(Enricher):
     """

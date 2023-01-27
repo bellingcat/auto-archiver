@@ -2,7 +2,6 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from inspect import ClassFoundException
 from typing import Type
-from ..core import Metadata
 from abc import ABC
 # from collections.abc import Iterable
 

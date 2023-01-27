@@ -1,4 +1,4 @@
-import re, os, shutil, html, traceback
+import re, os, shutil, traceback
 import instaloader  # https://instaloader.github.io/as-module.html
 from loguru import logger
 

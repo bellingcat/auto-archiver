@@ -1,7 +1,6 @@
 
 from telethon.sync import TelegramClient
 from telethon.errors import ChannelInvalidError
-from telethon.tl.types import PeerUser, PeerChat, PeerChannel
 from telethon.tl.functions.messages import ImportChatInviteRequest
 from telethon.errors.rpcerrorlist import UserAlreadyParticipantError, FloodWaitError, InviteRequestSentError, InviteHashExpiredError
 from loguru import logger
@@ -9,8 +8,7 @@ from tqdm import tqdm
 import re, time, json, os
 
 from . import Archiver
-from ..core import Metadata
-from ..core import Media
+from ..core import Metadata, Media
 
 
 class TelethonArchiver(Archiver):

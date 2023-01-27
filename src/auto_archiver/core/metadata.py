@@ -6,13 +6,11 @@ from dataclasses import dataclass, field
 from dataclasses_json import dataclass_json
 import datetime
 from urllib.parse import urlparse
-from loguru import logger
 from dateutil.parser import parse as parse_dt
 from .media import Media
 
+
 # annotation order matters
-
-
 @dataclass_json
 @dataclass
 class Metadata:
@@ -71,6 +69,7 @@ class Metadata:
 
 
 # custom getter/setters
+
 
     def set_url(self, url: str) -> Metadata:
         assert type(url) is str and len(url) > 0, "invalid URL"

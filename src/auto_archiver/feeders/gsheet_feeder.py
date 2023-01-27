@@ -1,14 +1,12 @@
 import gspread, os
 
-# from metadata import Metadata
 from loguru import logger
 from slugify import slugify
 
 # from . import Enricher
 from . import Feeder
 from ..core import Metadata
-from ..utils import Gsheets
-from ..utils import GWorksheet
+from ..utils import Gsheets, GWorksheet
 
 class GsheetsFeeder(Gsheets, Feeder):
     name = "gsheet_feeder"
