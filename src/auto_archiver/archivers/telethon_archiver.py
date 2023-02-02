@@ -28,7 +28,7 @@ class TelethonArchiver(Archiver):
         return {
             "api_id": {"default": None, "help": "telegram API_ID value, go to https://my.telegram.org/apps"},
             "api_hash": {"default": None, "help": "telegram API_HASH value, go to https://my.telegram.org/apps"},
-            "bot_token": {"default": None, "help": "optional, but allows access to more content such as large videos, talk to @botfather"},
+            # "bot_token": {"default": None, "help": "optional, but allows access to more content such as large videos, talk to @botfather"},
             "session_file": {"default": "secrets/anon", "help": "optional, records the telegram login session for future usage, '.session' will be appended to the provided value."},
             "join_channels": {"default": True, "help": "disables the initial setup with channel_invites config, useful if you have a lot and get stuck"},
             "channel_invites": {
@@ -112,11 +112,9 @@ class TelethonArchiver(Archiver):
 
         logger.debug(f"TELETHON STARTING {chat}, {post_id}")
         # NB: not using bot_token since then private channels cannot be archived: self.client.start(bot_token=self.bot_token)
-        # with self.client.start():
-        with self.client.start(bot_token=self.bot_token):
-            post = self.client.get_messages(chat, ids=post_id)
+        with self.client.start():
             try:
-                pass
+                post = self.client.get_messages(chat,   ids=post_id)
             except ValueError as e:
                 logger.error(f"Could not fetch telegram {url} possibly it's private: {e}")
                 return False
