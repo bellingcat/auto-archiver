@@ -15,7 +15,6 @@ class GsheetsFeeder(Gsheets, Feeder):
         # without this STEP.__init__ is not called
         super().__init__(config)
         self.gsheets_client = gspread.service_account(filename=self.service_account)
-        assert type(self.header) == int, f"header ({self.header}) value must be an integer not {type(self.header)}"
 
     @staticmethod
     def configs() -> dict:

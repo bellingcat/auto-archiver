@@ -10,6 +10,9 @@ class Gsheets(Step):
         # without this STEP.__init__ is not called
         super().__init__(config)
         self.gsheets_client = gspread.service_account(filename=self.service_account)
+        #TODO: config should be responsible for conversions
+        try: self.header = int(self.header)
+        except: pass
         assert type(self.header) == int, f"header ({self.header}) value must be an integer not {type(self.header)}"
         assert self.sheet is not None, "You need to define a sheet name in your orchestration file when using gsheets."
 
