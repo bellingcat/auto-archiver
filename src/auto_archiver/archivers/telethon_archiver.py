@@ -110,7 +110,6 @@ class TelethonArchiver(Archiver):
 
         result = Metadata()
 
-        logger.debug(f"TELETHON STARTING {chat}, {post_id}")
         # NB: not using bot_token since then private channels cannot be archived: self.client.start(bot_token=self.bot_token)
         with self.client.start():
             try:
@@ -124,7 +123,6 @@ class TelethonArchiver(Archiver):
 
             logger.debug(f"TELETHON GOT POST {post=}")
             if post is None: return False
-            logger.info(f"fetched telegram {post.id=}")
 
             media_posts = self._get_media_posts_in_group(chat, post)
             logger.debug(f'got {len(media_posts)=} for {url=}')
