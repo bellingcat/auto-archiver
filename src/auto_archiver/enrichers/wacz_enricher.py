@@ -20,9 +20,6 @@ class WaczEnricher(Enricher):
         return {
             "profile": {"default": None, "help": "browsertrix-profile (for profile generation see https://github.com/webrecorder/browsertrix-crawler#creating-and-using-browser-profiles)."},
             "timeout": {"default": 90, "help": "timeout for WACZ generation in seconds"},
-            # #TODO: make WACZ conditional because it is not useful for some URLs and takes a long time
-            # "enrich_if_success": {"default": True, 
-            # "help": "if False will not enrich when a previous archiver has worked successfully."},
         }
 
     def enrich(self, to_enrich: Metadata) -> bool:
