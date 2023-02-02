@@ -18,7 +18,7 @@ class HtmlFormatter(Formatter):
         self.environment = Environment(loader=FileSystemLoader(os.path.join(pathlib.Path(__file__).parent.resolve(), "templates/")))
         # JinjaHelper class static methods are added as filters
         self.environment.filters.update({
-            k: v for k, v in JinjaHelpers.__dict__.items() if isinstance(v, staticmethod)
+            k: v.__func__ for k, v in JinjaHelpers.__dict__.items() if isinstance(v, staticmethod)
         })
         self.template = self.environment.get_template("html_template.html")
 
