@@ -110,7 +110,7 @@ class TelethonArchiver(Archiver):
 
         result = Metadata()
 
-        logger.debug(f"TELETHON STARTING")
+        logger.debug(f"TELETHON STARTING {chat}, {post_id}")
         # NB: not using bot_token since then private channels cannot be archived: self.client.start(bot_token=self.bot_token)
         with self.client.start():
             try:
