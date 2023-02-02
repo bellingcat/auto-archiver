@@ -85,7 +85,7 @@ class ArchivingOrchestrator:
 
         # 3 - call archivers until one succeeds
         for a in self.archivers:
-            logger.info(f"Trying archiver {a.name}")
+            logger.info(f"Trying archiver {a.name} for {url}")
             try:
                 # Q: should this be refactored so it's just a.download(result)?
                 result.merge(a.download(result))
