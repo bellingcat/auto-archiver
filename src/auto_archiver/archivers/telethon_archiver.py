@@ -101,6 +101,7 @@ class TelethonArchiver(Archiver):
         url = item.get_url()
         # detect URLs that we definitely cannot handle
         match = self.link_pattern.search(url)
+        logger.debug(f"TELETHON: {match=}")
         if not match: return False
 
         is_private = match.group(1) == "/c"
@@ -109,6 +110,7 @@ class TelethonArchiver(Archiver):
 
         result = Metadata()
 
+        logger.debug(f"TELETHON STARTING")
         # NB: not using bot_token since then private channels cannot be archived: self.client.start(bot_token=self.bot_token)
         with self.client.start():
             try:
@@ -120,6 +122,7 @@ class TelethonArchiver(Archiver):
                 logger.error(f"Could not fetch telegram {url}. This error may be fixed if you setup a bot_token in addition to api_id and api_hash (but then private channels will not be archived, we need to update this logic to handle both): {e}")
                 return False
 
+            logger.debug(f"TELETHON GOT POST {post=}")
             if post is None: return False
             logger.info(f"fetched telegram {post.id=}")
 
