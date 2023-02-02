@@ -122,6 +122,11 @@ class Metadata:
         for m in self.media:
             if m.get("id") == id: return m
         return default
+    
+    def get_first_image(self, default=None) -> Media:
+        for m in self.media:
+            if "image" in m.mimetype: return m
+        return default
 
     def set_final_media(self, final: Media) -> Metadata:
         """final media is a special type of media: if you can show only 1 this is it, it's useful for some DBs like GsheetDb"""

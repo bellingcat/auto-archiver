@@ -70,6 +70,10 @@ class GsheetsDb(Database):
         if (screenshot := item.get_media_by_id("screenshot")):
             batch_if_valid('screenshot', "\n".join(screenshot.urls))
 
+        if (thumbnail := item.get_first_image("thumbnail")):
+            batch_if_valid('thumbnail', f'=IMAGE("{thumbnail.urls[0]}")')
+
+
         if (browsertrix := item.get_media_by_id("browsertrix")):
             batch_if_valid('wacz', "\n".join(browsertrix.urls))
             batch_if_valid('replaywebpage', "\n".join([f'https://replayweb.page/?source={quote(wacz)}#view=pages&url={quote(item.get_url())}' for wacz in browsertrix.urls]))
