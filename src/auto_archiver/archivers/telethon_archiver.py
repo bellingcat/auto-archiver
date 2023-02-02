@@ -114,8 +114,9 @@ class TelethonArchiver(Archiver):
         # NB: not using bot_token since then private channels cannot be archived: self.client.start(bot_token=self.bot_token)
         # with self.client.start():
         with self.client.start(bot_token=self.bot_token):
+            post = self.client.get_messages(chat, ids=post_id)
             try:
-                post = self.client.get_messages(chat, ids=post_id)
+                pass
             except ValueError as e:
                 logger.error(f"Could not fetch telegram {url} possibly it's private: {e}")
                 return False
