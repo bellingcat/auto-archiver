@@ -111,8 +111,8 @@ class TelethonArchiver(Archiver):
         result = Metadata()
 
         # NB: not using bot_token since then private channels cannot be archived: self.client.start(bot_token=self.bot_token)
-        # with self.client.start():
-        with self.client.start(bot_token=self.bot_token):
+        with self.client.start():
+        # with self.client.start(bot_token=self.bot_token):
             try:
                 post = self.client.get_messages(chat,   ids=post_id)
             except ValueError as e:
