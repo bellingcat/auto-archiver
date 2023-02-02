@@ -1,5 +1,6 @@
 from typing import Union, Tuple
 import datetime
+from urllib.parse import quote
 
 # from metadata import Metadata
 from loguru import logger
@@ -45,7 +46,7 @@ class GsheetsDb(Database):
 
     def done(self, item: Metadata) -> None:
         """archival result ready - should be saved to DB"""
-        logger.success(f"DONE {item}")
+        logger.success(f"DONE {item.get_url()}")
         gw, row = self._retrieve_gsheet(item)
         # self._safe_status_update(item, 'done')
 
@@ -68,16 +69,10 @@ class GsheetsDb(Database):
         batch_if_valid('timestamp', item.get_timestamp())
         if (screenshot := item.get_media_by_id("screenshot")):
             batch_if_valid('screenshot', "\n".join(screenshot.urls))
-        # batch_if_valid('status', item.status)
 
-        # TODO: AFTER ENRICHMENTS
-        # batch_if_valid('hash', media.hash)
-        # batch_if_valid('thumbnail', result.thumbnail, f'=IMAGE("{result.thumbnail}")')
-        # batch_if_valid('thumbnail_index', result.thumbnail_index)
-        # batch_if_valid('duration', result.duration, str(result.duration))
-        # if result.wacz is not None:
-        #     batch_if_valid('wacz', result.wacz)
-        #     batch_if_valid('replaywebpage', f'https://replayweb.page/?source={quote(result.wacz)}#view=pages&url={quote(url)}')
+        if (browsertrix := item.get_media_by_id("browsertrix")):
+            batch_if_valid('wacz', "\n".join(browsertrix.urls))
+            batch_if_valid('replaywebpage', "\n".join([f'https://replayweb.page/?source={quote(wacz)}#view=pages&url={quote(item.get_url())}' for wacz in browsertrix.urls]))
 
         gw.batch_set_cell(cell_updates)
 
