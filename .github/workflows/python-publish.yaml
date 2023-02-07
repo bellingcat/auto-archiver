@@ -38,7 +38,7 @@ jobs:
       run: |
         python -m pip install --upgrade --upgrade-strategy=eager pip setuptools wheel twine pipenv
         python -m pip install -e . --upgrade
-        python -m pipenv install --dev
+        python -m pipenv install --dev --python 3.10
       env:
         PIPENV_DEFAULT_PYTHON_VERSION: "3.10"
 
