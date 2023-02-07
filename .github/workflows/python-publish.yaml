@@ -31,15 +31,32 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v3
       with:
-        python-version: '3.x'
+        python-version: '3.10'
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip
-        pip install build
-    - name: Build package
-      run: python -m build
-    - name: Publish package
-      uses: pypa/gh-action-pypi-publish@27b31702a0e7fc50959f5ad993c78deac1bdfc29
+        python -m pip install --upgrade --upgrade-strategy=eager pip setuptools wheel twine
+        python -m pip install -e . --upgrade
+        python -m pipenv install --dev
+      env:
+        PIPENV_DEFAULT_PYTHON_VERSION: "3.10"
+
+    - name: Build wheels
+      run: |
+        python -m pipenv run python setup.py sdist bdist_wheel
+   
+    # to upload to test pypi, pass repository_url: https://test.pypi.org/legacy/ and use secrets.TEST_PYPI_TOKEN
+    - name: Publish a Python distribution to PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
       with:
         user: __token__
-        password: ${{ secrets.PYPI_API_TOKEN }}
+        password: ${{ secrets.PYPI_TOKEN }}
+        # repository_url: https://test.pypi.org/legacy/
+        packages_dir: dist/
+
+    # - name: Build package
+    #   run: python -m build
+    # - name: Publish package
+    #   uses: pypa/gh-action-pypi-publish@27b31702a0e7fc50959f5ad993c78deac1bdfc29
+    #   with:
+    #     user: __token__
+    #     password: ${{ secrets.PYPI_API_TOKEN }}
