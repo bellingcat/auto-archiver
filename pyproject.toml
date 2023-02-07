@@ -2,4 +2,4 @@
 requires = ["setuptools", "wheel", "setuptools-pipfile"]
 build-backend = "setuptools.build_meta"
 [tool]
-setuptools-pipfile = "../Pipfile"
+setuptools-pipfile = "../../Pipfile"
