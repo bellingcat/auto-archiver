@@ -41,7 +41,6 @@ class S3Storage(Storage):
                     "help": "S3 CDN url, {bucket}, {region} and {key} are inserted at runtime"
                 },
                 "private": {"default": False, "help": "if true S3 files will not be readable online"},
-                # "key_path": {"default": "random", "help": "S3 file names are non-predictable strings, one of ['random', 'default']"},
             })
 
     def get_cdn_url(self, media: Media) -> str:

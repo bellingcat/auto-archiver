@@ -1,12 +1,9 @@
 
 import shutil
-from typing import IO, Any
-import boto3, uuid, os, mimetypes
-from botocore.errorfactory import ClientError
+from typing import IO
+import os
 from loguru import logger
-from slugify import slugify
 
-from ..core import Metadata
 from ..core import Media
 from ..storages import Storage
 
@@ -28,7 +25,7 @@ class LocalStorage(Storage):
             })
 
     def get_cdn_url(self, media: Media) -> str:
-        #TODO: is this viable with Storage.configs on path/filename?
+        # TODO: is this viable with Storage.configs on path/filename?
         dest = os.path.join(self.save_to, media.key)
         if self.save_absolute:
             dest = os.path.abspath(dest)

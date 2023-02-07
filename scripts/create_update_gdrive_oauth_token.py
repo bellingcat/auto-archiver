@@ -1,4 +1,5 @@
 import os.path
+import click, json
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -6,27 +7,41 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
-# If creating for first time download the OAuth Client Ids json `credentials.json` from https://console.cloud.google.com/apis/credentials OAuth 2.0 Client IDs
-# add "http://localhost:55192/" to the list of "Authorised redirect URIs"
-# https://davemateer.com/2022/04/28/google-drive-with-python for more information
-
 # You can run this code to get a new token and verify it belongs to the correct user
 # This token will be refresh automatically by the auto-archiver
-
 # Code below from https://developers.google.com/drive/api/quickstart/python
 
 SCOPES = ['https://www.googleapis.com/auth/drive']
 
 
-def main():
-    token_file = 'gd-token.json'
-    creds = None
-
+@click.command(
+    help="script to generate Google Drive OAuth token to use gdrive_storage, requires credentials.json and outputs gd-token.json, if you don't have credentials.json go to https://console.cloud.google.com/apis/credentials. Be sure to add 'http://localhost:55192/' to the Authorized redirect URIs in your OAuth App. More info:  https://davemateer.com/2022/04/28/google-drive-with-python"
+)
+@click.option(
+    "--credentials",
+    "-c",
+    type=click.Path(exists=True),
+    help="path to the credentials.json file downloaded from https://console.cloud.google.com/apis/credentials",
+    required=True
+)
+@click.option(
+    "--token",
+    "-t",
+    type=click.Path(exists=False),
+    default="gd-token.json",
+    help="file where to place the OAuth token, defaults to gd-token.json which you must then move to where your orchestration file points to, defaults to gd-token.json",
+    required=True
+)
+def main(credentials, token):
     # The file token.json stores the user's access and refresh tokens, and is
-    # created automatically when the authorization flow completes for the first
-    # time.
-    if os.path.exists(token_file):
-        creds = Credentials.from_authorized_user_file(token_file, SCOPES)
+    # created automatically when the authorization flow completes for the first time.
+    creds = None
+    if os.path.exists(token):
+        with open(token, 'r') as stream:
+            creds_json = json.load(stream)
+            # creds = Credentials.from_authorized_user_file(creds_json, SCOPES)
+            creds_json['refresh_token'] = creds_json.get("refresh_token", "")
+            creds = Credentials.from_authorized_user_info(creds_json, SCOPES)
 
     # If there are no (valid) credentials available, let the user log in.
     if not creds or not creds.valid:
@@ -36,10 +51,10 @@ def main():
         else:
             print('First run through so putting up login dialog')
             # credentials.json downloaded from https://console.cloud.google.com/apis/credentials
-            flow = InstalledAppFlow.from_client_secrets_file('credentials.json', SCOPES)
+            flow = InstalledAppFlow.from_client_secrets_file(credentials, SCOPES)
             creds = flow.run_local_server(port=55192)
         # Save the credentials for the next run
-        with open(token_file, 'w') as token:
+        with open(token, 'w') as token:
             print('Saving new token')
             token.write(creds.to_json())
     else:
