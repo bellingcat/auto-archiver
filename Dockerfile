@@ -21,7 +21,7 @@ RUN pip install --upgrade pip && \
 # TODO: avoid copying unnecessary files, including .git
 COPY Pipfile Pipfile.lock ./
 RUN pipenv install --python=3.10 --system --deploy
-ENV IS_DOCKER=1
+# ENV IS_DOCKER=1
 # doing this at the end helps during development, builds are quick
 COPY ./src/ . 
 
