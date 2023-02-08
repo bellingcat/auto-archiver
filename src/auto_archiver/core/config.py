@@ -51,7 +51,7 @@ class Config:
                 epilog="Check the code at https://github.com/bellingcat/auto-archiver"
             )
 
-            parser.add_argument('--config', action='store', dest='config', help='the filename of the YAML configuration file (defaults to \'config.yaml\')', default='config.yaml')
+            parser.add_argument('--config', action='store', dest='config', help='the filename of the YAML configuration file (defaults to \'config.yaml\')', default='orchestration.yaml')
 
         for configurable in self.configurable_parents:
             child: Step

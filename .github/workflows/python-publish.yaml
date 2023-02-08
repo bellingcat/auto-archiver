@@ -6,7 +6,7 @@
 # separate terms of service, privacy policy, and support
 # documentation.
 
-name: Upload Python Package
+name: Pypi
 
 on:
   release:
@@ -20,7 +20,7 @@ permissions:
 
 jobs:
   deploy:
-
+    name: Publish python package
     runs-on: ubuntu-latest
 
     steps:

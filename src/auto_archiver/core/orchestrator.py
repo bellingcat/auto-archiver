@@ -31,7 +31,6 @@ class ArchivingOrchestrator:
             self.feed_item(item)
 
     def feed_item(self, item: Metadata) -> Metadata:
-        print("ARCHIVING", item)
         try:
             with tempfile.TemporaryDirectory(dir="./") as tmp_dir:
                 item.set_tmp_dir(tmp_dir)
