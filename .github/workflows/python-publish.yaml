@@ -51,5 +51,6 @@ jobs:
       with:
         user: __token__
         verbose: true
+        skip_existing: true
         password: ${{ secrets.PYPI_API_TOKEN }}
         packages_dir: dist/
