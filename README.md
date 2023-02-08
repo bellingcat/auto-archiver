@@ -1,4 +1,6 @@
-# Auto Archiver
+<h1 align="center">Auto Archiver</h1>
+
+
 Read the [article about Auto Archiver on bellingcat.com](https://www.bellingcat.com/resources/2022/09/22/preserve-vital-online-content-with-bellingcats-auto-archiver-tool/).
 
 
@@ -15,6 +17,9 @@ But **you always need a configuration/orchestration file**, which is where you'l
 ## How to run the auto-archiver
 
 ### Option 1 - docker
+
+<details><summary><code>Docker instructions</code></summary>
+
 Docker works like a virtual machine running inside your computer, it isolates everything and makes installation simple. Since it is an isolated environment when you need to pass it your orchestration file or get downloaded media out of docker you will need to connect folders on your machine with folders inside docker with the `-v` volume flag.
 
 
@@ -32,13 +37,19 @@ Docker works like a virtual machine running inside your computer, it isolates ev
        2.  `$PWD/local_archive` is a folder `local_archive/` in case you want to archive locally and have the files accessible outside docker
        3.  `/app/local_archive` is a folder inside docker that you can reference in your orchestration.yml file 
 
+</details>
 
 ### Option 2 - python package
+
+<details><summary><code>Python package instructions</code></summary>
+
 1. make sure you have python 3.8 or higher installed
 2. install the package `pip/pipenv/conda install auto-archiver`
 3. test it's installed with `auto-archiver --help`
 4. run it with your orchestration file and pass any flags you want in the command line `auto-archiver --config secrets/orchestration.yaml`
    1. if your orchestration file is inside a `secrets/` which we advise
+
+</details>
 
 
 ### Option 3 - local installation
@@ -59,13 +70,6 @@ Clone and run:
 
 
 </details><br/>
-
-
-
-
-
-### Examples
-
 
 # Orchestration
 The archiver work is orchestrated by the following workflow (we call each a **step**): 
@@ -178,16 +182,18 @@ Note that the first row is skipped, as it is assumed to be a header row (`--gshe
 ## Development
 Use `python -m src.auto_archiver --config secrets/orchestration.yaml` to run from the local development environment.
 
-# Docker development
-* working with docker locally:
+#### Docker development
+working with docker locally:
   * `docker build . -t auto-archiver` to build a local image
   * `docker run --rm -v $PWD/secrets:/app/secrets aa --config secrets/config.yaml`
     * to use local archive, also create a volume `-v` for it by adding `-v $PWD/local_archive:/app/local_archive`
-* release to docker hub
+
+
+release to docker hub
   * `docker image tag auto-archiver bellingcat/auto-archiver:latest`
   * `docker push bellingcat/auto-archiver`
 
-# RELEASE
+#### RELEASE
 * update version in [version.py](src/auto_archiver/version.py)
 * run `bash ./scripts/release.sh` and confirm
 * package is automatically updated in pypi
