@@ -5,3 +5,7 @@ from .core.orchestrator import ArchivingOrchestrator
 from .core.config import Config
 # making accessible directly
 from .core.metadata import Metadata
+
+
+from .version import VERSION
+__version__ = VERSION
