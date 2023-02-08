@@ -1,5 +1,11 @@
 <h1 align="center">Auto Archiver</h1>
 
+[![PyPI version](https://badge.fury.io/py/auto-archiver.svg)](https://badge.fury.io/py/auto-archiver)
+[![PyPI download month](https://img.shields.io/pypi/dm/auto-archiver.svg)](https://pypi.python.org/pypi/auto-archiver/)
+<!-- [![Documentation Status](https://readthedocs.org/projects/vk-url-scraper/badge/?version=latest)](https://vk-url-scraper.readthedocs.io/en/latest/?badge=latest) -->
+![Docker Image Version (latest by date)](https://img.shields.io/docker/v/bellingcat/auto-archiver)
+![Docker Pulls](https://img.shields.io/docker/pulls/bellingcat/auto-archiver)
+
 
 Read the [article about Auto Archiver on bellingcat.com](https://www.bellingcat.com/resources/2022/09/22/preserve-vital-online-content-with-bellingcats-auto-archiver-tool/).
 
@@ -19,6 +25,8 @@ But **you always need a configuration/orchestration file**, which is where you'l
 ### Option 1 - docker
 
 <details><summary><code>Docker instructions</code></summary>
+
+[![dockeri.co](ahttps://dockerico.blankenship.io/image/bellingcat/auto-archiver)](https://hub.docker.com/r/bellingcat/auto-archiver)
 
 Docker works like a virtual machine running inside your computer, it isolates everything and makes installation simple. Since it is an isolated environment when you need to pass it your orchestration file or get downloaded media out of docker you will need to connect folders on your machine with folders inside docker with the `-v` volume flag.
 
