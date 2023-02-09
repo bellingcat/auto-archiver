@@ -1,80 +1,80 @@
 steps:
   # only 1 feeder allowed
-  # a feeder could be in an "infinite loop" for example: gsheets_infinite feeder which holds-> this could be an easy logic addiction by modifying for each to while not feeder.done() if it becomes necessary
+  # feeder: cli_feeder # default feeder
   feeder: gsheet_feeder # default -> only expects URL from CLI
   archivers: # order matters
-    - telethon
-    # - tiktok
-    # - twitter
-    # - instagram
-    # - webarchive # this way it runs as a failsafe only
-  # enrichers:
-  #   - screenshot
-    # - wacz
-    # - webarchive # this way it runs for every case, webarchive extends archiver and enrichment
-    # - thumbnails
-  formatters:
-    - HTMLFormater
-    - PdfFormater
+    # - vk_archiver
+    # - telethon_archiver
+    # - telegram_archiver
+    # - twitter_archiver
+    # - twitter_api_archiver
+    # # - instagram_archiver
+    # - tiktok_archiver
+    - youtubedl_enricher
+    # - wayback_archiver_enricher
+  enrichers:
+    - hash_enricher
+    - screenshot_enricher
+    - thumbnail_enricher
+    # - wayback_archiver_enricher
+    # - wacz_enricher
+    
+  formatter: html_formatter # defaults to mute_formatter
   storages:
     - local_storage
-    - s3
+    # - s3_storage
+    # - gdrive_storage
   databases:
-    - gsheets_db
-    - mongo_db
-
-
+    # - console_db
+    # - csv_db
+    - gsheet_db
+    # - mongo_db
 
 configurations:
+  global: #TODO: implement this logic, does nothing ATM
+    - save_logs: false
   gsheet_feeder:
-    sheet: my-auto-archiver
+    sheet: auto-archiver-test
     header: 2 # defaults to 1 in GSheetsFeeder
     service_account: "secrets/service_account.json"
-    # allow_worksheets: "allowed"
-    # block_worksheets: "blocked1,blocked2"
+    use_sheet_names_in_stored_paths: false
     columns:
-        'url': 'link'
-        'status': 'archive status'
-        'folder': 'destination folder'
-        'archive': 'archive location'
-        'date': 'archive date'
-        'thumbnail': 'thumbnail'
-        'thumbnail_index': 'thumbnail index'
-        'timestamp': 'upload timestamp'
-        'title': 'upload title'
-        'duration': 'duration'
-        'screenshot': 'screenshot'
-        'hash': 'hash'
-        'wacz': 'wacz'
-        'replaywebpage': 'replaywebpage'
-  telethon:
-    api_id: "1234567"
-    api_hash: "examplehash"
-    session_file: "secrets/anon"
-    channel_invites:
-      - invite: https://t.me/+XXXXXXXXXXXXXX
-        id: 1000000000
-      - invite: https://t.me/joinchat/XXXXXXXXXXXXXX
-        id: 1000000001
+      url: link
+      status: archive status
+      folder: destination folder
+      archive: archive location
+      date: archive date
+      thumbnail: thumbnail
+      thumbnail_index: thumbnail index
+      timestamp: upload timestamp
+      title: upload title
+      text: textual content
+      duration: duration
+      screenshot: screenshot
+      hash: hash
+      wacz: wacz
+      replaywebpage: replaywebpage
 
-  tiktok:
-    api_keys:
-      - username: 1
-        password: 2
-      - username: 3
-        password: 4
-    username: "abc"
-    password: "123"
-    token: "here"
-  screenshot:
+  screenshot_enricher:
     width: 1280
-    height: 4600
-  wacz:
-    profile: secrets/profile.tar.gz
-  webarchive:
-    api_key: "12345"
-  s3: 
-    - bucket: 123
-    - region: "nyc3"
-    - cdn: "{region}{bucket}"
+    height: 2300
+  wayback_archiver_enricher:
+    timeout: 10
+    key: ""
+    secret: ""
+  hash_enricher:
+    algorithm: "SHA3-512"
+  # wacz:
+    # profile: secrets/profile.tar.gz
+  local_storage:
+    save_to: "./local_archive"
+    save_absolute: true
+    filename_generator: static
+    path_generator: flat
 
+  gdrive_storage:
+    path_generator: url
+    filename_generator: random
+    root_folder_id: TODO
+    oauth_token: secrets/gd-token.json
+    service_account: "secrets/service_account.json"
