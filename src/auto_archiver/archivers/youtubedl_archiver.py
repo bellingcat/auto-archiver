@@ -6,7 +6,7 @@ from ..core import Metadata, Media
 
 
 class YoutubeDLArchiver(Archiver):
-    name = "youtubedl_enricher"
+    name = "youtubedl_archiver"
 
     def __init__(self, config: dict) -> None:
         super().__init__(config)

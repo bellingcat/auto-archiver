@@ -10,7 +10,7 @@ steps:
     # - twitter_api_archiver
     # # - instagram_archiver
     # - tiktok_archiver
-    - youtubedl_enricher
+    - youtubedl_archiver
     # - wayback_archiver_enricher
   enrichers:
     - hash_enricher
@@ -31,8 +31,6 @@ steps:
     # - mongo_db
 
 configurations:
-  global: #TODO: implement this logic, does nothing ATM
-    - save_logs: false
   gsheet_feeder:
     sheet: auto-archiver-test
     header: 2 # defaults to 1 in GSheetsFeeder
