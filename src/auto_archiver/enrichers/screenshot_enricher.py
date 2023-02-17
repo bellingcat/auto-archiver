@@ -3,7 +3,7 @@ import time, uuid, os
 from selenium.common.exceptions import TimeoutException
 
 from . import Enricher
-from ..utils import Webdriver
+from ..utils import Webdriver, UrlUtil
 from ..core import Media, Metadata
 
 class ScreenshotEnricher(Enricher):
@@ -19,6 +19,10 @@ class ScreenshotEnricher(Enricher):
 
     def enrich(self, to_enrich: Metadata) -> None:
         url = to_enrich.get_url()
+        if UrlUtil.is_auth_wall(url):
+            logger.debug(f"[SKIP] SCREENSHOT since url is behind AUTH WALL: {url=}")
+            return
+
         logger.debug(f"Enriching screenshot for {url=}")
         with Webdriver(self.width, self.height, self.timeout, 'facebook.com' in url) as driver:
             try:

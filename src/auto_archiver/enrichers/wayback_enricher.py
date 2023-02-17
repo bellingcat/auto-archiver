@@ -1,8 +1,10 @@
 from loguru import logger
 import time, requests
 
+
 from . import Enricher
 from ..archivers import Archiver
+from ..utils import UrlUtil
 from ..core import Metadata
 
 class WaybackArchiverEnricher(Enricher, Archiver):
@@ -33,6 +35,10 @@ class WaybackArchiverEnricher(Enricher, Archiver):
 
     def enrich(self, to_enrich: Metadata) -> bool:
         url = to_enrich.get_url()
+        if UrlUtil.is_auth_wall(url):
+            logger.debug(f"[SKIP] WAYBACK since url is behind AUTH WALL: {url=}")
+            return
+
         logger.debug(f"calling wayback for {url=}")
 
         if to_enrich.get("wayback"):
