@@ -153,8 +153,8 @@ These assume you've installed with pipenv, see docker section above for how to r
 # all the configurations come from ./orchestration.yaml
 auto-archiver
 # all the configurations come from ./secrets/orchestration.yaml
-auto-archiver --config orchestration.yaml
-# uses the configurations but for another google docs sheet 
+auto-archiver --config secrets/orchestration.yaml
+# uses the same configurations but for another google docs sheet 
 # with a header on row 2 and with some different column names
 # notice that columns is a dictionary so you need to pass it as JSON and it will override only the values provided
 auto-archiver --config orchestration.yaml --gsheets_feeder.sheet="use it on another sheets doc" --gsheets_feeder.header=2 --gsheets_feeder.columns='{"url": "link"}'
@@ -166,7 +166,7 @@ auto-archiver --s3_storage.private=1
 #### Google Drive
 To use Google Drive storage you need the id of the shared folder in the `config.yaml` file which must be shared with the service account eg `autoarchiverservice@auto-archiver-111111.iam.gserviceaccount.com` and then you can use `--storage=gd`
 
-#### Telethon (Telegrams API Library)
+#### Telethon + Instagram with telegram bot
 The first time you run, you will be prompted to do a authentication with the phone number associated, alternatively you can put your `anon.session` in the root.
 
 
