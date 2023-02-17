@@ -97,7 +97,7 @@ The structure of orchestration file is split into 2 parts: `steps` (what **steps
 steps:
   feeder: gsheet_feeder
   archivers: # order matters
-    - youtubedl_enricher
+    - youtubedl_archiver
   enrichers:
     - thumbnail_enricher
   formatter: html_formatter
