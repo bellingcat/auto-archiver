@@ -37,7 +37,7 @@ class TwitterArchiver(Archiver):
         return self.link_clean_pattern.sub("\\1", url)
 
     def is_rearchivable(self, url: str) -> bool:
-        # Twitter posts are static
+        # Twitter posts are static (for now)
         return False
 
     def download(self, item: Metadata) -> Metadata:
@@ -86,7 +86,7 @@ class TwitterArchiver(Archiver):
             media.filename = self.download_from_url(media.get("src"), f'{slugify(url)}_{i}{ext}', item)
             result.add_media(media)
 
-        return result.success("twitter")
+        return result.success("twitter-snscrape")
 
     def download_alternative(self, item: Metadata, url: str, tweet_id: str) -> Metadata:
         """

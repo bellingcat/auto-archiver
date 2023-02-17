@@ -2,10 +2,8 @@ from typing import Union, Tuple
 import datetime
 from urllib.parse import quote
 
-# from metadata import Metadata
 from loguru import logger
 
-# from . import Enricher
 from . import Database
 from ..core import Metadata
 from ..core import Media
@@ -61,13 +59,13 @@ class GsheetsDb(Database):
         cell_updates.append((row, 'status', item.status))
 
         media: Media = item.get_final_media()
-
-        batch_if_valid('archive', "\n".join(media.urls))
+        if hasattr(media, "urls"):
+            batch_if_valid('archive', "\n".join(media.urls))
         batch_if_valid('date', True, datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc).isoformat())
         batch_if_valid('title', item.get_title())
         batch_if_valid('text', item.get("content", "")[:500])
         batch_if_valid('timestamp', item.get_timestamp())
-        if (screenshot := item.get_media_by_id("screenshot")):
+        if (screenshot := item.get_media_by_id("screenshot")) and hasattr(screenshot, "urls"):
             batch_if_valid('screenshot', "\n".join(screenshot.urls))
 
         if (thumbnail := item.get_first_image("thumbnail")):

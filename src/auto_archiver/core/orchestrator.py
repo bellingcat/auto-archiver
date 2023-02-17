@@ -123,6 +123,9 @@ class ArchivingOrchestrator:
                 s.store(final_media, result)
             result.set_final_media(final_media)
 
+        if result.is_empty():
+            result.status = "nothing archived"
+
         # signal completion to databases (DBs, Google Sheets, CSV, ...)
         for d in self.databases: d.done(result)
 

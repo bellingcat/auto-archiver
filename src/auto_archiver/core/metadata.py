@@ -63,6 +63,9 @@ class Metadata:
     def is_success(self) -> bool:
         return "success" in self.status
 
+    def is_empty(self) -> bool:
+        return not self.is_success() and len(self.media) == 0 and len(self.get_clean_metadata()) <= 2  # url, processed_at
+
     @property  # getter .netloc
     def netloc(self) -> str:
         return urlparse(self.get_url()).netloc
@@ -122,7 +125,7 @@ class Metadata:
         for m in self.media:
             if m.get("id") == id: return m
         return default
-    
+
     def get_first_image(self, default=None) -> Media:
         for m in self.media:
             if "image" in m.mimetype: return m

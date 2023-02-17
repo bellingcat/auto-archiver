@@ -114,7 +114,7 @@ class TelethonArchiver(Archiver):
         with self.client.start():
         # with self.client.start(bot_token=self.bot_token):
             try:
-                post = self.client.get_messages(chat,   ids=post_id)
+                post = self.client.get_messages(chat, ids=post_id)
             except ValueError as e:
                 logger.error(f"Could not fetch telegram {url} possibly it's private: {e}")
                 return False
