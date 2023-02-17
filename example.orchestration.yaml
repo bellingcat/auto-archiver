@@ -8,7 +8,8 @@ steps:
     # - telegram_archiver
     # - twitter_archiver
     # - twitter_api_archiver
-    # # - instagram_archiver
+    # - instagram_archiver
+    # - instagram_tbot_archiver
     # - tiktok_archiver
     - youtubedl_archiver
     # - wayback_archiver_enricher
