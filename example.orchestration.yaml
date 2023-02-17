@@ -1,22 +1,21 @@
 steps:
   # only 1 feeder allowed
-  # feeder: cli_feeder # default feeder
-  feeder: gsheet_feeder # default -> only expects URL from CLI
-  archivers: # order matters
+  feeder: gsheet_feeder # defaults to cli_feeder
+  archivers: # order matters, uncomment to activate
     # - vk_archiver
     # - telethon_archiver
     # - telegram_archiver
     # - twitter_archiver
     # - twitter_api_archiver
-    # - instagram_archiver
     # - instagram_tbot_archiver
+    # - instagram_archiver
     # - tiktok_archiver
     - youtubedl_archiver
-    # - wayback_archiver_enricher
+    - wayback_archiver_enricher
   enrichers:
     - hash_enricher
-    - screenshot_enricher
-    - thumbnail_enricher
+    # - screenshot_enricher
+    # - thumbnail_enricher
     # - wayback_archiver_enricher
     # - wacz_enricher
     
@@ -26,16 +25,18 @@ steps:
     # - s3_storage
     # - gdrive_storage
   databases:
-    # - console_db
+    - console_db
     # - csv_db
-    - gsheet_db
+    # - gsheet_db
     # - mongo_db
 
 configurations:
   gsheet_feeder:
-    sheet: auto-archiver-test
-    header: 2 # defaults to 1 in GSheetsFeeder
+    sheet: "your sheet name"
+    header: 1
     service_account: "secrets/service_account.json"
+    # allow_worksheets: "only parse this worksheet"
+    # block_worksheets: "blocked sheet 1,blocked sheet 2"
     use_sheet_names_in_stored_paths: false
     columns:
       url: link
@@ -53,27 +54,70 @@ configurations:
       hash: hash
       wacz: wacz
       replaywebpage: replaywebpage
+  instagram_tbot_archiver:
+    api_id: "TELEGRAM_BOT_API_ID"
+    api_hash: "TELEGRAM_BOT_API_HASH"
+    # session_file: "secrets/anon"
+  telethon_archiver:
+    api_id: "TELEGRAM_BOT_API_ID"
+    api_hash: "TELEGRAM_BOT_API_HASH"
+    # session_file: "secrets/anon"
+    join_channels: false
+    channel_invites: # if you want to archive from private channels
+      - invite: https://t.me/+123456789
+        id: 0000000001
+      - invite: https://t.me/+123456788
+        id: 0000000002
+
+  twitter_api_archiver:
+    # either bearer_token only
+    bearer_token: "TWITTER_BEARER_TOKEN"
+    # OR all of the below
+    # consumer_key: ""
+    # consumer_secret: ""
+    # access_token: ""
+    # access_secret: ""
+  instagram_archiver:
+    username: "INSTAGRAM_USERNAME"
+    password: "INSTAGRAM_PASSWORD"
+    # session_file: "secrets/instaloader.session"
+
+  vk_archiver:
+    username: "or phone number"
+    password: "vk pass"
+    session_file: "secrets/vk_config.v2.json"
 
   screenshot_enricher:
     width: 1280
     height: 2300
   wayback_archiver_enricher:
     timeout: 10
-    key: ""
-    secret: ""
+    key: "wayback key"
+    secret: "wayback secret"
   hash_enricher:
-    algorithm: "SHA3-512"
-  # wacz:
-    # profile: secrets/profile.tar.gz
+    algorithm: "SHA3-512" # can also be SHA-256
+  wacz_enricher:
+    profile: secrets/profile.tar.gz
   local_storage:
     save_to: "./local_archive"
     save_absolute: true
     filename_generator: static
     path_generator: flat
+  s3_storage:
+    bucket: your-bucket-name
+    region: reg1
+    key: S3_KEY
+    secret: S3_SECRET
+    endpoint_url: "https://{region}.digitaloceanspaces.com"
+    cdn_url: "https://{bucket}.{region}.cdn.digitaloceanspaces.com/{key}"
+    # if private:true S3 urls will not be readable online
+    private: false
+    # with 'random' you can generate a random UUID for the URL instead of a predictable path, useful to still have public but unlisted files, alternative is 'default' or not omitted from config
+    key_path: random
 
   gdrive_storage:
     path_generator: url
     filename_generator: random
-    root_folder_id: TODO
-    oauth_token: secrets/gd-token.json
+    root_folder_id: folder_id_from_url
+    oauth_token: secrets/gd-token.json # needs to be generated with scripts/create_update_gdrive_oauth_token.py
     service_account: "secrets/service_account.json"
