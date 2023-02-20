@@ -9,7 +9,7 @@ from ..core import Metadata, Media
 
 class InstagramTbotArchiver(Archiver):
     """
-    calls a telegram bot to fetch instagram posts/stories...
+    calls a telegram bot to fetch instagram posts/stories... and gets available media from it
     https://github.com/adw0rd/instagrapi
     https://t.me/instagram_load_bot
     """
@@ -50,18 +50,21 @@ class InstagramTbotArchiver(Archiver):
             since_id = self.client.send_message(entity=chat, message=url).id
 
             attempts = 0
-            media = None
+            seen_media = []
             message = ""
             time.sleep(4)
-            while attempts < self.timeout and (not message or not media):
+            # media is added before text by the bot so it can be used as a stop-logic mechanism
+            while attempts < self.timeout and (not message or not len(seen_media)):
                 attempts += 1
                 time.sleep(1)
                 for post in self.client.iter_messages(chat, min_id=since_id):
                     since_id = max(since_id, post.id)
-                    if post.media and not media:
+                    if post.media and post.id not in seen_media:
                         filename_dest = os.path.join(tmp_dir, f'{chat.id}_{post.id}')
                         media = self.client.download_media(post.media, filename_dest)
-                        if media: result.add_media(Media(media))
+                        if media: 
+                            result.add_media(Media(media))
+                            seen_media.append(post.id)
                     if post.message: message += post.message
 
             if message:
