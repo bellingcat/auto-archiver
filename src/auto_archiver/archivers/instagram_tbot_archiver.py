@@ -2,7 +2,7 @@
 from telethon.sync import TelegramClient
 from loguru import logger
 import time, os
-
+from sqlite3 import OperationalError
 from . import Archiver
 from ..core import Metadata, Media
 
@@ -20,14 +20,17 @@ class InstagramTbotArchiver(Archiver):
         self.assert_valid_string("api_id")
         self.assert_valid_string("api_hash")
         self.timeout = int(self.timeout)
-        self.client = TelegramClient(self.session_file, self.api_id, self.api_hash)
+        try:
+            self.client = TelegramClient(self.session_file, self.api_id, self.api_hash)
+        except OperationalError as e:
+            logger.error(f"Unable to access the {self.session_file} session, please make sure you don't use the same session file here and in telethon_archiver. if you do then disable at least one of the archivers for the 1st time you setup telethon session: {e}")
 
     @staticmethod
     def configs() -> dict:
         return {
             "api_id": {"default": None, "help": "telegram API_ID value, go to https://my.telegram.org/apps"},
             "api_hash": {"default": None, "help": "telegram API_HASH value, go to https://my.telegram.org/apps"},
-            "session_file": {"default": "secrets/anon", "help": "optional, records the telegram login session for future usage, '.session' will be appended to the provided value."},
+            "session_file": {"default": "secrets/anon-insta", "help": "optional, records the telegram login session for future usage, '.session' will be appended to the provided value."},
             "timeout": {"default": 15, "help": "timeout to fetch the instagram content in seconds."},
         }
 
