@@ -40,11 +40,11 @@ class GWorksheet:
 
     def _col_index(self, col: str):
         self._check_col_exists(col)
-        return self.headers.index(self.columns[col])
+        return self.headers.index(self.columns[col].lower())
 
     def col_exists(self, col: str):
         self._check_col_exists(col)
-        return self.columns[col] in self.headers
+        return self.columns[col].lower() in self.headers
 
     def count_rows(self):
         return len(self.values)
