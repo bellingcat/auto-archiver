@@ -3,6 +3,7 @@ from loguru import logger
 
 from ..core import Media, Metadata
 from . import Enricher
+from ..utils import UrlUtil
 
 
 class WaczEnricher(Enricher):
@@ -20,11 +21,17 @@ class WaczEnricher(Enricher):
         return {
             "profile": {"default": None, "help": "browsertrix-profile (for profile generation see https://github.com/webrecorder/browsertrix-crawler#creating-and-using-browser-profiles)."},
             "timeout": {"default": 90, "help": "timeout for WACZ generation in seconds"},
+            "ignore_auth_wall": {"default": True, "help": "skip URL if it is behind authentication wall, set to False if you have browsertrix profile configured for private content."},
         }
 
     def enrich(self, to_enrich: Metadata) -> bool:
         # TODO: figure out support for browsertrix in docker
         url = to_enrich.get_url()
+
+        if UrlUtil.is_auth_wall(url):
+            logger.debug(f"[SKIP] SCREENSHOT since url is behind AUTH WALL: {url=}")
+            return
+
         logger.debug(f"generating WACZ for {url=}")
         collection = str(uuid.uuid4())[0:8]
         browsertrix_home = os.path.abspath(to_enrich.get_tmp_dir())
