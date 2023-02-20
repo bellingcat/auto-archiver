@@ -67,6 +67,10 @@ class InstagramTbotArchiver(Archiver):
                             seen_media.append(post.id)
                     if post.message: message += post.message
 
+            if "You must enter a URL to a post" in message: 
+                logger.debug(f"invalid link {url=} for {self.name}: {message}")
+                return False
+                
             if message:
                 result.set_content(message).set_title(message[:128])
 

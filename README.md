@@ -157,7 +157,7 @@ auto-archiver --config secrets/orchestration.yaml
 # uses the same configurations but for another google docs sheet 
 # with a header on row 2 and with some different column names
 # notice that columns is a dictionary so you need to pass it as JSON and it will override only the values provided
-auto-archiver --config orchestration.yaml --gsheets_feeder.sheet="use it on another sheets doc" --gsheets_feeder.header=2 --gsheets_feeder.columns='{"url": "link"}'
+auto-archiver --config orchestration.yaml --gsheet_feeder.sheet="use it on another sheets doc" --gsheet_feeder.header=2 --gsheet_feeder.columns='{"url": "link"}'
 # all the configurations come from orchestration.yaml and specifies that s3 files should be private
 auto-archiver --s3_storage.private=1
 ```
@@ -170,7 +170,7 @@ To use Google Drive storage you need the id of the shared folder in the `config.
 The first time you run, you will be prompted to do a authentication with the phone number associated, alternatively you can put your `anon.session` in the root.
 
 
-## Running on Google Sheets Feeder (gsheets_feeder)
+## Running on Google Sheets Feeder (gsheet_feeder)
 The `--gseets_feeder.sheet` property is the name of the Google Sheet to check for URLs. 
 This sheet must have been shared with the Google Service account used by `gspread`. 
 This sheet must also have specific columns (case-insensitive) in the `header` row - see [Gsheet.configs](src/auto_archiver/utils/gsheet.py) for all their names.
@@ -183,7 +183,7 @@ When the auto archiver starts running, it updates the "Archive status" column.
 ![A screenshot of a Google Spreadsheet with column headers defined as above, and several Youtube and Twitter URLs in the "Media URL" column. The auto archiver has added "archive in progress" to one of the status columns.](docs/demo-progress.png)
 The links are downloaded and archived, and the spreadsheet is updated to the following:
 ![A screenshot of a Google Spreadsheet with videos archived and metadata added per the description of the columns above.](docs/demo-after.png)
-Note that the first row is skipped, as it is assumed to be a header row (`--gsheets_feeder.header=1` and you can change it if you use more rows above). Rows with an empty URL column, or a non-empty archive column are also skipped. All sheets in the document will be checked.
+Note that the first row is skipped, as it is assumed to be a header row (`--gsheet_feeder.header=1` and you can change it if you use more rows above). Rows with an empty URL column, or a non-empty archive column are also skipped. All sheets in the document will be checked.
 
 
 ---
