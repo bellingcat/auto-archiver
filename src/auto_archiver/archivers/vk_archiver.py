@@ -17,13 +17,14 @@ class VkArchiver(Archiver):
         super().__init__(config)
         self.assert_valid_string("username")
         self.assert_valid_string("password")
-        self.vks = VkScraper(self.username, self.password)
+        self.vks = VkScraper(self.username, self.password, session_file=self.session_file)
 
     @staticmethod
     def configs() -> dict:
         return {
             "username": {"default": None, "help": "valid VKontakte username"},
-            "password": {"default": None, "help": "valid VKontakte password"}
+            "password": {"default": None, "help": "valid VKontakte password"},
+            "session_file": {"default": "secrets/vk_config.v2.json", "help": "valid VKontakte password"},
         }
 
     def is_rearchivable(self, url: str) -> bool:
