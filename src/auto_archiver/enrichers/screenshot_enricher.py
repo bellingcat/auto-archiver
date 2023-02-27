@@ -14,7 +14,8 @@ class ScreenshotEnricher(Enricher):
         return {
             "width": {"default": 1280, "help": "width of the screenshots"},
             "height": {"default": 720, "help": "height of the screenshots"},
-            "timeout": {"default": 60, "help": "timeout for taking the screenshot"}
+            "timeout": {"default": 60, "help": "timeout for taking the screenshot"},
+            "sleep_before_screenshot": {"default": 4, "help": "seconds to wait for the pages to load before taking screenshot"}
         }
 
     def enrich(self, to_enrich: Metadata) -> None:
@@ -27,7 +28,7 @@ class ScreenshotEnricher(Enricher):
         with Webdriver(self.width, self.height, self.timeout, 'facebook.com' in url) as driver:
             try:
                 driver.get(url)
-                time.sleep(2)
+                time.sleep(int(self.sleep_before_screenshot))
                 screenshot_file = os.path.join(to_enrich.get_tmp_dir(), f"screenshot_{str(uuid.uuid4())[0:8]}.png")
                 driver.save_screenshot(screenshot_file)
                 to_enrich.add_media(Media(filename=screenshot_file), id="screenshot")
@@ -35,4 +36,3 @@ class ScreenshotEnricher(Enricher):
                 logger.info("TimeoutException loading page for screenshot")
             except Exception as e:
                 logger.error(f"Got error while loading webdriver for screenshot enricher: {e}")
-        # return None
