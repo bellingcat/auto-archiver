@@ -5,6 +5,7 @@ import hashlib
 from typing import IO, Any
 
 from ..core import Media, Metadata, Step
+from ..enrichers import HashEnricher
 from loguru import logger
 import os, uuid
 from slugify import slugify
@@ -64,18 +65,18 @@ class Storage(Step):
         filename, ext = os.path.splitext(media.filename)
 
         # path_generator logic
-        if self.path_generator == "flat": 
+        if self.path_generator == "flat":
             path = ""
-            filename = slugify(filename) # in case it comes with os.sep
+            filename = slugify(filename)  # in case it comes with os.sep
         elif self.path_generator == "url": path = slugify(item.get_url())
         elif self.path_generator == "random":
             path = item.get("random_path", str(uuid.uuid4())[:16], True)
 
         # filename_generator logic
         if self.filename_generator == "random": filename = str(uuid.uuid4())[:16]
-        elif self.filename_generator == "static": 
-            with open(media.filename, "rb") as f:
-                bytes = f.read()  # read entire file as bytes
-            filename = hashlib.sha256(bytes).hexdigest()[:24]
+        elif self.filename_generator == "static":
+            he = HashEnricher({"algorithm": "SHA-256", "chunksize": 1.6e7})
+            hd = he.calculate_hash(media.filename)
+            filename = hd[:24]
 
         media.key = os.path.join(folder, path, f"{filename}{ext}")
