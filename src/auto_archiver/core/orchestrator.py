@@ -25,7 +25,7 @@ class ArchivingOrchestrator:
         self.archivers: List[Archiver] = config.archivers
         self.databases: List[Database] = config.databases
         self.storages: List[Storage] = config.storages
-        ArchivingContext.set("storages", self.storages)
+        ArchivingContext.set("storages", self.storages, keep_on_reset=True)
 
         for a in self.archivers: a.setup()
 
@@ -35,6 +35,7 @@ class ArchivingOrchestrator:
 
     def feed_item(self, item: Metadata) -> Metadata:
         try:
+            ArchivingContext.reset()
             with tempfile.TemporaryDirectory(dir="./") as tmp_dir:
                 ArchivingContext.set_tmp_dir(tmp_dir)
                 return self.archive(item)
@@ -108,22 +109,12 @@ class ArchivingOrchestrator:
 
         # 5 - store media
         # looks for Media in result.media and also result.media[x].properties (as list or dict values)
-        for s in self.storages:
-            for m in result.media:
-                s.store(m, result)  # modifies media
-                # Media can be inside media properties, examples include transformations on original media
-                for prop in m.properties.values():
-                    if isinstance(prop, Media):
-                        s.store(prop, result)
-                    if isinstance(prop, list) and len(prop) > 0 and isinstance(prop[0], Media):
-                        for prop_media in prop:
-                            s.store(prop_media, result)
+        result.store()
 
         # 6 - format and store formatted if needed
         # enrichers typically need access to already stored URLs etc
         if (final_media := self.formatter.format(result)):
-            for s in self.storages:
-                s.store(final_media, result)
+            final_media.store()
             result.set_final_media(final_media)
 
         if result.is_empty():

@@ -8,9 +8,10 @@ import datetime
 from urllib.parse import urlparse
 from dateutil.parser import parse as parse_dt
 from .media import Media
+from .context import ArchivingContext
 
-# annotation order matters
-@dataclass_json
+
+@dataclass_json  # annotation order matters
 @dataclass
 class Metadata:
     status: str = "no archiver"
@@ -22,7 +23,6 @@ class Metadata:
     # properties below are excluded from JSON representation
     tmp_keys: Set[str] = field(default_factory=set, repr=False, metadata=config(exclude=True))
     # tmp_metadata: Dict[str, Any] = field(default_factory=dict, repr=False, metadata=config(exclude=True)) # contains internal properties not to be leaked when .to_json/repr/str is called
-
 
     def merge(self: Metadata, right: Metadata, overwrite_left=True) -> Metadata:
         """
@@ -45,6 +45,12 @@ class Metadata:
         else:  # invert and do same logic
             return right.merge(self)
         return self
+
+    def store(self: Metadata, override_storages: List = None):
+        # calls .store for all contained media. storages [Storage]
+        storages = override_storages or ArchivingContext.get("storages")
+        for media in self.media:
+            media.store(override_storages=storages)
 
     def set(self, key: str, val: Any, is_tmp=False) -> Metadata:
         # if not self.metadata: self.metadata = {}
@@ -144,4 +150,3 @@ class Metadata:
 
     def __str__(self) -> str:
         return self.__repr__()
-        

@@ -5,8 +5,9 @@ from slugify import slugify
 
 # from . import Enricher
 from . import Feeder
-from ..core import Metadata
+from ..core import Metadata, ArchivingContext
 from ..utils import Gsheets, GWorksheet
+
 
 class GsheetsFeeder(Gsheets, Feeder):
     name = "gsheet_feeder"
@@ -31,7 +32,7 @@ class GsheetsFeeder(Gsheets, Feeder):
                     "help": "(CSV) explicitly block some worksheets from being processed",
                     "cli_set": lambda cli_val, cur_val: set(cli_val.split(","))
                 },
-                "use_sheet_names_in_stored_paths":{
+                "use_sheet_names_in_stored_paths": {
                     "default": True,
                     "help": "if True the stored files path will include 'workbook_name/worksheet_name/...'",
                 }
@@ -61,11 +62,12 @@ class GsheetsFeeder(Gsheets, Feeder):
                 if status not in ['', None]: continue
 
                 # All checks done - archival process starts here
-                m = Metadata().set_url(url).set("gsheet", {"row": row, "worksheet": gw}, True)
+                m = Metadata().set_url(url)
+                ArchivingContext.set("gsheet", {"row": row, "worksheet": gw}, keep_on_reset=True)
                 if self.use_sheet_names_in_stored_paths:
-                    m.set("folder", os.path.join(slugify(self.sheet), slugify(wks.title)), True)
+                    ArchivingContext.set("folder", os.path.join(slugify(self.sheet), slugify(wks.title)), True)
                 yield m
-                
+
             logger.success(f'Finished worksheet {wks.title}')
 
     def should_process_sheet(self, sheet_name: str) -> bool:

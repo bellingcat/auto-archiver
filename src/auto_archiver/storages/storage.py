@@ -1,10 +1,9 @@
 from __future__ import annotations
 from abc import abstractmethod
 from dataclasses import dataclass
-import hashlib
-from typing import IO, Any
+from typing import IO
 
-from ..core import Media, Metadata, Step
+from ..core import Media, Step, ArchivingContext
 from ..enrichers import HashEnricher
 from loguru import logger
 import os, uuid
@@ -42,10 +41,11 @@ class Storage(Step):
         # only for typing...
         return Step.init(name, config, Storage)
 
-    def store(self, media: Media, item: Metadata) -> None:
-        self.set_key(media, item)
+    def store(self, media: Media, url: str) -> None:
+        self.set_key(media, url)
         self.upload(media)
         media.add_url(self.get_cdn_url(media))
+        media.
 
     @abstractmethod
     def get_cdn_url(self, media: Media) -> str: pass
@@ -58,19 +58,19 @@ class Storage(Step):
         with open(media.filename, 'rb') as f:
             return self.uploadf(f, media, **kwargs)
 
-    def set_key(self, media: Media, item: Metadata) -> None:
+    def set_key(self, media: Media, url) -> None:
         """takes the media and optionally item info and generates a key"""
         if media.key is not None and len(media.key) > 0: return
-        folder = item.get("folder", "")
+        folder = ArchivingContext.get("folder", "")
         filename, ext = os.path.splitext(media.filename)
 
         # path_generator logic
         if self.path_generator == "flat":
             path = ""
             filename = slugify(filename)  # in case it comes with os.sep
-        elif self.path_generator == "url": path = slugify(item.get_url())
+        elif self.path_generator == "url": path = slugify(url)
         elif self.path_generator == "random":
-            path = item.get("random_path", str(uuid.uuid4())[:16], True)
+            path = ArchivingContext.get("random_path", str(uuid.uuid4())[:16], True)
 
         # filename_generator logic
         if self.filename_generator == "random": filename = str(uuid.uuid4())[:16]

@@ -1,5 +1,5 @@
-from .media import Media
 from .metadata import Metadata
+from .media import Media
 from .step import Step
 from .context import ArchivingContext
 

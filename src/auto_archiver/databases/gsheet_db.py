@@ -5,8 +5,7 @@ from urllib.parse import quote
 from loguru import logger
 
 from . import Database
-from ..core import Metadata
-from ..core import Media
+from ..core import Metadata, Media, ArchivingContext
 from ..utils import GWorksheet
 
 
@@ -86,7 +85,7 @@ class GsheetsDb(Database):
             logger.debug(f"Unable to update sheet: {e}")
 
     def _retrieve_gsheet(self, item: Metadata) -> Tuple[GWorksheet, int]:
-        # TODO: to make gsheet_db less coupled with gsheet_feeder's "gsheet" parameter, this method could 1st try to fetch "gsheet" from item and, if missing, manage its own singleton - not needed for now
-        gw: GWorksheet = item.get("gsheet").get("worksheet")
-        row: int = item.get("gsheet").get("row")
+        # TODO: to make gsheet_db less coupled with gsheet_feeder's "gsheet" parameter, this method could 1st try to fetch "gsheet" from ArchivingContext and, if missing, manage its own singleton - not needed for now
+        gw: GWorksheet = ArchivingContext.get("gsheet").get("worksheet")
+        row: int = ArchivingContext.get("gsheet").get("row")
         return gw, row

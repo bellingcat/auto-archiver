@@ -3,19 +3,43 @@ from __future__ import annotations
 from ast import List
 from typing import Any
 from dataclasses import dataclass, field
-from dataclasses_json import dataclass_json
+from dataclasses_json import dataclass_json, config
 import mimetypes
 
+from .context import ArchivingContext
+
+from loguru import logger
 
 
-@dataclass_json # annotation order matters
+@dataclass_json  # annotation order matters
 @dataclass
 class Media:
     filename: str
     key: str = None
     urls: List[str] = field(default_factory=list)
-    _mimetype: str = None  # eg: image/jpeg
     properties: dict = field(default_factory=dict)
+    _mimetype: str = None  # eg: image/jpeg
+    _stored: bool = field(default=False, repr=False, metadata=config(exclude=True))
+
+    def store(self: Media, override_storages: List = None, url: str = "url-not-available"):
+        # stores the media into the provided/available storages [Storage]
+        # repeats the process for its properties, in case they have inner media themselves
+        # for now it only goes down 1 level but it's easy to make it recursive if needed
+        storages = override_storages or ArchivingContext.get("storages")
+        if not len(storages):
+            logger.warning(f"No storages found in local context or provided directly for {self.filename}.")
+            return
+
+        for s in storages:
+            s.store(self, url)
+            # Media can be inside media properties, examples include transformations on original media
+            for prop in self.properties.values():
+                if isinstance(prop, Media):
+                    s.store(prop, url)
+                if isinstance(prop, list):
+                    for prop_media in prop:
+                        if isinstance(prop_media, Media):
+                            s.store(prop_media, url)
 
     def set(self, key: str, value: Any) -> Media:
         self.properties[key] = value
@@ -44,10 +68,3 @@ class Media:
 
     def is_audio(self) -> bool:
         return self.mimetype.startswith("audio")
-
-    def store(self):
-        """
-        either stores this media entry and all its media descendants
-        or returns if that process is already completed
-        """
-        pass

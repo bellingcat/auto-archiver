@@ -46,14 +46,16 @@ No preview available for {{ m.key }}.
 {% endif %}
 {% if links %}
 <a href="{{ url }}">open</a> or
-<a href="{{ url }}" download="">download</a>
+<a href="{{ url }}" download="">download</a> or
+{{ copy_urlize(url, "copy") }}
+
 <br>
 {% endif %}
 {% endfor %}
 
 {%- endmacro -%}
 
-{% macro copy_urlize(val) -%}
+{% macro copy_urlize(val, href_text) -%}
 
 {% if val is mapping %}
 <ul>
@@ -65,7 +67,11 @@ No preview available for {{ m.key }}.
 </ul>
 
 {% else %}
+{% if href_text  | length == 0 %}
 <span class="copy">{{ val | string | urlize }}</span>
+{% else %}
+<span class="copy" copy-value="{{val}}">{{ href_text | string | urlize }}</span>
+{% endif %}
 {% endif %}
 
 {%- endmacro -%}

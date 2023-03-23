@@ -29,7 +29,7 @@
             margin: auto;
             border: 1px solid;
             border-collapse: collapse;
-            vertical-align:top;
+            vertical-align: top;
         }
 
         table.metadata td:first-child {
@@ -185,7 +185,11 @@
         el.addEventListener("copy", (e) => {
             e.preventDefault();
             if (e.clipboardData) {
-                e.clipboardData.setData("text/plain", el.textContent);
+                if (el.hasAttribute("copy-value")) {
+                    e.clipboardData.setData("text/plain", el.getAttribute("copy-value"));
+                } else {
+                    e.clipboardData.setData("text/plain", el.textContent);
+                }
                 console.log(e.clipboardData.getData("text"))
                 showNotification("copied!")
             }
