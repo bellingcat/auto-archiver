@@ -2,7 +2,7 @@ import ffmpeg, os, uuid
 from loguru import logger
 
 from . import Enricher
-from ..core import Media, Metadata
+from ..core import Media, Metadata, ArchivingContext
 
 
 class ThumbnailEnricher(Enricher):
@@ -23,7 +23,7 @@ class ThumbnailEnricher(Enricher):
         logger.debug(f"generating thumbnails")
         for i, m in enumerate(to_enrich.media[::]):
             if m.is_video():
-                folder = os.path.join(to_enrich.get_tmp_dir(), str(uuid.uuid4()))
+                folder = os.path.join(ArchivingContext.get_tmp_dir(), str(uuid.uuid4()))
                 os.makedirs(folder, exist_ok=True)
                 logger.debug(f"generating thumbnails for {m.filename}")
                 fps, duration = 0.5, m.get("duration")

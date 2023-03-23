@@ -6,8 +6,9 @@ from dataclasses import dataclass, field
 from dataclasses_json import dataclass_json
 import mimetypes
 
-# annotation order matters
-@dataclass_json
+
+
+@dataclass_json # annotation order matters
 @dataclass
 class Media:
     filename: str
@@ -40,3 +41,13 @@ class Media:
 
     def is_video(self) -> bool:
         return self.mimetype.startswith("video")
+
+    def is_audio(self) -> bool:
+        return self.mimetype.startswith("audio")
+
+    def store(self):
+        """
+        either stores this media entry and all its media descendants
+        or returns if that process is already completed
+        """
+        pass

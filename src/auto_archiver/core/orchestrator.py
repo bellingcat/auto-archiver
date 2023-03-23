@@ -2,6 +2,8 @@ from __future__ import annotations
 from ast import List
 from typing import Union
 
+from .context import ArchivingContext
+
 from ..archivers import Archiver
 from ..feeders import Feeder
 from ..formatters import Formatter
@@ -23,6 +25,7 @@ class ArchivingOrchestrator:
         self.archivers: List[Archiver] = config.archivers
         self.databases: List[Database] = config.databases
         self.storages: List[Storage] = config.storages
+        ArchivingContext.set("storages", self.storages)
 
         for a in self.archivers: a.setup()
 
@@ -33,7 +36,7 @@ class ArchivingOrchestrator:
     def feed_item(self, item: Metadata) -> Metadata:
         try:
             with tempfile.TemporaryDirectory(dir="./") as tmp_dir:
-                item.set_tmp_dir(tmp_dir)
+                ArchivingContext.set_tmp_dir(tmp_dir)
                 return self.archive(item)
         except KeyboardInterrupt:
             # catches keyboard interruptions to do a clean exit

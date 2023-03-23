@@ -1,7 +1,7 @@
 import os, shutil, subprocess, uuid
 from loguru import logger
 
-from ..core import Media, Metadata
+from ..core import Media, Metadata, ArchivingContext
 from . import Enricher
 from ..utils import UrlUtil
 
@@ -34,7 +34,7 @@ class WaczEnricher(Enricher):
 
         logger.debug(f"generating WACZ for {url=}")
         collection = str(uuid.uuid4())[0:8]
-        browsertrix_home = os.path.abspath(to_enrich.get_tmp_dir())
+        browsertrix_home = os.path.abspath(ArchivingContext.get_tmp_dir())
         cmd = [
             "docker", "run",
             "--rm",  # delete container once it has completed running

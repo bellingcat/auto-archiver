@@ -3,7 +3,7 @@ import tiktok_downloader
 from loguru import logger
 
 from . import Archiver
-from ..core import Metadata, Media
+from ..core import Metadata, Media, ArchivingContext
 
 
 class TiktokArchiver(Archiver):
@@ -41,7 +41,7 @@ class TiktokArchiver(Archiver):
             logger.warning(f'Other Tiktok error {error}')
 
         try:
-            filename = os.path.join(item.get_tmp_dir(), f'{str(uuid.uuid4())[0:8]}.mp4')
+            filename = os.path.join(ArchivingContext.get_tmp_dir(), f'{str(uuid.uuid4())[0:8]}.mp4')
             tiktok_media = tiktok_downloader.snaptik(url).get_media()
 
             if len(tiktok_media) <= 0:

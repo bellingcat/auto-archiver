@@ -6,7 +6,7 @@ from urllib.parse import quote
 from loguru import logger
 
 from ..version import __version__
-from ..core import Metadata, Media
+from ..core import Metadata, Media, ArchivingContext
 from . import Formatter
 
 
@@ -43,7 +43,7 @@ class HtmlFormatter(Formatter):
             metadata=item.get_clean_metadata(),
             version=__version__
         )
-        html_path = os.path.join(item.get_tmp_dir(), f"formatted{str(uuid.uuid4())}.html")
+        html_path = os.path.join(ArchivingContext.get_tmp_dir(), f"formatted{str(uuid.uuid4())}.html")
         with open(html_path, mode="w", encoding="utf-8") as outf:
             outf.write(content)
         return Media(filename=html_path)

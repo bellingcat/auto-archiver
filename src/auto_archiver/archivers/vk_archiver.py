@@ -3,7 +3,7 @@ from vk_url_scraper import VkScraper
 
 from ..utils.misc import dump_payload
 from . import Archiver
-from ..core import Metadata, Media
+from ..core import Metadata, Media, ArchivingContext
 
 
 class VkArchiver(Archiver):
@@ -50,7 +50,7 @@ class VkArchiver(Archiver):
 
         result.set_content(dump_payload(vk_scrapes))
 
-        filenames = self.vks.download_media(vk_scrapes, item.get_tmp_dir())
+        filenames = self.vks.download_media(vk_scrapes, ArchivingContext.get_tmp_dir())
         for filename in filenames:
             result.add_media(Media(filename))
 

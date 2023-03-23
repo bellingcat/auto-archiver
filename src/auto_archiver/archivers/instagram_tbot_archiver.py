@@ -4,7 +4,7 @@ from loguru import logger
 import time, os
 from sqlite3 import OperationalError
 from . import Archiver
-from ..core import Metadata, Media
+from ..core import Metadata, Media, ArchivingContext
 
 
 class InstagramTbotArchiver(Archiver):
@@ -44,7 +44,7 @@ class InstagramTbotArchiver(Archiver):
         if not "instagram.com" in url: return False
 
         result = Metadata()
-        tmp_dir = item.get_tmp_dir()
+        tmp_dir = ArchivingContext.get_tmp_dir()
         with self.client.start():
             chat = self.client.get_entity("instagram_load_bot")
             since_id = self.client.send_message(entity=chat, message=url).id

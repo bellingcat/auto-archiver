@@ -3,8 +3,8 @@ from abc import abstractmethod
 from dataclasses import dataclass
 import os
 import mimetypes, requests
-from ..core import Metadata
-from ..core import Step
+
+from ..core import Metadata, Step, ArchivingContext
 
 
 @dataclass
@@ -51,7 +51,7 @@ class Archiver(Step):
             if len(to_filename) > 64:
                 to_filename = to_filename[-64:]
         if item:
-            to_filename = os.path.join(item.get_tmp_dir(), to_filename)
+            to_filename = os.path.join(ArchivingContext.get_tmp_dir(), to_filename)
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36'
         }

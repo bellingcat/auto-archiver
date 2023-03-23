@@ -3,12 +3,11 @@ from __future__ import annotations
 from ast import List, Set
 from typing import Any, Union, Dict
 from dataclasses import dataclass, field
-from dataclasses_json import dataclass_json
+from dataclasses_json import dataclass_json, config
 import datetime
 from urllib.parse import urlparse
 from dateutil.parser import parse as parse_dt
 from .media import Media
-
 
 # annotation order matters
 @dataclass_json
@@ -17,9 +16,13 @@ class Metadata:
     status: str = "no archiver"
     _processed_at: datetime = field(default_factory=datetime.datetime.utcnow)
     metadata: Dict[str, Any] = field(default_factory=dict)
-    tmp_keys: Set[str] = field(default_factory=set, repr=False, metadata={"exclude": True})  # keys that are not to be saved in DBs
     media: List[Media] = field(default_factory=list)
     rearchivable: bool = True  # defaults to true, archivers can overwrite
+
+    # properties below are excluded from JSON representation
+    tmp_keys: Set[str] = field(default_factory=set, repr=False, metadata=config(exclude=True))
+    # tmp_metadata: Dict[str, Any] = field(default_factory=dict, repr=False, metadata=config(exclude=True)) # contains internal properties not to be leaked when .to_json/repr/str is called
+
 
     def merge(self: Metadata, right: Metadata, overwrite_left=True) -> Metadata:
         """
@@ -93,12 +96,6 @@ class Metadata:
     def get_title(self) -> str:
         return self.get("title")
 
-    def set_tmp_dir(self, tmp_dir: str) -> Metadata:
-        return self.set("tmp_dir", tmp_dir, True)
-
-    def get_tmp_dir(self) -> str:
-        return self.get("tmp_dir")
-
     def set_timestamp(self, timestamp: datetime.datetime) -> Metadata:
         if type(timestamp) == str:
             timestamp = parse_dt(timestamp)
@@ -144,3 +141,7 @@ class Metadata:
             {k: v for k, v in self.metadata.items() if k not in self.tmp_keys},
             **{"processed_at": self._processed_at}
         )
+
+    def __str__(self) -> str:
+        return self.__repr__()
+        
