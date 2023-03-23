@@ -42,10 +42,12 @@ class Storage(Step):
         return Step.init(name, config, Storage)
 
     def store(self, media: Media, url: str) -> None:
+        if media.is_stored(): 
+            logger.debug(f"{self.key} already stored, skipping")
+            return
         self.set_key(media, url)
         self.upload(media)
         media.add_url(self.get_cdn_url(media))
-        media.
 
     @abstractmethod
     def get_cdn_url(self, media: Media) -> str: pass

@@ -40,7 +40,7 @@ class HtmlFormatter(Formatter):
             url=url,
             title=item.get_title(),
             media=item.media,
-            metadata=item.get_clean_metadata(),
+            metadata=item.metadata,
             version=__version__
         )
         html_path = os.path.join(ArchivingContext.get_tmp_dir(), f"formatted{str(uuid.uuid4())}.html")

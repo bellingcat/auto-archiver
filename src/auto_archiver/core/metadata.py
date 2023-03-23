@@ -15,14 +15,12 @@ from .context import ArchivingContext
 @dataclass
 class Metadata:
     status: str = "no archiver"
-    _processed_at: datetime = field(default_factory=datetime.datetime.utcnow)
     metadata: Dict[str, Any] = field(default_factory=dict)
     media: List[Media] = field(default_factory=list)
     rearchivable: bool = True  # defaults to true, archivers can overwrite
 
-    # properties below are excluded from JSON representation
-    tmp_keys: Set[str] = field(default_factory=set, repr=False, metadata=config(exclude=True))
-    # tmp_metadata: Dict[str, Any] = field(default_factory=dict, repr=False, metadata=config(exclude=True)) # contains internal properties not to be leaked when .to_json/repr/str is called
+    def __post_init__(self):
+        self.set("_processed_at", datetime.datetime.utcnow())
 
     def merge(self: Metadata, right: Metadata, overwrite_left=True) -> Metadata:
         """
@@ -33,7 +31,6 @@ class Metadata:
             if right.status and len(right.status):
                 self.status = right.status
             self.rearchivable |= right.rearchivable
-            self.tmp_keys |= right.tmp_keys
             for k, v in right.metadata.items():
                 assert k not in self.metadata or type(v) == type(self.get(k))
                 if type(v) not in [dict, list, set] or k not in self.metadata:
@@ -52,10 +49,8 @@ class Metadata:
         for media in self.media:
             media.store(override_storages=storages)
 
-    def set(self, key: str, val: Any, is_tmp=False) -> Metadata:
-        # if not self.metadata: self.metadata = {}
+    def set(self, key: str, val: Any) -> Metadata:
         self.metadata[key] = val
-        if is_tmp: self.tmp_keys.add(key)
         return self
 
     def get(self, key: str, default: Any = None, create_if_missing=False) -> Union[Metadata, str]:
@@ -73,7 +68,7 @@ class Metadata:
         return "success" in self.status
 
     def is_empty(self) -> bool:
-        return not self.is_success() and len(self.media) == 0 and len(self.get_clean_metadata()) <= 2  # url, processed_at
+        return not self.is_success() and len(self.media) == 0 and len(self.metadata) <= 2  # url, processed_at
 
     @property  # getter .netloc
     def netloc(self) -> str:
@@ -141,12 +136,6 @@ class Metadata:
     def get_final_media(self) -> Media:
         _default = self.media[0] if len(self.media) else None
         return self.get_media_by_id("_final_media", _default)
-
-    def get_clean_metadata(self) -> Metadata:
-        return dict(
-            {k: v for k, v in self.metadata.items() if k not in self.tmp_keys},
-            **{"processed_at": self._processed_at}
-        )
 
     def __str__(self) -> str:
         return self.__repr__()

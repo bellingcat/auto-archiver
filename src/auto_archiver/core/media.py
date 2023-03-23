@@ -41,6 +41,9 @@ class Media:
                         if isinstance(prop_media, Media):
                             s.store(prop_media, url)
 
+    def is_stored(self) -> bool:
+        return len(self.urls) > 0
+
     def set(self, key: str, value: Any) -> Media:
         self.properties[key] = value
         return self
