@@ -58,7 +58,7 @@ class WhisperEnricher(Enricher):
                 job_id = to_enrich.media[i].get("whisper_model")["job_id"]
                 to_enrich.media[i].set("whisper_model", {
                     "job_id": job_id,
-                    self.action: job_results[job_id]
+                    **job_results[job_id]
                 })
 
     def submit_job(self, media: Media):
@@ -100,18 +100,16 @@ class WhisperEnricher(Enricher):
             r_res = requests.get(f'{self.api_endpoint}/jobs/{job_id}/artifacts', headers={'Authorization': f'Bearer {self.api_key}'})
             assert r_res.status_code == 200, f"Job artifacts did not respond with 200, instead with: {r_res.status_code}"
             logger.success(r_res.json())
-            result = []
-            for artifact in r_res.json():
+            result = {}
+            for art_id, artifact in enumerate(r_res.json()):
                 subtitle = []
                 full_text = []
                 for i, d in enumerate(artifact.get("data")):
                     subtitle.append(f"{i+1}\n{d.get('start')} --> {d.get('end')}\n{d.get('text').strip()}")
                     full_text.append(d.get('text').strip())
                 if not len(subtitle): continue
-                result.append({
-                    "subtitle": "\n".join(subtitle),
-                    "full_text": "\n".join(full_text),
-                })
+                result[f"artifact_{art_id}_subtitle"] = "\n".join(subtitle)
+                result[f"artifact_{art_id}_text"] = "\n".join(full_text)
             return result
         return False
 
