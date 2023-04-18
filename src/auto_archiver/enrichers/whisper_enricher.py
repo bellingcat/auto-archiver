@@ -42,7 +42,7 @@ class WhisperEnricher(Enricher):
         job_results = {}
         for i, m in enumerate(to_enrich.media):
             if m.is_video() or m.is_audio():
-                m.store()
+                m.store(url=url)
                 try:
                     job_id = self.submit_job(m)
                     job_results[job_id] = False

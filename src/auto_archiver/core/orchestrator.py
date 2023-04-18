@@ -114,7 +114,7 @@ class ArchivingOrchestrator:
         # 6 - format and store formatted if needed
         # enrichers typically need access to already stored URLs etc
         if (final_media := self.formatter.format(result)):
-            final_media.store()
+            final_media.store(url=url)
             result.set_final_media(final_media)
 
         if result.is_empty():
