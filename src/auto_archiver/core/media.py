@@ -19,7 +19,7 @@ class Media:
     urls: List[str] = field(default_factory=list)
     properties: dict = field(default_factory=dict)
     _mimetype: str = None  # eg: image/jpeg
-    _stored: bool = field(default=False, repr=False, metadata=config(exclude=True))
+    _stored: bool = field(default=False, repr=False, metadata=config(exclude=lambda _: True)) # always exclude
 
     def store(self: Media, override_storages: List = None, url: str = "url-not-available"):
         # stores the media into the provided/available storages [Storage]
