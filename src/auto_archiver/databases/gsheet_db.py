@@ -62,7 +62,7 @@ class GsheetsDb(Database):
             batch_if_valid('archive', "\n".join(media.urls))
         batch_if_valid('date', True, datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc).isoformat())
         batch_if_valid('title', item.get_title())
-        batch_if_valid('text', item.get("content", "")[:500])
+        batch_if_valid('text', item.get("content", ""))
         batch_if_valid('timestamp', item.get_timestamp())
         if (screenshot := item.get_media_by_id("screenshot")) and hasattr(screenshot, "urls"):
             batch_if_valid('screenshot', "\n".join(screenshot.urls))
