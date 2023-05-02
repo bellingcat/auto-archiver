@@ -93,7 +93,7 @@ class ArchivingOrchestrator:
                 # Q: should this be refactored so it's just a.download(result)?
                 result.merge(a.download(result))
                 if result.is_success(): break
-            except Exception as e: logger.error(f"Unexpected error with archiver {a.name}: {e}")
+            except Exception as e: logger.error(f"Unexpected error with archiver {a.name}: {e}: {traceback.format_exc()}")
 
         # what if an archiver returns multiple entries and one is to be part of HTMLgenerator?
         # should it call the HTMLgenerator as if it's not an enrichment?
@@ -105,7 +105,7 @@ class ArchivingOrchestrator:
         # eg: screenshot, wacz, webarchive, thumbnails
         for e in self.enrichers:
             try: e.enrich(result)
-            except Exception as exc: logger.error(f"Unexpected error with enricher {e.name}: {exc}")
+            except Exception as exc: logger.error(f"Unexpected error with enricher {e.name}: {exc}: {traceback.format_exc()}")
 
         # 5 - store media
         # looks for Media in result.media and also result.media[x].properties (as list or dict values)
