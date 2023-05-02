@@ -89,7 +89,8 @@ class Metadata:
 
     def set_content(self, content: str) -> Metadata:
         # a dump with all the relevant content
-        return self.set("content", content)
+        append_content = (self.get("content", "") + content + "\n").strip()
+        return self.set("content", append_content)
 
     def set_title(self, title: str) -> Metadata:
         return self.set("title", title)
