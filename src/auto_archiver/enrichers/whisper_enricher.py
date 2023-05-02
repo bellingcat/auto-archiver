@@ -26,6 +26,7 @@ class WhisperEnricher(Enricher):
         return {
             "api_endpoint": {"default": "https://whisper.spoettel.dev/api/v1", "help": "WhisperApi api endpoint"},
             "api_key": {"default": None, "help": "WhisperApi api key for authentication"},
+            "include_srt": {"default": False, "help": "Whether to include a subtitle SRT (SubRip Subtitle file) for the video (can be used in video players)."},
             "timeout": {"default": 90, "help": "How many seconds to wait at most for a successful job completion."},
             "action": {"default": "translation", "help": "which Whisper operation to execute", "choices": ["transcript", "translation", "language_detection"]},
 
@@ -58,8 +59,13 @@ class WhisperEnricher(Enricher):
                 job_id = to_enrich.media[i].get("whisper_model")["job_id"]
                 to_enrich.media[i].set("whisper_model", {
                     "job_id": job_id,
-                    **job_results[job_id]
+                    **(job_results[job_id] if job_results[job_id] else {"result": "incomplete or failed job"})
                 })
+                # append the extracted text to the content of the post so it gets written to the DBs like gsheets text column
+                if job_results[job_id]:
+                    for k,v in job_results[job_id].items():
+                        if "_text" in k and len(v):
+                            to_enrich.set_content(f"\n[automatic video transcript]: {v}")
 
     def submit_job(self, media: Media):
         s3 = self._get_s3_storage()
@@ -108,7 +114,7 @@ class WhisperEnricher(Enricher):
                     subtitle.append(f"{i+1}\n{d.get('start')} --> {d.get('end')}\n{d.get('text').strip()}")
                     full_text.append(d.get('text').strip())
                 if not len(subtitle): continue
-                result[f"artifact_{art_id}_subtitle"] = "\n".join(subtitle)
+                if self.include_srt: result[f"artifact_{art_id}_subtitle"] = "\n".join(subtitle)
                 result[f"artifact_{art_id}_text"] = "\n".join(full_text)
             return result
         return False
