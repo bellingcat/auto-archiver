@@ -47,7 +47,7 @@ class Metadata:
         # calls .store for all contained media. storages [Storage]
         storages = override_storages or ArchivingContext.get("storages")
         for media in self.media:
-            media.store(override_storages=storages)
+            media.store(override_storages=storages, url=self.get_url())
 
     def set(self, key: str, val: Any) -> Metadata:
         self.metadata[key] = val
