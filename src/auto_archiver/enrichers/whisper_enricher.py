@@ -87,7 +87,7 @@ class WhisperEnricher(Enricher):
         while not all_completed and (time.time() - start_time) <= self.timeout:
             all_completed = True
             for job_id in job_results:
-                if job_results[job_id]: continue
+                if job_results[job_id] != False: continue
                 all_completed = False  # at least one not ready
                 try: job_results[job_id] = self.check_job(job_id)
                 except Exception as e:
