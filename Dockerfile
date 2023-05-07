@@ -1,5 +1,5 @@
 # stage 1 - all dependencies
-From python:3.10
+FROM webrecorder/browsertrix-crawler:latest
 
 WORKDIR /app
 
@@ -7,7 +7,7 @@ WORKDIR /app
 RUN pip install --upgrade pip && \
 	pip install pipenv && \
 	apt-get update && \
-	apt-get install -y gcc ffmpeg fonts-noto firefox-esr && \
+	apt-get install -y gcc ffmpeg fonts-noto firefox && \
 	wget https://github.com/mozilla/geckodriver/releases/download/v0.32.0/geckodriver-v0.32.0-linux64.tar.gz && \
 	tar -xvzf geckodriver* -C /usr/local/bin && \
 	chmod +x /usr/local/bin/geckodriver && \
