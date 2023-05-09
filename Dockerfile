@@ -17,7 +17,7 @@ RUN pip install --upgrade pip && \
 
 # TODO: avoid copying unnecessary files, including .git
 COPY Pipfile* ./
-RUN pipenv install --skip-lock
+RUN pipenv install
 
 # doing this at the end helps during development, builds are quick
 COPY ./src/ . 
