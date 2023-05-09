@@ -19,7 +19,7 @@ class Media:
     urls: List[str] = field(default_factory=list)
     properties: dict = field(default_factory=dict)
     _mimetype: str = None  # eg: image/jpeg
-    _stored: bool = field(default=False, repr=False, metadata=config(exclude=lambda _: True)) # always exclude
+    _stored: bool = field(default=False, repr=False, metadata=config(exclude=lambda _: True))  # always exclude
 
     def store(self: Media, override_storages: List = None, url: str = "url-not-available"):
         # stores the media into the provided/available storages [Storage]
@@ -42,7 +42,7 @@ class Media:
                             s.store(prop_media, url)
 
     def is_stored(self) -> bool:
-        return len(self.urls) > 0
+        return len(self.urls) > 0 and len(self.urls) == len(ArchivingContext.get("storages"))
 
     def set(self, key: str, value: Any) -> Media:
         self.properties[key] = value

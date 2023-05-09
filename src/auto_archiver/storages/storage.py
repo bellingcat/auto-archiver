@@ -43,7 +43,7 @@ class Storage(Step):
 
     def store(self, media: Media, url: str) -> None:
         if media.is_stored(): 
-            logger.debug(f"{self.key} already stored, skipping")
+            logger.debug(f"{media.key} already stored, skipping")
             return
         self.set_key(media, url)
         self.upload(media)

@@ -10,6 +10,7 @@ from googleapiclient.errors import HttpError
 # You can run this code to get a new token and verify it belongs to the correct user
 # This token will be refresh automatically by the auto-archiver
 # Code below from https://developers.google.com/drive/api/quickstart/python
+# Example invocation: py scripts/create_update_gdrive_oauth_token.py -c secrets/credentials.json -t secrets/gd-token.json
 
 SCOPES = ['https://www.googleapis.com/auth/drive']
 
