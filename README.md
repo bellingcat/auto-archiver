@@ -91,7 +91,7 @@ To check all available steps (which archivers, storages, databses, ...) exist ch
 
 The great thing is you configure all the workflow in your `orchestration.yaml` file which we advise you put into a `secrets/` folder and don't share it with others because it will contain passwords and other secrets. 
 
-The structure of orchestration file is split into 2 parts: `steps` (what **steps** to use) and `configs` (how those steps should behave), here's a simplification:
+The structure of orchestration file is split into 2 parts: `steps` (what **steps** to use) and `configurations` (how those steps should behave), here's a simplification:
 ```yaml
 # orchestration.yaml content
 steps:

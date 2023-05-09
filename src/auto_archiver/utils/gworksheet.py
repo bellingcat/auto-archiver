@@ -15,7 +15,6 @@ class GWorksheet:
         'archive': 'archive location',
         'date': 'archive date',
         'thumbnail': 'thumbnail',
-        'thumbnail_index': 'thumbnail index',
         'timestamp': 'upload timestamp',
         'title': 'upload title',
         'screenshot': 'screenshot',
