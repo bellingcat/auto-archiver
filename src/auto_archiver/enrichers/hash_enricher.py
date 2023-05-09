@@ -2,7 +2,7 @@ import hashlib
 from loguru import logger
 
 from . import Enricher
-from ..core import Metadata
+from ..core import Metadata, ArchivingContext
 
 
 class HashEnricher(Enricher):
@@ -17,6 +17,7 @@ class HashEnricher(Enricher):
         algo_choices = self.configs()["algorithm"]["choices"]
         assert self.algorithm in algo_choices, f"Invalid hash algorithm selected, must be one of {algo_choices} (you selected {self.algorithm})."
         self.chunksize = int(self.chunksize)
+        ArchivingContext.set("hash_enricher.algorithm", self.algorithm, keep_on_reset=True)
 
     @staticmethod
     def configs() -> dict:

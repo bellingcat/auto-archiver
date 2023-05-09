@@ -8,6 +8,7 @@ from loguru import logger
 from ..version import __version__
 from ..core import Metadata, Media, ArchivingContext
 from . import Formatter
+from ..enrichers import HashEnricher
 
 
 @dataclass
@@ -46,11 +47,16 @@ class HtmlFormatter(Formatter):
         html_path = os.path.join(ArchivingContext.get_tmp_dir(), f"formatted{str(uuid.uuid4())}.html")
         with open(html_path, mode="w", encoding="utf-8") as outf:
             outf.write(content)
-        return Media(filename=html_path)
+        final_media = Media(filename=html_path)
+
+        he = HashEnricher({"hash_enricher": {"algorithm": ArchivingContext.get("hash_enricher.algorithm"), "chunksize": 1.6e7}})
+        if len(hd := he.calculate_hash(final_media.filename)):
+            final_media.set("hash", f"{he.algorithm}:{hd}")
+
+        return final_media
 
 
 # JINJA helper filters
-
 class JinjaHelpers:
     @staticmethod
     def is_list(v) -> bool:

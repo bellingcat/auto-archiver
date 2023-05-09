@@ -64,6 +64,7 @@ class GsheetsDb(Database):
         batch_if_valid('title', item.get_title())
         batch_if_valid('text', item.get("content", ""))
         batch_if_valid('timestamp', item.get_timestamp())
+        batch_if_valid('hash', media.get("hash", "not-calculated"))
         if (screenshot := item.get_media_by_id("screenshot")) and hasattr(screenshot, "urls"):
             batch_if_valid('screenshot', "\n".join(screenshot.urls))
 

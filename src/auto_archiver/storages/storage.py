@@ -77,7 +77,7 @@ class Storage(Step):
         # filename_generator logic
         if self.filename_generator == "random": filename = str(uuid.uuid4())[:16]
         elif self.filename_generator == "static":
-            he = HashEnricher({"hash_enricher": {"algorithm": "SHA-256", "chunksize": 1.6e7}})
+            he = HashEnricher({"hash_enricher": {"algorithm": ArchivingContext.get("hash_enricher.algorithm"), "chunksize": 1.6e7}})
             hd = he.calculate_hash(media.filename)
             filename = hd[:24]
 
