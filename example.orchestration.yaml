@@ -49,7 +49,6 @@ configurations:
       timestamp: upload timestamp
       title: upload title
       text: textual content
-      duration: duration
       screenshot: screenshot
       hash: hash
       wacz: wacz

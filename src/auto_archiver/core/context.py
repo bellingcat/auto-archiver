@@ -27,7 +27,6 @@ class ArchivingContext:
 
     @staticmethod
     def set(key, value, keep_on_reset: bool = False):
-        logger.debug(f"SET [{key}]={value}")
         ac = ArchivingContext.get_instance()
         ac.configs[key] = value
         if keep_on_reset: ac.keep_on_reset.add(key)

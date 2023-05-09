@@ -34,7 +34,6 @@ class Gsheets(Step):
                     'timestamp': 'upload timestamp',
                     'title': 'upload title',
                     'text': 'text content',
-                    'duration': 'duration',
                     'screenshot': 'screenshot',
                     'hash': 'hash',
                     'wacz': 'wacz',
