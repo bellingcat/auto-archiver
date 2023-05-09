@@ -46,9 +46,12 @@ class WaczEnricher(Enricher):
                 "--generateWACZ",
                 "--text",
                 "--collection", collection,
+                "--id", collection,
+                "--saveState", "never",
                 "--behaviors", "autoscroll,autoplay,autofetch,siteSpecific",
                 "--behaviorTimeout", str(self.timeout),
-                "--timeout", str(self.timeout)
+                "--timeout", str(self.timeout),
+                "--profile", str(self.profile)
             ]
         else:
             logger.debug(f"generating WACZ in Docker for {url=}")
@@ -69,12 +72,12 @@ class WaczEnricher(Enricher):
                 "--timeout", str(self.timeout)
             ]
 
-        if self.profile:
-            profile_fn = os.path.join(browsertrix_home, "profile.tar.gz")
-            shutil.copyfile(self.profile, profile_fn)
-            # TODO: test which is right
-            cmd.extend(["--profile", profile_fn])
-            # cmd.extend(["--profile", "/crawls/profile.tar.gz"])
+            if self.profile:
+                profile_fn = os.path.join(browsertrix_home, "profile.tar.gz")
+                shutil.copyfile(self.profile, profile_fn)
+                # TODO: test which is right
+                cmd.extend(["--profile", profile_fn])
+                # cmd.extend(["--profile", "/crawls/profile.tar.gz"])
 
         try:
             logger.info(f"Running browsertrix-crawler: {' '.join(cmd)}")
@@ -83,7 +86,13 @@ class WaczEnricher(Enricher):
             logger.error(f"WACZ generation failed: {e}")
             return False
 
-        filename = os.path.join(browsertrix_home, "collections", collection, f"{collection}.wacz")
+        
+
+        if os.getenv('RUNNING_IN_DOCKER'):
+            filename = os.path.join("collections", collection, f"{collection}.wacz")
+        else:
+            filename = os.path.join(browsertrix_home, "collections", collection, f"{collection}.wacz")
+        
         if not os.path.exists(filename):
             logger.warning(f"Unable to locate and upload WACZ  {filename=}")
             return False
