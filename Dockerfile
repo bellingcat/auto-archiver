@@ -1,6 +1,8 @@
 # stage 1 - all dependencies
 FROM webrecorder/browsertrix-crawler:latest
 
+ENV RUNNING_IN_DOCKER=1
+
 WORKDIR /app
 
 # TODO: use custom ffmpeg builds instead of apt-get install
@@ -28,7 +30,7 @@ COPY ./src/ .
 # TODO: figure out how to make volumes not be root, does it depend on host or dockerfile?
 # RUN useradd --system --groups sudo --shell /bin/bash archiver && chown -R archiver:sudo .
 # USER archiver
-ENTRYPOINT ["python"]
+ENTRYPOINT ["python3"]
 # ENTRYPOINT ["docker-entrypoint.sh"]
 
 # should be executed with 2 volumes (3 if local_storage)
