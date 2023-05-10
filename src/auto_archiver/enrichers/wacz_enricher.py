@@ -26,36 +26,58 @@ class WaczEnricher(Enricher):
 
     def enrich(self, to_enrich: Metadata) -> bool:
         # TODO: figure out support for browsertrix in docker
+
         url = to_enrich.get_url()
 
         if UrlUtil.is_auth_wall(url):
             logger.debug(f"[SKIP] SCREENSHOT since url is behind AUTH WALL: {url=}")
             return
-
-        logger.debug(f"generating WACZ for {url=}")
+        
         collection = str(uuid.uuid4())[0:8]
         browsertrix_home = os.path.abspath(ArchivingContext.get_tmp_dir())
-        cmd = [
-            "docker", "run",
-            "--rm",  # delete container once it has completed running
-            "-v", f"{browsertrix_home}:/crawls/",
-            # "-it", # this leads to "the input device is not a TTY"
-            "webrecorder/browsertrix-crawler", "crawl",
-            "--url", url,
-            "--scopeType", "page",
-            "--generateWACZ",
-            "--text",
-            "--collection", collection,
-            "--behaviors", "autoscroll,autoplay,autofetch,siteSpecific",
-            "--behaviorTimeout", str(self.timeout),
-            "--timeout", str(self.timeout)
-        ]
-        if self.profile:
-            profile_fn = os.path.join(browsertrix_home, "profile.tar.gz")
-            shutil.copyfile(self.profile, profile_fn)
-            # TODO: test which is right
-            cmd.extend(["--profile", profile_fn])
-            # cmd.extend(["--profile", "/crawls/profile.tar.gz"])
+        
+        if os.getenv('RUNNING_IN_DOCKER'):
+            logger.debug(f"generating WACZ without Docker for {url=}")
+
+            cmd = [
+                "crawl",
+                "--url", url,
+                "--scopeType", "page",
+                "--generateWACZ",
+                "--text",
+                "--collection", collection,
+                "--id", collection,
+                "--saveState", "never",
+                "--behaviors", "autoscroll,autoplay,autofetch,siteSpecific",
+                "--behaviorTimeout", str(self.timeout),
+                "--timeout", str(self.timeout),
+                "--profile", str(self.profile)
+            ]
+        else:
+            logger.debug(f"generating WACZ in Docker for {url=}")
+            
+            cmd = [
+                "docker", "run",
+                "--rm",  # delete container once it has completed running
+                "-v", f"{browsertrix_home}:/crawls/",
+                # "-it", # this leads to "the input device is not a TTY"
+                "webrecorder/browsertrix-crawler", "crawl",
+                "--url", url,
+                "--scopeType", "page",
+                "--generateWACZ",
+                "--text",
+                "--collection", collection,
+                "--behaviors", "autoscroll,autoplay,autofetch,siteSpecific",
+                "--behaviorTimeout", str(self.timeout),
+                "--timeout", str(self.timeout)
+            ]
+
+            if self.profile:
+                profile_fn = os.path.join(browsertrix_home, "profile.tar.gz")
+                shutil.copyfile(self.profile, profile_fn)
+                # TODO: test which is right
+                cmd.extend(["--profile", profile_fn])
+                # cmd.extend(["--profile", "/crawls/profile.tar.gz"])
 
         try:
             logger.info(f"Running browsertrix-crawler: {' '.join(cmd)}")
@@ -64,7 +86,13 @@ class WaczEnricher(Enricher):
             logger.error(f"WACZ generation failed: {e}")
             return False
 
-        filename = os.path.join(browsertrix_home, "collections", collection, f"{collection}.wacz")
+        
+
+        if os.getenv('RUNNING_IN_DOCKER'):
+            filename = os.path.join("collections", collection, f"{collection}.wacz")
+        else:
+            filename = os.path.join(browsertrix_home, "collections", collection, f"{collection}.wacz")
+        
         if not os.path.exists(filename):
             logger.warning(f"Unable to locate and upload WACZ  {filename=}")
             return False

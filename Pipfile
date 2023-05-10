@@ -30,9 +30,13 @@ cryptography = "==38.0.4"
 dataclasses-json = "*"
 yt-dlp = ">=2023.2.17"
 vk-url-scraper = "*"
+uwsgi = "*"
+requests = {extras = ["socks"], version = "*"}
+# wacz = "==0.4.8"
+pywb = ">=2.7.3"
 
 [requires]
-python_version = "3.9"
+python_version = "3.10"
 
 [dev-packages]
 autopep8 = "*"
