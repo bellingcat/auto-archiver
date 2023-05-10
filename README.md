@@ -33,7 +33,7 @@ Docker works like a virtual machine running inside your computer, it isolates ev
 
 1. install [docker](https://docs.docker.com/get-docker/)
 2. pull the auto-archiver docker [image](https://hub.docker.com/r/bellingcat/auto-archiver) with `docker pull bellingcat/auto-archiver`
-3. run the docker image locally in a container: `docker run --rm -v $PWD/secrets:/app/secrets -v $PWD/local_archive:/app/local_archive bellingcat/auto-archiver -m auto_archiver  --config secrets/orchestration.yaml` breaking this command down:
+3. run the docker image locally in a container: `docker run --rm -v $PWD/secrets:/app/secrets -v $PWD/local_archive:/app/local_archive bellingcat/auto-archiver --config secrets/orchestration.yaml` breaking this command down:
    1. `docker run` tells docker to start a new container (an instance of the image)
    2. `--rm` makes sure this container is removed after execution (less garbage locally)
    3. `-v $PWD/secrets:/app/secrets` - your secrets folder

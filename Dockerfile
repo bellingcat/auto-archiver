@@ -26,10 +26,7 @@ COPY ./src/ .
 # RUN useradd --system --groups sudo --shell /bin/bash archiver && chown -R archiver:sudo .
 # USER archiver
 
-ADD docker-entrypoint.sh /docker-entrypoint.sh
-ENTRYPOINT ["/docker-entrypoint.sh"]
-
-CMD ["python3"]
+ENTRYPOINT ["pipenv", "run", "python3", "-m", "auto_archiver"]
 
 # should be executed with 2 volumes (3 if local_storage is used)
 # docker run --rm -v $PWD/secrets:/app/secrets -v $PWD/local_archive:/app/local_archive aa pipenv run python3 -m auto_archiver --config secrets/orchestration.yaml
