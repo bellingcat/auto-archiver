@@ -7,12 +7,15 @@ WORKDIR /app
 # TODO: use custom ffmpeg builds instead of apt-get install
 RUN pip install --upgrade pip && \
 	pip install pipenv && \
+	add-apt-repository ppa:mozillateam/ppa && \
 	apt-get update && \
-	apt-get install -y gcc ffmpeg fonts-noto firefox && \
-	wget https://github.com/mozilla/geckodriver/releases/download/v0.32.0/geckodriver-v0.32.0-linux64.tar.gz && \
+	apt-get install -y gcc ffmpeg fonts-noto && \
+	apt-get install -y --no-install-recommends firefox-esr && \
+	ln -s /usr/bin/firefox-esr /usr/bin/firefox && \
+	wget https://github.com/mozilla/geckodriver/releases/download/v0.33.0/geckodriver-v0.33.0-linux64.tar.gz && \
 	tar -xvzf geckodriver* -C /usr/local/bin && \
 	chmod +x /usr/local/bin/geckodriver && \
-	rm geckodriver-v* 
+	rm geckodriver-v*
 
 
 # TODO: avoid copying unnecessary files, including .git
@@ -25,6 +28,7 @@ COPY ./src/ .
 # TODO: figure out how to make volumes not be root, does it depend on host or dockerfile?
 # RUN useradd --system --groups sudo --shell /bin/bash archiver && chown -R archiver:sudo .
 # USER archiver
+
 
 ENTRYPOINT ["pipenv", "run", "python3", "-m", "auto_archiver"]
 
