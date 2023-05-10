@@ -31,5 +31,5 @@ ENTRYPOINT ["/docker-entrypoint.sh"]
 
 CMD ["python3"]
 
-# should be executed with 2 volumes (3 if local_storage)
-# docker run -v /var/run/docker.sock:/var/run/docker.sock -v $PWD/secrets:/app/secrets  -v $PWD/local_archive:/app/local_archive aa --help
+# should be executed with 2 volumes (3 if local_storage is used)
+# docker run --rm -v $PWD/secrets:/app/secrets -v $PWD/local_archive:/app/local_archive aa pipenv run python3 -m auto_archiver --config secrets/orchestration.yaml
