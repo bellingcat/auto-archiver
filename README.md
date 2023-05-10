@@ -87,9 +87,7 @@ The archiver work is orchestrated by the following workflow (we call each a **st
 4. **Formatter** creates a report from all the archived content (HTML, PDF, ...)
 5. **Database** knows what's been archived and also stores the archive result (spreadsheet, CSV, or just the console)
 
-To check all available steps (which archivers, storages, databses, ...) exist check the [example.orchestration.yaml](example.orchestration.yaml).
-
-The great thing is you configure all the workflow in your `orchestration.yaml` file which we advise you put into a `secrets/` folder and don't share it with others because it will contain passwords and other secrets. 
+To setup an auto-archiver instance, instance, create an `orchestration.yaml` which contains the workflow you would like. We advise you put this file into a `secrets/` folder and do not share it with others because it will contain passwords and other secrets. 
 
 The structure of orchestration file is split into 2 parts: `steps` (what **steps** to use) and `configurations` (how those steps should behave), here's a simplification:
 ```yaml
@@ -113,10 +111,12 @@ configurations:
   # ... configurations for the other steps here ...
 ```
 
+To see all available `steps` (which archivers, storages, databses, ...) exist check the [example.orchestration.yaml](example.orchestration.yaml).
+
 All the `configurations` in the `orchestration.yaml` file (you can name it differently but need to pass it in the `--config FILENAME` argument) can be seen in the console by using the `--help` flag. They can also be overwritten, for example if you are using the `cli_feeder` to archive from the command line and want to provide the URLs you should do:
 
 ```bash
-auto-archiver --config orchestration.yaml --cli_feeder.urls="url1,url2,url3"
+auto-archiver --config secrets/orchestration.yaml --cli_feeder.urls="url1,url2,url3"
 ```
 
 Here's the complete workflow that the auto-archiver goes through:
