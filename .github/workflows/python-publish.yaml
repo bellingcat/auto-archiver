@@ -1,0 +1,53 @@
+# This workflow will upload a Python Package using Twine when a release is created
+# For more information see: https://help.github.com/en/actions/language-and-framework-guides/using-python-with-github-actions#publishing-to-package-registries
+
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+
+name: Pypi
+
+on:
+  release:
+    types: [published]
+  push:
+    branches: [ "dockerize" ]
+    tags: [ "v*.*.*" ]
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Publish python package
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.10"
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade --upgrade-strategy=eager pip setuptools wheel twine pipenv
+        python -m pip install -e . --upgrade
+        python -m pipenv install --dev --python 3.10
+      env:
+        PIPENV_DEFAULT_PYTHON_VERSION: "3.10"
+
+    - name: Build wheels
+      run: |
+        python -m pipenv run python setup.py sdist bdist_wheel
+
+    - name: Publish a Python distribution to PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        user: __token__
+        verbose: true
+        skip_existing: true
+        password: ${{ secrets.PYPI_API_TOKEN }}
+        packages_dir: dist/

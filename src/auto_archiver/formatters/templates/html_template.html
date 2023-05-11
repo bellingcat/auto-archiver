@@ -1,0 +1,217 @@
+{# templates/results.html #}
+{% import 'macros.html' as macros %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300italic,700,700italic">
+    <title>{{ url }}</title>
+    <style>
+        html {
+            font-family: 'Roboto', sans-serif;
+        }
+
+        table {
+            table-layout: fixed;
+            width: 90%;
+        }
+
+        table td {
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            padding: 5px;
+        }
+
+        table,
+        th,
+        td {
+            margin: auto;
+            border: 1px solid;
+            border-collapse: collapse;
+            vertical-align: top;
+        }
+
+        table.metadata td:first-child {
+            text-align: center;
+        }
+
+        table.content td:nth-child(2),
+        .center {
+            text-align: center;
+        }
+
+        .copy:hover {
+            background: aliceblue;
+            cursor: copy;
+        }
+
+        #notification {
+            position: fixed;
+            right: 20px;
+            top: 20px;
+            background: aquamarine;
+            box-shadow: 6px 8px 5px 0px #000000;
+            padding: 10px;
+            font-size: large;
+            display: none;
+        }
+
+        img,
+        video {
+            filter: gray;
+            -webkit-filter: grayscale(1);
+            filter: grayscale(1);
+        }
+
+        /* Disable grayscale on hover */
+        img:hover,
+        video:hover {
+            -webkit-filter: grayscale(0);
+            filter: none;
+        }
+
+        .collapsible {
+            background-color: #777;
+            color: white;
+            cursor: pointer;
+            padding: 5px;
+            margin: 10px;
+            width: 100%;
+            border: none;
+            text-align: left;
+            outline: none;
+            font-size: 15px;
+        }
+
+        .active,
+        .collapsible:hover {
+            background-color: #555;
+        }
+
+        .collapsible-content {
+            padding: 0 18px;
+            display: none;
+            overflow: hidden;
+            background-color: #f1f1f1;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="notification"></div>
+    <h2>Archived media for <a href="{{ url }}">{{ url }}</a></h2>
+    <p><b>title:</b> '<span class="copy">{{ title }}</span>'</p>
+    <h2 class="center">content {{ media | length }} item(s)</h2>
+    <table class="content">
+        <tr>
+            <th>about</th>
+            <th>preview(s)</th>
+        </tr>
+        {% for m in media %}
+        <tr>
+            <td>
+                <ul>
+                    <li><b>key:</b> <span class="copy">{{ m.key }}</span></li>
+                    <li><b>type:</b> <span class="copy">{{ m.mimetype }}</span></li>
+
+                    {% for prop in m.properties %}
+
+                    {% if m.properties[prop] | is_list %}
+                    <p></p>
+                    <div>
+                        <b class="collapsible" title="expand">{{ prop }}:</b>
+                        <p></p>
+                        <div class="collapsible-content">
+                            {% for subprop in m.properties[prop] %}
+                            {% if subprop | is_media %}
+                            {{ macros.display_media(subprop, false, url) }}
+                            {% else %}
+                            {{ subprop }}
+                            {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <p></p>
+                    {% elif m.properties[prop] | string | length > 1 %}
+                    <li><b>{{ prop }}:</b> {{ macros.copy_urlize(m.properties[prop]) }}</li>
+                    {% endif %}
+
+                    {% endfor %}
+                </ul>
+            </td>
+            <td>
+                {{ macros.display_media(m, true, url) }}
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+    <h2 class="center">metadata</h2>
+    <table class="metadata">
+        <tr>
+            <th>key</th>
+            <th>value</th>
+        </tr>
+        {% for key in metadata %}
+        <tr>
+            <td>{{ key }}</td>
+            <td>
+                {{ macros.copy_urlize(metadata[key]) }}
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <p style="text-align:center;">Made with <a href="https://github.com/bellingcat/auto-archiver">bellingcat/auto-archiver</a> v{{ version }}</p>
+</body>
+<script defer>
+    // notification logic
+    const notification = document.getElementById("notification");
+
+    function showNotification(message, miliseconds) {
+        notification.style.display = "block";
+        notification.innerText = message;
+        setTimeout(() => {
+            notification.style.display = "none";
+            notification.innerText = "";
+        }, miliseconds || 1000)
+    }
+
+    // copy logic
+    Array.from(document.querySelectorAll(".copy")).forEach(el => {
+        el.onclick = () => {
+            document.execCommand("copy");
+        }
+        el.addEventListener("copy", (e) => {
+            e.preventDefault();
+            if (e.clipboardData) {
+                if (el.hasAttribute("copy-value")) {
+                    e.clipboardData.setData("text/plain", el.getAttribute("copy-value"));
+                } else {
+                    e.clipboardData.setData("text/plain", el.textContent);
+                }
+                console.log(e.clipboardData.getData("text"))
+                showNotification("copied!")
+            }
+        })
+    })
+
+    // collapsibles
+    let coll = document.getElementsByClassName("collapsible");
+    let i;
+
+    for (i = 0; i < coll.length; i++) {
+        coll[i].addEventListener("click", function() {
+            this.classList.toggle("active");
+            // let content = this.nextElementSibling;
+            let content = this.parentElement.querySelector(".collapsible-content");
+            if (content.style.display === "block") {
+                content.style.display = "none";
+            } else {
+                content.style.display = "block";
+            }
+        });
+    }
+</script>
+
+</html>

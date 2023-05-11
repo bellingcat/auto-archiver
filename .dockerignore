@@ -1,0 +1,17 @@
+logs/
+browsertrix-tmp/
+tmp*/
+temp/
+.DS_Store
+__pycache__/
+local_archive/
+config*.json
+config.json
+*.env
+credentials.json
+secrets/
+instaloader/
+instaloader.session
+vk_config*.json
+anon*
+geckodriver.log

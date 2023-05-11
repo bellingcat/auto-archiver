@@ -19,6 +19,12 @@ local_archive/
 vk_config*.json
 gd-token.json
 credentials.json
-secrets/*
+secrets*
 browsertrix/*
 browsertrix-tmp/*
+instaloader/*
+instaloader.session
+orchestration.yaml
+auto_archiver.egg-info*
+logs*
+*.csv

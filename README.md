@@ -1,186 +1,243 @@
-# Auto Archiver
+<h1 align="center">Auto Archiver</h1>
+
+[![PyPI version](https://badge.fury.io/py/auto-archiver.svg)](https://badge.fury.io/py/auto-archiver)
+[![Docker Image Version (latest by date)](https://img.shields.io/docker/v/bellingcat/auto-archiver?label=version&logo=docker)](https://hub.docker.com/r/bellingcat/auto-archiver)
+<!-- ![Docker Pulls](https://img.shields.io/docker/pulls/bellingcat/auto-archiver) -->
+<!-- [![PyPI download month](https://img.shields.io/pypi/dm/auto-archiver.svg)](https://pypi.python.org/pypi/auto-archiver/) -->
+<!-- [![Documentation Status](https://readthedocs.org/projects/vk-url-scraper/badge/?version=latest)](https://vk-url-scraper.readthedocs.io/en/latest/?badge=latest) -->
+
+
 Read the [article about Auto Archiver on bellingcat.com](https://www.bellingcat.com/resources/2022/09/22/preserve-vital-online-content-with-bellingcats-auto-archiver-tool/).
 
 
-Python script to automatically archive social media posts, videos, and images from a Google Sheets document. Uses different archivers depending on the platform, and can save content to local storage, S3 bucket (Digital Ocean Spaces, AWS, ...), and Google Drive. The Google Sheets where the links come from is updated with information about the archived content. It can be run manually or on an automated basis.
+Python tool to automatically archive social media posts, videos, and images from a Google Sheets, the console, and more. Uses different archivers depending on the platform, and can save content to local storage, S3 bucket (Digital Ocean Spaces, AWS, ...), and Google Drive. If using Google Sheets as the source for links, it will be updated with information about the archived content. It can be run manually or on an automated basis.
 
-## Setup
+There are 3 ways to use the auto-archiver:
+1. (easiest installation) via docker
+2. (local python install) `pip install auto-archiver`
+3. (legacy/development) clone and manually install from repo (see legacy [tutorial video](https://youtu.be/VfAhcuV2tLQ))
 
-Check this [tutorial video](https://youtu.be/VfAhcuV2tLQ).
-
-
-
-If you are using `pipenv` (recommended), `pipenv install` is sufficient to install Python prerequisites.
-
-You also need:
-1. [A Google Service account is necessary for use with `gspread`.](https://gspread.readthedocs.io/en/latest/oauth2.html#for-bots-using-service-account) Credentials for this account should be stored in `service_account.json`, in the same directory as the script.
-2. [ffmpeg](https://www.ffmpeg.org/) must also be installed locally for this tool to work. 
-3. [firefox](https://www.mozilla.org/en-US/firefox/new/) and [geckodriver](https://github.com/mozilla/geckodriver/releases) on a path folder like `/usr/local/bin`. 
-4. [fonts-noto](https://fonts.google.com/noto) to deal with multiple unicode characters during selenium/geckodriver's screenshots: `sudo apt install fonts-noto -y`. 
-5. Internet Archive credentials can be retrieved from https://archive.org/account/s3.php.
-6. If you would like to take archival [WACZ](https://specs.webrecorder.net/wacz/1.1.1/) snapshots using [browsertrix-crawler](https://github.com/webrecorder/browsertrix-crawler)
-   in addition to screenshots you will need to install [Docker](https://www.docker.com/).
-
-### Configuration file
-Configuration is done via a config.yaml file (see [example.config.yaml](example.config.yaml)) and some properties of that file can be overwritten via command line arguments. Here is the current result from running the `python auto_archive.py --help`:
-
-<details><summary><code>python auto_archive.py --help</code></summary>
+But **you always need a configuration/orchestration file**, which is where you'll configure where/what/how to archive. Make sure you read [orchestration](#orchestration).
 
 
+## How to install and run the auto-archiver
 
-```js
-usage: auto_archive.py [-h] [--config CONFIG] [--storage {s3,local,gd}] [--sheet SHEET] [--header HEADER] [--check-if-exists] [--save-logs] [--s3-private] [--col-url URL] [--col-status STATUS] [--col-folder FOLDER]
-                       [--col-archive ARCHIVE] [--col-date DATE] [--col-thumbnail THUMBNAIL] [--col-thumbnail_index THUMBNAIL_INDEX] [--col-timestamp TIMESTAMP] [--col-title TITLE] [--col-duration DURATION]
-                       [--col-screenshot SCREENSHOT] [--col-hash HASH]
+### Option 1 - docker
 
-Automatically archive social media posts, videos, and images from a Google Sheets document. 
-The command line arguments will always override the configurations in the provided YAML config file (--config), only some high-level options
-are allowed via the command line and the YAML configuration file is the preferred method. The sheet must have the "url" and "status" for the archiver to work.
+[![dockeri.co](https://dockerico.blankenship.io/image/bellingcat/auto-archiver)](https://hub.docker.com/r/bellingcat/auto-archiver)
 
-optional arguments:
-  -h, --help            show this help message and exit
-  --config CONFIG       the filename of the YAML configuration file (defaults to 'config.yaml')
-  --storage {s3,local,gd}
-                        which storage to use [execution.storage in config.yaml]
-  --sheet SHEET         the name of the google sheets document [execution.sheet in config.yaml]
-  --header HEADER       1-based index for the header row [execution.header in config.yaml]
-  --check-if-exists     when possible checks if the URL has been archived before and does not archive the same URL twice [exceution.check_if_exists]
-  --save-logs           creates or appends execution logs to files logs/LEVEL.log [exceution.save_logs]
-  --s3-private          Store content without public access permission (only for storage=s3) [secrets.s3.private in config.yaml]
-  --col-url URL         the name of the column to READ url FROM (default='link')
-  --col-status STATUS   the name of the column to FILL WITH status (default='archive status')
-  --col-folder FOLDER   the name of the column to READ folder FROM (default='destination folder')
-  --col-archive ARCHIVE
-                        the name of the column to FILL WITH archive (default='archive location')
-  --col-date DATE       the name of the column to FILL WITH date (default='archive date')
-  --col-thumbnail THUMBNAIL
-                        the name of the column to FILL WITH thumbnail (default='thumbnail')
-  --col-thumbnail_index THUMBNAIL_INDEX
-                        the name of the column to FILL WITH thumbnail_index (default='thumbnail index')
-  --col-timestamp TIMESTAMP
-                        the name of the column to FILL WITH timestamp (default='upload timestamp')
-  --col-title TITLE     the name of the column to FILL WITH title (default='upload title')
-  --col-duration DURATION
-                        the name of the column to FILL WITH duration (default='duration')
-  --col-screenshot SCREENSHOT
-                        the name of the column to FILL WITH screenshot (default='screenshot')
-  --col-hash HASH       the name of the column to FILL WITH hash (default='hash')
-```
+Docker works like a virtual machine running inside your computer, it isolates everything and makes installation simple. Since it is an isolated environment when you need to pass it your orchestration file or get downloaded media out of docker you will need to connect folders on your machine with folders inside docker with the `-v` volume flag.
+
+
+1. install [docker](https://docs.docker.com/get-docker/)
+2. pull the auto-archiver docker [image](https://hub.docker.com/r/bellingcat/auto-archiver) with `docker pull bellingcat/auto-archiver`
+3. run the docker image locally in a container: `docker run --rm -v $PWD/secrets:/app/secrets -v $PWD/local_archive:/app/local_archive bellingcat/auto-archiver --config secrets/orchestration.yaml` breaking this command down:
+   1. `docker run` tells docker to start a new container (an instance of the image)
+   2. `--rm` makes sure this container is removed after execution (less garbage locally)
+   3. `-v $PWD/secrets:/app/secrets` - your secrets folder
+      1. `-v` is a volume flag which means a folder that you have on your computer will be connected to a folder inside the docker container
+      2. `$PWD/secrets` points to a `secrets/` folder in your current working directory (where your console points to), we use this folder as a best practice to hold all the secrets/tokens/passwords/... you use
+      3. `/app/secrets` points to the path the docker container where this image can be found
+   4.  `-v $PWD/local_archive:/app/local_archive` - (optional) if you use local_storage
+       1.  `-v` same as above, this is a volume instruction
+       2.  `$PWD/local_archive` is a folder `local_archive/` in case you want to archive locally and have the files accessible outside docker
+       3.  `/app/local_archive` is a folder inside docker that you can reference in your orchestration.yml file 
+
+### Option 2 - python package
+
+<details><summary><code>Python package instructions</code></summary>
+
+1. make sure you have python 3.8 or higher installed
+2. install the package `pip/pipenv/conda install auto-archiver`
+3. test it's installed with `auto-archiver --help`
+4. run it with your orchestration file and pass any flags you want in the command line `auto-archiver --config secrets/orchestration.yaml` if your orchestration file is inside a `secrets/`, which we advise
+   
+You will also need [ffmpeg](https://www.ffmpeg.org/), [firefox](https://www.mozilla.org/en-US/firefox/new/) and [geckodriver](https://github.com/mozilla/geckodriver/releases), and optionally [fonts-noto](https://fonts.google.com/noto). Similar to the local installation. 
+
+</details>
+
+
+### Option 3 - local installation
+This can also be used for development.
+
+<details><summary><code>Legacy instructions, only use if docker/package is not an option</code></summary>
+
+
+Install the following locally:
+1. [ffmpeg](https://www.ffmpeg.org/) must also be installed locally for this tool to work. 
+2. [firefox](https://www.mozilla.org/en-US/firefox/new/) and [geckodriver](https://github.com/mozilla/geckodriver/releases) on a path folder like `/usr/local/bin`. 
+3. (optional) [fonts-noto](https://fonts.google.com/noto) to deal with multiple unicode characters during selenium/geckodriver's screenshots: `sudo apt install fonts-noto -y`. 
+
+Clone and run:
+1. `git clone https://github.com/bellingcat/auto-archiver`
+2. `pipenv install`
+3. `pipenv run python -m src.auto_archiver --config secrets/orchestration.yaml`
+
 
 </details><br/>
 
-#### Example invocations
-All the configurations can be specified in the YAML config file, but sometimes it is useful to override only some of those like the sheet that we are running the archival on, here are some examples (possibly prepended by `pipenv run`):
+# Orchestration
+The archiver work is orchestrated by the following workflow (we call each a **step**): 
+1. **Feeder** gets the links (from a spreadsheet, from the console, ...)
+2. **Archiver** tries to archive the link (twitter, youtube, ...)
+3. **Enricher** adds more info to the content (hashes, thumbnails, ...)
+4. **Formatter** creates a report from all the archived content (HTML, PDF, ...)
+5. **Database** knows what's been archived and also stores the archive result (spreadsheet, CSV, or just the console)
+
+To setup an auto-archiver instance create an `orchestration.yaml` which contains the workflow you would like. We advise you put this file into a `secrets/` folder and do not share it with others because it will contain passwords and other secrets. 
+
+The structure of orchestration file is split into 2 parts: `steps` (what **steps** to use) and `configurations` (how those steps should behave), here's a simplification:
+```yaml
+# orchestration.yaml content
+steps:
+  feeder: gsheet_feeder
+  archivers: # order matters
+    - youtubedl_archiver
+  enrichers:
+    - thumbnail_enricher
+  formatter: html_formatter
+  storages:
+    - local_storage
+  databases:
+    - gsheet_db
+
+configurations:
+  gsheet_feeder:
+    sheet: "your google sheet name"
+    header: 2 # row with header for your sheet
+  # ... configurations for the other steps here ...
+```
+
+To see all available `steps` (which archivers, storages, databses, ...) exist check the [example.orchestration.yaml](example.orchestration.yaml).
+
+All the `configurations` in the `orchestration.yaml` file (you can name it differently but need to pass it in the `--config FILENAME` argument) can be seen in the console by using the `--help` flag. They can also be overwritten, for example if you are using the `cli_feeder` to archive from the command line and want to provide the URLs you should do:
 
 ```bash
-# all the configurations come from config.yaml
-python auto_archive.py
+auto-archiver --config secrets/orchestration.yaml --cli_feeder.urls="url1,url2,url3"
+```
 
-# all the configurations come from config.yaml,
-# checks if URL is not archived twice and saves logs to logs/ folder
-python auto_archive.py --check-if-exists --save_logs
+Here's the complete workflow that the auto-archiver goes through:
+```mermaid
+graph TD
+    s((start)) --> F(fa:fa-table Feeder)
+    F -->|get and clean URL| D1{fa:fa-database Database}
+    D1 -->|is already archived| e((end))
+    D1 -->|not yet archived| a(fa:fa-download Archivers)
+    a -->|got media| E(fa:fa-chart-line Enrichers)
+    E --> S[fa:fa-box-archive Storages]
+    E --> Fo(fa:fa-code Formatter)
+    Fo --> S
+    Fo -->|update database| D2(fa:fa-database Database)
+    D2 --> e
+```
 
-# all the configurations come from my_config.yaml
-python auto_archive.py --config my_config.yaml
+## Orchestration checklist
+Use this to make sure you help making sure you did all the required steps:
+* [ ] you have a `/secrets` folder with all your configuration files including
+  * [ ] a orchestration file eg: `orchestration.yaml` pointing to the correct location of other files
+  * [ ] (optional if you use GoogleSheets) you have a `service_account.json` (see [how-to](https://gspread.readthedocs.io/en/latest/oauth2.html#for-bots-using-service-account))
+  * [ ] (optional for telegram) a `anon.session` which appears after the 1st run where you login to telegram
+    * if you use private channels you need to add `channel_invites` and set `join_channels=true` at least once
+  * [ ] (optional for VK) a `vk_config.v2.json`
+  * [ ] (optional for using GoogleDrive storage) `gd-token.json` (see [help script](scripts/create_update_gdrive_oauth_token.py))
+  * [ ] (optional for instagram) `instaloader.session` file which appears after the 1st run and login in instagram
+  * [ ] (optional for browsertrix) `profile.tar.gz` file
 
-# reads the configurations but saves archived content to google drive instead
-python auto_archive.py --config my_config.yaml --storage gd
+#### Example invocations
+The recommended way to run the auto-archiver is through Docker. The invocations below will run the auto-archiver Docker image using a configuration file that you have specified
 
-# uses the configurations but for another google docs sheet 
+```bash
+# all the configurations come from ./secrets/orchestration.yaml
+docker run --rm -v $PWD/secrets:/app/secrets -v $PWD/local_archive:/app/local_archive bellingcat/auto-archiver --config secrets/orchestration.yaml
+# uses the same configurations but for another google docs sheet 
 # with a header on row 2 and with some different column names
-python auto_archive.py --config my_config.yaml --sheet="use it on another sheets doc" --header=2 --col-link="put urls here"
+# notice that columns is a dictionary so you need to pass it as JSON and it will override only the values provided
+docker run --rm -v $PWD/secrets:/app/secrets -v $PWD/local_archive:/app/local_archive bellingcat/auto-archiver --config secrets/orchestration.yaml --gsheet_feeder.sheet="use it on another sheets doc" --gsheet_feeder.header=2 --gsheet_feeder.columns='{"url": "link"}'
+# all the configurations come from orchestration.yaml and specifies that s3 files should be private
+docker run --rm -v $PWD/secrets:/app/secrets -v $PWD/local_archive:/app/local_archive bellingcat/auto-archiver --config secrets/orchestration.yaml --s3_storage.private=1
+```
 
-# all the configurations come from config.yaml and specifies that s3 files should be private
-python auto_archive.py --s3-private
+The auto-archiver can also be run locally, if pre-requisites are correctly configured. Equivalent invocations are below.
+
+```bash
+# all the configurations come from ./secrets/orchestration.yaml
+auto-archiver --config secrets/orchestration.yaml
+# uses the same configurations but for another google docs sheet 
+# with a header on row 2 and with some different column names
+# notice that columns is a dictionary so you need to pass it as JSON and it will override only the values provided
+auto-archiver --config secrets/orchestration.yaml --gsheet_feeder.sheet="use it on another sheets doc" --gsheet_feeder.header=2 --gsheet_feeder.columns='{"url": "link"}'
+# all the configurations come from orchestration.yaml and specifies that s3 files should be private
+auto-archiver --config secrets/orchestration.yaml --s3_storage.private=1
 ```
 
 ### Extra notes on configuration
 #### Google Drive
 To use Google Drive storage you need the id of the shared folder in the `config.yaml` file which must be shared with the service account eg `autoarchiverservice@auto-archiver-111111.iam.gserviceaccount.com` and then you can use `--storage=gd`
 
-#### Telethon (Telegrams API Library)
+#### Telethon + Instagram with telegram bot
 The first time you run, you will be prompted to do a authentication with the phone number associated, alternatively you can put your `anon.session` in the root.
 
 
-## Running
-The `--sheet name` property (or `execution.sheet` in the YAML file) is the name of the Google Sheet to check for URLs. 
+## Running on Google Sheets Feeder (gsheet_feeder)
+The `--gseets_feeder.sheet` property is the name of the Google Sheet to check for URLs. 
 This sheet must have been shared with the Google Service account used by `gspread`. 
-This sheet must also have specific columns (case-insensitive) in the `header` row (see `COLUMN_NAMES` in [gworksheet.py](utils/gworksheet.py)), only the `link` and `status` columns are mandatory:
-* `Link` (required): the location of the media to be archived. This is the only column that should be supplied with data initially
-* `Archive status` (required): the status of the auto archiver script. Any row with text in this column will be skipped automatically.
-* `Destination folder`: (optional) by default files are saved to a folder called `name-of-sheets-document/name-of-sheets-tab/` using this option you can organize documents into folder from the sheet. 
-* `Archive location`: the location of the archived version. For files that were not able to be auto archived, this can be manually updated.
-* `Archive date`: the date that the auto archiver script ran for this file
-* `Upload timestamp`: the timestamp extracted from the video. (For YouTube, this unfortunately does not currently include the time)
-* `Upload title`: the "title" of the video from the original source
-* `Hash`: a hash of the first video or image found
-* `Screenshot`: a screenshot taken with from a browser view of opening the page
-* in case of videos
-  * `Duration`: duration in seconds
-  * `Thumbnail`: an image thumbnail of the video (resize row height to make this more visible)
-  * `Thumbnail index`: a link to a page that shows many thumbnails for the video, useful for quickly seeing video content
+This sheet must also have specific columns (case-insensitive) in the `header` as specified in [Gsheet.configs](src/auto_archiver/utils/gsheet.py). The default names of these columns and their purpose is:
 
+Inputs:
 
-For example, for use with this spreadsheet:
+* **Link** *(required)*: the URL of the post to archive
+* **Destination folder**: custom folder for archived file (regardless of storage)
 
-![A screenshot of a Google Spreadsheet with column headers defined as above, and several Youtube and Twitter URLs in the "Media URL" column](docs/demo-before.png)
+Outputs:
+* **Archive status** *(required)*: Status of archive operation
+* **Archive location**: URL of archived post
+* **Archive date**: Date archived
+* **Thumbnail**: Embeds a thumbnail for the post in the spreadsheet
+* **Timestamp**: Timestamp of original post
+* **Title**: Post title
+* **Text**: Post text
+* **Screenshot**: Link to screenshot of post
+* **Hash**: Hash of archived HTML file (which contains hashes of post media)
+* **WACZ**: Link to a WACZ web archive of post
+* **ReplayWebpage**: Link to a ReplayWebpage viewer of the WACZ archive
 
-```pipenv run python auto_archive.py --sheet archiver-test```
+For example, this is a spreadsheet configured with all of the columns for the auto archiver and a few URLs to archive. (Note that the column names are not case sensitive.)
+
+![A screenshot of a Google Spreadsheet with column headers defined as above, and several Youtube and Twitter URLs in the "Link" column](docs/demo-before.png)
+
+Now the auto archiver can be invoked, with this command in this example: `docker run --rm -v $PWD/secrets:/app/secrets -v $PWD/local_archive:/app/local_archive bellingcat/auto-archiver:dockerize --config secrets/orchestration-global.yaml --gsheet_feeder.sheet "Auto archive test 2023-2"`. Note that the sheet name has been overridden/specified in the command line invocation.
 
 When the auto archiver starts running, it updates the "Archive status" column.
 
-![A screenshot of a Google Spreadsheet with column headers defined as above, and several Youtube and Twitter URLs in the "Media URL" column. The auto archiver has added "archive in progress" to one of the status columns.](docs/demo-progress.png)
+![A screenshot of a Google Spreadsheet with column headers defined as above, and several Youtube and Twitter URLs in the "Link" column. The auto archiver has added "archive in progress" to one of the status columns.](docs/demo-progress.png)
 
 The links are downloaded and archived, and the spreadsheet is updated to the following:
 
 ![A screenshot of a Google Spreadsheet with videos archived and metadata added per the description of the columns above.](docs/demo-after.png)
 
-Note that the first row is skipped, as it is assumed to be a header row (`--header=1` and you can change it if you use more rows above). Rows with an empty URL column, or a non-empty archive column are also skipped. All sheets in the document will be checked.
+Note that the first row is skipped, as it is assumed to be a header row (`--gsheet_feeder.header=1` and you can change it if you use more rows above). Rows with an empty URL column, or a non-empty archive column are also skipped. All sheets in the document will be checked.
 
-## Automating
+The "archive location" link contains the path of the archived file, in local storage, S3, or in Google Drive.
 
-The auto-archiver can be run automatically via cron. An example crontab entry that runs the archiver every minute is as follows.
+![The archive result for a link in the demo sheet.](docs/demo-archive.png)
 
-```* * * * * python auto_archive.py --sheet archiver-test```
+---
+## Development
+Use `python -m src.auto_archiver --config secrets/orchestration.yaml` to run from the local development environment.
 
-With this configuration, the archiver should archive and store all media added to the Google Sheet every 60 seconds. Of course, additional logging information, etc. might be required.
-
-# auto_auto_archiver
-
-To make it easier to set up new auto-archiver sheets, the auto-auto-archiver will look at a particular sheet and run the auto-archiver on every sheet name in column A, starting from row 11. (It starts here to support instructional text in the first rows of the sheet, as shown below.) You can simply use your default config as for `auto_archiver.py` but use `--sheet` to specify the name of the sheet that lists the names of sheets to archive.It must be shared with the same service account.
-
-![A screenshot of a Google Spreadsheet configured to show instructional text and a list of sheet names to check with auto-archiver.](docs/auto-auto.png)
-
-# Code structure
-Code is split into functional concepts:
-1. [Archivers](archivers/) - receive a URL that they try to archive
-2. [Storages](storages/) - they deal with where the archived files go
-3. [Utilities](utils/)
-   1. [GWorksheet](utils/gworksheet.py) - facilitates some of the reading/writing tasks for a Google Worksheet
-
-### Current Archivers
-Archivers are tested in a meaningful order with Wayback Machine being the failsafe, that can easily be changed in the code. 
-
-> Note: We have 2 Twitter Archivers (`TwitterArchiver`, `TwitterApiArchiver`) because one requires Twitter API V2 credentials and has better results and the other does not rely on official APIs and misses out on some content. 
-
-```mermaid
-graph TD
-    A(Archiver) -->|parent of| B(TelethonArchiver)
-    A -->|parent of| C(TiktokArchiver)
-    A -->|parent of| D(YoutubeDLArchiver)
-    A -->|parent of| E(TelegramArchiver)
-    A -->|parent of| F(TwitterArchiver)
-    A -->|parent of| G(VkArchiver)
-    A -->|parent of| H(WaybackArchiver)
-    F -->|parent of| I(TwitterApiArchiver)
-```
-### Current Storages
-```mermaid
-graph TD
-    A(BaseStorage) -->|parent of| B(S3Storage)
-    A(BaseStorage) -->|parent of| C(LocalStorage)
-    A(BaseStorage) -->|parent of| D(GoogleDriveStorage)
-```
+#### Docker development
+working with docker locally:
+  * `docker build . -t auto-archiver` to build a local image
+  * `docker run --rm -v $PWD/secrets:/app/secrets auto-archiver pipenv run python3 -m auto_archiver --config secrets/orchestration.yaml`
+    * to use local archive, also create a volume `-v` for it by adding `-v $PWD/local_archive:/app/local_archive`
 
 
+release to docker hub
+  * `docker image tag auto-archiver bellingcat/auto-archiver:latest`
+  * `docker push bellingcat/auto-archiver`
 
+#### RELEASE
+* update version in [version.py](src/auto_archiver/version.py)
+* run `bash ./scripts/release.sh` and confirm
+* package is automatically updated in pypi
+* docker image is automatically pushed to dockerhup

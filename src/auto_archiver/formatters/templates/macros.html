@@ -1,0 +1,77 @@
+{% macro display_media(m, links, main_url) -%}
+
+{% for url in m.urls %}
+{% if url | length == 0 %}
+No URL available for {{ m.key }}.
+{% elif 'http' in url %}
+{% if 'image' in m.mimetype %}
+<div>
+    <a href="{{ url }}">
+        <img src="{{ url }}" style="max-height:400px;max-width:400px;"></img>
+    </a>
+
+    <div>
+        Reverse Image Search:&nbsp;
+        <a href="https://www.google.com/searchbyimage?sbisrc=4chanx&image_url={{ url | quote }}&safe=off">Google</a>,&nbsp;
+        <a href="https://lens.google.com/uploadbyurl?url={{ url | quote }}">Google Lens</a>,&nbsp;
+        <a href="https://yandex.ru/images/touch/search?rpt=imageview&url={{ url | quote }}">Yandex</a>,&nbsp;
+        <a href="https://www.bing.com/images/search?view=detailv2&iss=sbi&form=SBIVSP&sbisrc=UrlPaste&q=imgurl:{{ url | quote }}">Bing</a>,&nbsp;
+        <a href="https://www.tineye.com/search/?url={{ url | quote }}">Tineye</a>,&nbsp;
+        <a href="https://iqdb.org/?url={{ url | quote }}">IQDB</a>,&nbsp;
+        <a href="https://saucenao.com/search.php?db=999&url={{ url | quote }}">SauceNAO</a>,&nbsp;
+        <a href="https://imgops.com/{{ url | quote }}">IMGOPS</a>
+    </div>
+    <p></p>
+</div>
+{% elif 'video' in m.mimetype %}
+<div>
+    <video src="{{ url }}" controls style="max-height:400px;max-width:600px;">
+        Your browser does not support the video element.
+    </video>
+</div>
+{% elif 'audio' in m.mimetype %}
+<div>
+    <audio controls>
+        <source src="{{ url }}" type="{{ m.mimetype }}">
+        Your browser does not support the audio element.
+    </audio>
+</div>
+{% elif m.filename | get_extension == ".wacz" %}
+<a href="https://replayweb.page/?source={{ url | quote }}#view=pages&url={{ main_url }}">replayweb</a>
+{% else %}
+No preview available for {{ m.key }}.
+{% endif %}
+{% else %}
+{{ m.url | urlize }}
+{% endif %}
+{% if links %}
+<a href="{{ url }}">open</a> or
+<a href="{{ url }}" download="">download</a> or
+{{ copy_urlize(url, "copy") }}
+
+<br>
+{% endif %}
+{% endfor %}
+
+{%- endmacro -%}
+
+{% macro copy_urlize(val, href_text) -%}
+
+{% if val is mapping %}
+<ul>
+    {% for key in val %}
+    <li>
+        <b>{{ key }}:</b> {{ copy_urlize(val[key]) }}
+    </li>
+    {% endfor %}
+</ul>
+
+{% else %}
+{% if href_text  | length == 0 %}
+<span class="copy">{{ val | string | urlize }}</span>
+{% else %}
+<span class="copy" copy-value="{{val}}">{{ href_text | string | urlize }}</span>
+{% endif %}
+{% endif %}
+
+{%- endmacro -%}
