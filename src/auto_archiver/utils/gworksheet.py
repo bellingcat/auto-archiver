@@ -96,7 +96,7 @@ class GWorksheet:
         cell_updates = [
             {
                 'range': self.to_a1(row, col),
-                'values': [[val]]
+                'values': [[str(val)[0:49999]]]
             }
             for row, col, val in cell_updates
         ]

@@ -116,6 +116,9 @@ class WhisperEnricher(Enricher):
                 if not len(subtitle): continue
                 if self.include_srt: result[f"artifact_{art_id}_subtitle"] = "\n".join(subtitle)
                 result[f"artifact_{art_id}_text"] = "\n".join(full_text)
+            # call /delete endpoint on timely success
+            r_del = requests.delete(f'{self.api_endpoint}/jobs/{job_id}', headers={'Authorization': f'Bearer {self.api_key}'})
+            logger.debug(f"DELETE whisper {job_id=} result: {r_del.status_code}")
             return result
         return False
 
