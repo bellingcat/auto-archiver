@@ -1,7 +1,7 @@
 <h1 align="center">Auto Archiver</h1>
 
 [![PyPI version](https://badge.fury.io/py/auto-archiver.svg)](https://badge.fury.io/py/auto-archiver)
-[![Docker Image Version (latest by date)](https://img.shields.io/docker/v/bellingcat/auto-archiver?label=version&logo=docker)](https://pypi.org/project/auto-archiver/)
+[![Docker Image Version (latest by date)](https://img.shields.io/docker/v/bellingcat/auto-archiver?label=version&logo=docker)](https://hub.docker.com/r/bellingcat/auto-archiver)
 <!-- ![Docker Pulls](https://img.shields.io/docker/pulls/bellingcat/auto-archiver) -->
 <!-- [![PyPI download month](https://img.shields.io/pypi/dm/auto-archiver.svg)](https://pypi.python.org/pypi/auto-archiver/) -->
 <!-- [![Documentation Status](https://readthedocs.org/projects/vk-url-scraper/badge/?version=latest)](https://vk-url-scraper.readthedocs.io/en/latest/?badge=latest) -->
@@ -50,8 +50,9 @@ Docker works like a virtual machine running inside your computer, it isolates ev
 1. make sure you have python 3.8 or higher installed
 2. install the package `pip/pipenv/conda install auto-archiver`
 3. test it's installed with `auto-archiver --help`
-4. run it with your orchestration file and pass any flags you want in the command line `auto-archiver --config secrets/orchestration.yaml`
-   1. if your orchestration file is inside a `secrets/` which we advise
+4. run it with your orchestration file and pass any flags you want in the command line `auto-archiver --config secrets/orchestration.yaml` if your orchestration file is inside a `secrets/`, which we advise
+   
+You will also need [ffmpeg](https://www.ffmpeg.org/), [firefox](https://www.mozilla.org/en-US/firefox/new/) and [geckodriver](https://github.com/mozilla/geckodriver/releases), and optionally [fonts-noto](https://fonts.google.com/noto). Similar to the local installation. 
 
 </details>
 
@@ -65,7 +66,7 @@ This can also be used for development.
 Install the following locally:
 1. [ffmpeg](https://www.ffmpeg.org/) must also be installed locally for this tool to work. 
 2. [firefox](https://www.mozilla.org/en-US/firefox/new/) and [geckodriver](https://github.com/mozilla/geckodriver/releases) on a path folder like `/usr/local/bin`. 
-3. [fonts-noto](https://fonts.google.com/noto) to deal with multiple unicode characters during selenium/geckodriver's screenshots: `sudo apt install fonts-noto -y`. 
+3. (optional) [fonts-noto](https://fonts.google.com/noto) to deal with multiple unicode characters during selenium/geckodriver's screenshots: `sudo apt install fonts-noto -y`. 
 
 Clone and run:
 1. `git clone https://github.com/bellingcat/auto-archiver`
@@ -83,7 +84,7 @@ The archiver work is orchestrated by the following workflow (we call each a **st
 4. **Formatter** creates a report from all the archived content (HTML, PDF, ...)
 5. **Database** knows what's been archived and also stores the archive result (spreadsheet, CSV, or just the console)
 
-To setup an auto-archiver instance, instance, create an `orchestration.yaml` which contains the workflow you would like. We advise you put this file into a `secrets/` folder and do not share it with others because it will contain passwords and other secrets. 
+To setup an auto-archiver instance create an `orchestration.yaml` which contains the workflow you would like. We advise you put this file into a `secrets/` folder and do not share it with others because it will contain passwords and other secrets. 
 
 The structure of orchestration file is split into 2 parts: `steps` (what **steps** to use) and `configurations` (how those steps should behave), here's a simplification:
 ```yaml
@@ -227,7 +228,7 @@ Use `python -m src.auto_archiver --config secrets/orchestration.yaml` to run fro
 #### Docker development
 working with docker locally:
   * `docker build . -t auto-archiver` to build a local image
-  * `docker run --rm -v $PWD/secrets:/app/secrets aa pipenv run python3 -m auto_archiver --config secrets/orchestration.yaml`
+  * `docker run --rm -v $PWD/secrets:/app/secrets auto-archiver pipenv run python3 -m auto_archiver --config secrets/orchestration.yaml`
     * to use local archive, also create a volume `-v` for it by adding `-v $PWD/local_archive:/app/local_archive`
 
 
