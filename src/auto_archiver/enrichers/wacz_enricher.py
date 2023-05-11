@@ -25,13 +25,7 @@ class WaczEnricher(Enricher):
         }
 
     def enrich(self, to_enrich: Metadata) -> bool:
-        # TODO: figure out support for browsertrix in docker
-
         url = to_enrich.get_url()
-
-        if UrlUtil.is_auth_wall(url):
-            logger.debug(f"[SKIP] SCREENSHOT since url is behind AUTH WALL: {url=}")
-            return
         
         collection = str(uuid.uuid4())[0:8]
         browsertrix_home = os.path.abspath(ArchivingContext.get_tmp_dir())
@@ -50,9 +44,10 @@ class WaczEnricher(Enricher):
                 "--saveState", "never",
                 "--behaviors", "autoscroll,autoplay,autofetch,siteSpecific",
                 "--behaviorTimeout", str(self.timeout),
-                "--timeout", str(self.timeout),
-                "--profile", str(self.profile)
-            ]
+                "--timeout", str(self.timeout)]
+            
+            if self.profile:
+                cmd.extend(["--profile", os.path.join("/app", str(self.profile))])
         else:
             logger.debug(f"generating WACZ in Docker for {url=}")
             
@@ -75,9 +70,7 @@ class WaczEnricher(Enricher):
             if self.profile:
                 profile_fn = os.path.join(browsertrix_home, "profile.tar.gz")
                 shutil.copyfile(self.profile, profile_fn)
-                # TODO: test which is right
-                cmd.extend(["--profile", profile_fn])
-                # cmd.extend(["--profile", "/crawls/profile.tar.gz"])
+                cmd.extend(["--profile", os.path.join("/crawls", "profile.tar.gz")])
 
         try:
             logger.info(f"Running browsertrix-crawler: {' '.join(cmd)}")
