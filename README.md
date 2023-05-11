@@ -204,10 +204,16 @@ For example, this is a spreadsheet configured with all of the columns for the au
 
 ![A screenshot of a Google Spreadsheet with column headers defined as above, and several Youtube and Twitter URLs in the "Link" column](docs/demo-before.png)
 
+Now the auto archiver can be invoked, with this command in this example: `docker run --rm -v $PWD/secrets:/app/secrets -v $PWD/local_archive:/app/local_archive bellingcat/auto-archiver:dockerize --config secrets/orchestration-global.yaml --gsheet_feeder.sheet "Auto archive test 2023-2"`. Note that the sheet name has been overridden/specified in the command line invocation.
+
 When the auto archiver starts running, it updates the "Archive status" column.
+
 ![A screenshot of a Google Spreadsheet with column headers defined as above, and several Youtube and Twitter URLs in the "Link" column. The auto archiver has added "archive in progress" to one of the status columns.](docs/demo-progress.png)
+
 The links are downloaded and archived, and the spreadsheet is updated to the following:
+
 ![A screenshot of a Google Spreadsheet with videos archived and metadata added per the description of the columns above.](docs/demo-after.png)
+
 Note that the first row is skipped, as it is assumed to be a header row (`--gsheet_feeder.header=1` and you can change it if you use more rows above). Rows with an empty URL column, or a non-empty archive column are also skipped. All sheets in the document will be checked.
 
 The "archive location" link contains the path of the archived file, in local storage, S3, or in Google Drive.
