@@ -20,7 +20,7 @@ There are 3 ways to use the auto-archiver:
 But **you always need a configuration/orchestration file**, which is where you'll configure where/what/how to archive. Make sure you read [orchestration](#orchestration).
 
 
-## How to run the auto-archiver
+## How to install and run the auto-archiver
 
 ### Option 1 - docker
 
@@ -200,16 +200,19 @@ Outputs:
 * **WACZ**: Link to a WACZ web archive of post
 * **ReplayWebpage**: Link to a ReplayWebpage viewer of the WACZ archive
 
-For example, for use with this spreadsheet:
+For example, this is a spreadsheet configured with all of the columns for the auto archiver and a few URLs to archive. (Note that the column names are not case sensitive.)
 
-![A screenshot of a Google Spreadsheet with column headers defined as above, and several Youtube and Twitter URLs in the "Media URL" column](docs/demo-before.png)
+![A screenshot of a Google Spreadsheet with column headers defined as above, and several Youtube and Twitter URLs in the "Link" column](docs/demo-before.png)
 
 When the auto archiver starts running, it updates the "Archive status" column.
-![A screenshot of a Google Spreadsheet with column headers defined as above, and several Youtube and Twitter URLs in the "Media URL" column. The auto archiver has added "archive in progress" to one of the status columns.](docs/demo-progress.png)
+![A screenshot of a Google Spreadsheet with column headers defined as above, and several Youtube and Twitter URLs in the "Link" column. The auto archiver has added "archive in progress" to one of the status columns.](docs/demo-progress.png)
 The links are downloaded and archived, and the spreadsheet is updated to the following:
 ![A screenshot of a Google Spreadsheet with videos archived and metadata added per the description of the columns above.](docs/demo-after.png)
 Note that the first row is skipped, as it is assumed to be a header row (`--gsheet_feeder.header=1` and you can change it if you use more rows above). Rows with an empty URL column, or a non-empty archive column are also skipped. All sheets in the document will be checked.
 
+The "archive location" link contains the path of the archived file, in local storage, S3, or in Google Drive.
+
+![The archive result for a link in the demo sheet.](docs/demo-archive.png)
 
 ---
 ## Development
