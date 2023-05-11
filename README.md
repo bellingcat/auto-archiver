@@ -24,8 +24,6 @@ But **you always need a configuration/orchestration file**, which is where you'l
 
 ### Option 1 - docker
 
-<details><summary><code>Docker instructions</code></summary>
-
 [![dockeri.co](https://dockerico.blankenship.io/image/bellingcat/auto-archiver)](https://hub.docker.com/r/bellingcat/auto-archiver)
 
 Docker works like a virtual machine running inside your computer, it isolates everything and makes installation simple. Since it is an isolated environment when you need to pass it your orchestration file or get downloaded media out of docker you will need to connect folders on your machine with folders inside docker with the `-v` volume flag.
@@ -44,8 +42,6 @@ Docker works like a virtual machine running inside your computer, it isolates ev
        1.  `-v` same as above, this is a volume instruction
        2.  `$PWD/local_archive` is a folder `local_archive/` in case you want to archive locally and have the files accessible outside docker
        3.  `/app/local_archive` is a folder inside docker that you can reference in your orchestration.yml file 
-
-</details>
 
 ### Option 2 - python package
 
@@ -147,19 +143,30 @@ Use this to make sure you help making sure you did all the required steps:
   * [ ] (optional for browsertrix) `profile.tar.gz` file
 
 #### Example invocations
-These assume you've installed with pipenv, see docker section above for how to run through docker
+The recommended way to run the auto-archiver is through Docker. The invocations below will run the auto-archiver Docker image using a configuration file that you have specified
 
 ```bash
-# all the configurations come from ./orchestration.yaml
-auto-archiver
+# all the configurations come from ./secrets/orchestration.yaml
+docker run --rm -v $PWD/secrets:/app/secrets -v $PWD/local_archive:/app/local_archive bellingcat/auto-archiver --config secrets/orchestration.yaml
+# uses the same configurations but for another google docs sheet 
+# with a header on row 2 and with some different column names
+# notice that columns is a dictionary so you need to pass it as JSON and it will override only the values provided
+docker run --rm -v $PWD/secrets:/app/secrets -v $PWD/local_archive:/app/local_archive bellingcat/auto-archiver --config secrets/orchestration.yaml --gsheet_feeder.sheet="use it on another sheets doc" --gsheet_feeder.header=2 --gsheet_feeder.columns='{"url": "link"}'
+# all the configurations come from orchestration.yaml and specifies that s3 files should be private
+docker run --rm -v $PWD/secrets:/app/secrets -v $PWD/local_archive:/app/local_archive bellingcat/auto-archiver --config secrets/orchestration.yaml --s3_storage.private=1
+```
+
+The auto-archiver can also be run locally, if pre-requisites are correctly configured. Equivalent invocations are below.
+
+```bash
 # all the configurations come from ./secrets/orchestration.yaml
 auto-archiver --config secrets/orchestration.yaml
 # uses the same configurations but for another google docs sheet 
 # with a header on row 2 and with some different column names
 # notice that columns is a dictionary so you need to pass it as JSON and it will override only the values provided
-auto-archiver --config orchestration.yaml --gsheet_feeder.sheet="use it on another sheets doc" --gsheet_feeder.header=2 --gsheet_feeder.columns='{"url": "link"}'
+auto-archiver --config secrets/orchestration.yaml --gsheet_feeder.sheet="use it on another sheets doc" --gsheet_feeder.header=2 --gsheet_feeder.columns='{"url": "link"}'
 # all the configurations come from orchestration.yaml and specifies that s3 files should be private
-auto-archiver --s3_storage.private=1
+auto-archiver --config secrets/orchestration.yaml --s3_storage.private=1
 ```
 
 ### Extra notes on configuration
@@ -173,7 +180,25 @@ The first time you run, you will be prompted to do a authentication with the pho
 ## Running on Google Sheets Feeder (gsheet_feeder)
 The `--gseets_feeder.sheet` property is the name of the Google Sheet to check for URLs. 
 This sheet must have been shared with the Google Service account used by `gspread`. 
-This sheet must also have specific columns (case-insensitive) in the `header` row - see [Gsheet.configs](src/auto_archiver/utils/gsheet.py) for all their names.
+This sheet must also have specific columns (case-insensitive) in the `header` as specified in [Gsheet.configs](src/auto_archiver/utils/gsheet.py). The default names of these columns and their purpose is:
+
+Inputs:
+
+* **Link** *(required)*: the URL of the post to archive
+* **Destination folder**: custom folder for archived file (regardless of storage)
+
+Outputs:
+* **Archive status** *(required)*: Status of archive operation
+* **Archive location**: URL of archived post
+* **Archive date**: Date archived
+* **Thumbnail**: Embeds a thumbnail for the post in the spreadsheet
+* **Timestamp**: Timestamp of original post
+* **Title**: Post title
+* **Text**: Post text
+* **Screenshot**: Link to screenshot of post
+* **Hash**: Hash of archived HTML file (which contains hashes of post media)
+* **WACZ**: Link to a WACZ web archive of post
+* **ReplayWebpage**: Link to a ReplayWebpage viewer of the WACZ archive
 
 For example, for use with this spreadsheet:
 
