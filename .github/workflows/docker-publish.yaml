@@ -9,7 +9,7 @@ on:
   release:
     types: [published]
   push:
-    branches: [ "dockerize" ]
+    branches: [ "main" ]
     tags: [ "v*.*.*" ]
 
 env:
