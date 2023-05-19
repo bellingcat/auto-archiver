@@ -38,10 +38,11 @@ class Config:
         self.cli_ops = {}
         self.config = {}
 
-    def parse(self, use_cli=True, yaml_config_filename: str = None):
+    def parse(self, use_cli=True, yaml_config_filename: str = None, overwrite_configs:str={}):
         """
         if yaml_config_filename is provided, the --config argument is ignored, 
         useful for library usage when the config values are preloaded
+        overwrite_configs is a dict that overwrites the yaml file contents
         """
         # 1. parse CLI values
         if use_cli:
@@ -80,6 +81,7 @@ class Config:
 
         # 2. read YAML config file (or use provided value)
         self.yaml_config = self.read_yaml(yaml_config_filename)
+        self.yaml_config.update(overwrite_configs) # optional override programmatically
 
         # 3. CONFIGS: decide value with priority: CLI >> config.yaml >> default
         self.config = defaultdict(dict)
