@@ -39,7 +39,7 @@ class GsheetsFeeder(Gsheets, Feeder):
             })
 
     def __iter__(self) -> Metadata:
-        sh = self.gsheets_client.open(self.sheet)
+        sh = self.open_sheet()
         for ii, wks in enumerate(sh.worksheets()):
             if not self.should_process_sheet(wks.title):
                 logger.debug(f"SKIPPED worksheet '{wks.title}' due to allow/block rules")

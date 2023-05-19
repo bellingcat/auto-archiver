@@ -21,7 +21,7 @@ class Step(ABC):
 
     def init(name: str, config: dict, child: Type[Step]) -> Step:
         """
-        looks into direct subclasses of child for name and returns such ab object
+        looks into direct subclasses of child for name and returns such an object
         TODO: cannot find subclasses of child.subclasses
         """
         for sub in child.__subclasses__():
