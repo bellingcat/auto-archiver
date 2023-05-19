@@ -12,7 +12,7 @@ on:
   release:
     types: [published]
   push:
-    branches: [ "main" ]
+    # branches: [ "main" ]
     tags: [ "v*.*.*" ]
 
 permissions:
