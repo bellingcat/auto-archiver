@@ -40,3 +40,12 @@ class DateTimeEncoder(json.JSONEncoder):
 
 def dump_payload(p):
     return json.dumps(p, ensure_ascii=False, indent=4, cls=DateTimeEncoder)
+
+
+def update_nested_dict(dictionary, update_dict):
+    # takes 2 dicts and overwrites the first with the second only on the changed balues
+    for key, value in update_dict.items():
+        if key in dictionary and isinstance(value, dict) and isinstance(dictionary[key], dict):
+            update_nested_dict(dictionary[key], value)
+        else:
+            dictionary[key] = value

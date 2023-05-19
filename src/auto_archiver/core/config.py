@@ -13,6 +13,7 @@ from ..formatters import Formatter
 from ..storages import Storage
 from ..enrichers import Enricher
 from . import Step
+from ..utils import update_nested_dict
 
 
 @dataclass
@@ -38,7 +39,7 @@ class Config:
         self.cli_ops = {}
         self.config = {}
 
-    def parse(self, use_cli=True, yaml_config_filename: str = None, overwrite_configs:str={}):
+    def parse(self, use_cli=True, yaml_config_filename: str = None, overwrite_configs: str = {}):
         """
         if yaml_config_filename is provided, the --config argument is ignored, 
         useful for library usage when the config values are preloaded
@@ -81,7 +82,7 @@ class Config:
 
         # 2. read YAML config file (or use provided value)
         self.yaml_config = self.read_yaml(yaml_config_filename)
-        self.yaml_config.update(overwrite_configs) # optional override programmatically
+        update_nested_dict(self.yaml_config, overwrite_configs)
 
         # 3. CONFIGS: decide value with priority: CLI >> config.yaml >> default
         self.config = defaultdict(dict)
