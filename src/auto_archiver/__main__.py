@@ -5,7 +5,7 @@ def main():
     config = Config()
     config.parse()
     orchestrator = ArchivingOrchestrator(config)
-    orchestrator.feed()
+    for r in orchestrator.feed(): pass
 
 
 if __name__ == "__main__":

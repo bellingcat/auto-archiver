@@ -1,6 +1,5 @@
 from __future__ import annotations
-from ast import List
-from typing import Union
+from typing import Generator, Union, List
 
 from .context import ArchivingContext
 
@@ -10,7 +9,6 @@ from ..formatters import Formatter
 from ..storages import Storage
 from ..enrichers import Enricher
 from ..databases import Database
-from .media import Media
 from .metadata import Metadata
 
 import tempfile, traceback
@@ -29,7 +27,7 @@ class ArchivingOrchestrator:
 
         for a in self.archivers: a.setup()
 
-    def feed(self) -> None:
+    def feed(self) -> Generator[Metadata]:
         for item in self.feeder:
             yield self.feed_item(item)
 
