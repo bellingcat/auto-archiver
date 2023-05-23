@@ -31,7 +31,7 @@ class ArchivingOrchestrator:
 
     def feed(self) -> None:
         for item in self.feeder:
-            self.feed_item(item)
+            yield self.feed_item(item)
 
     def feed_item(self, item: Metadata) -> Metadata:
         try:
