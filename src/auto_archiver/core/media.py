@@ -1,7 +1,6 @@
 
 from __future__ import annotations
-from ast import List
-from typing import Any
+from typing import Any, List
 from dataclasses import dataclass, field
 from dataclasses_json import dataclass_json, config
 import mimetypes

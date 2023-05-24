@@ -1,7 +1,6 @@
 
 from __future__ import annotations
-from ast import List, Set
-from typing import Any, Union, Dict
+from typing import Any, List, Union, Dict
 from dataclasses import dataclass, field
 from dataclasses_json import dataclass_json, config
 import datetime
