@@ -64,7 +64,7 @@ class GsheetsFeeder(Gsheets, Feeder):
                 # All checks done - archival process starts here
                 m = Metadata().set_url(url)
                 ArchivingContext.set("gsheet", {"row": row, "worksheet": gw}, keep_on_reset=True)
-                folder = slugify(gw.get_cell(row, 'folder').strip())
+                folder = slugify(gw.get_cell_or_default(row, 'folder').strip())
                 if len(folder):
                     if self.use_sheet_names_in_stored_paths:
                         ArchivingContext.set("folder", os.path.join(folder, slugify(self.sheet), slugify(wks.title)), True)
