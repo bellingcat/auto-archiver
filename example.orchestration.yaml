@@ -112,10 +112,11 @@ configurations:
     private: false
     # with 'random' you can generate a random UUID for the URL instead of a predictable path, useful to still have public but unlisted files, alternative is 'default' or not omitted from config
     key_path: random
-
   gdrive_storage:
     path_generator: url
     filename_generator: random
     root_folder_id: folder_id_from_url
     oauth_token: secrets/gd-token.json # needs to be generated with scripts/create_update_gdrive_oauth_token.py
     service_account: "secrets/service_account.json"
+  csv_db:
+    csv_file: "./local_archive/db.csv"
