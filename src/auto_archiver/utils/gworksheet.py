@@ -19,6 +19,7 @@ class GWorksheet:
         'title': 'upload title',
         'screenshot': 'screenshot',
         'hash': 'hash',
+        'pdq_hash': 'perceptual hashes',
         'wacz': 'wacz',
         'replaywebpage': 'replaywebpage',
     }
