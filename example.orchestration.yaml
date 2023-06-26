@@ -1,6 +1,6 @@
 steps:
   # only 1 feeder allowed
-  feeder: gsheet_feeder # defaults to cli_feeder
+  feeder: cli_feeder # defaults to cli_feeder
   archivers: # order matters, uncomment to activate
     # - vk_archiver
     # - telethon_archiver
@@ -11,14 +11,14 @@ steps:
     # - instagram_archiver
     # - tiktok_archiver
     - youtubedl_archiver
-    - wayback_archiver_enricher
+    # - wayback_archiver_enricher
   enrichers:
     - hash_enricher
     # - screenshot_enricher
     # - thumbnail_enricher
     # - wayback_archiver_enricher
     # - wacz_enricher
-    
+    - pdq_hash_enricher
   formatter: html_formatter # defaults to mute_formatter
   storages:
     - local_storage
