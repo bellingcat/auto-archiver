@@ -35,6 +35,7 @@ vk-url-scraper = "*"
 uwsgi = "*"
 requests = {extras = ["socks"], version = "*"}
 # wacz = "==0.4.8"
+numpy = "*"
 
 [requires]
 python_version = "3.10"
