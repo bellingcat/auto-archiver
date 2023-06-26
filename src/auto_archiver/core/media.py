@@ -35,7 +35,7 @@ class Media:
 
     def all_inner_media(self, include_self=False):
         """ Media can be inside media properties, examples include transformations on original media.
-        This function return a generator for all the inner media.        
+        This function returns a generator for all the inner media.        
         """
         if include_self: yield self
         for prop in self.properties.values():

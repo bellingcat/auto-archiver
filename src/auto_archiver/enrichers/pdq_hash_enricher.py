@@ -28,8 +28,7 @@ class PdqHashEnricher(Enricher):
 
         for m in to_enrich.media:
             for media in m.all_inner_media(True):
-                if media.is_image() and media.get("id") != "screenshot":
-                    if len(hd := self.calculate_pdq_hash(media.filename)):
+                if media.is_image() and media.get("id") != "screenshot" and len(hd := self.calculate_pdq_hash(media.filename)):
                         media.set("pdq_hash", hd)    
 
     def calculate_pdq_hash(self, filename):

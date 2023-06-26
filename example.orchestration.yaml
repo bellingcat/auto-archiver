@@ -50,6 +50,7 @@ configurations:
       text: textual content
       screenshot: screenshot
       hash: hash
+      pdq_hash: perceptual hashes
       wacz: wacz
       replaywebpage: replaywebpage
   instagram_tbot_archiver:
