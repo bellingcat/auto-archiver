@@ -52,8 +52,11 @@ class GsheetsDb(Database):
 
         def batch_if_valid(col, val, final_value=None):
             final_value = final_value or val
-            if val and gw.col_exists(col) and gw.get_cell(row_values, col) == '':
-                cell_updates.append((row, col, final_value))
+            try:
+                if val and gw.col_exists(col) and gw.get_cell(row_values, col) == '':
+                    cell_updates.append((row, col, final_value))
+            except Exception as e:
+                logger.error(f"Unable to batch {col}={final_value} due to {e}")
 
         cell_updates.append((row, 'status', item.status))
 
@@ -65,6 +68,16 @@ class GsheetsDb(Database):
         batch_if_valid('text', item.get("content", ""))
         batch_if_valid('timestamp', item.get_timestamp())
         batch_if_valid('hash', media.get("hash", "not-calculated"))
+
+        # merge all pdq hashes into a single string, if present
+        pdq_hashes = []
+        all_media = item.get_all_media()
+        for m in all_media:
+            if pdq := m.get("pdq_hash"):
+                pdq_hashes.append(pdq)
+        if len(pdq_hashes):
+            batch_if_valid('pdq_hash', ",".join(pdq_hashes))
+
         if (screenshot := item.get_media_by_id("screenshot")) and hasattr(screenshot, "urls"):
             batch_if_valid('screenshot', "\n".join(screenshot.urls))
 
