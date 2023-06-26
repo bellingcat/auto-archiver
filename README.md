@@ -228,7 +228,7 @@ Use `python -m src.auto_archiver --config secrets/orchestration.yaml` to run fro
 #### Docker development
 working with docker locally:
   * `docker build . -t auto-archiver` to build a local image
-  * `docker run --rm -v $PWD/secrets:/app/secrets auto-archiver pipenv run python3 -m auto_archiver --config secrets/orchestration.yaml`
+  * `docker run --rm -v $PWD/secrets:/app/secrets auto-archiver  --config secrets/orchestration.yaml`
     * to use local archive, also create a volume `-v` for it by adding `-v $PWD/local_archive:/app/local_archive`
 
 
