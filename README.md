@@ -197,7 +197,8 @@ Outputs:
 * **Title**: Post title
 * **Text**: Post text
 * **Screenshot**: Link to screenshot of post
-* **Hash**: Hash of archived HTML file (which contains hashes of post media)
+* **Hash**: Hash of archived HTML file (which contains hashes of post media) - for checksums/verification
+* **Perceptual Hash**: Perceptual hashes of found images - these can be used for de-duplication of content
 * **WACZ**: Link to a WACZ web archive of post
 * **ReplayWebpage**: Link to a ReplayWebpage viewer of the WACZ archive
 
