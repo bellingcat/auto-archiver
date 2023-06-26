@@ -9,7 +9,8 @@ from ..core import Metadata
 
 class PdqHashEnricher(Enricher):
     """
-    Calculates perceptual hashes for Media instances using PDQ, allowing for (near-)duplicate detection
+    Calculates perceptual hashes for Media instances using PDQ, allowing for (near-)duplicate detection.
+    Ideally this enrichment is orchestrated to run after the thumbnail_enricher.
     """
     name = "pdq_hash_enricher"
 
@@ -23,19 +24,20 @@ class PdqHashEnricher(Enricher):
 
     def enrich(self, to_enrich: Metadata) -> None:
         url = to_enrich.get_url()
-        logger.debug(f"calculating media hashes for {url=}")
+        logger.debug(f"calculating perceptual hashes for {url=}")
 
-        for i, m in enumerate(to_enrich.media):
-            # only run for images and video thumbnails, not screenshots
-            if m.filename.endswith(('.jpg', '.png', '.jpeg')) and m.key != "screenshot":
-                if len(hd := self.calculate_pdq_hash(m.filename)):
-                    to_enrich.media[i].set("pdq_hash", hd)
+        for m in to_enrich.media:
+            for media in m.all_inner_media(True):
+                if media.is_image() and media.key != "screenshot":
+                    if len(hd := self.calculate_pdq_hash(media.filename)):
+                        media.set("pdq_hash", hd)    
 
     def calculate_pdq_hash(self, filename):
-        # open the image file
+        # returns a hexadecimal string with the perceptual hash for the given filename 
         with Image.open(filename) as img:
             # convert the image to RGB
             image_rgb = np.array(img.convert("RGB"))
             # compute the 256-bit PDQ hash (we do not store the quality score)
-            hash, _ = pdqhash.compute(image_rgb)
-            return hash
+            hash_array, _ = pdqhash.compute(image_rgb)
+            hash = "".join(str(b) for b in hash_array)
+            return hex(int(hash, 2))[2:]
