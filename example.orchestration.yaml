@@ -11,14 +11,14 @@ steps:
     # - instagram_archiver
     # - tiktok_archiver
     - youtubedl_archiver
-    - wayback_archiver_enricher
+    # - wayback_archiver_enricher
   enrichers:
     - hash_enricher
     # - screenshot_enricher
     # - thumbnail_enricher
     # - wayback_archiver_enricher
     # - wacz_enricher
-    
+    # - pdq_hash_enricher
   formatter: html_formatter # defaults to mute_formatter
   storages:
     - local_storage
@@ -50,6 +50,7 @@ configurations:
       text: textual content
       screenshot: screenshot
       hash: hash
+      pdq_hash: perceptual hashes
       wacz: wacz
       replaywebpage: replaywebpage
   instagram_tbot_archiver:

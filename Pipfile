@@ -19,6 +19,8 @@ google-api-python-client = "*"
 google-auth-httplib2 = "*"
 google-auth-oauthlib = "*"
 oauth2client = "*"
+pdqhash = "*"
+pillow = "*"
 python-slugify = "*"
 pyyaml = "*"
 dateparser = "*"
@@ -33,6 +35,7 @@ vk-url-scraper = "*"
 uwsgi = "*"
 requests = {extras = ["socks"], version = "*"}
 # wacz = "==0.4.8"
+numpy = "*"
 
 [requires]
 python_version = "3.10"

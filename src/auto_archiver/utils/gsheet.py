@@ -36,6 +36,7 @@ class Gsheets(Step):
                     'text': 'text content',
                     'screenshot': 'screenshot',
                     'hash': 'hash',
+                    'pdq_hash': 'perceptual hashes',
                     'wacz': 'wacz',
                     'replaywebpage': 'replaywebpage',
                 },

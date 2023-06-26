@@ -125,7 +125,14 @@
                         <div class="collapsible-content">
                             {% for subprop in m.properties[prop] %}
                             {% if subprop | is_media %}
-                            {{ macros.display_media(subprop, false, url) }}
+                            {{ macros.display_media(subprop, true, url) }}
+
+                            <ul>
+                                {% for subprop_prop in subprop.properties %}
+                                <li><b>{{ subprop_prop }}:</b> {{ macros.copy_urlize(subprop.properties[subprop_prop]) }}</li>
+                                {% endfor %}
+                            </ul>
+
                             {% else %}
                             {{ subprop }}
                             {% endif %}
@@ -162,7 +169,8 @@
         {% endfor %}
     </table>
 
-    <p style="text-align:center;">Made with <a href="https://github.com/bellingcat/auto-archiver">bellingcat/auto-archiver</a> v{{ version }}</p>
+    <p style="text-align:center;">Made with <a
+            href="https://github.com/bellingcat/auto-archiver">bellingcat/auto-archiver</a> v{{ version }}</p>
 </body>
 <script defer>
     // notification logic
@@ -201,7 +209,7 @@
     let i;
 
     for (i = 0; i < coll.length; i++) {
-        coll[i].addEventListener("click", function() {
+        coll[i].addEventListener("click", function () {
             this.classList.toggle("active");
             // let content = this.nextElementSibling;
             let content = this.parentElement.querySelector(".collapsible-content");

@@ -5,3 +5,4 @@ from .hash_enricher import HashEnricher
 from .thumbnail_enricher import ThumbnailEnricher
 from .wacz_enricher import WaczEnricher
 from .whisper_enricher import WhisperEnricher
+from .pdq_hash_enricher import PdqHashEnricher
