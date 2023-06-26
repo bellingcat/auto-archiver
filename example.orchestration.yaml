@@ -18,7 +18,7 @@ steps:
     # - thumbnail_enricher
     - wayback_archiver_enricher
     # - wacz_enricher
-    # - pdq_hash_enricher
+    - pdq_hash_enricher
   formatter: html_formatter # defaults to mute_formatter
   storages:
     - local_storage
