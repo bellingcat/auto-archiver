@@ -30,15 +30,19 @@ class Media:
             return
 
         for s in storages:
-            s.store(self, url)
-            # Media can be inside media properties, examples include transformations on original media
-            for prop in self.properties.values():
-                if isinstance(prop, Media):
-                    s.store(prop, url)
-                if isinstance(prop, list):
-                    for prop_media in prop:
-                        if isinstance(prop_media, Media):
-                            s.store(prop_media, url)
+            for any_media in self.all_inner_media(include_self=True):
+                s.store(any_media, url)
+
+    def all_inner_media(self, include_self=False):
+        """ Media can be inside media properties, examples include transformations on original media.
+        This function return a generator for all the inner media.        
+        """
+        if include_self: yield self
+        for prop in self.properties.values():
+            if isinstance(prop, Media): yield prop
+            if isinstance(prop, list):
+                for prop_media in prop:
+                    if isinstance(prop_media, Media): yield prop_media
 
     def is_stored(self) -> bool:
         return len(self.urls) > 0 and len(self.urls) == len(ArchivingContext.get("storages"))
@@ -70,3 +74,6 @@ class Media:
 
     def is_audio(self) -> bool:
         return self.mimetype.startswith("audio")
+    
+    def is_image(self) -> bool:
+        return self.mimetype.startswith("image")
