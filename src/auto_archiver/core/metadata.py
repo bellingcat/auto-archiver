@@ -136,6 +136,10 @@ class Metadata:
     def get_final_media(self) -> Media:
         _default = self.media[0] if len(self.media) else None
         return self.get_media_by_id("_final_media", _default)
+    
+    def get_all_media(self) -> List[Media]:
+        # returns a list with all the media and inner media
+        return [inner for m in self.media for inner in m.all_inner_media(True)]
 
     def __str__(self) -> str:
         return self.__repr__()
