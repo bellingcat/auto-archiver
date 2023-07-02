@@ -67,7 +67,7 @@ class GsheetsDb(Database):
         batch_if_valid('title', item.get_title())
         batch_if_valid('text', item.get("content", ""))
         batch_if_valid('timestamp', item.get_timestamp())
-        batch_if_valid('hash', media.get("hash", "not-calculated"))
+        if media: batch_if_valid('hash', media.get("hash", "not-calculated"))
 
         # merge all pdq hashes into a single string, if present
         pdq_hashes = []

@@ -90,20 +90,35 @@ class TwitterArchiver(Archiver):
 
     def download_alternative(self, item: Metadata, url: str, tweet_id: str) -> Metadata:
         """
-        CURRENTLY STOPPED WORKING
+        Hack alternative working again.
+        https://stackoverflow.com/a/71867055/6196010 (OUTDATED URL)
+        https://github.com/JustAnotherArchivist/snscrape/issues/996#issuecomment-1615937362
         """
-        return False
-        # https://stackoverflow.com/a/71867055/6196010
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/114.0",
+            "Accept": "*/*",
+            "Accept-Language": "en-US,en;q=0.5",
+            "Accept-Encoding": "gzip, deflate, br",
+            "Origin": "https://platform.twitter.com",
+            "Connection": "keep-alive",
+            "Referer": "https://platform.twitter.com/",
+            "Sec-Fetch-Dest": "empty",
+            "Sec-Fetch-Mode": "cors",
+            "Sec-Fetch-Site": "cross-site",
+            "Pragma": "no-cache",
+            "Cache-Control": "no-cache",
+            "TE": "trailers"
+        }
         logger.debug(f"Trying twitter hack for {url=}")
         result = Metadata()
 
-        hack_url = f"https://cdn.syndication.twimg.com/tweet?id={tweet_id}"
+        hack_url = f"https://cdn.syndication.twimg.com/tweet-result?id={tweet_id}"
         r = requests.get(hack_url)
         if r.status_code != 200: return False
         tweet = r.json()
 
         urls = []
-        for p in tweet["photos"]:
+        for p in tweet.get("photos", []):
             urls.append(p["url"])
 
         # 1 tweet has 1 video max
@@ -113,14 +128,18 @@ class TwitterArchiver(Archiver):
 
         logger.debug(f"Twitter hack got {urls=}")
 
-        for u in urls:
-            media = Media()
+        for i, u in enumerate(urls):
+            media = Media(filename="")
             media.set("src", u)
-            media.filename = self.download_from_url(u, f'{slugify(url)}_{i}', item)
+            ext = ""
+            if (mtype := mimetypes.guess_type(u)[0]):
+                ext = mimetypes.guess_extension(mtype)
+
+            media.filename = self.download_from_url(u, f'{slugify(url)}_{i}{ext}', item)
             result.add_media(media)
 
-        result.set_content(json.dumps(tweet, ensure_ascii=False)).set_timestamp(datetime.strptime(tweet["created_at"], "%Y-%m-%dT%H:%M:%S.%fZ"))
-        return result
+        result.set_title(tweet.get("text")).set_content(json.dumps(tweet, ensure_ascii=False)).set_timestamp(datetime.strptime(tweet["created_at"], "%Y-%m-%dT%H:%M:%S.%fZ"))
+        return result.success("twitter-hack")
 
     def get_username_tweet_id(self, url):
         # detect URLs that we definitely cannot handle
