@@ -93,6 +93,7 @@ class TwitterArchiver(Archiver):
         Hack alternative working again.
         https://stackoverflow.com/a/71867055/6196010 (OUTDATED URL)
         https://github.com/JustAnotherArchivist/snscrape/issues/996#issuecomment-1615937362
+        next to test: https://cdn.embedly.com/widgets/media.html?&schema=twitter&url=https://twitter.com/bellingcat/status/1674700676612386816
         """
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/114.0",
