@@ -30,7 +30,7 @@ tqdm = "*"
 jinja2 = "*"
 cryptography = "*"
 dataclasses-json = "*"
-yt-dlp = ">=2023.2.17"
+yt-dlp = "*"
 vk-url-scraper = "*"
 uwsgi = "*"
 requests = {extras = ["socks"], version = "*"}

@@ -48,7 +48,8 @@ class TelegramArchiver(Archiver):
         video = s.find("video")
         if video is None:
             logger.warning("could not find video")
-            image_tags = s.find_all(class_="js-message_photo")
+            image_tags = s.find_all(class_="tgme_widget_message_photo_wrap")
+            logger.info(image_tags)
 
             image_urls = []
             for im in image_tags:
