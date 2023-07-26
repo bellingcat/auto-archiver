@@ -6,6 +6,7 @@ from slugify import slugify
 
 from . import Archiver
 from ..core import Metadata, Media
+from ..utils.misc import remove_get_parameters
 
 
 class TwitterArchiver(Archiver):
@@ -133,7 +134,7 @@ class TwitterArchiver(Archiver):
             media = Media(filename="")
             media.set("src", u)
             ext = ""
-            if (mtype := mimetypes.guess_type(u)[0]):
+            if (mtype := mimetypes.guess_type(remove_get_parameters(u))[0]):
                 ext = mimetypes.guess_extension(mtype)
 
             media.filename = self.download_from_url(u, f'{slugify(url)}_{i}{ext}', item)
