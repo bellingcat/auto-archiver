@@ -37,9 +37,6 @@ class TwitterArchiver(Archiver):
         # https://twitter.com/MeCookieMonster/status/1617921633456640001?s=20&t=3d0g4ZQis7dCbSDg-mE7-w
         return self.link_clean_pattern.sub("\\1", url)
 
-    def best_quality_url(self, url: str) -> str:
-        return re.sub(r"name=(\w+)", "name=orig", url, 1)
-
     def download(self, item: Metadata) -> Metadata:
         """
         if this url is archivable will download post info and look for other posts from the same group with media.
@@ -77,7 +74,7 @@ class TwitterArchiver(Archiver):
                 media.set("src", variant.url)
                 mimetype = variant.contentType
             elif type(tweet_media) == Photo:
-                media.set("src", self.best_quality_url(tweet_media.fullUrl))
+                media.set("src", UrlUtil.twitter_best_quality_url(tweet_media.fullUrl))
                 mimetype = "image/jpeg"
             else:
                 logger.warning(f"Could not get media URL of {tweet_media}")
@@ -117,7 +114,7 @@ class TwitterArchiver(Archiver):
 
         for i, u in enumerate(urls):
             media = Media(filename="")
-            u = self.best_quality_url(u)
+            u = UrlUtil.twitter_best_quality_url(u)
             media.set("src", u)
             ext = ""
             if (mtype := mimetypes.guess_type(UrlUtil.remove_get_parameters(u))[0]):

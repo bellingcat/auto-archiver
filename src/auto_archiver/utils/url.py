@@ -45,3 +45,11 @@ class UrlUtil:
         if "twimg.com/profile_images" in url: return False
         if "twimg.com" in url and "/default_profile_images" in url: return False
         return True
+
+    @staticmethod
+    def twitter_best_quality_url(url: str) -> str:
+        """
+        some twitter image URLs point to a less-than best quality
+        this returns the URL pointing to the highest (original) quality
+        """
+        return re.sub(r"name=(\w+)", "name=orig", url, 1)

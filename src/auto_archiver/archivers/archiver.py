@@ -51,6 +51,7 @@ class Archiver(Step):
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36'
         }
         d = requests.get(url, headers=headers)
+        assert d.status_code == 200, f"got response code {d.status_code} for {url=}"
         with open(to_filename, 'wb') as f:
             f.write(d.content)
         return to_filename
