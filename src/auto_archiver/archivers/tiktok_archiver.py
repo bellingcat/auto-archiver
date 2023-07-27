@@ -16,10 +16,6 @@ class TiktokArchiver(Archiver):
     def configs() -> dict:
         return {}
 
-    def is_rearchivable(self, url: str) -> bool:
-        # TikTok posts are static
-        return False
-
     def download(self, item: Metadata) -> Metadata:
         url = item.get_url()
         if 'tiktok.com' not in url:

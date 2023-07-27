@@ -27,10 +27,6 @@ class VkArchiver(Archiver):
             "session_file": {"default": "secrets/vk_config.v2.json", "help": "valid VKontakte password"},
         }
 
-    def is_rearchivable(self, url: str) -> bool:
-        # VK content is static
-        return False
-
     def download(self, item: Metadata) -> Metadata:
         url = item.get_url()
 

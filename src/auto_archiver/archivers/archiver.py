@@ -27,11 +27,6 @@ class Archiver(Step):
         # used to clean unnecessary URL parameters OR unfurl redirect links
         return url
 
-    def is_rearchivable(self, url: str) -> bool:
-        # archivers can signal if it does not make sense to rearchive a piece of content
-        # default is rearchiving
-        return True
-
     def _guess_file_type(self, path: str) -> str:
         """
         Receives a URL or filename and returns global mimetype like 'image' or 'video'

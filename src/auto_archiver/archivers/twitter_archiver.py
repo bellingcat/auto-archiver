@@ -37,9 +37,8 @@ class TwitterArchiver(Archiver):
         # https://twitter.com/MeCookieMonster/status/1617921633456640001?s=20&t=3d0g4ZQis7dCbSDg-mE7-w
         return self.link_clean_pattern.sub("\\1", url)
 
-    def is_rearchivable(self, url: str) -> bool:
-        # Twitter posts are static (for now)
-        return False
+    def best_quality_url(self, url: str) -> str:
+        return re.sub(r"name=(\w+)", "name=orig", url, 1)
 
     def download(self, item: Metadata) -> Metadata:
         """
@@ -78,7 +77,7 @@ class TwitterArchiver(Archiver):
                 media.set("src", variant.url)
                 mimetype = variant.contentType
             elif type(tweet_media) == Photo:
-                media.set("src", tweet_media.fullUrl.replace('name=large', 'name=orig').replace('name=small', 'name=orig'))
+                media.set("src", self.best_quality_url(tweet_media.fullUrl))
                 mimetype = "image/jpeg"
             else:
                 logger.warning(f"Could not get media URL of {tweet_media}")
@@ -118,6 +117,7 @@ class TwitterArchiver(Archiver):
 
         for i, u in enumerate(urls):
             media = Media(filename="")
+            u = self.best_quality_url(u)
             media.set("src", u)
             ext = ""
             if (mtype := mimetypes.guess_type(UrlUtil.remove_get_parameters(u))[0]):

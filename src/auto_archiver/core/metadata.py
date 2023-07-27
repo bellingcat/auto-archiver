@@ -16,7 +16,6 @@ class Metadata:
     status: str = "no archiver"
     metadata: Dict[str, Any] = field(default_factory=dict)
     media: List[Media] = field(default_factory=list)
-    rearchivable: bool = True  # defaults to true, archivers can overwrite
 
     def __post_init__(self):
         self.set("_processed_at", datetime.datetime.utcnow())
@@ -29,7 +28,6 @@ class Metadata:
         if overwrite_left:
             if right.status and len(right.status):
                 self.status = right.status
-            self.rearchivable |= right.rearchivable
             for k, v in right.metadata.items():
                 assert k not in self.metadata or type(v) == type(self.get(k))
                 if type(v) not in [dict, list, set] or k not in self.metadata:

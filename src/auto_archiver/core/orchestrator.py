@@ -62,11 +62,7 @@ class ArchivingOrchestrator:
         result.set_url(url)
         if original_url != url: result.set("original_url", original_url)
 
-        # 2 - rearchiving logic + notify start to DB
-        # archivers can signal whether the content is rearchivable: eg: tweet vs webpage
-        for a in self.archivers: result.rearchivable |= a.is_rearchivable(url)
-        logger.debug(f"{result.rearchivable=} for {url=}")
-
+        # 2 - notify start to DB
         # signal to DB that archiving has started
         # and propagate already archived if it exists
         cached_result = None
@@ -78,7 +74,7 @@ class ArchivingOrchestrator:
             d.started(result)
             if (local_result := d.fetch(result)):
                 cached_result = (cached_result or Metadata()).merge(local_result)
-        if cached_result and not cached_result.rearchivable:
+        if cached_result:
             logger.debug("Found previously archived entry")
             for d in self.databases:
                 d.done(cached_result)
