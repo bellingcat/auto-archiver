@@ -44,7 +44,6 @@ class WaczArchiverEnricher(Enricher, Archiver):
             return True
 
         url = to_enrich.get_url()
-        logger.warning(f"ENRICHING WACZ for {url=}")
 
         collection = str(uuid.uuid4())[0:8]
         browsertrix_home = os.path.abspath(ArchivingContext.get_tmp_dir())
@@ -58,6 +57,7 @@ class WaczArchiverEnricher(Enricher, Archiver):
                 "--scopeType", "page",
                 "--generateWACZ",
                 "--text",
+                "--screenshot", "fullPage",
                 "--collection", collection,
                 "--id", collection,
                 "--saveState", "never",
@@ -80,6 +80,7 @@ class WaczArchiverEnricher(Enricher, Archiver):
                 "--scopeType", "page",
                 "--generateWACZ",
                 "--text",
+                "--screenshot", "fullPage",
                 "--collection", collection,
                 "--behaviors", "autoscroll,autoplay,autofetch,siteSpecific",
                 "--behaviorTimeout", str(self.timeout),
@@ -136,13 +137,24 @@ class WaczArchiverEnricher(Enricher, Archiver):
 
         # get media out of .warc
         counter = 0
+        seen_urls = set()
         with open(warc_filename, 'rb') as warc_stream:
             for record in ArchiveIterator(warc_stream):
                 # only include fetched resources
+                if record.rec_type == "resource":  # screenshots
+                    fn = os.path.join(tmp_dir, f"warc-file-{counter}.png")
+                    with open(fn, "wb") as outf: outf.write(record.raw_stream.read())
+                    m = Media(filename=fn)
+                    to_enrich.add_media(m, "browsertrix-screenshot")
+                    counter += 1
+
                 if record.rec_type != 'response': continue
                 record_url = record.rec_headers.get_header('WARC-Target-URI')
                 if not UrlUtil.is_relevant_url(record_url):
                     logger.debug(f"Skipping irrelevant URL {record_url} but it's still present in the WACZ.")
+                    continue
+                if record_url in seen_urls:
+                    logger.debug(f"Skipping already seen URL {record_url}.")
                     continue
 
                 # filter by media mimetypes
@@ -152,11 +164,23 @@ class WaczArchiverEnricher(Enricher, Archiver):
 
                 # create local file and add media
                 ext = mimetypes.guess_extension(content_type)
-                fn = os.path.join(tmp_dir, f"warc-file-{counter}{ext}")
+                warc_fn = f"warc-file-{counter}{ext}"
+                fn = os.path.join(tmp_dir, warc_fn)
+
+                record_url_best_qual = UrlUtil.twitter_best_quality_url(record_url)
                 with open(fn, "wb") as outf: outf.write(record.raw_stream.read())
+
                 m = Media(filename=fn)
                 m.set("src", record_url)
-                # TODO URLUTIL to ignore known-recurring media like favicons, profile pictures, etc.
-                to_enrich.add_media(m, f"browsertrix-media-{counter}")
+                # if a link with better quality exists, try to download that
+                if record_url_best_qual != record_url:
+                    try:
+                        m.filename = self.download_from_url(record_url_best_qual, warc_fn, to_enrich)
+                        m.set("src", record_url_best_qual)
+                        m.set("src_alternative", record_url)
+                    except Exception as e: logger.warning(f"Unable to download best quality URL for {record_url=} got error {e}, using original in WARC.")
+
+                to_enrich.add_media(m, warc_fn)
                 counter += 1
+                seen_urls.add(record_url)
         logger.info(f"WACZ extract_media finished, found {counter} relevant media file(s)")
