@@ -2,7 +2,6 @@
 import os, json, requests
 from datetime import datetime
 from loguru import logger
-from urllib.parse import urlparse, urlunparse
 
 
 def mkdir_if_not_exists(folder):
@@ -20,14 +19,6 @@ def expand_url(url):
         except:
             logger.error(f'Failed to expand url {url}')
     return url
-
-def remove_get_parameters(url):
-    # http://example.com/file.mp4?t=1 -> http://example.com/file.mp4
-    # useful for mimetypes to work
-    parsed_url = urlparse(url)
-    new_url = urlunparse(parsed_url._replace(query=''))
-    return new_url
-
 
 def getattr_or(o: object, prop: str, default=None):
     try:

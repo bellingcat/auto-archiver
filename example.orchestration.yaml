@@ -12,12 +12,13 @@ steps:
     # - tiktok_archiver
     - youtubedl_archiver
     # - wayback_archiver_enricher
+    # - wacz_archiver_enricher
   enrichers:
     - hash_enricher
     # - screenshot_enricher
     # - thumbnail_enricher
     # - wayback_archiver_enricher
-    # - wacz_enricher
+    # - wacz_archiver_enricher
     # - pdq_hash_enricher # if you want to calculate hashes for thumbnails, include this after thumbnail_enricher
   formatter: html_formatter # defaults to mute_formatter
   storages:
@@ -95,7 +96,7 @@ configurations:
     secret: "wayback secret"
   hash_enricher:
     algorithm: "SHA3-512" # can also be SHA-256
-  wacz_enricher:
+  wacz_archiver_enricher:
     profile: secrets/profile.tar.gz
   local_storage:
     save_to: "./local_archive"

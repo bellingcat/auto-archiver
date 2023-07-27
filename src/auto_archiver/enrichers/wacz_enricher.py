@@ -1,16 +1,23 @@
+import mimetypes
 import os, shutil, subprocess, uuid
+from zipfile import ZipFile
 from loguru import logger
+from warcio.archiveiterator import ArchiveIterator
 
 from ..core import Media, Metadata, ArchivingContext
 from . import Enricher
+from ..archivers import Archiver
 from ..utils import UrlUtil
 
 
-class WaczEnricher(Enricher):
+class WaczArchiverEnricher(Enricher, Archiver):
     """
-    Submits the current URL to the webarchive and returns a job_id or completed archive
+    Uses https://github.com/webrecorder/browsertrix-crawler to generate a .WACZ archive of the URL
+    If used with [profiles](https://github.com/webrecorder/browsertrix-crawler#creating-and-using-browser-profiles)
+    it can become quite powerful for archiving private content.
+    When used as an archiver it will extract the media from the .WACZ archive so it can be enriched.
     """
-    name = "wacz_enricher"
+    name = "wacz_archiver_enricher"
 
     def __init__(self, config: dict) -> None:
         # without this STEP.__init__ is not called
@@ -20,16 +27,28 @@ class WaczEnricher(Enricher):
     def configs() -> dict:
         return {
             "profile": {"default": None, "help": "browsertrix-profile (for profile generation see https://github.com/webrecorder/browsertrix-crawler#creating-and-using-browser-profiles)."},
-            "timeout": {"default": 90, "help": "timeout for WACZ generation in seconds"},
-            "ignore_auth_wall": {"default": True, "help": "skip URL if it is behind authentication wall, set to False if you have browsertrix profile configured for private content."},
+            "timeout": {"default": 120, "help": "timeout for WACZ generation in seconds"},
+            "extract_media": {"default": True, "help": "If enabled all the images/videos/audio present in the WACZ archive will be extracted into separate Media. The .wacz file will be kept untouched."}
         }
 
+    def download(self, item: Metadata) -> Metadata:
+        # this new Metadata object is required to avoid duplication
+        result = Metadata()
+        result.merge(item)
+        if self.enrich(result):
+            return result.success("wacz")
+
     def enrich(self, to_enrich: Metadata) -> bool:
+        if to_enrich.get_media_by_id("browsertrix"):
+            logger.info(f"WACZ enricher had already been executed: {to_enrich.get_media_by_id('browsertrix')}")
+            return True
+
         url = to_enrich.get_url()
-        
+        logger.warning(f"ENRICHING WACZ for {url=}")
+
         collection = str(uuid.uuid4())[0:8]
         browsertrix_home = os.path.abspath(ArchivingContext.get_tmp_dir())
-        
+
         if os.getenv('RUNNING_IN_DOCKER'):
             logger.debug(f"generating WACZ without Docker for {url=}")
 
@@ -45,12 +64,12 @@ class WaczEnricher(Enricher):
                 "--behaviors", "autoscroll,autoplay,autofetch,siteSpecific",
                 "--behaviorTimeout", str(self.timeout),
                 "--timeout", str(self.timeout)]
-            
+
             if self.profile:
                 cmd.extend(["--profile", os.path.join("/app", str(self.profile))])
         else:
             logger.debug(f"generating WACZ in Docker for {url=}")
-            
+
             cmd = [
                 "docker", "run",
                 "--rm",  # delete container once it has completed running
@@ -79,15 +98,65 @@ class WaczEnricher(Enricher):
             logger.error(f"WACZ generation failed: {e}")
             return False
 
-        
-
         if os.getenv('RUNNING_IN_DOCKER'):
             filename = os.path.join("collections", collection, f"{collection}.wacz")
         else:
             filename = os.path.join(browsertrix_home, "collections", collection, f"{collection}.wacz")
-        
+
         if not os.path.exists(filename):
             logger.warning(f"Unable to locate and upload WACZ  {filename=}")
             return False
 
         to_enrich.add_media(Media(filename), "browsertrix")
+        if self.extract_media:
+            self.extract_media_from_wacz(to_enrich, filename)
+        return True
+
+    def extract_media_from_wacz(self, to_enrich: Metadata, wacz_filename: str) -> None:
+        """
+        Receives a .wacz archive, and extracts all relevant media from it, adding them to to_enrich.
+        """
+        logger.info(f"WACZ extract_media flag is set, extracting media from {wacz_filename=}")
+
+        # unzipping the .wacz
+        tmp_dir = ArchivingContext.get_tmp_dir()
+        unzipped_dir = os.path.join(tmp_dir, "unzipped")
+        with ZipFile(wacz_filename, 'r') as z_obj:
+            z_obj.extractall(path=unzipped_dir)
+
+        # if warc is split into multiple gzip chunks, merge those
+        warc_dir = os.path.join(unzipped_dir, "archive")
+        warc_filename = os.path.join(tmp_dir, "merged.warc")
+        with open(warc_filename, 'wb') as outfile:
+            for filename in sorted(os.listdir(warc_dir)):
+                if filename.endswith('.gz'):
+                    chunk_file = os.path.join(warc_dir, filename)
+                    with open(chunk_file, 'rb') as infile:
+                        shutil.copyfileobj(infile, outfile)
+
+        # get media out of .warc
+        counter = 0
+        with open(warc_filename, 'rb') as warc_stream:
+            for record in ArchiveIterator(warc_stream):
+                # only include fetched resources
+                if record.rec_type != 'response': continue
+                record_url = record.rec_headers.get_header('WARC-Target-URI')
+                if not UrlUtil.is_relevant_url(record_url):
+                    logger.debug(f"Skipping irrelevant URL {record_url} but it's still present in the WACZ.")
+                    continue
+
+                # filter by media mimetypes
+                content_type = record.http_headers.get("Content-Type")
+                if not content_type: continue
+                if not any(x in content_type for x in ["video", "image", "audio"]): continue
+
+                # create local file and add media
+                ext = mimetypes.guess_extension(content_type)
+                fn = os.path.join(tmp_dir, f"warc-file-{counter}{ext}")
+                with open(fn, "wb") as outf: outf.write(record.raw_stream.read())
+                m = Media(filename=fn)
+                m.set("src", record_url)
+                # TODO URLUTIL to ignore known-recurring media like favicons, profile pictures, etc.
+                to_enrich.add_media(m, f"browsertrix-media-{counter}")
+                counter += 1
+        logger.info(f"WACZ extract_media finished, found {counter} relevant media file(s)")

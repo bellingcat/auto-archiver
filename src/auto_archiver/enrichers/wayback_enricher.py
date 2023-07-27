@@ -28,6 +28,7 @@ class WaybackArchiverEnricher(Enricher, Archiver):
         }
 
     def download(self, item: Metadata) -> Metadata:
+        # this new Metadata object is required to avoid duplication
         result = Metadata()
         result.merge(item)
         if self.enrich(result):
