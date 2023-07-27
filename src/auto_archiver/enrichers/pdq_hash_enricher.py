@@ -1,6 +1,7 @@
+import traceback
 import pdqhash
 import numpy as np
-from PIL import Image
+from PIL import Image, UnidentifiedImageError
 from loguru import logger
 
 from . import Enricher
@@ -32,11 +33,15 @@ class PdqHashEnricher(Enricher):
                         media.set("pdq_hash", hd)    
 
     def calculate_pdq_hash(self, filename):
-        # returns a hexadecimal string with the perceptual hash for the given filename 
-        with Image.open(filename) as img:
-            # convert the image to RGB
-            image_rgb = np.array(img.convert("RGB"))
-            # compute the 256-bit PDQ hash (we do not store the quality score)
-            hash_array, _ = pdqhash.compute(image_rgb)
-            hash = "".join(str(b) for b in hash_array)
-            return hex(int(hash, 2))[2:]
+        # returns a hexadecimal string with the perceptual hash for the given filename
+        try:
+            with Image.open(filename) as img:
+                # convert the image to RGB
+                image_rgb = np.array(img.convert("RGB"))
+                # compute the 256-bit PDQ hash (we do not store the quality score)
+                hash_array, _ = pdqhash.compute(image_rgb)
+                hash = "".join(str(b) for b in hash_array)
+                return hex(int(hash, 2))[2:]
+        except UnidentifiedImageError as e:
+            logger.error(f"Image {filename=} is likely corrupted or in unsupported format {e}: {traceback.format_exc()}")
+        return ""

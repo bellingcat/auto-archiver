@@ -6,7 +6,7 @@ from slugify import slugify
 
 from . import Archiver
 from ..core import Metadata, Media
-from ..utils.misc import remove_get_parameters
+from ..utils import UrlUtil
 
 
 class TwitterArchiver(Archiver):
@@ -78,7 +78,7 @@ class TwitterArchiver(Archiver):
                 media.set("src", variant.url)
                 mimetype = variant.contentType
             elif type(tweet_media) == Photo:
-                media.set("src", tweet_media.fullUrl.replace('name=large', 'name=orig'))
+                media.set("src", tweet_media.fullUrl.replace('name=large', 'name=orig').replace('name=small', 'name=orig'))
                 mimetype = "image/jpeg"
             else:
                 logger.warning(f"Could not get media URL of {tweet_media}")
@@ -96,21 +96,7 @@ class TwitterArchiver(Archiver):
         https://github.com/JustAnotherArchivist/snscrape/issues/996#issuecomment-1615937362
         next to test: https://cdn.embedly.com/widgets/media.html?&schema=twitter&url=https://twitter.com/bellingcat/status/1674700676612386816
         """
-        headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/114.0",
-            "Accept": "*/*",
-            "Accept-Language": "en-US,en;q=0.5",
-            "Accept-Encoding": "gzip, deflate, br",
-            "Origin": "https://platform.twitter.com",
-            "Connection": "keep-alive",
-            "Referer": "https://platform.twitter.com/",
-            "Sec-Fetch-Dest": "empty",
-            "Sec-Fetch-Mode": "cors",
-            "Sec-Fetch-Site": "cross-site",
-            "Pragma": "no-cache",
-            "Cache-Control": "no-cache",
-            "TE": "trailers"
-        }
+
         logger.debug(f"Trying twitter hack for {url=}")
         result = Metadata()
 
@@ -134,7 +120,7 @@ class TwitterArchiver(Archiver):
             media = Media(filename="")
             media.set("src", u)
             ext = ""
-            if (mtype := mimetypes.guess_type(remove_get_parameters(u))[0]):
+            if (mtype := mimetypes.guess_type(UrlUtil.remove_get_parameters(u))[0]):
                 ext = mimetypes.guess_extension(mtype)
 
             media.filename = self.download_from_url(u, f'{slugify(url)}_{i}{ext}', item)
