@@ -43,4 +43,5 @@ class UrlUtil:
 
         # twitter profile pictures
         if "twimg.com/profile_images" in url: return False
+        if "twimg.com" in url and "/default_profile_images" in url: return False
         return True
