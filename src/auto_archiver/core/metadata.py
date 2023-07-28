@@ -1,5 +1,6 @@
 
 from __future__ import annotations
+import hashlib
 from typing import Any, List, Union, Dict
 from dataclasses import dataclass, field
 from dataclasses_json import dataclass_json, config
@@ -42,6 +43,7 @@ class Metadata:
 
     def store(self: Metadata, override_storages: List = None):
         # calls .store for all contained media. storages [Storage]
+        self.remove_duplicate_media_by_hash()
         storages = override_storages or ArchivingContext.get("storages")
         for media in self.media:
             media.store(override_storages=storages, url=self.get_url())
@@ -122,6 +124,27 @@ class Metadata:
             if m.get("id") == id: return m
         return default
 
+    def remove_duplicate_media_by_hash(self) -> None:
+        # iterates all media, calculates a hash if it's missing and deletes duplicates
+        def calculate_hash_in_chunks(hash_algo, chunksize, filename) -> str:
+            # taken from hash_enricher, cannot be isolated to misc due to circular imports
+            with open(filename, "rb") as f:
+                while True:
+                    buf = f.read(chunksize)
+                    if not buf: break
+                    hash_algo.update(buf)
+            return hash_algo.hexdigest()
+
+        media_hashes = set()
+        new_media = []
+        for m in self.media:
+            h = m.get("hash")
+            if not h: h = calculate_hash_in_chunks(hashlib.sha256(), 1.6e7, m.filename)
+            if len(h) and h in media_hashes: continue
+            media_hashes.add(h)
+            new_media.append(m)
+        self.media = new_media
+
     def get_first_image(self, default=None) -> Media:
         for m in self.media:
             if "image" in m.mimetype: return m
@@ -134,7 +157,7 @@ class Metadata:
     def get_final_media(self) -> Media:
         _default = self.media[0] if len(self.media) else None
         return self.get_media_by_id("_final_media", _default)
-    
+
     def get_all_media(self) -> List[Media]:
         # returns a list with all the media and inner media
         return [inner for m in self.media for inner in m.all_inner_media(True)]

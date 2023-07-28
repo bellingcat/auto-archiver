@@ -34,7 +34,7 @@ class HashEnricher(Enricher):
             if len(hd := self.calculate_hash(m.filename)):
                 to_enrich.media[i].set("hash", f"{self.algorithm}:{hd}")
 
-    def calculate_hash(self, filename):
+    def calculate_hash(self, filename) -> str:
         hash = None
         if self.algorithm == "SHA-256":
             hash = hashlib.sha256()
