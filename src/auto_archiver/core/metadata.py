@@ -139,7 +139,7 @@ class Metadata:
         new_media = []
         for m in self.media:
             h = m.get("hash")
-            if not h: h = calculate_hash_in_chunks(hashlib.sha256(), 1.6e7, m.filename)
+            if not h: h = calculate_hash_in_chunks(hashlib.sha256(), int(1.6e7), m.filename)
             if len(h) and h in media_hashes: continue
             media_hashes.add(h)
             new_media.append(m)

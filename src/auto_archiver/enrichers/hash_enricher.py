@@ -23,7 +23,7 @@ class HashEnricher(Enricher):
     def configs() -> dict:
         return {
             "algorithm": {"default": "SHA-256", "help": "hash algorithm to use", "choices": ["SHA-256", "SHA3-512"]},
-            "chunksize": {"default": 1.6e7, "help": "number of bytes to use when reading files in chunks (if this value is too large you will run out of RAM), default is 16MB"},
+            "chunksize": {"default": int(1.6e7), "help": "number of bytes to use when reading files in chunks (if this value is too large you will run out of RAM), default is 16MB"},
         }
 
     def enrich(self, to_enrich: Metadata) -> None:
