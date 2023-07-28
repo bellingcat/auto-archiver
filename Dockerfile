@@ -9,7 +9,7 @@ RUN pip install --upgrade pip && \
 	pip install pipenv && \
 	add-apt-repository ppa:mozillateam/ppa && \
 	apt-get update && \
-	apt-get install -y gcc ffmpeg fonts-noto && \
+	apt-get install -y gcc ffmpeg fonts-noto exiftool && \
 	apt-get install -y --no-install-recommends firefox-esr && \
 	ln -s /usr/bin/firefox-esr /usr/bin/firefox && \
 	wget https://github.com/mozilla/geckodriver/releases/download/v0.33.0/geckodriver-v0.33.0-linux64.tar.gz && \

@@ -15,6 +15,7 @@ steps:
     # - wacz_archiver_enricher
   enrichers:
     - hash_enricher
+    # - metadata_enricher
     # - screenshot_enricher
     # - thumbnail_enricher
     # - wayback_archiver_enricher
