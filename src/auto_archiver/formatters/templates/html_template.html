@@ -65,11 +65,12 @@
         }
 
         /* Disable grayscale on hover */
-        img:hover,
+        /* img:hover,
         video:hover {
             -webkit-filter: grayscale(0);
             filter: none;
-        }
+        } */
+
 
         .collapsible {
             background-color: #777;
@@ -101,57 +102,68 @@
 <body>
     <div id="notification"></div>
     <h2>Archived media for <a href="{{ url }}">{{ url }}</a></h2>
+    {% if title | string | length > 0 %}
     <p><b>title:</b> '<span class="copy">{{ title }}</span>'</p>
+    {% endif %}
     <h2 class="center">content {{ media | length }} item(s)</h2>
+    <form class="center">
+        <label>
+            <input type="checkbox" id="safe-media-view" checked>
+            Safe Media View
+        </label>
+    </form>
     <table class="content">
         <tr>
             <th>about</th>
             <th>preview(s)</th>
         </tr>
-        {% for m in media %}
-        <tr>
-            <td>
-                <ul>
-                    <li><b>key:</b> <span class="copy">{{ m.key }}</span></li>
-                    <li><b>type:</b> <span class="copy">{{ m.mimetype }}</span></li>
+        <tbody>
+            {% for m in media %}
+            <tr>
+                <td>
+                    <ul>
+                        <li><b>key:</b> <span class="copy">{{ m.key }}</span></li>
+                        <li><b>type:</b> <span class="copy">{{ m.mimetype }}</span></li>
 
-                    {% for prop in m.properties %}
+                        {% for prop in m.properties %}
 
-                    {% if m.properties[prop] | is_list %}
-                    <p></p>
-                    <div>
-                        <b class="collapsible" title="expand">{{ prop }}:</b>
+                        {% if m.properties[prop] | is_list %}
                         <p></p>
-                        <div class="collapsible-content">
-                            {% for subprop in m.properties[prop] %}
-                            {% if subprop | is_media %}
-                            {{ macros.display_media(subprop, true, url) }}
+                        <div>
+                            <b class="collapsible" title="expand">{{ prop }}:</b>
+                            <p></p>
+                            <div class="collapsible-content">
+                                {% for subprop in m.properties[prop] %}
+                                {% if subprop | is_media %}
+                                {{ macros.display_media(subprop, true, url) }}
 
-                            <ul>
-                                {% for subprop_prop in subprop.properties %}
-                                <li><b>{{ subprop_prop }}:</b> {{ macros.copy_urlize(subprop.properties[subprop_prop]) }}</li>
+                                <ul>
+                                    {% for subprop_prop in subprop.properties %}
+                                    <li><b>{{ subprop_prop }}:</b>
+                                        {{ macros.copy_urlize(subprop.properties[subprop_prop]) }}</li>
+                                    {% endfor %}
+                                </ul>
+
+                                {% else %}
+                                {{ subprop }}
+                                {% endif %}
                                 {% endfor %}
-                            </ul>
-
-                            {% else %}
-                            {{ subprop }}
-                            {% endif %}
-                            {% endfor %}
+                            </div>
                         </div>
-                    </div>
-                    <p></p>
-                    {% elif m.properties[prop] | string | length > 1 %}
-                    <li><b>{{ prop }}:</b> {{ macros.copy_urlize(m.properties[prop]) }}</li>
-                    {% endif %}
+                        <p></p>
+                        {% elif m.properties[prop] | string | length > 1 %}
+                        <li><b>{{ prop }}:</b> {{ macros.copy_urlize(m.properties[prop]) }}</li>
+                        {% endif %}
 
-                    {% endfor %}
-                </ul>
-            </td>
-            <td>
-                {{ macros.display_media(m, true, url) }}
-            </td>
-        </tr>
-        {% endfor %}
+                        {% endfor %}
+                    </ul>
+                </td>
+                <td>
+                    {{ macros.display_media(m, true, url) }}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
     </table>
     <h2 class="center">metadata</h2>
     <table class="metadata">
@@ -220,6 +232,49 @@
             }
         });
     }
+
+    // logic for enabled/disabled greyscale
+    // Get references to the checkboxes and images/videos
+    const safeImageViewCheckbox = document.getElementById('safe-media-view');
+    const imagesVideos = document.querySelectorAll('img, video');
+
+    // Function to toggle grayscale effect
+    function toggleGrayscale() {
+        imagesVideos.forEach(element => {
+            if (safeImageViewCheckbox.checked) {
+                // Enable grayscale effect
+                element.style.filter = 'grayscale(1)';
+                element.style.webkitFilter = 'grayscale(1)';
+            } else {
+                // Disable grayscale effect
+                element.style.filter = 'none';
+                element.style.webkitFilter = 'none';
+            }
+        });
+    }
+
+    // Add event listener to the checkbox to trigger the toggleGrayscale function
+    safeImageViewCheckbox.addEventListener('change', toggleGrayscale);
+
+    // Handle the hover effect using JavaScript
+    imagesVideos.forEach(element => {
+        element.addEventListener('mouseenter', () => {
+            // Disable grayscale effect on hover
+            element.style.filter = 'none';
+            element.style.webkitFilter = 'none';
+        });
+
+        element.addEventListener('mouseleave', () => {
+            // Re-enable grayscale effect if checkbox is checked
+            if (safeImageViewCheckbox.checked) {
+                element.style.filter = 'grayscale(1)';
+                element.style.webkitFilter = 'grayscale(1)';
+            }
+        });
+    });
+
+    // Call the function on page load to apply the initial state
+    toggleGrayscale();
 </script>
 
 </html>
