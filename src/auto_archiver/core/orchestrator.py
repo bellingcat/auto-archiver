@@ -105,7 +105,6 @@ class ArchivingOrchestrator:
         # looks for Media in result.media and also result.media[x].properties (as list or dict values)
         result.store()
 
-        #TODO: remove any duplicate media, if hash is available
 
         # 6 - format and store formatted if needed
         # enrichers typically need access to already stored URLs etc

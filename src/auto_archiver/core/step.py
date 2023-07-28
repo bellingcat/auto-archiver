@@ -1,9 +1,8 @@
 from __future__ import annotations
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from inspect import ClassFoundException
 from typing import Type
 from abc import ABC
-# from collections.abc import Iterable
 
 
 @dataclass
