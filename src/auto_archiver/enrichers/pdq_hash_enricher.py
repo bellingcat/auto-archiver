@@ -29,8 +29,8 @@ class PdqHashEnricher(Enricher):
 
         for m in to_enrich.media:
             for media in m.all_inner_media(True):
-                if media.is_image() and media.get("id") != "screenshot" and len(hd := self.calculate_pdq_hash(media.filename)):
-                        media.set("pdq_hash", hd)    
+                if media.is_image() and "screenshot" not in media.get("id") and "warc-file-" not in media.get("id") and len(hd := self.calculate_pdq_hash(media.filename)):
+                    media.set("pdq_hash", hd)
 
     def calculate_pdq_hash(self, filename):
         # returns a hexadecimal string with the perceptual hash for the given filename
