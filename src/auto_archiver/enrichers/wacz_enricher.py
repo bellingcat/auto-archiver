@@ -180,6 +180,9 @@ class WaczArchiverEnricher(Enricher, Archiver):
                         m.set("src_alternative", record_url)
                     except Exception as e: logger.warning(f"Unable to download best quality URL for {record_url=} got error {e}, using original in WARC.")
 
+                # remove bad videos
+                if m.is_video() and not m.is_valid_video(): continue
+                
                 to_enrich.add_media(m, warc_fn)
                 counter += 1
                 seen_urls.add(record_url)

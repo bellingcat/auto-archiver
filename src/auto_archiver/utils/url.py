@@ -1,7 +1,6 @@
 import re
 from urllib.parse import urlparse, urlunparse
 
-
 class UrlUtil:
     telegram_private = re.compile(r"https:\/\/t\.me(\/c)\/(.+)\/(\d+)")
     is_istagram = re.compile(r"https:\/\/www\.instagram\.com")
@@ -44,6 +43,12 @@ class UrlUtil:
         # twitter profile pictures
         if "twimg.com/profile_images" in url: return False
         if "twimg.com" in url and "/default_profile_images" in url: return False
+
+        # instagram profile pictures
+        if "https://scontent.cdninstagram.com/" in url and "150x150" in url: return False
+        # instagram recurring images
+        if "https://static.cdninstagram.com/rsrc.php/" in url: return False
+
         return True
 
     @staticmethod

@@ -1,9 +1,14 @@
 
 from __future__ import annotations
+import os
+import traceback
 from typing import Any, List
 from dataclasses import dataclass, field
 from dataclasses_json import dataclass_json, config
 import mimetypes
+
+import ffmpeg
+from ffmpeg._run import Error
 
 from .context import ArchivingContext
 
@@ -74,6 +79,23 @@ class Media:
 
     def is_audio(self) -> bool:
         return self.mimetype.startswith("audio")
-    
+
     def is_image(self) -> bool:
         return self.mimetype.startswith("image")
+
+    def is_valid_video(self) -> bool:
+        # checks for video streams with ffmpeg, or min file size for a video
+        # self.is_video() should be used together with this method
+        try:
+            streams = ffmpeg.probe(self.filename, select_streams='v')['streams']
+            logger.warning(f"STREAMS FOR {self.filename} {streams}")
+            return any(s.get("duration_ts") > 0 for s in streams)
+        except Error: return False # ffmpeg errors when reading bad files
+        except Exception as e:
+            logger.error(e)
+            logger.error(traceback.format_exc())
+            try:
+                fsize = os.path.getsize(self.filename)
+                return fsize > 20_000
+            except: pass
+        return True
