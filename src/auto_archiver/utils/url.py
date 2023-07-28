@@ -49,6 +49,9 @@ class UrlUtil:
         # instagram recurring images
         if "https://static.cdninstagram.com/rsrc.php/" in url: return False
 
+        # telegram
+        if "https://telegram.org/img/emoji/" in url: return False
+
         return True
 
     @staticmethod
