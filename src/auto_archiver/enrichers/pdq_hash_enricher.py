@@ -26,11 +26,16 @@ class PdqHashEnricher(Enricher):
     def enrich(self, to_enrich: Metadata) -> None:
         url = to_enrich.get_url()
         logger.debug(f"calculating perceptual hashes for {url=}")
+        media_with_hashes = []
 
         for m in to_enrich.media:
             for media in m.all_inner_media(True):
-                if media.is_image() and "screenshot" not in media.get("id") and "warc-file-" not in media.get("id") and len(hd := self.calculate_pdq_hash(media.filename)):
+                media_id = media.get("id", "")
+                if media.is_image() and "screenshot" not in media_id and "warc-file-" not in media_id and len(hd := self.calculate_pdq_hash(media.filename)):
                     media.set("pdq_hash", hd)
+                    media_with_hashes.append(media.filename)
+
+        logger.debug(f"calculated '{len(media_with_hashes)}' perceptual hashes for {url=}: {media_with_hashes}")
 
     def calculate_pdq_hash(self, filename):
         # returns a hexadecimal string with the perceptual hash for the given filename
