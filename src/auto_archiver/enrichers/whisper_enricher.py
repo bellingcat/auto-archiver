@@ -18,17 +18,18 @@ class WhisperEnricher(Enricher):
     def __init__(self, config: dict) -> None:
         # without this STEP.__init__ is not called
         super().__init__(config)
+        assert type(self.api_endpoint) == str and len(self.api_endpoint) > 0, "please provide a value for the whisper_enricher api_endpoint"
         assert type(self.api_key) == str and len(self.api_key) > 0, "please provide a value for the whisper_enricher api_key"
         self.timeout = int(self.timeout)
 
     @staticmethod
     def configs() -> dict:
         return {
-            "api_endpoint": {"default": "https://whisper.spoettel.dev/api/v1", "help": "WhisperApi api endpoint"},
+            "api_endpoint": {"default": None, "help": "WhisperApi api endpoint, eg: https://whisperbox-api.com/api/v1, a deployment of https://github.com/bellingcat/whisperbox-transcribe."},
             "api_key": {"default": None, "help": "WhisperApi api key for authentication"},
             "include_srt": {"default": False, "help": "Whether to include a subtitle SRT (SubRip Subtitle file) for the video (can be used in video players)."},
             "timeout": {"default": 90, "help": "How many seconds to wait at most for a successful job completion."},
-            "action": {"default": "translation", "help": "which Whisper operation to execute", "choices": ["transcript", "translation", "language_detection"]},
+            "action": {"default": "translate", "help": "which Whisper operation to execute", "choices": ["transcribe", "translate", "language_detection"]},
 
         }
 
@@ -76,6 +77,7 @@ class WhisperEnricher(Enricher):
             "type": self.action,
             # "language": "string" # may be a config
         }
+        logger.debug(f"calling API with {payload=}")
         response = requests.post(f'{self.api_endpoint}/jobs', json=payload, headers={'Authorization': f'Bearer {self.api_key}'})
         assert response.status_code == 201, f"calling the whisper api {self.api_endpoint} returned a non-success code: {response.status_code}"
         logger.debug(response.json())

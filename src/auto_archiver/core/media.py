@@ -89,7 +89,7 @@ class Media:
         try:
             streams = ffmpeg.probe(self.filename, select_streams='v')['streams']
             logger.warning(f"STREAMS FOR {self.filename} {streams}")
-            return any(s.get("duration_ts") > 0 for s in streams)
+            return any(s.get("duration_ts", 0) > 0 for s in streams)
         except Error: return False # ffmpeg errors when reading bad files
         except Exception as e:
             logger.error(e)
