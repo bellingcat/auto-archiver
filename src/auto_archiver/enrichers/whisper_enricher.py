@@ -60,6 +60,8 @@ class WhisperEnricher(Enricher):
                 job_id = to_enrich.media[i].get("whisper_model")["job_id"]
                 to_enrich.media[i].set("whisper_model", {
                     "job_id": job_id,
+                    "job_status_check": f"{self.api_endpoint}/jobs/{job_id}",
+                    "job_artifacts_check": f"{self.api_endpoint}/jobs/{job_id}/artifacts",
                     **(job_results[job_id] if job_results[job_id] else {"result": "incomplete or failed job"})
                 })
                 # append the extracted text to the content of the post so it gets written to the DBs like gsheets text column
