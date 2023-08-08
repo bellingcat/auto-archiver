@@ -57,7 +57,8 @@ class WhisperEnricher(Enricher):
 
         for i, m in enumerate(to_enrich.media):
             if m.is_video() or m.is_audio():
-                job_id = to_enrich.media[i].get("whisper_model")["job_id"]
+                job_id = to_enrich.media[i].get("whisper_model", {}).get("job_id")
+                if not job_id: continue
                 to_enrich.media[i].set("whisper_model", {
                     "job_id": job_id,
                     "job_status_check": f"{self.api_endpoint}/jobs/{job_id}",
