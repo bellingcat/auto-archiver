@@ -57,6 +57,9 @@ class UrlUtil:
         if "https://yt3.ggpht.com" in url and "default-user=" in url: return False
         if "https://www.youtube.com/s/search/audio/" in url: return False
 
+        # ok
+        if " https://ok.ru/res/i/" in url: return False
+
         return True
 
     @staticmethod
