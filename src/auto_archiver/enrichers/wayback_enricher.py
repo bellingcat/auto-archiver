@@ -23,6 +23,7 @@ class WaybackArchiverEnricher(Enricher, Archiver):
     def configs() -> dict:
         return {
             "timeout": {"default": 15, "help": "seconds to wait for successful archive confirmation from wayback, if more than this passes the result contains the job_id so the status can later be checked manually."},
+            "if_not_archived_within": {"default": None, "help": "only tell wayback to archive if no archive is available before the number of seconds specified, use None to ignore this option. For more information: https://docs.google.com/document/d/1Nsv52MvSjbLb2PCpHlat0gkzw0EvtSgpKHu4mk0MnrA"},
             "key": {"default": None, "help": "wayback API key. to get credentials visit https://archive.org/account/s3.php"},
             "secret": {"default": None, "help": "wayback API secret. to get credentials visit https://archive.org/account/s3.php"}
         }
@@ -50,7 +51,11 @@ class WaybackArchiverEnricher(Enricher, Archiver):
             "Accept": "application/json",
             "Authorization": f"LOW {self.key}:{self.secret}"
         }
-        r = requests.post('https://web.archive.org/save/', headers=ia_headers, data={'url': url})
+        post_data = {'url': url}
+        if self.if_not_archived_within:
+            post_data["if_not_archived_within"] = self.if_not_archived_within
+        # see https://docs.google.com/document/d/1Nsv52MvSjbLb2PCpHlat0gkzw0EvtSgpKHu4mk0MnrA for more options
+        r = requests.post('https://web.archive.org/save/', headers=ia_headers, data=post_data)
 
         if r.status_code != 200:
             logger.error(em := f"Internet archive failed with status of {r.status_code}: {r.json()}")
