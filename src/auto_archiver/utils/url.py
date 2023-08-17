@@ -60,6 +60,11 @@ class UrlUtil:
         # ok
         if " https://ok.ru/res/i/" in url: return False
 
+        # vk
+        if "https://vk.com/emoji/" in url: return False
+        if "vk.com/images/" in url: return False
+        if "vk.com/images/reaction/" in url: return False
+
         return True
 
     @staticmethod
