@@ -1643,11 +1643,11 @@
         },
         "vk-url-scraper": {
             "hashes": [
-                "sha256:dc1c5cebc2919620935be0b669bef899dca3b8a3ef6419a81c97d03903b012a5",
-                "sha256:edf155fde3e86950f715a4de09cbe975cf220cb1fcc2fa239dd27868d991ffb3"
+                "sha256:b81caa8738b0154aca25ab33012e8e4d8dc11cdc9fd371968afbbadd57e2e1ab",
+                "sha256:d12aec2828e8e47c766991207fd809e402ab832ea449129b94ac7eadb0d1a27c"
             ],
             "index": "pypi",
-            "version": "==0.3.24"
+            "version": "==0.3.26"
         },
         "warcio": {
             "hashes": [
