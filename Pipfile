@@ -35,14 +35,10 @@ vk-url-scraper = "*"
 requests = {extras = ["socks"], version = "*"}
 numpy = "*"
 warcio = "*"
-# pywb and uwsgi are needed for browsertrix to run in docker
-# wacz = "==0.4.8"
-uwsgi = "*"
-pywb = "*"
-
-[requires]
-python_version = "3.10"
 
 [dev-packages]
 autopep8 = "*"
 setuptools-pipfile = "*"
+
+[requires]
+python_version = "3.10"

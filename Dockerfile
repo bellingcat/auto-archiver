@@ -20,8 +20,10 @@ RUN pip install --upgrade pip && \
 
 # TODO: avoid copying unnecessary files, including .git
 COPY Pipfile* ./
-RUN pipenv install
-
+# install from pipenv, with browsertrix-only requirements
+RUN pipenv install && \
+	pipenv install pywb uwsgi
+	
 # doing this at the end helps during development, builds are quick
 COPY ./src/ . 
 
