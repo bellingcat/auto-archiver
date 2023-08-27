@@ -25,7 +25,7 @@ class YoutubeDLArchiver(Archiver):
             logger.debug('Using Facebook cookie')
             yt_dlp.utils.std_headers['cookie'] = self.facebook_cookie
 
-        ydl = yt_dlp.YoutubeDL({'outtmpl': os.path.join(ArchivingContext.get_tmp_dir(), f'%(id)s.%(ext)s'), 'quiet': False})
+        ydl = yt_dlp.YoutubeDL({'outtmpl': os.path.join(ArchivingContext.get_tmp_dir(), f'%(id)s.%(ext)s'), 'quiet': False, 'noplaylist':True})
 
         try:
             # don'd download since it can be a live stream
