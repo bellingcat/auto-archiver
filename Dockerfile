@@ -2,9 +2,8 @@ FROM webrecorder/browsertrix-crawler:latest
 
 ENV RUNNING_IN_DOCKER=1
 
-WORKDIR /app
+WORKDIR /app/auto-archiver
 
-# TODO: use custom ffmpeg builds instead of apt-get install
 RUN pip install --upgrade pip && \
 	pip install pipenv && \
 	add-apt-repository ppa:mozillateam/ppa && \
@@ -18,7 +17,6 @@ RUN pip install --upgrade pip && \
 	rm geckodriver-v*
 
 
-# TODO: avoid copying unnecessary files, including .git
 COPY Pipfile* ./
 # install from pipenv, with browsertrix-only requirements
 RUN pipenv install && \
@@ -26,11 +24,6 @@ RUN pipenv install && \
 	
 # doing this at the end helps during development, builds are quick
 COPY ./src/ . 
-
-# TODO: figure out how to make volumes not be root, does it depend on host or dockerfile?
-# RUN useradd --system --groups sudo --shell /bin/bash archiver && chown -R archiver:sudo .
-# USER archiver
-
 
 ENTRYPOINT ["pipenv", "run", "python3", "-m", "auto_archiver"]
 
