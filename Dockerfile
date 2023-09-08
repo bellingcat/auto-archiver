@@ -2,7 +2,7 @@ FROM webrecorder/browsertrix-crawler:latest
 
 ENV RUNNING_IN_DOCKER=1
 
-WORKDIR /app/auto-archiver
+WORKDIR /app
 
 RUN pip install --upgrade pip && \
 	pip install pipenv && \
