@@ -28,7 +28,6 @@ class WaczArchiverEnricher(Enricher, Archiver):
         return {
             "profile": {"default": None, "help": "browsertrix-profile (for profile generation see https://github.com/webrecorder/browsertrix-crawler#creating-and-using-browser-profiles)."},
             "docker_commands": {"default": None, "help":"if a custom docker invocation is needed"},
-            "browsertrix_home": {"default": None, "help": "Path to use with the custom browsertrix file locations, useful together with docker_commands"},
             "timeout": {"default": 120, "help": "timeout for WACZ generation in seconds"},
             "extract_media": {"default": True, "help": "If enabled all the images/videos/audio present in the WACZ archive will be extracted into separate Media. The .wacz file will be kept untouched."}
         }
@@ -48,7 +47,9 @@ class WaczArchiverEnricher(Enricher, Archiver):
         url = to_enrich.get_url()
 
         collection = str(uuid.uuid4())[0:8]
-        browsertrix_home = self.browsertrix_home or os.path.abspath(ArchivingContext.get_tmp_dir())
+        browsertrix_home_host = os.environ.get('BROWSERTRIX_HOME_HOST') or os.path.abspath(ArchivingContext.get_tmp_dir())
+        browsertrix_home_container = os.environ.get('BROWSERTRIX_HOME_CONTAINER') or browsertrix_home_host
+        logger.debug(f"{browsertrix_home_host=} {browsertrix_home_container=}")
 
         if os.environ.get('RUNNING_IN_DOCKER', 0) == '1':
             logger.debug(f"generating WACZ without Docker for {url=}")
@@ -72,7 +73,7 @@ class WaczArchiverEnricher(Enricher, Archiver):
         else:
             logger.debug(f"generating WACZ in Docker for {url=}")
             if not self.docker_commands:
-                self.docker_commands = ["docker", "run", "--rm", "-v", f"{browsertrix_home}:/crawls/", "webrecorder/browsertrix-crawler"]
+                self.docker_commands = ["docker", "run", "--rm", "-v", f"{browsertrix_home_host}:/crawls/", "webrecorder/browsertrix-crawler"]
             cmd = self.docker_commands + [
                 "crawl",
                 "--url", url,
@@ -87,7 +88,7 @@ class WaczArchiverEnricher(Enricher, Archiver):
             ]
 
             if self.profile:
-                profile_fn = os.path.join(browsertrix_home, "profile.tar.gz")
+                profile_fn = os.path.join(browsertrix_home_container, "profile.tar.gz")
                 logger.debug(f"copying {self.profile} to {profile_fn}")
                 shutil.copyfile(self.profile, profile_fn)
                 cmd.extend(["--profile", os.path.join("/crawls", "profile.tar.gz")])
@@ -102,7 +103,7 @@ class WaczArchiverEnricher(Enricher, Archiver):
         if os.getenv('RUNNING_IN_DOCKER'):
             filename = os.path.join("collections", collection, f"{collection}.wacz")
         else:
-            filename = os.path.join(browsertrix_home, "collections", collection, f"{collection}.wacz")
+            filename = os.path.join(browsertrix_home_container, "collections", collection, f"{collection}.wacz")
 
         if not os.path.exists(filename):
             logger.warning(f"Unable to locate and upload WACZ  {filename=}")
