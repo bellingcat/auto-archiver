@@ -79,7 +79,7 @@ class WaczArchiverEnricher(Enricher, Archiver):
                 "-v", f"shared-data:/crawls/",
                 # "-it", # this leads to "the input device is not a TTY"
                 # "webrecorder/browsertrix-crawler", 
-                "auto-archiver-api-crawler",
+                "auto-archiver-api-crawler-1",
                 "crawl",
                 "--url", url,
                 "--scopeType", "page",
