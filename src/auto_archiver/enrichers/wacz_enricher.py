@@ -73,10 +73,11 @@ class WaczArchiverEnricher(Enricher, Archiver):
             logger.debug(f"generating WACZ in Docker for {url=}")
 
             cmd = [
-                "docker", "run",
+                # "docker", "run",
+                "docker", "exec",
                 "--rm",  # delete container once it has completed running
                 # "-v", f"{browsertrix_home}:/crawls/",
-                "-v", f"shared-data:/crawls/",
+                # "-v", f"shared-data:/crawls/",
                 # "-it", # this leads to "the input device is not a TTY"
                 # "webrecorder/browsertrix-crawler", 
                 "auto-archiver-api-crawler-1",
