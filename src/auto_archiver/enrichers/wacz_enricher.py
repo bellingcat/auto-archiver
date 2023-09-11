@@ -75,7 +75,7 @@ class WaczArchiverEnricher(Enricher, Archiver):
             cmd = [
                 # "docker", "run",
                 "docker", "exec",
-                "--rm",  # delete container once it has completed running
+                # "--rm",  # delete container once it has completed running
                 # "-v", f"{browsertrix_home}:/crawls/",
                 # "-v", f"shared-data:/crawls/",
                 # "-it", # this leads to "the input device is not a TTY"
