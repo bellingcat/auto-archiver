@@ -27,7 +27,8 @@ class WaczArchiverEnricher(Enricher, Archiver):
     def configs() -> dict:
         return {
             "profile": {"default": None, "help": "browsertrix-profile (for profile generation see https://github.com/webrecorder/browsertrix-crawler#creating-and-using-browser-profiles)."},
-            "browsertrix_home": {"default": None, "help": "path to use when calling docker run with a volume, by default it will be the tmp folder generated during execution, but setting this option is needed when running the auto-archiver in a docker container that calls another container via DooD."},
+            "docker_commands": {"default": None, "help":"if a custom docker invocation is needed"},
+            "browsertrix_home": {"default": None, "help": "Path to use with the custom browsertrix file locations, useful together with docker_commands"},
             "timeout": {"default": 120, "help": "timeout for WACZ generation in seconds"},
             "extract_media": {"default": True, "help": "If enabled all the images/videos/audio present in the WACZ archive will be extracted into separate Media. The .wacz file will be kept untouched."}
         }
@@ -49,7 +50,7 @@ class WaczArchiverEnricher(Enricher, Archiver):
         collection = str(uuid.uuid4())[0:8]
         browsertrix_home = self.browsertrix_home or os.path.abspath(ArchivingContext.get_tmp_dir())
 
-        if os.getenv('RUNNING_IN_DOCKER'):
+        if os.environ.get('RUNNING_IN_DOCKER', 0) == '1':
             logger.debug(f"generating WACZ without Docker for {url=}")
 
             cmd = [
@@ -70,13 +71,10 @@ class WaczArchiverEnricher(Enricher, Archiver):
                 cmd.extend(["--profile", os.path.join("/app", str(self.profile))])
         else:
             logger.debug(f"generating WACZ in Docker for {url=}")
-
-            cmd = [
-                "docker", "run",
-                "--rm",  # delete container once it has completed running
-                "-v", f"{browsertrix_home}:/crawls/",
-                # "-it", # this leads to "the input device is not a TTY"
-                "webrecorder/browsertrix-crawler", "crawl",
+            if not self.docker_commands:
+                self.docker_commands = ["docker", "run", "--rm", "-v", f"{browsertrix_home}:/crawls/", "webrecorder/browsertrix-crawler"]
+            cmd = self.docker_commands + [
+                "crawl",
                 "--url", url,
                 "--scopeType", "page",
                 "--generateWACZ",
@@ -90,6 +88,7 @@ class WaczArchiverEnricher(Enricher, Archiver):
 
             if self.profile:
                 profile_fn = os.path.join(browsertrix_home, "profile.tar.gz")
+                logger.debug(f"copying {self.profile} to {profile_fn}")
                 shutil.copyfile(self.profile, profile_fn)
                 cmd.extend(["--profile", os.path.join("/crawls", "profile.tar.gz")])
 
