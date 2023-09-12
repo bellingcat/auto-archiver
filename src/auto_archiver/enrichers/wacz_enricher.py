@@ -96,6 +96,7 @@ class WaczArchiverEnricher(Enricher, Archiver):
 
             if self.profile:
                 profile_fn = os.path.join(browsertrix_home, "profile.tar.gz")
+                logger.debug(f"copying {self.profile} to {profile_fn}")
                 shutil.copyfile(self.profile, profile_fn)
                 cmd.extend(["--profile", os.path.join("/crawls", "profile.tar.gz")])
 
