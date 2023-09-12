@@ -2,7 +2,7 @@ FROM webrecorder/browsertrix-crawler:latest
 
 ENV RUNNING_IN_DOCKER=1
 
-WORKDIR /aa-app
+WORKDIR /app
 
 RUN pip install --upgrade pip && \
 	pip install pipenv && \
@@ -19,14 +19,12 @@ RUN pip install --upgrade pip && \
 
 COPY Pipfile* ./
 # install from pipenv, with browsertrix-only requirements
-RUN pipenv install
- #&& \
-	# pipenv install pywb uwsgi
+RUN pipenv install && \
+	pipenv install pywb uwsgi
 	
 # doing this at the end helps during development, builds are quick
 COPY ./src/ . 
 
-# ENTRYPOINT ["sleep", "600"]
 ENTRYPOINT ["pipenv", "run", "python3", "-m", "auto_archiver"]
 
 # should be executed with 2 volumes (3 if local_storage is used)

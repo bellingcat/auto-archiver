@@ -68,7 +68,7 @@ class WaczArchiverEnricher(Enricher, Archiver):
                 "--timeout", str(self.timeout)]
 
             if self.profile:
-                cmd.extend(["--profile", os.path.join("/aa-app", str(self.profile))])
+                cmd.extend(["--profile", os.path.join("/app", str(self.profile))])
         else:
             logger.debug(f"generating WACZ in Docker for {url=}")
             if not self.docker_commands:
@@ -94,7 +94,7 @@ class WaczArchiverEnricher(Enricher, Archiver):
 
         try:
             logger.info(f"Running browsertrix-crawler: {' '.join(cmd)}")
-            subprocess.run(cmd, check=True, env={})
+            subprocess.run(cmd, check=True)
         except Exception as e:
             logger.error(f"WACZ generation failed: {e}")
             return False
