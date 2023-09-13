@@ -49,7 +49,6 @@ class WaczArchiverEnricher(Enricher, Archiver):
         collection = str(uuid.uuid4())[0:8]
         browsertrix_home_host = os.environ.get('BROWSERTRIX_HOME_HOST') or os.path.abspath(ArchivingContext.get_tmp_dir())
         browsertrix_home_container = os.environ.get('BROWSERTRIX_HOME_CONTAINER') or browsertrix_home_host
-        logger.debug(f"{browsertrix_home_host=} {browsertrix_home_container=}")
 
         cmd = [
             "crawl",
@@ -65,13 +64,12 @@ class WaczArchiverEnricher(Enricher, Archiver):
             "--behaviorTimeout", str(self.timeout),
             "--timeout", str(self.timeout)]
 
-        if os.environ.get('RUNNING_IN_DOCKER', 0) == '1':
-            logger.debug(f"generating WACZ without Docker for {url=}")
+        # call docker if explicitly enabled or we are running on the host (not in docker)
+        use_docker = os.environ.get('WACZ_ENABLE_DOCKER') or not os.environ.get('RUNNING_IN_DOCKER')
 
-            if self.profile:
-                cmd.extend(["--profile", os.path.join("/app", str(self.profile))])
-        else:
+        if use_docker:
             logger.debug(f"generating WACZ in Docker for {url=}")
+            logger.debug(f"{browsertrix_home_host=} {browsertrix_home_container=}")
             if not self.docker_commands:
                 self.docker_commands = ["docker", "run", "--rm", "-v", f"{browsertrix_home_host}:/crawls/", "webrecorder/browsertrix-crawler"]
             cmd = self.docker_commands + cmd
@@ -82,6 +80,12 @@ class WaczArchiverEnricher(Enricher, Archiver):
                 shutil.copyfile(self.profile, profile_fn)
                 cmd.extend(["--profile", os.path.join("/crawls", "profile.tar.gz")])
 
+        else:
+            logger.debug(f"generating WACZ without Docker for {url=}")
+
+            if self.profile:
+                cmd.extend(["--profile", os.path.join("/app", str(self.profile))])
+
         try:
             logger.info(f"Running browsertrix-crawler: {' '.join(cmd)}")
             subprocess.run(cmd, check=True)
@@ -89,10 +93,10 @@ class WaczArchiverEnricher(Enricher, Archiver):
             logger.error(f"WACZ generation failed: {e}")
             return False
 
-        if os.getenv('RUNNING_IN_DOCKER'):
-            filename = os.path.join("collections", collection, f"{collection}.wacz")
-        else:
+        if use_docker:
             filename = os.path.join(browsertrix_home_container, "collections", collection, f"{collection}.wacz")
+        else:
+            filename = os.path.join("collections", collection, f"{collection}.wacz")
 
         if not os.path.exists(filename):
             logger.warning(f"Unable to locate and upload WACZ  {filename=}")
