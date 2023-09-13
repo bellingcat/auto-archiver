@@ -51,22 +51,22 @@ class WaczArchiverEnricher(Enricher, Archiver):
         browsertrix_home_container = os.environ.get('BROWSERTRIX_HOME_CONTAINER') or browsertrix_home_host
         logger.debug(f"{browsertrix_home_host=} {browsertrix_home_container=}")
 
+        cmd = [
+            "crawl",
+            "--url", url,
+            "--scopeType", "page",
+            "--generateWACZ",
+            "--text",
+            "--screenshot", "fullPage",
+            "--collection", collection,
+            "--id", collection,
+            "--saveState", "never",
+            "--behaviors", "autoscroll,autoplay,autofetch,siteSpecific",
+            "--behaviorTimeout", str(self.timeout),
+            "--timeout", str(self.timeout)]
+
         if os.environ.get('RUNNING_IN_DOCKER', 0) == '1':
             logger.debug(f"generating WACZ without Docker for {url=}")
-
-            cmd = [
-                "crawl",
-                "--url", url,
-                "--scopeType", "page",
-                "--generateWACZ",
-                "--text",
-                "--screenshot", "fullPage",
-                "--collection", collection,
-                "--id", collection,
-                "--saveState", "never",
-                "--behaviors", "autoscroll,autoplay,autofetch,siteSpecific",
-                "--behaviorTimeout", str(self.timeout),
-                "--timeout", str(self.timeout)]
 
             if self.profile:
                 cmd.extend(["--profile", os.path.join("/app", str(self.profile))])
@@ -74,18 +74,7 @@ class WaczArchiverEnricher(Enricher, Archiver):
             logger.debug(f"generating WACZ in Docker for {url=}")
             if not self.docker_commands:
                 self.docker_commands = ["docker", "run", "--rm", "-v", f"{browsertrix_home_host}:/crawls/", "webrecorder/browsertrix-crawler"]
-            cmd = self.docker_commands + [
-                "crawl",
-                "--url", url,
-                "--scopeType", "page",
-                "--generateWACZ",
-                "--text",
-                "--screenshot", "fullPage",
-                "--collection", collection,
-                "--behaviors", "autoscroll,autoplay,autofetch,siteSpecific",
-                "--behaviorTimeout", str(self.timeout),
-                "--timeout", str(self.timeout)
-            ]
+            cmd = self.docker_commands + cmd
 
             if self.profile:
                 profile_fn = os.path.join(browsertrix_home_container, "profile.tar.gz")
