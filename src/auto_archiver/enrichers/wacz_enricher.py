@@ -70,9 +70,10 @@ class WaczArchiverEnricher(Enricher, Archiver):
         if use_docker:
             logger.debug(f"generating WACZ in Docker for {url=}")
             logger.debug(f"{browsertrix_home_host=} {browsertrix_home_container=}")
-            if not self.docker_commands:
-                self.docker_commands = ["docker", "run", "--rm", "-v", f"{browsertrix_home_host}:/crawls/", "webrecorder/browsertrix-crawler"]
-            cmd = self.docker_commands + cmd
+            if self.docker_commands:
+                cmd = self.docker_commands + cmd
+            else:
+                cmd = ["docker", "run", "--rm", "-v", f"{browsertrix_home_host}:/crawls/", "webrecorder/browsertrix-crawler"] + cmd
 
             if self.profile:
                 profile_fn = os.path.join(browsertrix_home_container, "profile.tar.gz")
