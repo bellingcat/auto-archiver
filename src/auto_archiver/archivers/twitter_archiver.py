@@ -15,8 +15,8 @@ class TwitterArchiver(Archiver):
     """
 
     name = "twitter_archiver"
-    link_pattern = re.compile(r"twitter.com\/(?:\#!\/)?(\w+)\/status(?:es)?\/(\d+)")
-    link_clean_pattern = re.compile(r"(.+twitter\.com\/.+\/\d+)(\?)*.*")
+    link_pattern = re.compile(r"(?:twitter|x).com\/(?:\#!\/)?(\w+)\/status(?:es)?\/(\d+)")
+    link_clean_pattern = re.compile(r"(.+(?:twitter|x)\.com\/.+\/\d+)(\?)*.*")
 
     def __init__(self, config: dict) -> None:
         super().__init__(config)
