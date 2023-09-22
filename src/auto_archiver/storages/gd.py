@@ -119,7 +119,7 @@ class GDriveStorage(Storage):
             'parents': [upload_to]
         }
         media = MediaFileUpload(media.filename, resumable=True)
-        gd_file = self.service.files().create(body=file_metadata, media_body=media, fields='id').execute()
+        gd_file = self.service.files().create(supportsAllDrives=True, body=file_metadata, media_body=media, fields='id').execute()
         logger.debug(f'uploadf: uploaded file {gd_file["id"]} successfully in folder={upload_to}')
 
     # must be implemented even if unused
@@ -150,6 +150,9 @@ class GDriveStorage(Storage):
 
         for attempt in range(retries):
             results = self.service.files().list(
+                # both below for Google Shared Drives
+                supportsAllDrives=True,
+                includeItemsFromAllDrives=True,
                 q=query_string,
                 spaces='drive',  # ie not appDataFolder or photos
                 fields='files(id, name)'
@@ -182,7 +185,7 @@ class GDriveStorage(Storage):
             'mimeType': 'application/vnd.google-apps.folder',
             'parents': [parent_id]
         }
-        gd_folder = self.service.files().create(body=file_metadata, fields='id').execute()
+        gd_folder = self.service.files().create(supportsAllDrives=True, body=file_metadata, fields='id').execute()
         return gd_folder.get('id')
 
     # def exists(self, key):
