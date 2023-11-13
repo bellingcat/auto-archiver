@@ -15,7 +15,7 @@ class Webdriver:
 
     def __enter__(self) -> webdriver:
         options = webdriver.FirefoxOptions()
-        options.headless = True
+        options.add_argument("--headless")
         options.set_preference('network.protocol-handler.external.tg', False)
         try:
             self.driver = webdriver.Firefox(options=options)

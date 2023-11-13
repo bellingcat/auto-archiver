@@ -65,6 +65,9 @@ class UrlUtil:
         if "vk.com/images/" in url: return False
         if "vk.com/images/reaction/" in url: return False
 
+        # wikipedia
+        if "wikipedia.org/static" in url: return False
+
         return True
 
     @staticmethod
