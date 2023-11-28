@@ -1,3 +1,4 @@
+import jsonlines
 import mimetypes
 import os, shutil, subprocess, uuid
 from zipfile import ZipFile
@@ -106,6 +107,24 @@ class WaczArchiverEnricher(Enricher, Archiver):
         to_enrich.add_media(Media(wacz_fn), "browsertrix")
         if self.extract_media:
             self.extract_media_from_wacz(to_enrich, wacz_fn)
+
+        if use_docker:
+            jsonl_fn = os.path.join(browsertrix_home_container, "collections", collection, "pages", "pages.jsonl")
+        else:
+            jsonl_fn = os.path.join("collections", collection, "pages", "pages.jsonl")
+
+        if not os.path.exists(jsonl_fn):
+            logger.warning(f"Unable to locate and pages.jsonl  {jsonl_fn=}")
+        else:
+            logger.info(f"Parsing pages.jsonl  {jsonl_fn=}")
+            with jsonlines.open(jsonl_fn) as reader:
+                for obj in reader:
+                    if 'title' in obj:
+                        to_enrich.set_title(obj['title'])
+                    if 'text' in obj:
+                        to_enrich.set_content(obj['text'])
+
+
         return True
 
     def extract_media_from_wacz(self, to_enrich: Metadata, wacz_filename: str) -> None:
