@@ -1,14 +1,14 @@
 
-from typing import IO, Any
-import boto3, uuid, os, mimetypes
-from botocore.errorfactory import ClientError
-from ..core import Metadata
+from typing import IO
+import boto3, os
+
+from ..utils.misc import random_str
 from ..core import Media
 from ..storages import Storage
+from ..enrichers import HashEnricher
 from loguru import logger
-from slugify import slugify
 
-
+NO_DUPLICATES_FOLDER = "no-dups/"
 class S3Storage(Storage):
     name = "s3_storage"
 
@@ -21,6 +21,9 @@ class S3Storage(Storage):
             aws_access_key_id=self.key,
             aws_secret_access_key=self.secret
         )
+        self.random_no_duplicate = bool(self.random_no_duplicate)
+        if self.random_no_duplicate:
+            logger.warning("random_no_duplicate is set to True, this will override `path_generator`, `filename_generator` and `folder`.")
 
     @staticmethod
     def configs() -> dict:
@@ -31,7 +34,7 @@ class S3Storage(Storage):
                 "region": {"default": None, "help": "S3 region name"},
                 "key": {"default": None, "help": "S3 API key"},
                 "secret": {"default": None, "help": "S3 API secret"},
-                # TODO: how to have sth like a custom folder? has to come from the feeders
+                "random_no_duplicate": {"default": False, "help": f"if set, it will override `path_generator`, `filename_generator` and `folder`. It will check if the file already exists and if so it will not upload it again. Creates a new root folder path `{NO_DUPLICATES_FOLDER}`"},
                 "endpoint_url": {
                     "default": 'https://{region}.digitaloceanspaces.com',
                     "help": "S3 bucket endpoint, {region} are inserted at runtime"
@@ -47,6 +50,22 @@ class S3Storage(Storage):
         return self.cdn_url.format(bucket=self.bucket, region=self.region, key=media.key)
 
     def uploadf(self, file: IO[bytes], media: Media, **kwargs: dict) -> None:
+        if not self.is_upload_needed(media): return True
+
+        if self.random_no_duplicate:
+            # checks if a folder with the hash already exists, if so it skips the upload
+            he = HashEnricher({"hash_enricher": {"algorithm": "SHA-256", "chunksize": 1.6e7}})
+            hd = he.calculate_hash(media.filename)
+            path = os.path.join(NO_DUPLICATES_FOLDER, hd[:24])
+
+            if existing_key:=self.file_in_folder(path):
+                media.key = existing_key
+                logger.debug(f"skipping upload of {media.filename} because it already exists in {media.key}")
+                return True
+            
+            _, ext = os.path.splitext(media.key)
+            media.key = os.path.join(path, f"{random_str(24)}{ext}")
+
         extra_args = kwargs.get("extra_args", {})
         if not self.private and 'ACL' not in extra_args:
             extra_args['ACL'] = 'public-read'
@@ -60,14 +79,30 @@ class S3Storage(Storage):
 
         self.s3.upload_fileobj(file, Bucket=self.bucket, Key=media.key, ExtraArgs=extra_args)
         return True
+    
+    def is_upload_needed(self, media: Media) -> bool:
+        if self.random_no_duplicate:
+            # checks if a folder with the hash already exists, if so it skips the upload
+            he = HashEnricher({"hash_enricher": {"algorithm": "SHA-256", "chunksize": 1.6e7}})
+            hd = he.calculate_hash(media.filename)
+            path = os.path.join(NO_DUPLICATES_FOLDER, hd[:24])
 
-    # def exists(self, key: str) -> bool:
-    #     """
-    #     Tests if a given file with key=key exists in the bucket
-    #     """
-    #     try:
-    #         self.s3.head_object(Bucket=self.bucket, Key=key)
-    #         return True
-    #     except ClientError as e:
-    #         logger.warning(f"got a ClientError when checking if {key=} exists in bucket={self.bucket}: {e}")
-    #     return False
+            if existing_key:=self.file_in_folder(path):
+                media.key = existing_key
+                logger.debug(f"skipping upload of {media.filename} because it already exists in {media.key}")
+                return False
+            
+            _, ext = os.path.splitext(media.key)
+            media.key = os.path.join(path, f"{random_str(24)}{ext}")
+        return True
+    
+    
+    def file_in_folder(self, path:str) -> str:
+        # checks if path exists and is not an empty folder
+        if not path.endswith('/'):
+            path = path + '/' 
+        resp = self.s3.list_objects(Bucket=self.bucket, Prefix=path, Delimiter='/', MaxKeys=1)
+        if 'Contents' in resp:
+            return resp['Contents'][0]['Key']
+        return False
+
