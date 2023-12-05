@@ -2,11 +2,13 @@ from __future__ import annotations
 from abc import abstractmethod
 from dataclasses import dataclass
 from typing import IO
+import os
+
+from ..utils.misc import random_str
 
 from ..core import Media, Step, ArchivingContext
 from ..enrichers import HashEnricher
 from loguru import logger
-import os, uuid
 from slugify import slugify
 
 
@@ -72,10 +74,10 @@ class Storage(Step):
             filename = slugify(filename)  # in case it comes with os.sep
         elif self.path_generator == "url": path = slugify(url)
         elif self.path_generator == "random":
-            path = ArchivingContext.get("random_path", str(uuid.uuid4())[:23], True)
+            path = ArchivingContext.get("random_path", random_str(24), True)
 
         # filename_generator logic
-        if self.filename_generator == "random": filename = str(uuid.uuid4())[:23]
+        if self.filename_generator == "random": filename = random_str(24)
         elif self.filename_generator == "static":
             he = HashEnricher({"hash_enricher": {"algorithm": ArchivingContext.get("hash_enricher.algorithm"), "chunksize": 1.6e7}})
             hd = he.calculate_hash(media.filename)
