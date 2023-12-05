@@ -72,10 +72,10 @@ class Storage(Step):
             filename = slugify(filename)  # in case it comes with os.sep
         elif self.path_generator == "url": path = slugify(url)
         elif self.path_generator == "random":
-            path = ArchivingContext.get("random_path", str(uuid.uuid4())[:16], True)
+            path = ArchivingContext.get("random_path", str(uuid.uuid4())[:23], True)
 
         # filename_generator logic
-        if self.filename_generator == "random": filename = str(uuid.uuid4())[:16]
+        if self.filename_generator == "random": filename = str(uuid.uuid4())[:23]
         elif self.filename_generator == "static":
             he = HashEnricher({"hash_enricher": {"algorithm": ArchivingContext.get("hash_enricher.algorithm"), "chunksize": 1.6e7}})
             hd = he.calculate_hash(media.filename)

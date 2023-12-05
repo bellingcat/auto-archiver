@@ -1,5 +1,5 @@
 import mimetypes
-import os, shutil, subprocess, uuid
+import os, shutil, subprocess
 from zipfile import ZipFile
 from loguru import logger
 from warcio.archiveiterator import ArchiveIterator
@@ -7,7 +7,7 @@ from warcio.archiveiterator import ArchiveIterator
 from ..core import Media, Metadata, ArchivingContext
 from . import Enricher
 from ..archivers import Archiver
-from ..utils import UrlUtil
+from ..utils import UrlUtil, random_str
 
 
 class WaczArchiverEnricher(Enricher, Archiver):
@@ -46,7 +46,7 @@ class WaczArchiverEnricher(Enricher, Archiver):
 
         url = to_enrich.get_url()
 
-        collection = str(uuid.uuid4())[0:8]
+        collection = random_str(8)
         browsertrix_home_host = os.environ.get('BROWSERTRIX_HOME_HOST') or os.path.abspath(ArchivingContext.get_tmp_dir())
         browsertrix_home_container = os.environ.get('BROWSERTRIX_HOME_CONTAINER') or browsertrix_home_host
 
