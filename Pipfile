@@ -35,6 +35,7 @@ vk-url-scraper = "*"
 requests = {extras = ["socks"], version = "*"}
 numpy = "*"
 warcio = "*"
+jsonlines = "*"
 
 [dev-packages]
 autopep8 = "*"
