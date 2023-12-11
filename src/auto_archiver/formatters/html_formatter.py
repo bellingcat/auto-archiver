@@ -47,7 +47,7 @@ class HtmlFormatter(Formatter):
         html_path = os.path.join(ArchivingContext.get_tmp_dir(), f"formatted{str(uuid.uuid4())}.html")
         with open(html_path, mode="w", encoding="utf-8") as outf:
             outf.write(content)
-        final_media = Media(filename=html_path)
+        final_media = Media(filename=html_path, _mimetype="text/html")
 
         he = HashEnricher({"hash_enricher": {"algorithm": ArchivingContext.get("hash_enricher.algorithm"), "chunksize": 1.6e7}})
         if len(hd := he.calculate_hash(final_media.filename)):
