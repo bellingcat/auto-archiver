@@ -41,7 +41,7 @@ class AAApiDb(Database):
 
         if response.status_code == 200:
             logger.success(f"API returned a previously archived instance: {response.json()}")
-            # TODO: can we do better than just returning the first result?
+            # TODO: can we do better than just returning the most recent result?
             return Metadata.from_dict(response.json()[0]["result"])
         
         logger.error(f"AA API FAIL ({response.status_code}): {response.json()}")
