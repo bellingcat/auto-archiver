@@ -77,7 +77,7 @@ class ArchivingOrchestrator:
         if cached_result:
             logger.debug("Found previously archived entry")
             for d in self.databases:
-                d.done(cached_result)
+                d.done(cached_result, cached=True)
             return cached_result
 
         # 3 - call archivers until one succeeds

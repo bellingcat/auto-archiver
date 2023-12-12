@@ -36,6 +36,6 @@ class Database(Step, ABC):
         return False
 
     @abstractmethod
-    def done(self, item: Metadata) -> None:
+    def done(self, item: Metadata, cached: bool=False) -> None:
         """archival result ready - should be saved to DB"""
         pass
