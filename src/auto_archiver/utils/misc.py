@@ -1,5 +1,6 @@
 
 import os, json, requests
+import uuid
 from datetime import datetime
 from loguru import logger
 
@@ -49,3 +50,7 @@ def update_nested_dict(dictionary, update_dict):
             update_nested_dict(dictionary[key], value)
         else:
             dictionary[key] = value
+
+def random_str(length: int = 32) -> str:
+    assert length <= 32, "length must be less than 32 as UUID4 is used"
+    return str(uuid.uuid4()).replace("-", "")[:length]
