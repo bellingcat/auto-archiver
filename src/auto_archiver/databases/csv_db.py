@@ -24,7 +24,7 @@ class CSVDb(Database):
             "csv_file": {"default": "db.csv", "help": "CSV file name"}
         }
 
-    def done(self, item: Metadata) -> None:
+    def done(self, item: Metadata, cached: bool=False) -> None:
         """archival result ready - should be saved to DB"""
         logger.success(f"DONE {item}")
         is_empty = not os.path.isfile(self.csv_file) or os.path.getsize(self.csv_file) == 0

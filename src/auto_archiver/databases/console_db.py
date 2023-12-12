@@ -27,6 +27,6 @@ class ConsoleDb(Database):
     def aborted(self, item: Metadata) -> None:
         logger.warning(f"ABORTED {item}")
 
-    def done(self, item: Metadata) -> None:
+    def done(self, item: Metadata, cached: bool=False) -> None:
         """archival result ready - should be saved to DB"""
         logger.success(f"DONE {item}")

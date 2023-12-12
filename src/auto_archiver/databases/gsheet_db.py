@@ -41,7 +41,7 @@ class GsheetsDb(Database):
         """check if the given item has been archived already"""
         return False
 
-    def done(self, item: Metadata) -> None:
+    def done(self, item: Metadata, cached: bool=False) -> None:
         """archival result ready - should be saved to DB"""
         logger.success(f"DONE {item.get_url()}")
         gw, row = self._retrieve_gsheet(item)
@@ -57,8 +57,10 @@ class GsheetsDb(Database):
                     cell_updates.append((row, col, final_value))
             except Exception as e:
                 logger.error(f"Unable to batch {col}={final_value} due to {e}")
-
-        cell_updates.append((row, 'status', item.status))
+        status_message = item.status
+        if cached:
+            status_message = f"[cached] {status_message}"
+        cell_updates.append((row, 'status', status_message))
 
         media: Media = item.get_final_media()
         if hasattr(media, "urls"):

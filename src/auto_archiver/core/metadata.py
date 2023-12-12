@@ -105,7 +105,8 @@ class Metadata:
 
     def get_timestamp(self, utc=True, iso=True) -> datetime.datetime:
         ts = self.get("timestamp")
-        if not ts: return ts
+        if not ts: return 
+        if type(ts) == float: ts = datetime.datetime.fromtimestamp(ts)
         if utc: ts = ts.replace(tzinfo=datetime.timezone.utc)
         if iso: return ts.isoformat()
         return ts
