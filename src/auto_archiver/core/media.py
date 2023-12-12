@@ -65,7 +65,8 @@ class Media:
 
     @property  # getter .mimetype
     def mimetype(self) -> str:
-        assert self.filename is not None and len(self.filename) > 0, "cannot get mimetype from media without filename"
+        if not self.filename or len(self.filename) == 0:
+            logger.warning(f"cannot get mimetype from media without filename: {self}")
         if not self._mimetype:
             self._mimetype = mimetypes.guess_type(self.filename)[0]
         return self._mimetype or ""
