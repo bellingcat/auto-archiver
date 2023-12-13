@@ -40,11 +40,12 @@ class AAApiDb(Database):
         response = requests.get(os.path.join(self.api_endpoint, "tasks/search-url"), params=params, headers=headers)
 
         if response.status_code == 200:
-            logger.success(f"API returned a previously archived instance: {response.json()}")
-            # TODO: can we do better than just returning the most recent result?
-            return Metadata.from_dict(response.json()[0]["result"])
-        
-        logger.error(f"AA API FAIL ({response.status_code}): {response.json()}")
+            if len(response.json()):
+                logger.success(f"API returned a previously archived instance: {response.json()}")
+                # TODO: can we do better than just returning the most recent result?
+                return Metadata.from_dict(response.json()[0]["result"])
+        else:
+            logger.error(f"AA API FAIL ({response.status_code}): {response.json()}")
         return False
 
 
