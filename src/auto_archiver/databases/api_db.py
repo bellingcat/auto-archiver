@@ -35,15 +35,15 @@ class AAApiDb(Database):
         """ query the database for the existence of this item"""
         if not self.allow_rearchive: return
         
-        params = {"url": item.get_url(), "limit": 1}
+        params = {"url": item.get_url(), "limit": 15}
         headers = {"Authorization": f"Bearer {self.api_token}", "accept": "application/json"}
         response = requests.get(os.path.join(self.api_endpoint, "tasks/search-url"), params=params, headers=headers)
 
         if response.status_code == 200:
             if len(response.json()):
-                logger.success(f"API returned a previously archived instance: {response.json()}")
-                # TODO: can we do better than just returning the most recent result?
-                return Metadata.from_dict(response.json()[0]["result"])
+                logger.success(f"API returned {len(response.json())} previously archived instance(s)")
+                fetched_metadata = [Metadata.from_dict(r["result"]) for r in response.json()]
+                return Metadata.choose_most_complete(fetched_metadata)
         else:
             logger.error(f"AA API FAIL ({response.status_code}): {response.json()}")
         return False
