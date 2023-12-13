@@ -165,3 +165,16 @@ class Metadata:
 
     def __str__(self) -> str:
         return self.__repr__()
+
+
+    @staticmethod
+    def choose_most_complete(results: List[Metadata]) -> Metadata:
+        # returns the most complete result from a list of results
+        # prioritizes results with more media, then more metadata
+        if len(results) == 0: return None
+        if len(results) == 1: return results[0]
+        most_complete = results[0]
+        for r in results[1:]:
+            if len(r.media) > len(most_complete.media): most_complete = r
+            elif len(r.media) == len(most_complete.media) and len(r.metadata) > len(most_complete.metadata): most_complete = r
+        return most_complete
