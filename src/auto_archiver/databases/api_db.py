@@ -16,6 +16,7 @@ class AAApiDb(Database):
         # without this STEP.__init__ is not called
         super().__init__(config)
         self.allow_rearchive = bool(self.allow_rearchive)
+        self.store_results = bool(self.store_results)
         self.assert_valid_string("api_endpoint")
         self.assert_valid_string("api_secret")
 
@@ -29,6 +30,7 @@ class AAApiDb(Database):
             "author_id": {"default": None, "help": "which email to assign as author"},
             "group_id": {"default": None, "help": "which group of users have access to the archive in case public=false as author"},
             "allow_rearchive": {"default": True, "help": "if False then the API database will be queried prior to any archiving operations and stop if the link has already been archived"},
+            "store_results": {"default": True, "help": "when set, will send the results to the API database."},
             "tags": {"default": [], "help": "what tags to add to the archived URL", "cli_set": lambda cli_val, cur_val: set(cli_val.split(","))},
         }
     def fetch(self, item: Metadata) -> Union[Metadata, bool]:
@@ -51,6 +53,7 @@ class AAApiDb(Database):
 
     def done(self, item: Metadata, cached: bool=False) -> None:
         """archival result ready - should be saved to DB"""
+        if not self.store_results: return
         if cached: 
             logger.debug(f"skipping saving archive of {item.get_url()} to the AA API because it was cached")
             return
