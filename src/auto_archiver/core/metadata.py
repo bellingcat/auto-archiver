@@ -170,8 +170,7 @@ class Metadata:
     @staticmethod
     def choose_most_complete(results: List[Metadata]) -> Metadata:
         # returns the most complete result from a list of results
-        # if there's a tie, returns the first one
-        # if there are no results, returns None
+        # prioritizes results with more media, then more metadata
         if len(results) == 0: return None
         if len(results) == 1: return results[0]
         most_complete = results[0]
