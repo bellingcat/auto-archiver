@@ -7,6 +7,8 @@ from dataclasses_json import dataclass_json, config
 import datetime
 from urllib.parse import urlparse
 from dateutil.parser import parse as parse_dt
+from loguru import logger
+
 from .media import Media
 from .context import ArchivingContext
 
@@ -106,10 +108,15 @@ class Metadata:
     def get_timestamp(self, utc=True, iso=True) -> datetime.datetime:
         ts = self.get("timestamp")
         if not ts: return 
-        if type(ts) == float: ts = datetime.datetime.fromtimestamp(ts)
-        if utc: ts = ts.replace(tzinfo=datetime.timezone.utc)
-        if iso: return ts.isoformat()
-        return ts
+        try:
+            if type(ts) == str: ts = datetime.datetime.fromisoformat(ts)
+            if type(ts) == float: ts = datetime.datetime.fromtimestamp(ts)
+            if utc: ts = ts.replace(tzinfo=datetime.timezone.utc)
+            if iso: return ts.isoformat()
+            return ts
+        except Exception as e:
+            logger.error(f"Unable to parse timestamp {ts}: {e}")
+            return
 
     def add_media(self, media: Media, id: str = None) -> Metadata:
         # adds a new media, optionally including an id
