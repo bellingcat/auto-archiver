@@ -18,7 +18,6 @@ class AAApiDb(Database):
         self.allow_rearchive = bool(self.allow_rearchive)
         self.store_results = bool(self.store_results)
         self.assert_valid_string("api_endpoint")
-        self.assert_valid_string("api_secret")
 
     @staticmethod
     def configs() -> dict:
