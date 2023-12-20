@@ -52,20 +52,6 @@ class S3Storage(Storage):
     def uploadf(self, file: IO[bytes], media: Media, **kwargs: dict) -> None:
         if not self.is_upload_needed(media): return True
 
-        if self.random_no_duplicate:
-            # checks if a folder with the hash already exists, if so it skips the upload
-            he = HashEnricher({"hash_enricher": {"algorithm": "SHA-256", "chunksize": 1.6e7}})
-            hd = he.calculate_hash(media.filename)
-            path = os.path.join(NO_DUPLICATES_FOLDER, hd[:24])
-
-            if existing_key:=self.file_in_folder(path):
-                media.key = existing_key
-                logger.debug(f"skipping upload of {media.filename} because it already exists in {media.key}")
-                return True
-            
-            _, ext = os.path.splitext(media.key)
-            media.key = os.path.join(path, f"{random_str(24)}{ext}")
-
         extra_args = kwargs.get("extra_args", {})
         if not self.private and 'ACL' not in extra_args:
             extra_args['ACL'] = 'public-read'
@@ -89,6 +75,7 @@ class S3Storage(Storage):
 
             if existing_key:=self.file_in_folder(path):
                 media.key = existing_key
+                media.set("previously archived", True)
                 logger.debug(f"skipping upload of {media.filename} because it already exists in {media.key}")
                 return False
             

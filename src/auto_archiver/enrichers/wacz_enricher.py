@@ -30,7 +30,8 @@ class WaczArchiverEnricher(Enricher, Archiver):
             "profile": {"default": None, "help": "browsertrix-profile (for profile generation see https://github.com/webrecorder/browsertrix-crawler#creating-and-using-browser-profiles)."},
             "docker_commands": {"default": None, "help":"if a custom docker invocation is needed"},
             "timeout": {"default": 120, "help": "timeout for WACZ generation in seconds"},
-            "extract_media": {"default": True, "help": "If enabled all the images/videos/audio present in the WACZ archive will be extracted into separate Media. The .wacz file will be kept untouched."}
+            "extract_media": {"default": False, "help": "If enabled all the images/videos/audio present in the WACZ archive will be extracted into separate Media and appear in the html report. The .wacz file will be kept untouched."},
+            "extract_screenshot": {"default": True, "help": "If enabled the screenshot captured by browsertrix will be extracted into separate Media and appear in the html report. The .wacz file will be kept untouched."}
         }
 
     def download(self, item: Metadata) -> Metadata:
@@ -105,7 +106,7 @@ class WaczArchiverEnricher(Enricher, Archiver):
             return False
 
         to_enrich.add_media(Media(wacz_fn), "browsertrix")
-        if self.extract_media:
+        if self.extract_media or self.extract_screenshot:
             self.extract_media_from_wacz(to_enrich, wacz_fn)
 
         if use_docker:
@@ -155,12 +156,13 @@ class WaczArchiverEnricher(Enricher, Archiver):
         with open(warc_filename, 'rb') as warc_stream:
             for record in ArchiveIterator(warc_stream):
                 # only include fetched resources
-                if record.rec_type == "resource":  # screenshots
+                if record.rec_type == "resource" and self.extract_screenshot:  # screenshots
                     fn = os.path.join(tmp_dir, f"warc-file-{counter}.png")
                     with open(fn, "wb") as outf: outf.write(record.raw_stream.read())
                     m = Media(filename=fn)
                     to_enrich.add_media(m, "browsertrix-screenshot")
                     counter += 1
+                if not self.extract_media: continue
 
                 if record.rec_type != 'response': continue
                 record_url = record.rec_headers.get_header('WARC-Target-URI')
