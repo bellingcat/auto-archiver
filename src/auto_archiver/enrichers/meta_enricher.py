@@ -1,3 +1,4 @@
+import datetime
 import os
 from loguru import logger
 
@@ -22,9 +23,13 @@ class MetaEnricher(Enricher):
         }
 
     def enrich(self, to_enrich: Metadata) -> None:
-        url = to_enrich.get_url()
-        logger.debug(f"calculating file sizes for {url=} ({len(to_enrich.media)} media files)")
+        logger.debug(f"calculating archive metadata information for url={to_enrich.get_url()}")
 
+        self.enrich_file_sizes(to_enrich)
+        self.enrich_archive_duration(to_enrich)
+
+    def enrich_file_sizes(self, to_enrich):
+        logger.debug(f"calculating archive file sizes for url={to_enrich.get_url()} ({len(to_enrich.media)} media files)")
         total_size = 0
         for i, m in enumerate(to_enrich.media):
             file_stats = os.stat(m.filename)
@@ -42,3 +47,9 @@ class MetaEnricher(Enricher):
             if size < 1024:
                 return f"{size:.1f} {unit}"
             size /= 1024
+
+    def enrich_archive_duration(self, to_enrich):
+        logger.debug(f"calculating archive duration for url={to_enrich.get_url()} ")
+
+        archive_duration = datetime.datetime.utcnow() - to_enrich.get("_processed_at")
+        to_enrich.set("archive_duration_seconds", archive_duration.seconds)
