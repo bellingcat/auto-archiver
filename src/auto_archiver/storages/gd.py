@@ -52,7 +52,7 @@ class GDriveStorage(Storage):
             else:
                 logger.debug('GD OAuth Token valid')
         else:
-            gd_service_account = config.service_account
+            gd_service_account = config['gdrive_storage']['service_account']
             logger.debug(f'Using GD Service Account {gd_service_account}')
             creds = service_account.Credentials.from_service_account_file(gd_service_account, scopes=SCOPES)
 
@@ -87,14 +87,14 @@ class GDriveStorage(Storage):
         file_id = self._get_id_from_parent_and_name(folder_id, filename)
         return f"https://drive.google.com/file/d/{file_id}/view?usp=sharing"
 
-    def upload(self, media: Media, **kwargs) -> bool:
-        # override parent so that we can use shutil.copy2 and keep metadata
-        dest = os.path.join(self.save_to, media.key)
-        os.makedirs(os.path.dirname(dest), exist_ok=True)
-        logger.debug(f'[{self.__class__.name}] storing file {media.filename} with key {media.key} to {dest}')
-        res = shutil.copy2(media.filename, dest)
-        logger.info(res)
-        return True
+    # def upload(self, media: Media, **kwargs) -> bool:
+    #     # override parent so that we can use shutil.copy2 and keep metadata
+    #     dest = os.path.join(self.save_to, media.key)
+    #     os.makedirs(os.path.dirname(dest), exist_ok=True)
+    #     logger.debug(f'[{self.__class__.name}] storing file {media.filename} with key {media.key} to {dest}')
+    #     res = shutil.copy2(media.filename, dest)
+    #     logger.info(res)
+    #     return True
 
     def upload(self, media: Media, **kwargs) -> bool:
         logger.debug(f'[{self.__class__.name}] storing file {media.filename} with key {media.key}')
@@ -158,6 +158,8 @@ class GDriveStorage(Storage):
                 fields='files(id, name)'
             ).execute()
             items = results.get('files', [])
+
+            items = self.service.ListFile(query_string).GetList()
 
             if len(items) > 0:
                 logger.debug(f"{debug_header} found {len(items)} matches, returning last of {','.join([i['id'] for i in items])}")
