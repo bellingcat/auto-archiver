@@ -87,15 +87,6 @@ class GDriveStorage(Storage):
         file_id = self._get_id_from_parent_and_name(folder_id, filename)
         return f"https://drive.google.com/file/d/{file_id}/view?usp=sharing"
 
-    # def upload(self, media: Media, **kwargs) -> bool:
-    #     # override parent so that we can use shutil.copy2 and keep metadata
-    #     dest = os.path.join(self.save_to, media.key)
-    #     os.makedirs(os.path.dirname(dest), exist_ok=True)
-    #     logger.debug(f'[{self.__class__.name}] storing file {media.filename} with key {media.key} to {dest}')
-    #     res = shutil.copy2(media.filename, dest)
-    #     logger.info(res)
-    #     return True
-
     def upload(self, media: Media, **kwargs) -> bool:
         logger.debug(f'[{self.__class__.name}] storing file {media.filename} with key {media.key}')
         """
