@@ -150,8 +150,6 @@ class GDriveStorage(Storage):
             ).execute()
             items = results.get('files', [])
 
-            items = self.service.ListFile(query_string).GetList()
-
             if len(items) > 0:
                 logger.debug(f"{debug_header} found {len(items)} matches, returning last of {','.join([i['id'] for i in items])}")
                 _id = items[-1]['id']
