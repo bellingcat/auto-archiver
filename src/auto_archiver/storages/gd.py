@@ -52,7 +52,7 @@ class GDriveStorage(Storage):
             else:
                 logger.debug('GD OAuth Token valid')
         else:
-            gd_service_account = config['gdrive_storage']['service_account']
+            gd_service_account = self.service_account
             logger.debug(f'Using GD Service Account {gd_service_account}')
             creds = service_account.Credentials.from_service_account_file(gd_service_account, scopes=SCOPES)
 
