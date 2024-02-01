@@ -146,8 +146,10 @@ class TelethonArchiver(Archiver):
                     logger.debug(f"Empty media found, skipping {str(mp)=}")
                     continue
                 result.add_media(Media(filename))
-
-            result.set_content(str(post)).set_title(title).set_timestamp(post.date)
+            
+            result.set_title(title).set_timestamp(post.date).set("api_data", post.to_dict())
+            if post.message != title:
+                result.set_content(post.message)
         return result.success("telethon")
 
     def _get_media_posts_in_group(self, chat, original_post, max_amp=10):
