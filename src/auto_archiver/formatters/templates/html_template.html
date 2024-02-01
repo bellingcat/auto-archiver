@@ -101,7 +101,7 @@
 
 <body>
     <div id="notification"></div>
-    <h2>Archived media for <a href="{{ url }}">{{ url }}</a></h2>
+    <h2>Archived media for <span class="copy">{{ url }}</span> - <a href="{{ url }}">open</a></h2>
     {% if title | string | length > 0 %}
     <p><b>title:</b> '<span class="copy">{{ title }}</span>'</p>
     {% endif %}
