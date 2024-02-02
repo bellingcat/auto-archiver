@@ -59,11 +59,11 @@ class AAApiDb(Database):
         logger.debug(f"saving archive of {item.get_url()} to the AA API.")
 
         payload = {'result': item.to_json(), 'public': self.public, 'author_id': self.author_id, 'group_id': self.group_id, 'tags': list(self.tags)}
-        response = requests.post(os.path.join(self.api_endpoint, "submit-archive"), json=payload, auth=("abc", self.api_secret))
+        headers = {"Authorization": f"Bearer {self.api_secret}"}
+        response = requests.post(os.path.join(self.api_endpoint, "submit-archive"), json=payload, headers=headers)
 
         if response.status_code == 200:
             logger.success(f"AA API: {response.json()}")
         else:
             logger.error(f"AA API FAIL ({response.status_code}): {response.json()}")
 
-    
