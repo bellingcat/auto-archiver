@@ -23,6 +23,10 @@ class Archiver(Step):
         # used when archivers need to login or do other one-time setup
         pass
 
+    def cleanup(self) -> None:
+        # called when archivers are done, or upon errors, cleanup any resources
+        pass
+
     def sanitize_url(self, url: str) -> str:
         # used to clean unnecessary URL parameters OR unfurl redirect links
         return url
