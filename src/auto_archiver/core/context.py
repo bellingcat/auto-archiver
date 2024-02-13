@@ -1,6 +1,3 @@
-from loguru import logger
-
-
 class ArchivingContext:
     """
     Singleton context class.

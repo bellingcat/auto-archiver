@@ -25,11 +25,21 @@ class ArchivingOrchestrator:
         self.storages: List[Storage] = config.storages
         ArchivingContext.set("storages", self.storages, keep_on_reset=True)
 
-        for a in self.archivers: a.setup()
+        try: 
+            for a in self.archivers: a.setup()
+        except (KeyboardInterrupt, Exception) as e:
+            logger.error(f"Error during setup of archivers: {e}\n{traceback.format_exc()}")
+            self.cleanup()
+
+
+    def cleanup(self)->None:
+        logger.info("Cleaning up")
+        for a in self.archivers: a.cleanup()
 
     def feed(self) -> Generator[Metadata]:
         for item in self.feeder:
             yield self.feed_item(item)
+        self.cleanup()
 
     def feed_item(self, item: Metadata) -> Metadata:
         """
@@ -37,22 +47,20 @@ class ArchivingOrchestrator:
             - catches keyboard interruptions to do a clean exit
             - catches any unexpected error, logs it, and does a clean exit
         """
-        ArchivingContext.reset()
-        # temporary directory is kept until cleanup completes
-        with tempfile.TemporaryDirectory(dir="./") as tmp_dir:
-            try:
+        try:
+            ArchivingContext.reset()
+            with tempfile.TemporaryDirectory(dir="./") as tmp_dir:
                 ArchivingContext.set_tmp_dir(tmp_dir)
                 return self.archive(item)
-            except KeyboardInterrupt:
-                # catches keyboard interruptions to do a clean exit
-                logger.warning(f"caught interrupt on {item=}")
-                for d in self.databases: d.aborted(item)
-                for a in self.archivers: a.cleanup()
-                exit()
-            except Exception as e:
-                logger.error(f'Got unexpected error on item {item}: {e}\n{traceback.format_exc()}')
-                for d in self.databases: d.failed(item)
-                for a in self.archivers: a.cleanup()
+        except KeyboardInterrupt:
+            # catches keyboard interruptions to do a clean exit
+            logger.warning(f"caught interrupt on {item=}")
+            for d in self.databases: d.aborted(item)
+            self.cleanup()
+            exit()
+        except Exception as e:
+            logger.error(f'Got unexpected error on item {item}: {e}\n{traceback.format_exc()}')
+            for d in self.databases: d.failed(item)
 
 
     def archive(self, result: Metadata) -> Union[Metadata, None]:
@@ -113,6 +121,5 @@ class ArchivingOrchestrator:
 
         # signal completion to databases and archivers
         for d in self.databases: d.done(result)
-        for a in self.archivers: a.cleanup()
 
         return result

@@ -1,4 +1,5 @@
 
+import shutil
 from telethon.sync import TelegramClient
 from telethon.errors import ChannelInvalidError
 from telethon.tl.functions.messages import ImportChatInviteRequest
@@ -9,6 +10,7 @@ import re, time, json, os
 
 from . import Archiver
 from ..core import Metadata, Media, ArchivingContext
+from ..utils import random_str
 
 
 class TelethonArchiver(Archiver):
@@ -20,8 +22,6 @@ class TelethonArchiver(Archiver):
         super().__init__(config)
         self.assert_valid_string("api_id")
         self.assert_valid_string("api_hash")
-
-        self.client = TelegramClient(self.session_file, self.api_id, self.api_hash)
 
     @staticmethod
     def configs() -> dict:
@@ -40,10 +40,20 @@ class TelethonArchiver(Archiver):
 
     def setup(self) -> None:
         """
-        1. trigger login process for telegram or proceed if already saved in a session file
-        2. joins channel_invites where needed
+        1. makes a copy of session_file that is removed in cleanup
+        2. trigger login process for telegram or proceed if already saved in a session file
+        3. joins channel_invites where needed
         """
         logger.info(f"SETUP {self.name} checking login...")
+
+        # make a copy of the session that is used exclusively with this archiver instance
+        new_session_file = os.path.join("secrets/", f"telethon-{time.strftime('%Y-%m-%d')}{random_str(8)}.session")
+        shutil.copy(self.session_file + ".session", new_session_file)
+        self.session_file = new_session_file
+
+        # initiate the client
+        self.client = TelegramClient(self.session_file, self.api_id, self.api_hash)
+        
         with self.client.start():
             logger.success(f"SETUP {self.name} login works.")
 
@@ -88,6 +98,11 @@ class TelethonArchiver(Archiver):
                         logger.warning(f"Invalid invite link {invite}")
                     i += 1
                     pbar.update()
+
+    def cleanup(self) -> None:
+        logger.info(f"CLEANUP {self.name}.")
+        if os.path.exists(self.session_file):
+            os.remove(self.session_file)
 
     def download(self, item: Metadata) -> Metadata:
         """

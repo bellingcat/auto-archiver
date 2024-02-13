@@ -1,10 +1,12 @@
 
+import shutil
 from telethon.sync import TelegramClient
 from loguru import logger
 import time, os
 from sqlite3 import OperationalError
 from . import Archiver
 from ..core import Metadata, Media, ArchivingContext
+from ..utils import random_str
 
 
 class InstagramTbotArchiver(Archiver):
@@ -20,10 +22,6 @@ class InstagramTbotArchiver(Archiver):
         self.assert_valid_string("api_id")
         self.assert_valid_string("api_hash")
         self.timeout = int(self.timeout)
-        try:
-            self.client = TelegramClient(self.session_file, self.api_id, self.api_hash)
-        except OperationalError as e:
-            logger.error(f"Unable to access the {self.session_file} session, please make sure you don't use the same session file here and in telethon_archiver. if you do then disable at least one of the archivers for the 1st time you setup telethon session: {e}")
 
     @staticmethod
     def configs() -> dict:
@@ -35,9 +33,31 @@ class InstagramTbotArchiver(Archiver):
         }
 
     def setup(self) -> None:
+        """
+        1. makes a copy of session_file that is removed in cleanup
+        2. checks if the session file is valid
+        """
         logger.info(f"SETUP {self.name} checking login...")
+
+        # make a copy of the session that is used exclusively with this archiver instance
+        new_session_file = os.path.join("secrets/", f"instabot-{time.strftime('%Y-%m-%d')}{random_str(8)}.session")
+        shutil.copy(self.session_file + ".session", new_session_file)
+        self.session_file = new_session_file
+
+
+        try:
+            self.client = TelegramClient(self.session_file, self.api_id, self.api_hash)
+        except OperationalError as e:
+            logger.error(f"Unable to access the {self.session_file} session, please make sure you don't use the same session file here and in telethon_archiver. if you do then disable at least one of the archivers for the 1st time you setup telethon session: {e}")
+
         with self.client.start():
             logger.success(f"SETUP {self.name} login works.")
+
+    def cleanup(self) -> None:
+        logger.info(f"CLEANUP {self.name}.")
+        if os.path.exists(self.session_file):
+            os.remove(self.session_file)
+        
 
     def download(self, item: Metadata) -> Metadata:
         url = item.get_url()
