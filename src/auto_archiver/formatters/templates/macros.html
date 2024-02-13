@@ -18,6 +18,12 @@ No URL available for {{ m.key }}.
         <a href="https://www.bing.com/images/search?view=detailv2&iss=sbi&form=SBIVSP&sbisrc=UrlPaste&q=imgurl:{{ url | quote }}">Bing</a>,&nbsp;
         <a href="https://www.tineye.com/search/?url={{ url | quote }}">Tineye</a>
     </div>
+
+    <div>
+        Image Forensics:&nbsp;
+        <a href="https://fotoforensics.com/?url={{ url | quote }}">FotoForensics</a>,&nbsp;
+        <a href="https://mever.iti.gr/forensics/?image={{ url }}">Media Verification Assistant</a>
+    </div>
     <p></p>
 </div>
 {% elif 'video' in m.mimetype %}
