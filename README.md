@@ -233,12 +233,12 @@ working with docker locally:
     * to use local archive, also create a volume `-v` for it by adding `-v $PWD/local_archive:/app/local_archive`
 
 
-release to docker hub
+manual release to docker hub
   * `docker image tag auto-archiver bellingcat/auto-archiver:latest`
   * `docker push bellingcat/auto-archiver`
 
 #### RELEASE
 * update version in [version.py](src/auto_archiver/version.py)
-* run `bash ./scripts/release.sh` and confirm
-* package is automatically updated in pypi
-* docker image is automatically pushed to dockerhup
+* go to github releases > new release > use `vx.y.z` for matching version notation
+  * package is automatically updated in pypi
+  * docker image is automatically pushed to dockerhup
