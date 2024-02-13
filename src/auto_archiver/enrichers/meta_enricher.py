@@ -19,8 +19,7 @@ class MetaEnricher(Enricher):
 
     @staticmethod
     def configs() -> dict:
-        return {
-        }
+        return {}
 
     def enrich(self, to_enrich: Metadata) -> None:
         logger.debug(f"calculating archive metadata information for url={to_enrich.get_url()}")
@@ -28,13 +27,13 @@ class MetaEnricher(Enricher):
         self.enrich_file_sizes(to_enrich)
         self.enrich_archive_duration(to_enrich)
 
-    def enrich_file_sizes(self, to_enrich):
+    def enrich_file_sizes(self, to_enrich: Metadata):
         logger.debug(f"calculating archive file sizes for url={to_enrich.get_url()} ({len(to_enrich.media)} media files)")
         total_size = 0
-        for i, m in enumerate(to_enrich.media):
-            file_stats = os.stat(m.filename)
-            to_enrich.media[i].set("bytes", file_stats.st_size)
-            to_enrich.media[i].set("size", self.human_readable_bytes(file_stats.st_size))
+        for media in to_enrich.get_all_media():
+            file_stats = os.stat(media.filename)
+            media.set("bytes", file_stats.st_size)
+            media.set("size", self.human_readable_bytes(file_stats.st_size))
             total_size += file_stats.st_size
         
         to_enrich.set("total_bytes", total_size)
