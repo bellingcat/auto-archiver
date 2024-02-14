@@ -30,7 +30,7 @@ class YoutubeDLArchiver(Archiver):
             yt_dlp.utils.std_headers['cookie'] = self.facebook_cookie
 
         ydl_options = {'outtmpl': os.path.join(ArchivingContext.get_tmp_dir(), f'%(id)s.%(ext)s'), 'quiet': False, 'noplaylist': True, 'writesubtitles': self.subtitles, 'writeautomaticsub': self.subtitles}
-        ydl = yt_dlp.YoutubeDL(ydl_options) # allsubtitles not working as expected
+        ydl = yt_dlp.YoutubeDL(ydl_options) # allsubtitles and subtitleslangs not working as expected, so default lang is always "en"
 
         try:
             # don'd download since it can be a live stream
@@ -46,7 +46,7 @@ class YoutubeDLArchiver(Archiver):
             return False
 
         # this time download
-        ydl = yt_dlp.YoutubeDL({**ydl_options, "getcomments": True}) 
+        ydl = yt_dlp.YoutubeDL({**ydl_options, "getcomments": self.comments}) 
         info = ydl.extract_info(url, download=True)
 
         if "entries" in info:
@@ -80,7 +80,7 @@ class YoutubeDLArchiver(Archiver):
             result.set("comments", [{
                 "text": c["text"],
                 "author": c["author"], 
-                "timestamp": datetime.datetime.utcfromtimestamp(c.get("timestamp"))
+                "timestamp": datetime.datetime.utcfromtimestamp(c.get("timestamp")).replace(tzinfo=datetime.timezone.utc)
             } for c in info.get("comments", [])])
 
         if (timestamp := info.get("timestamp")):
