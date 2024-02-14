@@ -12,13 +12,17 @@ class YoutubeDLArchiver(Archiver):
         super().__init__(config)
         self.subtitles = bool(self.subtitles)
         self.comments = bool(self.comments)
+        self.livestreams = bool(self.livestreams)
+        self.live_from_start = bool(self.live_from_start)
 
     @staticmethod
     def configs() -> dict:
         return {
             "facebook_cookie": {"default": None, "help": "optional facebook cookie to have more access to content, from browser, looks like 'cookie: datr= xxxx'"},
             "subtitles": {"default": True, "help": "download subtitles if available"},
-            "comments": {"default": False, "help": "download all comments if available, may lead to large metadata"}
+            "comments": {"default": False, "help": "download all comments if available, may lead to large metadata"},
+            "livestreams": {"default": False, "help": "if set, will download live streams, otherwise will skip them; see --max-filesize for more control"},
+            "live_from_start": {"default": False, "help": "if set, will download live streams from their earliest available moment, otherwise starts now."},
         }
 
     def download(self, item: Metadata) -> Metadata:
@@ -29,20 +33,20 @@ class YoutubeDLArchiver(Archiver):
             logger.debug('Using Facebook cookie')
             yt_dlp.utils.std_headers['cookie'] = self.facebook_cookie
 
-        ydl_options = {'outtmpl': os.path.join(ArchivingContext.get_tmp_dir(), f'%(id)s.%(ext)s'), 'quiet': False, 'noplaylist': True, 'writesubtitles': self.subtitles, 'writeautomaticsub': self.subtitles}
+        ydl_options = {'outtmpl': os.path.join(ArchivingContext.get_tmp_dir(), f'%(id)s.%(ext)s'), 'quiet': False, 'noplaylist': True, 'writesubtitles': self.subtitles, 'writeautomaticsub': self.subtitles, "live_from_start": self.live_from_start}
         ydl = yt_dlp.YoutubeDL(ydl_options) # allsubtitles and subtitleslangs not working as expected, so default lang is always "en"
 
         try:
             # don'd download since it can be a live stream
             info = ydl.extract_info(url, download=False)
-            if info.get('is_live', False):
-                logger.warning("Live streaming media, not archiving now")
+            if info.get('is_live', False) and not self.livestreams:
+                logger.warning("Livestream detected, skipping due to 'livestreams' configuration setting")
                 return False
         except yt_dlp.utils.DownloadError as e:
             logger.debug(f'No video - Youtube normal control flow: {e}')
             return False
         except Exception as e:
-            logger.debug(f'ytdlp exception which is normal for example a facebook page with images only will cause a IndexError: list index out of range. Exception here is: \n  {e}')
+            logger.debug(f'ytdlp exception which is normal for example a facebook page with images only will cause a IndexError: list index out of range. Exception is: \n  {e}')
             return False
 
         # this time download
