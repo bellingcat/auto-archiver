@@ -96,6 +96,11 @@
             overflow: hidden;
             background-color: #f1f1f1;
         }
+
+        .pem-certificate {
+            text-align: left;
+            font-size: small;
+        }
     </style>
 </head>
 
@@ -184,7 +189,45 @@
     <p style="text-align:center;">Made with <a
             href="https://github.com/bellingcat/auto-archiver">bellingcat/auto-archiver</a> v{{ version }}</p>
 </body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/forge/0.10.0/forge.min.js" defer></script>
 <script defer>
+    // partial decode of SSL certificates
+    function decodeCertificate(sslCert) {
+        var cert = forge.pki.certificateFromPem(sslCert);
+        return `PREVIEW:<br/><ul>
+            <li><b>Subject:</b> <span class="copy">${cert.subject.attributes.map(attr => `${attr.shortName}: ${attr.value}`).join(", ")}</span></li>
+            <li><b>Issuer:</b> <span class="copy">${cert.issuer.attributes.map(attr => `${attr.shortName}: ${attr.value}`).join(", ")}</span></li>
+            <li><b>Valid From:</b> <span class="copy">${cert.validity.notBefore}</span></li>
+            <li><b>Valid To:</b> <span class="copy">${cert.validity.notAfter}</span></li>
+            <li><b>Serial Number:</b> <span class="copy">${cert.serialNumber}</span></li>
+        </ul>`;
+    }
+
+    async function run() {
+        await PreviewCertificates();
+        await enableCopyLogic();
+        await enableCollapsibleLogic();
+        await setupSafeView();
+    }
+
+    async function PreviewCertificates() {
+        await Promise.all(
+            Array.from(document.querySelectorAll(".pem-certificate")).map(async el => {
+                let certificate = await (await fetch(el.getAttribute("pem"))).text();
+                el.innerHTML = decodeCertificate(certificate);
+
+                let cyberChefUrl =
+                    `https://gchq.github.io/CyberChef/#recipe=Parse_X.509_certificate('PEM')&input=${btoa(certificate)}`;
+                // create a new anchor with this url and append after the code
+                let a = document.createElement("a");
+                a.href = cyberChefUrl;
+                a.textContent = "Full certificate details";
+                el.parentElement.appendChild(a);
+            })
+        );
+        console.log("certificate preview done");
+    }
+
     // notification logic
     const notification = document.getElementById("notification");
 
@@ -198,83 +241,95 @@
     }
 
     // copy logic
-    Array.from(document.querySelectorAll(".copy")).forEach(el => {
-        el.onclick = () => {
-            document.execCommand("copy");
-        }
-        el.addEventListener("copy", (e) => {
-            e.preventDefault();
-            if (e.clipboardData) {
-                if (el.hasAttribute("copy-value")) {
-                    e.clipboardData.setData("text/plain", el.getAttribute("copy-value"));
-                } else {
-                    e.clipboardData.setData("text/plain", el.textContent);
+    async function enableCopyLogic() {
+        await Promise.all(
+            Array.from(document.querySelectorAll(".copy")).map(el => {
+                el.onclick = () => {
+                    document.execCommand("copy");
                 }
-                console.log(e.clipboardData.getData("text"))
-                showNotification("copied!")
-            }
-        })
-    })
+                el.addEventListener("copy", (e) => {
+                    e.preventDefault();
+                    if (e.clipboardData) {
+                        if (el.hasAttribute("copy-value")) {
+                            e.clipboardData.setData("text/plain", el.getAttribute("copy-value"));
+                        } else {
+                            e.clipboardData.setData("text/plain", el.textContent);
+                        }
+                        console.log(e.clipboardData.getData("text"))
+                        showNotification("copied!")
+                    }
+                })
+            })
+        )
+        console.log("copy logic enabled");
+    }
 
     // collapsibles
-    let coll = document.getElementsByClassName("collapsible");
-    let i;
-
-    for (i = 0; i < coll.length; i++) {
-        coll[i].addEventListener("click", function () {
-            this.classList.toggle("active");
-            // let content = this.nextElementSibling;
-            let content = this.parentElement.querySelector(".collapsible-content");
-            if (content.style.display === "block") {
-                content.style.display = "none";
-            } else {
-                content.style.display = "block";
-            }
-        });
+    async function enableCollapsibleLogic() {
+        let coll = document.getElementsByClassName("collapsible");
+        for (let i = 0; i < coll.length; i++) {
+            await new Promise(resolve => {
+                coll[i].addEventListener("click", function () {
+                    this.classList.toggle("active");
+                    // let content = this.nextElementSibling;
+                    let content = this.parentElement.querySelector(".collapsible-content");
+                    if (content.style.display === "block") {
+                        content.style.display = "none";
+                    } else {
+                        content.style.display = "block";
+                    }
+                });
+                resolve();
+            })
+        }
+        console.log("collapsible logic enabled");
     }
 
-    // logic for enabled/disabled greyscale
-    // Get references to the checkboxes and images/videos
-    const safeImageViewCheckbox = document.getElementById('safe-media-view');
-    const imagesVideos = document.querySelectorAll('img, video');
+    async function setupSafeView() {
+        // logic for enabled/disabled greyscale
+        // Get references to the checkboxes and images/videos
+        const safeImageViewCheckbox = document.getElementById('safe-media-view');
+        const imagesVideos = document.querySelectorAll('img, video');
 
-    // Function to toggle grayscale effect
-    function toggleGrayscale() {
+        // Function to toggle grayscale effect
+        function toggleGrayscale() {
+            imagesVideos.forEach(element => {
+                if (safeImageViewCheckbox.checked) {
+                    // Enable grayscale effect
+                    element.style.filter = 'grayscale(1)';
+                    element.style.webkitFilter = 'grayscale(1)';
+                } else {
+                    // Disable grayscale effect
+                    element.style.filter = 'none';
+                    element.style.webkitFilter = 'none';
+                }
+            });
+        }
+
+        // Add event listener to the checkbox to trigger the toggleGrayscale function
+        safeImageViewCheckbox.addEventListener('change', toggleGrayscale);
+
+        // Handle the hover effect using JavaScript
         imagesVideos.forEach(element => {
-            if (safeImageViewCheckbox.checked) {
-                // Enable grayscale effect
-                element.style.filter = 'grayscale(1)';
-                element.style.webkitFilter = 'grayscale(1)';
-            } else {
-                // Disable grayscale effect
+            element.addEventListener('mouseenter', () => {
+                // Disable grayscale effect on hover
                 element.style.filter = 'none';
                 element.style.webkitFilter = 'none';
-            }
+            });
+
+            element.addEventListener('mouseleave', () => {
+                // Re-enable grayscale effect if checkbox is checked
+                if (safeImageViewCheckbox.checked) {
+                    element.style.filter = 'grayscale(1)';
+                    element.style.webkitFilter = 'grayscale(1)';
+                }
+            });
         });
+        toggleGrayscale();
+        console.log("grayscale logic enabled");
     }
 
-    // Add event listener to the checkbox to trigger the toggleGrayscale function
-    safeImageViewCheckbox.addEventListener('change', toggleGrayscale);
-
-    // Handle the hover effect using JavaScript
-    imagesVideos.forEach(element => {
-        element.addEventListener('mouseenter', () => {
-            // Disable grayscale effect on hover
-            element.style.filter = 'none';
-            element.style.webkitFilter = 'none';
-        });
-
-        element.addEventListener('mouseleave', () => {
-            // Re-enable grayscale effect if checkbox is checked
-            if (safeImageViewCheckbox.checked) {
-                element.style.filter = 'grayscale(1)';
-                element.style.webkitFilter = 'grayscale(1)';
-            }
-        });
-    });
-
-    // Call the function on page load to apply the initial state
-    toggleGrayscale();
+    run();
 </script>
 
 </html>

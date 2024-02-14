@@ -37,6 +37,7 @@ numpy = "*"
 warcio = "*"
 jsonlines = "*"
 pysubs2 = "*"
+minify-html = "*"
 
 [dev-packages]
 autopep8 = "*"

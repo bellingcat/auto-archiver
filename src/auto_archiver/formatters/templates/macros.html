@@ -41,6 +41,10 @@ No URL available for {{ m.key }}.
 </div>
 {% elif m.filename | get_extension == ".wacz" %}
 <a href="https://replayweb.page/?source={{ url | quote }}#view=pages&url={{ main_url }}">replayweb</a>
+
+{% elif m.filename | get_extension == ".pem" %}
+<code class="pem-certificate" pem="{{url}}"></code>
+
 {% else %}
 No preview available for {{ m.key }}.
 {% endif %}
