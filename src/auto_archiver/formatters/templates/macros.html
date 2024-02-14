@@ -60,7 +60,12 @@ No preview available for {{ m.key }}.
 
 {% macro copy_urlize(val, href_text) -%}
 
-{% if val is mapping %}
+{% if val | is_list %}
+    {% for item in val %}
+    {{ copy_urlize(item) }}
+    {% endfor %}
+
+{% elif val is mapping %}
 <ul>
     {% for key in val %}
     <li>
@@ -70,7 +75,7 @@ No preview available for {{ m.key }}.
 </ul>
 
 {% else %}
-{% if href_text  | length == 0 %}
+{% if href_text | length == 0 %}
 <span class="copy">{{ val | string | urlize }}</span>
 {% else %}
 <span class="copy" copy-value="{{val}}">{{ href_text | string | urlize }}</span>

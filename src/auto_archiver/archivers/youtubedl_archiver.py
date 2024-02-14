@@ -1,4 +1,4 @@
-import datetime, os, yt_dlp
+import datetime, os, yt_dlp, pysubs2
 from loguru import logger
 
 from . import Archiver
@@ -10,11 +10,15 @@ class YoutubeDLArchiver(Archiver):
 
     def __init__(self, config: dict) -> None:
         super().__init__(config)
+        self.subtitles = bool(self.subtitles)
+        self.comments = bool(self.comments)
 
     @staticmethod
     def configs() -> dict:
         return {
             "facebook_cookie": {"default": None, "help": "optional facebook cookie to have more access to content, from browser, looks like 'cookie: datr= xxxx'"},
+            "subtitles": {"default": True, "help": "download subtitles if available"},
+            "comments": {"default": False, "help": "download all comments if available, may lead to large metadata"}
         }
 
     def download(self, item: Metadata) -> Metadata:
@@ -25,7 +29,8 @@ class YoutubeDLArchiver(Archiver):
             logger.debug('Using Facebook cookie')
             yt_dlp.utils.std_headers['cookie'] = self.facebook_cookie
 
-        ydl = yt_dlp.YoutubeDL({'outtmpl': os.path.join(ArchivingContext.get_tmp_dir(), f'%(id)s.%(ext)s'), 'quiet': False, 'noplaylist': True})
+        ydl_options = {'outtmpl': os.path.join(ArchivingContext.get_tmp_dir(), f'%(id)s.%(ext)s'), 'quiet': False, 'noplaylist': True, 'writesubtitles': self.subtitles, 'writeautomaticsub': self.subtitles}
+        ydl = yt_dlp.YoutubeDL(ydl_options) # allsubtitles not working as expected
 
         try:
             # don'd download since it can be a live stream
@@ -41,7 +46,9 @@ class YoutubeDLArchiver(Archiver):
             return False
 
         # this time download
+        ydl = yt_dlp.YoutubeDL({**ydl_options, "getcomments": True}) 
         info = ydl.extract_info(url, download=True)
+
         if "entries" in info:
             entries = info.get("entries", [])
             if not len(entries):
@@ -55,7 +62,26 @@ class YoutubeDLArchiver(Archiver):
             filename = ydl.prepare_filename(entry)
             if not os.path.exists(filename):
                 filename = filename.split('.')[0] + '.mkv'
-            result.add_media(Media(filename).set("duration", info.get("duration")))
+            new_media = Media(filename).set("duration", info.get("duration"))
+            
+            # read text from subtitles if enabled
+            if self.subtitles:
+                for lang, val in info.get('requested_subtitles', {}).items():
+                    try:    
+                        subs = pysubs2.load(val.get('filepath'), encoding="utf-8")
+                        text = " ".join([line.text for line in subs])
+                        new_media.set(f"subtitles_{lang}", text)
+                    except Exception as e:
+                        logger.error(f"Error loading subtitle file {val.get('filepath')}: {e}")
+            result.add_media(new_media)
+
+        # extract comments if enabled
+        if self.comments:
+            result.set("comments", [{
+                "text": c["text"],
+                "author": c["author"], 
+                "timestamp": datetime.datetime.utcfromtimestamp(c.get("timestamp"))
+            } for c in info.get("comments", [])])
 
         if (timestamp := info.get("timestamp")):
             timestamp = datetime.datetime.utcfromtimestamp(timestamp).replace(tzinfo=datetime.timezone.utc).isoformat()
