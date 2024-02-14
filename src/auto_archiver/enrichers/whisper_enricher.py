@@ -10,7 +10,7 @@ from ..storages import S3Storage
 class WhisperEnricher(Enricher):
     """
     Connects with a Whisper API service to get texts out of audio
-    whisper API repository: TODO
+    whisper API repository: https://github.com/bellingcat/whisperbox-transcribe/
     Only works if an S3 compatible storage is used
     """
     name = "whisper_enricher"
