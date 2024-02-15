@@ -90,7 +90,7 @@ class TwitterApiArchiver(TwitterArchiver, Archiver):
                     continue
                 logger.info(f"Found media {media}")
                 ext = mimetypes.guess_extension(mimetype)
-                media.filename = self.download_from_url(media.get("src"), f'{slugify(url)}_{i}{ext}', item)
+                media.filename = self.download_from_url(media.get("src"), f'{slugify(url)}_{i}{ext}')
                 result.add_media(media)
 
         result.set_content(json.dumps({

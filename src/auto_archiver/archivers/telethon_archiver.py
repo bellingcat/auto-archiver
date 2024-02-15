@@ -152,7 +152,7 @@ class TelethonArchiver(Archiver):
                     if len(other_media_urls):
                         logger.debug(f"Got {len(other_media_urls)} other media urls from {mp.id=}: {other_media_urls}")
                     for i, om_url in enumerate(other_media_urls):
-                        filename = self.download_from_url(om_url, f'{chat}_{group_id}_{i}', item)
+                        filename = self.download_from_url(om_url, f'{chat}_{group_id}_{i}')
                         result.add_media(Media(filename=filename), id=f"{group_id}_{i}")
 
                 filename_dest = os.path.join(tmp_dir, f'{chat}_{group_id}', str(mp.id))

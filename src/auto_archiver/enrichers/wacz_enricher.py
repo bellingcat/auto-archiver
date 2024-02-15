@@ -191,7 +191,7 @@ class WaczArchiverEnricher(Enricher, Archiver):
                 # if a link with better quality exists, try to download that
                 if record_url_best_qual != record_url:
                     try:
-                        m.filename = self.download_from_url(record_url_best_qual, warc_fn, to_enrich)
+                        m.filename = self.download_from_url(record_url_best_qual, warc_fn)
                         m.set("src", record_url_best_qual)
                         m.set("src_alternative", record_url)
                     except Exception as e: logger.warning(f"Unable to download best quality URL for {record_url=} got error {e}, using original in WARC.")

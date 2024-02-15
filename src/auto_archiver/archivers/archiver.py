@@ -41,16 +41,15 @@ class Archiver(Step):
             return mime.split("/")[0]
         return ""
 
-    def download_from_url(self, url: str, to_filename: str = None, item: Metadata = None) -> str:
+    def download_from_url(self, url: str, to_filename: str = None) -> str:
         """
-        downloads a URL to provided filename, or inferred from URL, returns local filename, if item is present will use its tmp_dir
+        downloads a URL to provided filename, or inferred from URL, returns local filename
         """
         if not to_filename:
             to_filename = url.split('/')[-1].split('?')[0]
             if len(to_filename) > 64:
                 to_filename = to_filename[-64:]
-        if item:
-            to_filename = os.path.join(ArchivingContext.get_tmp_dir(), to_filename)
+        to_filename = os.path.join(ArchivingContext.get_tmp_dir(), to_filename)
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36'
         }
