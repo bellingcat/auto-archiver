@@ -15,12 +15,17 @@ class SSLEnricher(Enricher):
 
     def __init__(self, config: dict) -> None:
         super().__init__(config)
+        self. skip_when_nothing_archived = bool(self.skip_when_nothing_archived)
 
     @staticmethod
     def configs() -> dict:
-        return {}
+        return {
+            "skip_when_nothing_archived": {"default": True, "help": "if true, will skip enriching when no media is archived"},
+        }
 
     def enrich(self, to_enrich: Metadata) -> None:
+        if not to_enrich.media and self.skip_when_nothing_archived: return
+        
         url = to_enrich.get_url()
         domain = urlparse(url).netloc
         logger.debug(f"fetching SSL certificate for {domain=} in {url=}")
