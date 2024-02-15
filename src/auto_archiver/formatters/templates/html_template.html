@@ -180,13 +180,16 @@
         <tr>
             <td>{{ key }}</td>
             <td>
+                {% if metadata[key] is mapping %}
+                <div class="center copy" copy-value64='{{metadata[key] | json_dump_b64}}'>Copy as JSON</div>
+                {% endif %}
                 {{ macros.copy_urlize(metadata[key]) }}
             </td>
         </tr>
         {% endfor %}
     </table>
 
-    <p style="text-align:center;">Made with <a
+    <p class="center">Made with <a
             href="https://github.com/bellingcat/auto-archiver">bellingcat/auto-archiver</a> v{{ version }}</p>
 </body>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/forge/0.10.0/forge.min.js" defer></script>
@@ -194,7 +197,7 @@
     // partial decode of SSL certificates
     function decodeCertificate(sslCert) {
         var cert = forge.pki.certificateFromPem(sslCert);
-        return `PREVIEW:<br/><ul>
+        return `SSL CERTIFICATE PREVIEW:<br/><ul>
             <li><b>Subject:</b> <span class="copy">${cert.subject.attributes.map(attr => `${attr.shortName}: ${attr.value}`).join(", ")}</span></li>
             <li><b>Issuer:</b> <span class="copy">${cert.issuer.attributes.map(attr => `${attr.shortName}: ${attr.value}`).join(", ")}</span></li>
             <li><b>Valid From:</b> <span class="copy">${cert.validity.notBefore}</span></li>
@@ -252,6 +255,9 @@
                     if (e.clipboardData) {
                         if (el.hasAttribute("copy-value")) {
                             e.clipboardData.setData("text/plain", el.getAttribute("copy-value"));
+                        } else if (el.hasAttribute("copy-value64")) {
+                            // TODO: figure out how to decode unicode chars into utf-8
+                            e.clipboardData.setData("text/plain", new String(atob(el.getAttribute("copy-value64"))));
                         } else {
                             e.clipboardData.setData("text/plain", el.textContent);
                         }
