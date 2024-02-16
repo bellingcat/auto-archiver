@@ -22,8 +22,13 @@ class MetaEnricher(Enricher):
         return {}
 
     def enrich(self, to_enrich: Metadata) -> None:
-        logger.debug(f"calculating archive metadata information for url={to_enrich.get_url()}")
+        url = to_enrich.get_url()
+        if to_enrich.is_empty():
+            logger.debug(f"[SKIP] META_ENRICHER there is no media or metadata to enrich: {url=}")
+            return
 
+        logger.debug(f"calculating archive metadata information for {url=}")
+        
         self.enrich_file_sizes(to_enrich)
         self.enrich_archive_duration(to_enrich)
 
