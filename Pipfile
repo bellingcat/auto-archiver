@@ -38,6 +38,7 @@ warcio = "*"
 jsonlines = "*"
 pysubs2 = "*"
 minify-html = "*"
+retrying = "*"
 
 [dev-packages]
 autopep8 = "*"
