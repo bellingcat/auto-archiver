@@ -135,7 +135,7 @@
                         {% if m.properties[prop] | is_list %}
                         <p></p>
                         <div>
-                            <b class="collapsible" title="expand">{{ prop }}:</b>
+                            <b class="collapsible" title="expand">{{ prop }} ({{ m.properties[prop] | length }}):</b>
                             <p></p>
                             <div class="collapsible-content">
                                 {% for subprop in m.properties[prop] %}
@@ -150,7 +150,7 @@
                                 </ul>
 
                                 {% else %}
-                                {{ subprop }}
+                                {{ macros.copy_urlize(subprop) }}
                                 {% endif %}
                                 {% endfor %}
                             </div>
@@ -189,10 +189,10 @@
         {% endfor %}
     </table>
 
-    <p class="center">Made with <a
-            href="https://github.com/bellingcat/auto-archiver">bellingcat/auto-archiver</a> v{{ version }}</p>
+    <p class="center">Made with <a href="https://github.com/bellingcat/auto-archiver">bellingcat/auto-archiver</a>
+        v{{ version }}</p>
 </body>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/forge/0.10.0/forge.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/forge/0.10.0/forge.min.js"></script>
 <script defer>
     // partial decode of SSL certificates
     function decodeCertificate(sslCert) {
@@ -257,7 +257,8 @@
                             e.clipboardData.setData("text/plain", el.getAttribute("copy-value"));
                         } else if (el.hasAttribute("copy-value64")) {
                             // TODO: figure out how to decode unicode chars into utf-8
-                            e.clipboardData.setData("text/plain", new String(atob(el.getAttribute("copy-value64"))));
+                            e.clipboardData.setData("text/plain", new String(atob(el.getAttribute(
+                                "copy-value64"))));
                         } else {
                             e.clipboardData.setData("text/plain", el.textContent);
                         }
