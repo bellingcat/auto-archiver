@@ -75,7 +75,6 @@ class Metadata:
         return "success" in self.status
 
     def is_empty(self) -> bool:
-        logger.debug(f"{self.metadata.keys()=}")
         meaningfull_ids = set(self.metadata.keys()) - set(["_processed_at", "url", "total_bytes", "total_size", "archive_duration_seconds"])
         return not self.is_success() and len(self.media) == 0 and len(meaningfull_ids) == 0
 
