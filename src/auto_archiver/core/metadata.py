@@ -54,6 +54,12 @@ class Metadata:
         self.metadata[key] = val
         return self
 
+    def append(self, key: str, val: Any) -> Metadata:
+        if key not in self.metadata:
+            self.metadata[key] = []    
+        self.metadata[key] = val
+        return self
+
     def get(self, key: str, default: Any = None, create_if_missing=False) -> Union[Metadata, str]:
         # goes through metadata and returns the Metadata available
         if create_if_missing and key not in self.metadata:
@@ -69,7 +75,9 @@ class Metadata:
         return "success" in self.status
 
     def is_empty(self) -> bool:
-        return not self.is_success() and len(self.media) == 0 and len(self.metadata) <= 2  # url, processed_at
+        logger.debug(f"{self.metadata.keys()=}")
+        meaningfull_ids = set(self.metadata.keys()) - set(["_processed_at", "url", "total_bytes", "total_size", "archive_duration_seconds"])
+        return not self.is_success() and len(self.media) == 0 and len(meaningfull_ids) == 0
 
     @property  # getter .netloc
     def netloc(self) -> str:
