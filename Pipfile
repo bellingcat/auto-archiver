@@ -39,6 +39,7 @@ jsonlines = "*"
 pysubs2 = "*"
 minify-html = "*"
 retrying = "*"
+tsp-client = "*"
 
 [dev-packages]
 autopep8 = "*"

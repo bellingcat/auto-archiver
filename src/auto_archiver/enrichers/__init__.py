@@ -9,4 +9,4 @@ from .pdq_hash_enricher import PdqHashEnricher
 from .metadata_enricher import MetadataEnricher
 from .meta_enricher import MetaEnricher
 from .ssl_enricher import SSLEnricher
-from .freetsa_enricher import FreeTSAEnricher
+from .timestamping_enricher import TimestampingEnricher

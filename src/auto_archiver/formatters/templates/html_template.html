@@ -97,9 +97,14 @@
             background-color: #f1f1f1;
         }
 
-        .pem-certificate {
+        .pem-certificate, .text-preview {
             text-align: left;
             font-size: small;
+        }
+        .text-preview{
+            padding-left: 10px;
+            padding-right: 10px;
+            white-space: pre-wrap;
         }
     </style>
 </head>
@@ -138,7 +143,9 @@
                             <b class="collapsible" title="expand">{{ prop }} ({{ m.properties[prop] | length }}):</b>
                             <p></p>
                             <div class="collapsible-content">
+
                                 {% for subprop in m.properties[prop] %}
+
                                 {% if subprop | is_media %}
                                 {{ macros.display_media(subprop, true, url) }}
 
@@ -150,6 +157,11 @@
                                 </ul>
 
                                 {% else %}
+
+                                {% if subprop is mapping %}
+                                <div class="center copy" copy-value64='{{subprop | json_dump_b64}}'>Copy as JSON</div>
+                                {% endif %}
+                                
                                 {{ macros.copy_urlize(subprop) }}
                                 {% endif %}
                                 {% endfor %}
@@ -208,6 +220,7 @@
 
     async function run() {
         await PreviewCertificates();
+        await PreviewText();
         await enableCopyLogic();
         await enableCollapsibleLogic();
         await setupSafeView();
@@ -229,6 +242,16 @@
             })
         );
         console.log("certificate preview done");
+    }
+
+    async function PreviewText() {
+        await Promise.all(
+            Array.from(document.querySelectorAll(".text-preview")).map(async el => {
+                let textContent = await (await fetch(el.getAttribute("url"))).text();
+                el.textContent = textContent;
+            })
+        );
+        console.log("text preview done");
     }
 
     // notification logic

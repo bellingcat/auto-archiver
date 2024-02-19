@@ -45,6 +45,9 @@ No URL available for {{ m.key }}.
 {% elif m.filename | get_extension == ".pem" %}
 <code class="pem-certificate" pem="{{url}}"></code>
 
+{% elif 'text' in m.mimetype %}
+<div>PREVIEW:<br/><code><pre class="text-preview" url="{{url}}"></pre></code></div>
+
 {% else %}
 No preview available for {{ m.key }}.
 {% endif %}
