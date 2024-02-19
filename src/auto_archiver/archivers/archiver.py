@@ -44,7 +44,7 @@ class Archiver(Step):
         return ""
 
     @retry(wait_random_min=500, wait_random_max=3500, stop_max_attempt_number=5)
-    def download_from_url(self, url: str, to_filename: str = None) -> str:
+    def download_from_url(self, url: str, to_filename: str = None, verbose=True) -> str:
         """
         downloads a URL to provided filename, or inferred from URL, returns local filename
         """
@@ -53,7 +53,7 @@ class Archiver(Step):
             if len(to_filename) > 64:
                 to_filename = to_filename[-64:]
         to_filename = os.path.join(ArchivingContext.get_tmp_dir(), to_filename)
-        logger.debug(f"downloading {url[0:50]=} {to_filename=}")
+        if verbose: logger.debug(f"downloading {url[0:50]=} {to_filename=}")
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36'
         }
