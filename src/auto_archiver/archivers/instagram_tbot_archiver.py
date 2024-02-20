@@ -44,7 +44,6 @@ class InstagramTbotArchiver(Archiver):
         shutil.copy(self.session_file + ".session", new_session_file)
         self.session_file = new_session_file
 
-
         try:
             self.client = TelegramClient(self.session_file, self.api_id, self.api_hash)
         except OperationalError as e:
@@ -58,7 +57,6 @@ class InstagramTbotArchiver(Archiver):
         if os.path.exists(self.session_file):
             os.remove(self.session_file)
         
-
     def download(self, item: Metadata) -> Metadata:
         url = item.get_url()
         if not "instagram.com" in url: return False

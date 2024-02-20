@@ -30,7 +30,7 @@ class InstagramAPIArchiver(Archiver):
     @staticmethod
     def configs() -> dict:
         return {
-            "access_token": {"default": None, "help": "a valid hikerapi token"},
+            "access_token": {"default": None, "help": "a valid instagrapi-api token"},
             "api_endpoint": {"default": None, "help": "API endpoint to use"},
             "full_profile": {"default": False, "help": "if true, will download all posts, tagged posts, stories, and highlights for a profile, if false, will only download the profile pic and information."},
             "minimize_json_output": {"default": True, "help": "if true, will remove empty values from the json output"},
@@ -128,7 +128,7 @@ class InstagramAPIArchiver(Archiver):
             post = self.call_api(f"v1/media/by/id", {"id": id})
         else:
             post = self.call_api(f"v1/media/by/code", {"code": code})
-        assert post, f"Post {code} not found"
+        assert post, f"Post {id or code} not found"
 
         if caption_text := post.get("caption_text"):
             result.set_title(caption_text)
