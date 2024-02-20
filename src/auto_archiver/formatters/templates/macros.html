@@ -49,7 +49,7 @@ No URL available for {{ m.key }}.
 <div>PREVIEW:<br/><code><pre class="text-preview" url="{{url}}"></pre></code></div>
 
 {% else %}
-No preview available for {{ m.key }}.
+No preview available for <code>{{ m.key }}</code>.
 {% endif %}
 {% else %}
 {{ m.url | urlize }}
@@ -89,4 +89,37 @@ No preview available for {{ m.key }}.
 {% endif %}
 {% endif %}
 
+{%- endmacro -%}
+
+
+{% macro display_recursive(prop) -%}
+    {% if prop is mapping %}
+    <div class="center copy" copy-value64='{{prop | json_dump_b64}}'>Copy as JSON</div>
+    <ul>
+        {% for subprop in prop %}
+            <li>
+                <b>{{ subprop }}:</b>
+                {{ display_recursive(prop[subprop]) }}
+            </li>
+        {% endfor %}
+    </ul>
+
+    {% elif prop | is_list %}
+        {% for item in prop %}
+            <li>
+                {{ display_recursive(item) }}
+            </li>
+        {% endfor %}
+    {% elif prop | is_media %}
+        {{ display_media(prop, true) }}
+        <ul>
+            <li><b>type:</b> <span class="copy">{{ prop.mimetype }}</span></li>
+            {% for subprop in prop.properties %}
+            <li><b>{{ subprop }}:</b>
+                {{ display_recursive(prop.properties[subprop]) }}</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        {{ copy_urlize(prop) }}
+    {% endif %}
 {%- endmacro -%}

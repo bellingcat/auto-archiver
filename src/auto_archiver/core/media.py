@@ -44,10 +44,14 @@ class Media:
         """
         if include_self: yield self
         for prop in self.properties.values():
-            if isinstance(prop, Media): yield prop
+            if isinstance(prop, Media): 
+                for inner_media in prop.all_inner_media(include_self=True):
+                    yield inner_media
             if isinstance(prop, list):
                 for prop_media in prop:
-                    if isinstance(prop_media, Media): yield prop_media
+                    if isinstance(prop_media, Media): 
+                        for inner_media in prop_media.all_inner_media(include_self=True):
+                            yield inner_media
 
     def is_stored(self) -> bool:
         return len(self.urls) > 0 and len(self.urls) == len(ArchivingContext.get("storages"))

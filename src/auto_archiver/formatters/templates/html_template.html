@@ -145,25 +145,7 @@
                             <div class="collapsible-content">
 
                                 {% for subprop in m.properties[prop] %}
-
-                                {% if subprop | is_media %}
-                                {{ macros.display_media(subprop, true, url) }}
-
-                                <ul>
-                                    {% for subprop_prop in subprop.properties %}
-                                    <li><b>{{ subprop_prop }}:</b>
-                                        {{ macros.copy_urlize(subprop.properties[subprop_prop]) }}</li>
-                                    {% endfor %}
-                                </ul>
-
-                                {% else %}
-
-                                {% if subprop is mapping %}
-                                <div class="center copy" copy-value64='{{subprop | json_dump_b64}}'>Copy as JSON</div>
-                                {% endif %}
-                                
-                                {{ macros.copy_urlize(subprop) }}
-                                {% endif %}
+                                    {{ macros.display_recursive(subprop) }}
                                 {% endfor %}
                             </div>
                         </div>
