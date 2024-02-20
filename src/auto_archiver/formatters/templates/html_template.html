@@ -177,14 +177,23 @@
     }
 
     async function run() {
-        await PreviewCertificates();
-        await PreviewText();
-        await enableCopyLogic();
-        await enableCollapsibleLogic();
-        await setupSafeView();
+        let setupFunctions = [
+            previewCertificates,
+            previewText,
+            enableCopyLogic,
+            enableCollapsibleLogic,
+            setupSafeView
+        ];
+        setupFunctions.forEach(async f => {
+            try {
+                await f();
+            } catch (e) {
+                console.error(`Error in ${f.name}: ${e}`);
+            }
+        });
     }
 
-    async function PreviewCertificates() {
+    async function previewCertificates() {
         await Promise.all(
             Array.from(document.querySelectorAll(".pem-certificate")).map(async el => {
                 let certificate = await (await fetch(el.getAttribute("pem"))).text();
@@ -202,7 +211,7 @@
         console.log("certificate preview done");
     }
 
-    async function PreviewText() {
+    async function previewText() {
         await Promise.all(
             Array.from(document.querySelectorAll(".text-preview")).map(async el => {
                 let textContent = await (await fetch(el.getAttribute("url"))).text();
