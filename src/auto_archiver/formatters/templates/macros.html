@@ -92,7 +92,7 @@ No preview available for <code>{{ m.key }}</code>.
 {%- endmacro -%}
 
 
-{% macro display_recursive(prop) -%}
+{% macro display_recursive(prop, skip_display) -%}
     {% if prop is mapping %}
     <div class="center copy" copy-value64='{{prop | json_dump_b64}}'>Copy as JSON</div>
     <ul>
@@ -110,14 +110,36 @@ No preview available for <code>{{ m.key }}</code>.
                 {{ display_recursive(item) }}
             </li>
         {% endfor %}
+
+
     {% elif prop | is_media %}
-        {{ display_media(prop, true) }}
+        {% if not skip_display %}
+            {{ display_media(prop, true) }}
+        {% endif %}
         <ul>
+            <li><b>key:</b> <span class="copy">{{ prop.key }}</span></li>
             <li><b>type:</b> <span class="copy">{{ prop.mimetype }}</span></li>
             {% for subprop in prop.properties %}
-            <li><b>{{ subprop }}:</b>
-                {{ display_recursive(prop.properties[subprop]) }}</li>
+                
+
+                {% if prop.properties[subprop] | is_list %}
+                <p></p>
+                <div>
+                    <b class="collapsible" title="expand">{{ subprop }} ({{ prop.properties[subprop] | length }}):</b>
+                    <p></p>
+                    <div class="collapsible-content">
+                        {% for subsubprop in prop.properties[subprop] %}
+                            {{ display_recursive(subsubprop) }}
+                        {% endfor %}
+                    </div>
+                </div>
+                <p></p>
+                {% elif prop.properties[subprop] | string | length > 1 %}
+                <li><b>{{ subprop }}:</b> {{ copy_urlize(prop.properties[subprop]) }}</li>
+                {% endif %}
+
             {% endfor %}
+
         </ul>
     {% else %}
         {{ copy_urlize(prop) }}
