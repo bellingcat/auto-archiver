@@ -53,10 +53,10 @@ class TelegramArchiver(Archiver):
 
             if not len(image_urls): return False
             for img_url in image_urls:
-                result.add_media(Media(self.download_from_url(img_url, item=item)))
+                result.add_media(Media(self.download_from_url(img_url)))
         else:
             video_url = video.get('src')
-            m_video = Media(self.download_from_url(video_url, item=item))
+            m_video = Media(self.download_from_url(video_url))
             # extract duration from HTML
             try:
                 duration = s.find_all('time')[0].contents[0]

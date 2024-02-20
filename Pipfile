@@ -36,6 +36,11 @@ requests = {extras = ["socks"], version = "*"}
 numpy = "*"
 warcio = "*"
 jsonlines = "*"
+pysubs2 = "*"
+minify-html = "*"
+retrying = "*"
+tsp-client = "*"
+certvalidator = "*"
 
 [dev-packages]
 autopep8 = "*"

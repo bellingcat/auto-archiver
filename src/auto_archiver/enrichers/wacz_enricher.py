@@ -31,7 +31,9 @@ class WaczArchiverEnricher(Enricher, Archiver):
             "docker_commands": {"default": None, "help":"if a custom docker invocation is needed"},
             "timeout": {"default": 120, "help": "timeout for WACZ generation in seconds"},
             "extract_media": {"default": False, "help": "If enabled all the images/videos/audio present in the WACZ archive will be extracted into separate Media and appear in the html report. The .wacz file will be kept untouched."},
-            "extract_screenshot": {"default": True, "help": "If enabled the screenshot captured by browsertrix will be extracted into separate Media and appear in the html report. The .wacz file will be kept untouched."}
+            "extract_screenshot": {"default": True, "help": "If enabled the screenshot captured by browsertrix will be extracted into separate Media and appear in the html report. The .wacz file will be kept untouched."},
+            "socks_proxy_host": {"default": None, "help": "SOCKS proxy host for browsertrix-crawler, use in combination with socks_proxy_port. eg: user:password@host"},
+            "socks_proxy_port": {"default": None, "help": "SOCKS proxy port for browsertrix-crawler, use in combination with socks_proxy_host. eg 1234"},
         }
 
     def download(self, item: Metadata) -> Metadata:
@@ -91,7 +93,12 @@ class WaczArchiverEnricher(Enricher, Archiver):
 
         try:
             logger.info(f"Running browsertrix-crawler: {' '.join(cmd)}")
-            subprocess.run(cmd, check=True)
+            if self.socks_proxy_host and self.socks_proxy_port:
+                logger.debug("Using SOCKS proxy for browsertrix-crawler")
+                my_env = os.environ.copy()
+                my_env["SOCKS_HOST"] = self.socks_proxy_host
+                my_env["SOCKS_PORT"] = str(self.socks_proxy_port)
+            subprocess.run(cmd, check=True, env=my_env)
         except Exception as e:
             logger.error(f"WACZ generation failed: {e}")
             return False
@@ -191,7 +198,7 @@ class WaczArchiverEnricher(Enricher, Archiver):
                 # if a link with better quality exists, try to download that
                 if record_url_best_qual != record_url:
                     try:
-                        m.filename = self.download_from_url(record_url_best_qual, warc_fn, to_enrich)
+                        m.filename = self.download_from_url(record_url_best_qual, warc_fn)
                         m.set("src", record_url_best_qual)
                         m.set("src_alternative", record_url)
                     except Exception as e: logger.warning(f"Unable to download best quality URL for {record_url=} got error {e}, using original in WARC.")
