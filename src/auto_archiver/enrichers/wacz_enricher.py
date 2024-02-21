@@ -35,6 +35,18 @@ class WaczArchiverEnricher(Enricher, Archiver):
             "socks_proxy_host": {"default": None, "help": "SOCKS proxy host for browsertrix-crawler, use in combination with socks_proxy_port. eg: user:password@host"},
             "socks_proxy_port": {"default": None, "help": "SOCKS proxy port for browsertrix-crawler, use in combination with socks_proxy_host. eg 1234"},
         }
+    
+    def setup(self) -> None:
+        self.use_docker = os.environ.get('WACZ_ENABLE_DOCKER') or not os.environ.get('RUNNING_IN_DOCKER')
+        self.browsertrix_home_host = os.environ.get('BROWSERTRIX_HOME_HOST')
+        # create crawls folder if not exists, so it can be safely removed in cleanup
+        if self.use_docker and self.browsertrix_home_host:
+            os.makedirs(self.browsertrix_home_host, exist_ok=True)
+
+    def cleanup(self) -> None:
+        if self.use_docker and self.browsertrix_home_host:
+            logger.debug(f"Removing {self.browsertrix_home_host=}")
+            shutil.rmtree(self.browsertrix_home_host, ignore_errors=True)
 
     def download(self, item: Metadata) -> Metadata:
         # this new Metadata object is required to avoid duplication
@@ -51,7 +63,7 @@ class WaczArchiverEnricher(Enricher, Archiver):
         url = to_enrich.get_url()
 
         collection = random_str(8)
-        browsertrix_home_host = os.environ.get('BROWSERTRIX_HOME_HOST') or os.path.abspath(ArchivingContext.get_tmp_dir())
+        browsertrix_home_host = self.browsertrix_home_host or os.path.abspath(ArchivingContext.get_tmp_dir())
         browsertrix_home_container = os.environ.get('BROWSERTRIX_HOME_CONTAINER') or browsertrix_home_host
 
         cmd = [
@@ -69,9 +81,7 @@ class WaczArchiverEnricher(Enricher, Archiver):
             "--timeout", str(self.timeout)]
 
         # call docker if explicitly enabled or we are running on the host (not in docker)
-        use_docker = os.environ.get('WACZ_ENABLE_DOCKER') or not os.environ.get('RUNNING_IN_DOCKER')
-
-        if use_docker:
+        if self.use_docker:
             logger.debug(f"generating WACZ in Docker for {url=}")
             logger.debug(f"{browsertrix_home_host=} {browsertrix_home_container=}")
             if self.docker_commands:
@@ -103,7 +113,7 @@ class WaczArchiverEnricher(Enricher, Archiver):
             logger.error(f"WACZ generation failed: {e}")
             return False
 
-        if use_docker:
+        if self.use_docker:
             wacz_fn = os.path.join(browsertrix_home_container, "collections", collection, f"{collection}.wacz")
         else:
             wacz_fn = os.path.join("collections", collection, f"{collection}.wacz")
@@ -116,7 +126,7 @@ class WaczArchiverEnricher(Enricher, Archiver):
         if self.extract_media or self.extract_screenshot:
             self.extract_media_from_wacz(to_enrich, wacz_fn)
 
-        if use_docker:
+        if self.use_docker:
             jsonl_fn = os.path.join(browsertrix_home_container, "collections", collection, "pages", "pages.jsonl")
         else:
             jsonl_fn = os.path.join("collections", collection, "pages", "pages.jsonl")
