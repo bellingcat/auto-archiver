@@ -23,8 +23,7 @@ class AAApiDb(Database):
     def configs() -> dict:
         return {
             "api_endpoint": {"default": None, "help": "API endpoint where calls are made to"},
-            "api_secret": {"default": None, "help": "API Basic authentication secret [deprecating soon]"},
-            "api_token": {"default": None, "help": "API Bearer token, to be preferred over secret (Basic auth) going forward"},
+            "api_token": {"default": None, "help": "API Bearer token."},
             "public": {"default": False, "help": "whether the URL should be publicly available via the API"},
             "author_id": {"default": None, "help": "which email to assign as author"},
             "group_id": {"default": None, "help": "which group of users have access to the archive in case public=false as author"},
@@ -59,7 +58,7 @@ class AAApiDb(Database):
         logger.debug(f"saving archive of {item.get_url()} to the AA API.")
 
         payload = {'result': item.to_json(), 'public': self.public, 'author_id': self.author_id, 'group_id': self.group_id, 'tags': list(self.tags)}
-        headers = {"Authorization": f"Bearer {self.api_secret}"}
+        headers = {"Authorization": f"Bearer {self.api_token}"}
         response = requests.post(os.path.join(self.api_endpoint, "submit-archive"), json=payload, headers=headers)
 
         if response.status_code == 200:
