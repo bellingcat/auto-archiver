@@ -39,14 +39,19 @@ class WaczArchiverEnricher(Enricher, Archiver):
     def setup(self) -> None:
         self.use_docker = os.environ.get('WACZ_ENABLE_DOCKER') or not os.environ.get('RUNNING_IN_DOCKER')
         self.browsertrix_home_host = os.environ.get('BROWSERTRIX_HOME_HOST')
+        self.browsertrix_home_container = os.environ.get('BROWSERTRIX_HOME_CONTAINER') or self.browsertrix_home_host
         # create crawls folder if not exists, so it can be safely removed in cleanup
-        if self.use_docker and self.browsertrix_home_host:
-            os.makedirs(self.browsertrix_home_host, exist_ok=True)
+        if self.use_docker:
+            if self.browsertrix_home_container:
+                os.makedirs(self.browsertrix_home_container, exist_ok=True)
 
     def cleanup(self) -> None:
-        if self.use_docker and self.browsertrix_home_host:
-            logger.debug(f"Removing {self.browsertrix_home_host=}")
-            shutil.rmtree(self.browsertrix_home_host, ignore_errors=True)
+        if self.use_docker:
+            if self.browsertrix_home_container:
+                logger.debug(f"Removing {self.browsertrix_home_container=}")
+                shutil.rmtree(self.browsertrix_home_container, ignore_errors=True)
+
+
 
     def download(self, item: Metadata) -> Metadata:
         # this new Metadata object is required to avoid duplication
@@ -64,7 +69,7 @@ class WaczArchiverEnricher(Enricher, Archiver):
 
         collection = random_str(8)
         browsertrix_home_host = self.browsertrix_home_host or os.path.abspath(ArchivingContext.get_tmp_dir())
-        browsertrix_home_container = os.environ.get('BROWSERTRIX_HOME_CONTAINER') or browsertrix_home_host
+        browsertrix_home_container = self.browsertrix_home_container or browsertrix_home_host
 
         cmd = [
             "crawl",

@@ -90,7 +90,9 @@ class ArchivingOrchestrator:
         if cached_result:
             logger.debug("Found previously archived entry")
             for d in self.databases:
-                d.done(cached_result, cached=True)
+                try: d.done(cached_result, cached=True)
+                except Exception as e:
+                    logger.error(f"ERROR database {d.name}: {e}: {traceback.format_exc()}")
             return cached_result
 
         # 3 - call archivers until one succeeds
@@ -120,6 +122,9 @@ class ArchivingOrchestrator:
             result.status = "nothing archived"
 
         # signal completion to databases and archivers
-        for d in self.databases: d.done(result)
+        for d in self.databases:
+            try: d.done(result)
+            except Exception as e:
+                logger.error(f"ERROR database {d.name}: {e}: {traceback.format_exc()}")
 
         return result
