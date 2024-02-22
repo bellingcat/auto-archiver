@@ -38,20 +38,19 @@ class WaczArchiverEnricher(Enricher, Archiver):
     
     def setup(self) -> None:
         self.use_docker = os.environ.get('WACZ_ENABLE_DOCKER') or not os.environ.get('RUNNING_IN_DOCKER')
+        self.docker_in_docker = os.environ.get('WACZ_ENABLE_DOCKER') and os.environ.get('RUNNING_IN_DOCKER')
+
+        self.cwd_dind = f"crawls/crawls{random_str(8)}"
         self.browsertrix_home_host = os.environ.get('BROWSERTRIX_HOME_HOST')
         self.browsertrix_home_container = os.environ.get('BROWSERTRIX_HOME_CONTAINER') or self.browsertrix_home_host
         # create crawls folder if not exists, so it can be safely removed in cleanup
-        if self.use_docker:
-            if self.browsertrix_home_container:
-                os.makedirs(self.browsertrix_home_container, exist_ok=True)
+        if self.docker_in_docker:
+            os.makedirs(self.cwd_dind, exist_ok=True)
 
     def cleanup(self) -> None:
-        if self.use_docker:
-            if self.browsertrix_home_container:
-                logger.debug(f"Removing {self.browsertrix_home_container=}")
-                shutil.rmtree(self.browsertrix_home_container, ignore_errors=True)
-
-
+        if self.docker_in_docker:
+            logger.debug(f"Removing {self.cwd_dind=}")
+            shutil.rmtree(self.cwd_dind, ignore_errors=True)
 
     def download(self, item: Metadata) -> Metadata:
         # this new Metadata object is required to avoid duplication
@@ -84,6 +83,9 @@ class WaczArchiverEnricher(Enricher, Archiver):
             "--behaviors", "autoscroll,autoplay,autofetch,siteSpecific",
             "--behaviorTimeout", str(self.timeout),
             "--timeout", str(self.timeout)]
+        
+        if self.docker_in_docker:
+            cmd.extend(["--cwd", self.cwd_dind])
 
         # call docker if explicitly enabled or we are running on the host (not in docker)
         if self.use_docker:
