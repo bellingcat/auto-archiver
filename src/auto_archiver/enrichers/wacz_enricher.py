@@ -40,7 +40,7 @@ class WaczArchiverEnricher(Enricher, Archiver):
         self.use_docker = os.environ.get('WACZ_ENABLE_DOCKER') or not os.environ.get('RUNNING_IN_DOCKER')
         self.docker_in_docker = os.environ.get('WACZ_ENABLE_DOCKER') and os.environ.get('RUNNING_IN_DOCKER')
 
-        self.cwd_dind = f"crawls/crawls{random_str(8)}"
+        self.cwd_dind = f"/crawls/crawls{random_str(8)}"
         self.browsertrix_home_host = os.environ.get('BROWSERTRIX_HOME_HOST')
         self.browsertrix_home_container = os.environ.get('BROWSERTRIX_HOME_CONTAINER') or self.browsertrix_home_host
         # create crawls folder if not exists, so it can be safely removed in cleanup
