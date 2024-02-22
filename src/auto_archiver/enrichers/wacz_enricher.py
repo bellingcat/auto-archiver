@@ -120,7 +120,10 @@ class WaczArchiverEnricher(Enricher, Archiver):
             logger.error(f"WACZ generation failed: {e}")
             return False
 
-        if self.use_docker:
+        
+        if self.docker_in_docker:
+            wacz_fn = os.path.join(self.cwd_dind, "collections", collection, f"{collection}.wacz")
+        elif self.use_docker:
             wacz_fn = os.path.join(browsertrix_home_container, "collections", collection, f"{collection}.wacz")
         else:
             wacz_fn = os.path.join("collections", collection, f"{collection}.wacz")
@@ -133,7 +136,9 @@ class WaczArchiverEnricher(Enricher, Archiver):
         if self.extract_media or self.extract_screenshot:
             self.extract_media_from_wacz(to_enrich, wacz_fn)
 
-        if self.use_docker:
+        if self.docker_in_docker:
+            jsonl_fn = os.path.join(self.cwd_dind, "collections", collection, "pages", "pages.jsonl")
+        elif self.use_docker:
             jsonl_fn = os.path.join(browsertrix_home_container, "collections", collection, "pages", "pages.jsonl")
         else:
             jsonl_fn = os.path.join("collections", collection, "pages", "pages.jsonl")
