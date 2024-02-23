@@ -200,7 +200,7 @@ class InstagramAPIArchiver(Archiver):
         post_count = 0
         while end_cursor != "":
             posts = self.call_api(f"v1/user/medias/chunk", {"user_id": user_id, "end_cursor": end_cursor})
-            if not len(posts): break
+            if not len(posts) or not type(posts) == list or len(posts) != 2: break
             posts, end_cursor = posts[0], posts[1]
             logger.info(f"parsing {len(posts)} posts, next {end_cursor=}")
 
