@@ -102,10 +102,18 @@ class InstagramAPIArchiver(Archiver):
                 logger.error(f"Error downloading stories for {username}: {e}")
 
             # download all posts
-            self.download_all_posts(result, user_id)
+            try:
+                self.download_all_posts(result, user_id)
+            except Exception as e:
+                result.append("errors", f"Error downloading posts for {username}")
+                logger.error(f"Error downloading posts for {username}: {e}")
 
             # download all tagged
-            self.download_all_tagged(result, user_id)
+            try:
+                self.download_all_tagged(result, user_id)
+            except Exception as e:
+                result.append("errors", f"Error downloading tagged posts for {username}")
+                logger.error(f"Error downloading tagged posts for {username}: {e}")
 
             # download all highlights
             try:
@@ -243,8 +251,8 @@ class InstagramAPIArchiver(Archiver):
             if self.minimize_json_output: 
                 del item["clips_metadata"]
 
-        if code := item.get("code"): 
-            result.set("url", f"https://www.instagram.com/p/{code}/")
+        if code := item.get("code") and not result.get("url"): 
+            result.set_url(f"https://www.instagram.com/p/{code}/")
             
         resources = item.get("resources", item.get("carousel_media", []))
         item, media, media_id = self.scrape_media(item, context)
