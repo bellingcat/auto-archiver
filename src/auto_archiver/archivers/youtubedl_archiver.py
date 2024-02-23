@@ -39,7 +39,7 @@ class YoutubeDLArchiver(Archiver):
         ydl = yt_dlp.YoutubeDL(ydl_options) # allsubtitles and subtitleslangs not working as expected, so default lang is always "en"
 
         try:
-            # don'd download since it can be a live stream
+            # don't download since it can be a live stream
             info = ydl.extract_info(url, download=False)
             if info.get('is_live', False) and not self.livestreams:
                 logger.warning("Livestream detected, skipping due to 'livestreams' configuration setting")
@@ -64,13 +64,17 @@ class YoutubeDLArchiver(Archiver):
 
         result = Metadata()
         result.set_title(info.get("title"))
+        if "description" in info: result.set_content(info["description"])
         for entry in entries:
             try:
                 filename = ydl.prepare_filename(entry)
                 if not os.path.exists(filename):
                     filename = filename.split('.')[0] + '.mkv'
-                new_media = Media(filename).set("duration", info.get("duration"))
-                
+
+                new_media = Media(filename)
+                for x in ["duration", "original_url", "fulltitle", "description", "upload_date"]:
+                    if x in entry: new_media.set(x, entry[x])
+
                 # read text from subtitles if enabled
                 if self.subtitles:
                     for lang, val in (info.get('requested_subtitles') or {}).items():
