@@ -22,6 +22,7 @@ class InstagramAPIArchiver(Archiver):
         super().__init__(config)
         self.assert_valid_string("access_token")
         self.assert_valid_string("api_endpoint")
+        self.full_profile_max_posts = int(self.full_profile_max_posts)
         if self.api_endpoint[-1] == "/": self.api_endpoint = self.api_endpoint[:-1]
 
         self.full_profile = bool(self.full_profile)
@@ -33,6 +34,7 @@ class InstagramAPIArchiver(Archiver):
             "access_token": {"default": None, "help": "a valid instagrapi-api token"},
             "api_endpoint": {"default": None, "help": "API endpoint to use"},
             "full_profile": {"default": False, "help": "if true, will download all posts, tagged posts, stories, and highlights for a profile, if false, will only download the profile pic and information."},
+            "full_profile_max_posts": {"default": 0, "help": "Use to limit the number of posts to download when full_profile is true. 0 means no limit. limit is applied softly since posts are fetched in batch, once to: posts, tagged posts, and highlights"},
             "minimize_json_output": {"default": True, "help": "if true, will remove empty values from the json output"},
         }
     
@@ -117,16 +119,7 @@ class InstagramAPIArchiver(Archiver):
 
             # download all highlights
             try:
-                count_highlights = 0
-                highlights = self.call_api(f"v1/user/highlights", {"user_id": user_id})
-                for h in highlights:
-                    try: 
-                        h_info = self._download_highlights_reusable(result, h.get("pk"))
-                        count_highlights += len(h_info.get("items", []))
-                    except Exception as e:
-                        result.append("errors", f"Error downloading highlight id{h.get('pk')} for {username}")
-                        logger.error(f"Error downloading highlight id{h.get('pk')} for {username}: {e}")
-                result.set("#highlights", count_highlights)
+                self.download_all_highlights(result, username, user_id)
             except Exception as e:
                 result.append("errors", f"Error downloading highlights for {username}")
                 logger.error(f"Error downloading highlights for {username}: {e}")
@@ -134,6 +127,21 @@ class InstagramAPIArchiver(Archiver):
 
         result.set_url(url) # reset as scrape_item modifies it
         return result.success("insta profile")
+
+    def download_all_highlights(self, result, username, user_id):
+        count_highlights = 0
+        highlights = self.call_api(f"v1/user/highlights", {"user_id": user_id})
+        for h in highlights:
+            try: 
+                h_info = self._download_highlights_reusable(result, h.get("pk"))
+                count_highlights += len(h_info.get("items", []))
+            except Exception as e:
+                result.append("errors", f"Error downloading highlight id{h.get('pk')} for {username}")
+                logger.error(f"Error downloading highlight id{h.get('pk')} for {username}: {e}")
+            if self.full_profile_max_posts and count_highlights >= self.full_profile_max_posts:
+                logger.info(f"HIGHLIGHTS reached full_profile_max_posts={self.full_profile_max_posts}")
+                break
+        result.set("#highlights", count_highlights)
 
     def download_post(self, result: Metadata, code: str = None, id: str = None, context: str = None) -> Metadata:
         if id:
@@ -211,6 +219,9 @@ class InstagramAPIArchiver(Archiver):
                     logger.error(f"Error downloading post, skipping {p.get('id')}: {e}")
                 pbar.update(1)
                 post_count+=1
+            if self.full_profile_max_posts and post_count >= self.full_profile_max_posts:
+                logger.info(f"POSTS reached full_profile_max_posts={self.full_profile_max_posts}")
+                break
         result.set("#posts", post_count)
         
     def download_all_tagged(self, result: Metadata, user_id: str):
@@ -233,6 +244,9 @@ class InstagramAPIArchiver(Archiver):
                     logger.error(f"Error downloading tagged post, skipping {p.get('id')}: {e}")
                 pbar.update(1)
                 tagged_count+=1
+            if self.full_profile_max_posts and tagged_count >= self.full_profile_max_posts:
+                logger.info(f"TAGS reached full_profile_max_posts={self.full_profile_max_posts}")
+                break
         result.set("#tagged", tagged_count)
 
 
