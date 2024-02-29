@@ -22,7 +22,7 @@ class Database(Step, ABC):
         """signals the DB that the given item archival has started"""
         pass
 
-    def failed(self, item: Metadata) -> None:
+    def failed(self, item: Metadata, reason:str) -> None:
         """update DB accordingly for failure"""
         pass
 

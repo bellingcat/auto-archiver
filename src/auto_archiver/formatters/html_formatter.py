@@ -21,7 +21,7 @@ class HtmlFormatter(Formatter):
     def __init__(self, config: dict) -> None:
         # without this STEP.__init__ is not called
         super().__init__(config)
-        self.environment = Environment(loader=FileSystemLoader(os.path.join(pathlib.Path(__file__).parent.resolve(), "templates/")))
+        self.environment = Environment(loader=FileSystemLoader(os.path.join(pathlib.Path(__file__).parent.resolve(), "templates/")), autoescape=True)
         # JinjaHelper class static methods are added as filters
         self.environment.filters.update({
             k: v.__func__ for k, v in JinjaHelpers.__dict__.items() if isinstance(v, staticmethod)

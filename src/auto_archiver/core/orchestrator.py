@@ -1,5 +1,7 @@
 from __future__ import annotations
 from typing import Generator, Union, List
+from urllib.parse import urlparse
+from ipaddress import ip_address
 
 from .context import ArchivingContext
 
@@ -60,7 +62,9 @@ class ArchivingOrchestrator:
             exit()
         except Exception as e:
             logger.error(f'Got unexpected error on item {item}: {e}\n{traceback.format_exc()}')
-            for d in self.databases: d.failed(item)
+            for d in self.databases:
+                if type(e) == AssertionError: d.failed(item, str(e))
+                else: d.failed(item)
 
 
     def archive(self, result: Metadata) -> Union[Metadata, None]:
@@ -74,6 +78,7 @@ class ArchivingOrchestrator:
             6. Call selected Formatter and store formatted if needed
         """
         original_url = result.get_url()
+        self.assert_valid_url(original_url)
 
         # 1 - sanitize - each archiver is responsible for cleaning/expanding its own URLs
         url = original_url
@@ -128,3 +133,23 @@ class ArchivingOrchestrator:
                 logger.error(f"ERROR database {d.name}: {e}: {traceback.format_exc()}")
 
         return result
+
+    def assert_valid_url(self, url: str) -> bool:
+        """
+        Blocks localhost, private, reserved, and link-local IPs and all non-http/https schemes.
+        """
+        assert url.startswith("http://") or url.startswith("https://"), f"Invalid URL scheme"
+        
+        parsed = urlparse(url)
+        assert parsed.scheme in ["http", "https"], f"Invalid URL scheme"
+        assert parsed.hostname, f"Invalid URL hostname"
+        assert parsed.hostname != "localhost", f"Invalid URL"
+
+        try: # special rules for IP addresses
+            ip = ip_address(parsed.hostname)
+        except ValueError: pass
+        else:
+            assert ip.is_global, f"Invalid IP used"
+            assert not ip.is_reserved, f"Invalid IP used"
+            assert not ip.is_link_local, f"Invalid IP used"
+            assert not ip.is_private, f"Invalid IP used"

@@ -7,6 +7,7 @@ steps:
     # - telegram_archiver
     # - twitter_archiver
     # - twitter_api_archiver
+    # - instagram_api_archiver
     # - instagram_tbot_archiver
     # - instagram_archiver
     # - tiktok_archiver

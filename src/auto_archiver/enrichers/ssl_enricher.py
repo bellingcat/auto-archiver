@@ -27,7 +27,10 @@ class SSLEnricher(Enricher):
         if not to_enrich.media and self.skip_when_nothing_archived: return
         
         url = to_enrich.get_url()
-        domain = urlparse(url).netloc
+        parsed = urlparse(url)
+        assert parsed.scheme in ["https"], f"Invalid URL scheme {url=}"
+        
+        domain = parsed.netloc
         logger.debug(f"fetching SSL certificate for {domain=} in {url=}")
 
         cert = ssl.get_server_certificate((domain, 443))
