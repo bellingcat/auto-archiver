@@ -77,7 +77,7 @@ class ArchivingOrchestrator:
             5. Store all downloaded/generated media
             6. Call selected Formatter and store formatted if needed
         """
-        original_url = result.get_url()
+        original_url = result.get_url().strip()
         self.assert_valid_url(original_url)
 
         # 1 - sanitize - each archiver is responsible for cleaning/expanding its own URLs
