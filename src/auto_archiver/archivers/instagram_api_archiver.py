@@ -186,12 +186,13 @@ class InstagramAPIArchiver(Archiver):
     def download_stories(self, result: Metadata, username: str) -> Metadata:
         now = datetime.now().strftime("%Y-%m-%d_%H-%M")
         stories = self._download_stories_reusable(result, username)
+        if stories == []: return result.success("insta no story")
         result.set_title(f"stories {username} at {now}").set("#stories", len(stories))
         return result.success(f"insta stories {now}")
     
     def _download_stories_reusable(self, result: Metadata, username: str) -> list[dict]:
         stories = self.call_api(f"v1/user/stories/by/username", {"username": username})
-        assert stories, f"Stories for {username} not found"
+        if not stories or not len(stories): return []
         stories = stories[::-1] # newest to oldest
 
         for s in tqdm(stories, desc="downloading stories", unit="story"):

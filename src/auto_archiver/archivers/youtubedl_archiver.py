@@ -56,7 +56,8 @@ class YoutubeDLArchiver(Archiver):
             return False
 
         # this time download
-        ydl = yt_dlp.YoutubeDL({**ydl_options, "getcomments": self.comments}) 
+        ydl = yt_dlp.YoutubeDL({**ydl_options, "getcomments": self.comments})
+        #TODO: for playlist or long lists of videos, how to download one at a time so they can be stored before the next one is downloaded?
         info = ydl.extract_info(url, download=True)
 
         if "entries" in info:
