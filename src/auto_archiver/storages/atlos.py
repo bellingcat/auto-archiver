@@ -34,8 +34,8 @@ class AtlosStorage(Storage):
         requests.post(
             f"{self.atlos_url}/api/v2/source_material/upload/{atlos_id}",
             headers={"Authorization": f"Bearer {self.api_token}"},
-            json={
-                "title": media.key
+            params={
+                "title": media.properties
             },
             files={"file": (os.path.basename(media.filename), open(media.filename, "rb"))},
         ).raise_for_status()
