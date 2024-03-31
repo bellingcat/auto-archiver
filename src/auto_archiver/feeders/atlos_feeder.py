@@ -36,9 +36,10 @@ class AtlosFeeder(Feeder):
             for item in data["results"]:
                 if (
                     item["source_url"] not in [None, ""]
-                    and item["metadata"]
+                    and (item["metadata"]
                     .get("auto_archiver", {})
-                    .get("processed", False) != True
+                    .get("processed", False) != True or True)
+                    and item["visibility"] == "visible"
                 ):
                     yield Metadata().set_url(item["source_url"]).set(
                         "atlos_id", item["id"]

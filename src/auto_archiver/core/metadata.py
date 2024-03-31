@@ -48,7 +48,7 @@ class Metadata:
         self.remove_duplicate_media_by_hash()
         storages = override_storages or ArchivingContext.get("storages")
         for media in self.media:
-            media.store(override_storages=storages, url=self.get_url())
+            media.store(override_storages=storages, url=self.get_url(), metadata=self)
 
     def set(self, key: str, val: Any) -> Metadata:
         self.metadata[key] = val

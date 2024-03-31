@@ -25,10 +25,11 @@ class Media:
     _mimetype: str = None  # eg: image/jpeg
     _stored: bool = field(default=False, repr=False, metadata=config(exclude=lambda _: True))  # always exclude
 
-    def store(self: Media, override_storages: List = None, url: str = "url-not-available"):
-        # stores the media into the provided/available storages [Storage]
-        # repeats the process for its properties, in case they have inner media themselves
-        # for now it only goes down 1 level but it's easy to make it recursive if needed
+    def store(self: Media, override_storages: List = None, url: str = "url-not-available", metadata: Any = None):
+        # 'Any' typing for metadata to avoid circular imports. Stores the media
+        # into the provided/available storages [Storage] repeats the process for
+        # its properties, in case they have inner media themselves for now it
+        # only goes down 1 level but it's easy to make it recursive if needed.
         storages = override_storages or ArchivingContext.get("storages")
         if not len(storages):
             logger.warning(f"No storages found in local context or provided directly for {self.filename}.")
@@ -36,7 +37,7 @@ class Media:
 
         for s in storages:
             for any_media in self.all_inner_media(include_self=True):
-                s.store(any_media, url)
+                s.store(any_media, url, metadata=metadata)
 
     def all_inner_media(self, include_self=False):
         """ Media can be inside media properties, examples include transformations on original media.
