@@ -34,7 +34,6 @@ class AtlosFeeder(Feeder):
             cursor = data["next"]
 
             for item in data["results"]:
-                print(item)
                 if (
                     item["source_url"] not in [None, ""]
                     and (
