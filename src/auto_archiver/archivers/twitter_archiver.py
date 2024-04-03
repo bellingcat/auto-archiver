@@ -130,7 +130,7 @@ class TwitterArchiver(Archiver):
         result.set_title(tweet.get("text")).set_content(json.dumps(tweet, ensure_ascii=False)).set_timestamp(datetime.strptime(tweet["created_at"], "%Y-%m-%dT%H:%M:%S.%fZ"))
         return result.success("twitter-hack")
     
-    def download_ytdl(self, item: Metadata, url:str, tweet_id:str):
+    def download_ytdl(self, item: Metadata, url:str, tweet_id:str) -> Metadata:
         downloader = YoutubeDL()
         tie = TwitterIE(downloader)
         tweet = tie._extract_status(tweet_id)
