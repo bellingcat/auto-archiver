@@ -2,6 +2,8 @@ import re, requests, mimetypes, json
 from datetime import datetime
 from loguru import logger
 from snscrape.modules.twitter import TwitterTweetScraper, Video, Gif, Photo
+from yt_dlp import YoutubeDL
+from yt_dlp.extractor.twitter import TwitterIE
 from slugify import slugify
 
 from . import Archiver
@@ -98,7 +100,9 @@ class TwitterArchiver(Archiver):
 
         hack_url = f"https://cdn.syndication.twimg.com/tweet-result?id={tweet_id}"
         r = requests.get(hack_url)
-        if r.status_code != 200: return False
+        if r.status_code != 200 or r.json()=={}: 
+            logger.warning(f"Failed to get tweet information from {hack_url}, trying ytdl")
+            return self.download_ytdl(item, url, tweet_id)
         tweet = r.json()
 
         urls = []
@@ -108,7 +112,7 @@ class TwitterArchiver(Archiver):
         # 1 tweet has 1 video max
         if "video" in tweet:
             v = tweet["video"]
-            urls.append(self.choose_variant(v.get("variants", [])))
+            urls.append(self.choose_variant(v.get("variants", []))['url'])
 
         logger.debug(f"Twitter hack got {urls=}")
 
@@ -125,6 +129,38 @@ class TwitterArchiver(Archiver):
 
         result.set_title(tweet.get("text")).set_content(json.dumps(tweet, ensure_ascii=False)).set_timestamp(datetime.strptime(tweet["created_at"], "%Y-%m-%dT%H:%M:%S.%fZ"))
         return result.success("twitter-hack")
+    
+    def download_ytdl(self, item: Metadata, url:str, tweet_id:str):
+        downloader = YoutubeDL()
+        tie = TwitterIE(downloader)
+        tweet = tie._extract_status(tweet_id)
+        result = Metadata()
+        result\
+            .set_title(tweet.get('full_text', ''))\
+            .set_content(json.dumps(tweet, ensure_ascii=False))\
+            .set_timestamp(datetime.strptime(tweet["created_at"], "%a %b %d %H:%M:%S %z %Y"))
+        if not tweet.get("entities", {}).get("media"):
+            logger.debug('No media found, archiving tweet text only')
+            return result
+        for i, tw_media in enumerate(tweet["entities"]["media"]):
+            media = Media(filename="")
+            mimetype = ""
+            if tw_media["type"] == "photo":
+                media.set("src", UrlUtil.twitter_best_quality_url(tw_media['media_url_https']))
+                mimetype = "image/jpeg"
+            elif tw_media["type"] == "video":
+                variant = self.choose_variant(tw_media['video_info']['variants'])
+                media.set("src", variant['url'])
+                mimetype = variant['content_type']
+            elif tw_media["type"] == "animated_gif":
+                variant = tw_media['video_info']['variants'][0]
+                media.set("src", variant['url'])
+                mimetype = variant['content_type']
+            ext = mimetypes.guess_extension(mimetype)
+            media.filename = self.download_from_url(media.get("src"), f'{slugify(url)}_{i}{ext}', item)
+            result.add_media(media)
+        return result.success("twitter-ytdl")
+        
 
     def get_username_tweet_id(self, url):
         # detect URLs that we definitely cannot handle
@@ -140,13 +176,13 @@ class TwitterArchiver(Archiver):
         # choosing the highest quality possible
         variant, width, height = None, 0, 0
         for var in variants:
-            if var.get("type", "") == "video/mp4":
-                width_height = re.search(r"\/(\d+)x(\d+)\/", var["src"])
+            if var.get("content_type", "") == "video/mp4":
+                width_height = re.search(r"\/(\d+)x(\d+)\/", var["url"])
                 if width_height:
                     w, h = int(width_height[1]), int(width_height[2])
                     if w > width or h > height:
                         width, height = w, h
-                        variant = var.get("src", variant)
+                        variant = var
             else:
-                variant = var.get("src") if not variant else variant
+                variant = var if not variant else variant
         return variant
