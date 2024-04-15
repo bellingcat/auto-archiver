@@ -120,7 +120,7 @@ class ArchivingOrchestrator:
 
         # 6 - format and store formatted if needed
         if (final_media := self.formatter.format(result)):
-            final_media.store(url=url)
+            final_media.store(url=url, metadata=result)
             result.set_final_media(final_media)
 
         if result.is_empty():
