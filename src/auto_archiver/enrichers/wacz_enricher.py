@@ -75,14 +75,16 @@ class WaczArchiverEnricher(Enricher, Archiver):
             "--url", url,
             "--scopeType", "page",
             "--generateWACZ",
-            "--text",
+            "--text", "to-pages",
             "--screenshot", "fullPage",
             "--collection", collection,
             "--id", collection,
             "--saveState", "never",
             "--behaviors", "autoscroll,autoplay,autofetch,siteSpecific",
             "--behaviorTimeout", str(self.timeout),
-            "--timeout", str(self.timeout)]
+            "--timeout", str(self.timeout),
+            "--blockAds" # TODO: test
+        ]
         
         if self.docker_in_docker:
             cmd.extend(["--cwd", self.cwd_dind])
@@ -110,9 +112,9 @@ class WaczArchiverEnricher(Enricher, Archiver):
 
         try:
             logger.info(f"Running browsertrix-crawler: {' '.join(cmd)}")
+            my_env = os.environ.copy()
             if self.socks_proxy_host and self.socks_proxy_port:
                 logger.debug("Using SOCKS proxy for browsertrix-crawler")
-                my_env = os.environ.copy()
                 my_env["SOCKS_HOST"] = self.socks_proxy_host
                 my_env["SOCKS_PORT"] = str(self.socks_proxy_port)
             subprocess.run(cmd, check=True, env=my_env)
@@ -161,7 +163,7 @@ class WaczArchiverEnricher(Enricher, Archiver):
         """
         Receives a .wacz archive, and extracts all relevant media from it, adding them to to_enrich.
         """
-        logger.info(f"WACZ extract_media flag is set, extracting media from {wacz_filename=}")
+        logger.info(f"WACZ extract_media or extract_screenshot flag is set, extracting media from {wacz_filename=}")
 
         # unzipping the .wacz
         tmp_dir = ArchivingContext.get_tmp_dir()
@@ -182,10 +184,11 @@ class WaczArchiverEnricher(Enricher, Archiver):
         # get media out of .warc
         counter = 0
         seen_urls = set()
+        import json
         with open(warc_filename, 'rb') as warc_stream:
             for record in ArchiveIterator(warc_stream):
                 # only include fetched resources
-                if record.rec_type == "resource" and self.extract_screenshot:  # screenshots
+                if record.rec_type == "resource" and record.content_type == "image/png" and self.extract_screenshot:  # screenshots
                     fn = os.path.join(tmp_dir, f"warc-file-{counter}.png")
                     with open(fn, "wb") as outf: outf.write(record.raw_stream.read())
                     m = Media(filename=fn)
@@ -231,4 +234,4 @@ class WaczArchiverEnricher(Enricher, Archiver):
                 to_enrich.add_media(m, warc_fn)
                 counter += 1
                 seen_urls.add(record_url)
-        logger.info(f"WACZ extract_media finished, found {counter} relevant media file(s)")
+        logger.info(f"WACZ extract_media/extract_screenshot finished, found {counter} relevant media file(s)")
