@@ -28,7 +28,7 @@ class AtlosDb(Database):
     def failed(self, item: Metadata, reason: str) -> None:
         """Update DB accordingly for failure"""
         # If the item has no Atlos ID, there's nothing for us to do
-        if not item.metadata["atlos_id"]:
+        if not item.metadata.get("atlos_id"):
             logger.info(f"Item {item.get_url()} has no Atlos ID, skipping")
             return
 
@@ -58,7 +58,7 @@ class AtlosDb(Database):
     def done(self, item: Metadata, cached: bool = False) -> None:
         """archival result ready - should be saved to DB"""
 
-        if not item.metadata["atlos_id"]:
+        if not item.metadata.get("atlos_id"):
             logger.info(f"Item {item.get_url()} has no Atlos ID, skipping")
             return
 
