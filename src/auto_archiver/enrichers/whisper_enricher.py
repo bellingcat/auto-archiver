@@ -10,7 +10,7 @@ from ..storages import S3Storage
 class WhisperEnricher(Enricher):
     """
     Connects with a Whisper API service to get texts out of audio
-    whisper API repository: TODO
+    whisper API repository: https://github.com/bellingcat/whisperbox-transcribe/
     Only works if an S3 compatible storage is used
     """
     name = "whisper_enricher"
@@ -44,7 +44,7 @@ class WhisperEnricher(Enricher):
         job_results = {}
         for i, m in enumerate(to_enrich.media):
             if m.is_video() or m.is_audio():
-                m.store(url=url)
+                m.store(url=url, metadata=to_enrich)
                 try:
                     job_id = self.submit_job(m)
                     job_results[job_id] = False

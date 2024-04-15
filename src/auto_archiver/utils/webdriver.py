@@ -1,21 +1,24 @@
 from __future__ import annotations
 from selenium import webdriver
 from selenium.common.exceptions import TimeoutException
+from selenium.webdriver.common.proxy import Proxy, ProxyType
 from loguru import logger
 from selenium.webdriver.common.by import By
 import time
 
 
 class Webdriver:
-    def __init__(self, width: int, height: int, timeout_seconds: int, facebook_accept_cookies: bool = False) -> webdriver:
+    def __init__(self, width: int, height: int, timeout_seconds: int, facebook_accept_cookies: bool = False, http_proxy: str = "") -> webdriver:
         self.width = width
         self.height = height
         self.timeout_seconds = timeout_seconds
         self.facebook_accept_cookies = facebook_accept_cookies
+        self.http_proxy = http_proxy
 
     def __enter__(self) -> webdriver:
         options = webdriver.FirefoxOptions()
         options.add_argument("--headless")
+        options.add_argument(f'--proxy-server={self.http_proxy}')
         options.set_preference('network.protocol-handler.external.tg', False)
         try:
             self.driver = webdriver.Firefox(options=options)

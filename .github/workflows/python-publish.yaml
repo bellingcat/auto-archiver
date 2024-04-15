@@ -11,9 +11,6 @@ name: Pypi
 on:
   release:
     types: [published]
-  push:
-    # branches: [ "main" ]
-    tags: [ "v*.*.*" ]
 
 permissions:
   contents: read

@@ -82,7 +82,7 @@ class TwitterArchiver(Archiver):
                 logger.warning(f"Could not get media URL of {tweet_media}")
                 continue
             ext = mimetypes.guess_extension(mimetype)
-            media.filename = self.download_from_url(media.get("src"), f'{slugify(url)}_{i}{ext}', item)
+            media.filename = self.download_from_url(media.get("src"), f'{slugify(url)}_{i}{ext}')
             result.add_media(media)
 
         return result.success("twitter-snscrape")
@@ -124,7 +124,7 @@ class TwitterArchiver(Archiver):
             if (mtype := mimetypes.guess_type(UrlUtil.remove_get_parameters(u))[0]):
                 ext = mimetypes.guess_extension(mtype)
 
-            media.filename = self.download_from_url(u, f'{slugify(url)}_{i}{ext}', item)
+            media.filename = self.download_from_url(u, f'{slugify(url)}_{i}{ext}')
             result.add_media(media)
 
         result.set_title(tweet.get("text")).set_content(json.dumps(tweet, ensure_ascii=False)).set_timestamp(datetime.strptime(tweet["created_at"], "%Y-%m-%dT%H:%M:%S.%fZ"))

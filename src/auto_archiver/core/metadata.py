@@ -7,6 +7,8 @@ from dataclasses_json import dataclass_json, config
 import datetime
 from urllib.parse import urlparse
 from dateutil.parser import parse as parse_dt
+from loguru import logger
+
 from .media import Media
 from .context import ArchivingContext
 
@@ -46,9 +48,15 @@ class Metadata:
         self.remove_duplicate_media_by_hash()
         storages = override_storages or ArchivingContext.get("storages")
         for media in self.media:
-            media.store(override_storages=storages, url=self.get_url())
+            media.store(override_storages=storages, url=self.get_url(), metadata=self)
 
     def set(self, key: str, val: Any) -> Metadata:
+        self.metadata[key] = val
+        return self
+
+    def append(self, key: str, val: Any) -> Metadata:
+        if key not in self.metadata:
+            self.metadata[key] = []    
         self.metadata[key] = val
         return self
 
@@ -67,7 +75,8 @@ class Metadata:
         return "success" in self.status
 
     def is_empty(self) -> bool:
-        return not self.is_success() and len(self.media) == 0 and len(self.metadata) <= 2  # url, processed_at
+        meaningfull_ids = set(self.metadata.keys()) - set(["_processed_at", "url", "total_bytes", "total_size", "archive_duration_seconds"])
+        return not self.is_success() and len(self.media) == 0 and len(meaningfull_ids) == 0
 
     @property  # getter .netloc
     def netloc(self) -> str:
@@ -106,10 +115,15 @@ class Metadata:
     def get_timestamp(self, utc=True, iso=True) -> datetime.datetime:
         ts = self.get("timestamp")
         if not ts: return 
-        if type(ts) == float: ts = datetime.datetime.fromtimestamp(ts)
-        if utc: ts = ts.replace(tzinfo=datetime.timezone.utc)
-        if iso: return ts.isoformat()
-        return ts
+        try:
+            if type(ts) == str: ts = datetime.datetime.fromisoformat(ts)
+            if type(ts) == float: ts = datetime.datetime.fromtimestamp(ts)
+            if utc: ts = ts.replace(tzinfo=datetime.timezone.utc)
+            if iso: return ts.isoformat()
+            return ts
+        except Exception as e:
+            logger.error(f"Unable to parse timestamp {ts}: {e}")
+            return
 
     def add_media(self, media: Media, id: str = None) -> Metadata:
         # adds a new media, optionally including an id
@@ -165,3 +179,16 @@ class Metadata:
 
     def __str__(self) -> str:
         return self.__repr__()
+
+
+    @staticmethod
+    def choose_most_complete(results: List[Metadata]) -> Metadata:
+        # returns the most complete result from a list of results
+        # prioritizes results with more media, then more metadata
+        if len(results) == 0: return None
+        if len(results) == 1: return results[0]
+        most_complete = results[0]
+        for r in results[1:]:
+            if len(r.media) > len(most_complete.media): most_complete = r
+            elif len(r.media) == len(most_complete.media) and len(r.metadata) > len(most_complete.metadata): most_complete = r
+        return most_complete

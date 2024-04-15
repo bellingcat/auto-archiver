@@ -21,8 +21,8 @@ class ConsoleDb(Database):
     def started(self, item: Metadata) -> None:
         logger.warning(f"STARTED {item}")
 
-    def failed(self, item: Metadata) -> None:
-        logger.error(f"FAILED {item}")
+    def failed(self, item: Metadata, reason:str) -> None:
+        logger.error(f"FAILED {item}: {reason}")
 
     def aborted(self, item: Metadata) -> None:
         logger.warning(f"ABORTED {item}")

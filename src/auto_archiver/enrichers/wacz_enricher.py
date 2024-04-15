@@ -30,8 +30,27 @@ class WaczArchiverEnricher(Enricher, Archiver):
             "profile": {"default": None, "help": "browsertrix-profile (for profile generation see https://github.com/webrecorder/browsertrix-crawler#creating-and-using-browser-profiles)."},
             "docker_commands": {"default": None, "help":"if a custom docker invocation is needed"},
             "timeout": {"default": 120, "help": "timeout for WACZ generation in seconds"},
-            "extract_media": {"default": True, "help": "If enabled all the images/videos/audio present in the WACZ archive will be extracted into separate Media. The .wacz file will be kept untouched."}
+            "extract_media": {"default": False, "help": "If enabled all the images/videos/audio present in the WACZ archive will be extracted into separate Media and appear in the html report. The .wacz file will be kept untouched."},
+            "extract_screenshot": {"default": True, "help": "If enabled the screenshot captured by browsertrix will be extracted into separate Media and appear in the html report. The .wacz file will be kept untouched."},
+            "socks_proxy_host": {"default": None, "help": "SOCKS proxy host for browsertrix-crawler, use in combination with socks_proxy_port. eg: user:password@host"},
+            "socks_proxy_port": {"default": None, "help": "SOCKS proxy port for browsertrix-crawler, use in combination with socks_proxy_host. eg 1234"},
         }
+    
+    def setup(self) -> None:
+        self.use_docker = os.environ.get('WACZ_ENABLE_DOCKER') or not os.environ.get('RUNNING_IN_DOCKER')
+        self.docker_in_docker = os.environ.get('WACZ_ENABLE_DOCKER') and os.environ.get('RUNNING_IN_DOCKER')
+
+        self.cwd_dind = f"/crawls/crawls{random_str(8)}"
+        self.browsertrix_home_host = os.environ.get('BROWSERTRIX_HOME_HOST')
+        self.browsertrix_home_container = os.environ.get('BROWSERTRIX_HOME_CONTAINER') or self.browsertrix_home_host
+        # create crawls folder if not exists, so it can be safely removed in cleanup
+        if self.docker_in_docker:
+            os.makedirs(self.cwd_dind, exist_ok=True)
+
+    def cleanup(self) -> None:
+        if self.docker_in_docker:
+            logger.debug(f"Removing {self.cwd_dind=}")
+            shutil.rmtree(self.cwd_dind, ignore_errors=True)
 
     def download(self, item: Metadata) -> Metadata:
         # this new Metadata object is required to avoid duplication
@@ -48,27 +67,30 @@ class WaczArchiverEnricher(Enricher, Archiver):
         url = to_enrich.get_url()
 
         collection = random_str(8)
-        browsertrix_home_host = os.environ.get('BROWSERTRIX_HOME_HOST') or os.path.abspath(ArchivingContext.get_tmp_dir())
-        browsertrix_home_container = os.environ.get('BROWSERTRIX_HOME_CONTAINER') or browsertrix_home_host
+        browsertrix_home_host = self.browsertrix_home_host or os.path.abspath(ArchivingContext.get_tmp_dir())
+        browsertrix_home_container = self.browsertrix_home_container or browsertrix_home_host
 
         cmd = [
             "crawl",
             "--url", url,
             "--scopeType", "page",
             "--generateWACZ",
-            "--text",
+            "--text", "to-pages",
             "--screenshot", "fullPage",
             "--collection", collection,
             "--id", collection,
             "--saveState", "never",
             "--behaviors", "autoscroll,autoplay,autofetch,siteSpecific",
             "--behaviorTimeout", str(self.timeout),
-            "--timeout", str(self.timeout)]
+            "--timeout", str(self.timeout),
+            "--blockAds" # TODO: test
+        ]
+        
+        if self.docker_in_docker:
+            cmd.extend(["--cwd", self.cwd_dind])
 
         # call docker if explicitly enabled or we are running on the host (not in docker)
-        use_docker = os.environ.get('WACZ_ENABLE_DOCKER') or not os.environ.get('RUNNING_IN_DOCKER')
-
-        if use_docker:
+        if self.use_docker:
             logger.debug(f"generating WACZ in Docker for {url=}")
             logger.debug(f"{browsertrix_home_host=} {browsertrix_home_container=}")
             if self.docker_commands:
@@ -90,12 +112,20 @@ class WaczArchiverEnricher(Enricher, Archiver):
 
         try:
             logger.info(f"Running browsertrix-crawler: {' '.join(cmd)}")
-            subprocess.run(cmd, check=True)
+            my_env = os.environ.copy()
+            if self.socks_proxy_host and self.socks_proxy_port:
+                logger.debug("Using SOCKS proxy for browsertrix-crawler")
+                my_env["SOCKS_HOST"] = self.socks_proxy_host
+                my_env["SOCKS_PORT"] = str(self.socks_proxy_port)
+            subprocess.run(cmd, check=True, env=my_env)
         except Exception as e:
             logger.error(f"WACZ generation failed: {e}")
             return False
 
-        if use_docker:
+        
+        if self.docker_in_docker:
+            wacz_fn = os.path.join(self.cwd_dind, "collections", collection, f"{collection}.wacz")
+        elif self.use_docker:
             wacz_fn = os.path.join(browsertrix_home_container, "collections", collection, f"{collection}.wacz")
         else:
             wacz_fn = os.path.join("collections", collection, f"{collection}.wacz")
@@ -105,10 +135,12 @@ class WaczArchiverEnricher(Enricher, Archiver):
             return False
 
         to_enrich.add_media(Media(wacz_fn), "browsertrix")
-        if self.extract_media:
+        if self.extract_media or self.extract_screenshot:
             self.extract_media_from_wacz(to_enrich, wacz_fn)
 
-        if use_docker:
+        if self.docker_in_docker:
+            jsonl_fn = os.path.join(self.cwd_dind, "collections", collection, "pages", "pages.jsonl")
+        elif self.use_docker:
             jsonl_fn = os.path.join(browsertrix_home_container, "collections", collection, "pages", "pages.jsonl")
         else:
             jsonl_fn = os.path.join("collections", collection, "pages", "pages.jsonl")
@@ -131,7 +163,7 @@ class WaczArchiverEnricher(Enricher, Archiver):
         """
         Receives a .wacz archive, and extracts all relevant media from it, adding them to to_enrich.
         """
-        logger.info(f"WACZ extract_media flag is set, extracting media from {wacz_filename=}")
+        logger.info(f"WACZ extract_media or extract_screenshot flag is set, extracting media from {wacz_filename=}")
 
         # unzipping the .wacz
         tmp_dir = ArchivingContext.get_tmp_dir()
@@ -152,15 +184,17 @@ class WaczArchiverEnricher(Enricher, Archiver):
         # get media out of .warc
         counter = 0
         seen_urls = set()
+        import json
         with open(warc_filename, 'rb') as warc_stream:
             for record in ArchiveIterator(warc_stream):
                 # only include fetched resources
-                if record.rec_type == "resource":  # screenshots
+                if record.rec_type == "resource" and record.content_type == "image/png" and self.extract_screenshot:  # screenshots
                     fn = os.path.join(tmp_dir, f"warc-file-{counter}.png")
                     with open(fn, "wb") as outf: outf.write(record.raw_stream.read())
                     m = Media(filename=fn)
                     to_enrich.add_media(m, "browsertrix-screenshot")
                     counter += 1
+                if not self.extract_media: continue
 
                 if record.rec_type != 'response': continue
                 record_url = record.rec_headers.get_header('WARC-Target-URI')
@@ -189,7 +223,7 @@ class WaczArchiverEnricher(Enricher, Archiver):
                 # if a link with better quality exists, try to download that
                 if record_url_best_qual != record_url:
                     try:
-                        m.filename = self.download_from_url(record_url_best_qual, warc_fn, to_enrich)
+                        m.filename = self.download_from_url(record_url_best_qual, warc_fn)
                         m.set("src", record_url_best_qual)
                         m.set("src_alternative", record_url)
                     except Exception as e: logger.warning(f"Unable to download best quality URL for {record_url=} got error {e}, using original in WARC.")
@@ -200,4 +234,4 @@ class WaczArchiverEnricher(Enricher, Archiver):
                 to_enrich.add_media(m, warc_fn)
                 counter += 1
                 seen_urls.add(record_url)
-        logger.info(f"WACZ extract_media finished, found {counter} relevant media file(s)")
+        logger.info(f"WACZ extract_media/extract_screenshot finished, found {counter} relevant media file(s)")

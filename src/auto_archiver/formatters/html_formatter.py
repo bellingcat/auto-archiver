@@ -4,6 +4,8 @@ import mimetypes, os, pathlib
 from jinja2 import Environment, FileSystemLoader
 from urllib.parse import quote
 from loguru import logger
+import minify_html, json
+import base64
 
 from ..version import __version__
 from ..core import Metadata, Media, ArchivingContext
@@ -19,7 +21,7 @@ class HtmlFormatter(Formatter):
     def __init__(self, config: dict) -> None:
         # without this STEP.__init__ is not called
         super().__init__(config)
-        self.environment = Environment(loader=FileSystemLoader(os.path.join(pathlib.Path(__file__).parent.resolve(), "templates/")))
+        self.environment = Environment(loader=FileSystemLoader(os.path.join(pathlib.Path(__file__).parent.resolve(), "templates/")), autoescape=True)
         # JinjaHelper class static methods are added as filters
         self.environment.filters.update({
             k: v.__func__ for k, v in JinjaHelpers.__dict__.items() if isinstance(v, staticmethod)
@@ -45,6 +47,8 @@ class HtmlFormatter(Formatter):
             metadata=item.metadata,
             version=__version__
         )
+        content = minify_html.minify(content, minify_js=False, minify_css=True)
+
         html_path = os.path.join(ArchivingContext.get_tmp_dir(), f"formatted{random_str(24)}.html")
         with open(html_path, mode="w", encoding="utf-8") as outf:
             outf.write(content)
@@ -89,3 +93,8 @@ class JinjaHelpers:
     @staticmethod
     def quote(s: str) -> str:
         return quote(s)
+
+    @staticmethod
+    def json_dump_b64(d: dict) -> str:
+        j = json.dumps(d, indent=4, default=str)
+        return base64.b64encode(j.encode()).decode()

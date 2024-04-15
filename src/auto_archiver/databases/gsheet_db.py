@@ -29,9 +29,9 @@ class GsheetsDb(Database):
         gw, row = self._retrieve_gsheet(item)
         gw.set_cell(row, 'status', 'Archive in progress')
 
-    def failed(self, item: Metadata) -> None:
+    def failed(self, item: Metadata, reason:str) -> None:
         logger.error(f"FAILED {item}")
-        self._safe_status_update(item, 'Archive failed')
+        self._safe_status_update(item, f'Archive failed {reason}')
 
     def aborted(self, item: Metadata) -> None:
         logger.warning(f"ABORTED {item}")
@@ -102,6 +102,11 @@ class GsheetsDb(Database):
 
     def _retrieve_gsheet(self, item: Metadata) -> Tuple[GWorksheet, int]:
         # TODO: to make gsheet_db less coupled with gsheet_feeder's "gsheet" parameter, this method could 1st try to fetch "gsheet" from ArchivingContext and, if missing, manage its own singleton - not needed for now
-        gw: GWorksheet = ArchivingContext.get("gsheet").get("worksheet")
-        row: int = ArchivingContext.get("gsheet").get("row")
+        if gsheet := ArchivingContext.get("gsheet"):
+            gw: GWorksheet = gsheet.get("worksheet")
+            row: int = gsheet.get("row")
+        elif self.sheet_id:
+            print(self.sheet_id)
+
+
         return gw, row

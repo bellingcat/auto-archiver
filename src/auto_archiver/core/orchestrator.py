@@ -1,5 +1,7 @@
 from __future__ import annotations
 from typing import Generator, Union, List
+from urllib.parse import urlparse
+from ipaddress import ip_address
 
 from .context import ArchivingContext
 
@@ -25,13 +27,28 @@ class ArchivingOrchestrator:
         self.storages: List[Storage] = config.storages
         ArchivingContext.set("storages", self.storages, keep_on_reset=True)
 
-        for a in self.archivers: a.setup()
+        try: 
+            for a in self.all_archivers_for_setup(): a.setup()
+        except (KeyboardInterrupt, Exception) as e:
+            logger.error(f"Error during setup of archivers: {e}\n{traceback.format_exc()}")
+            self.cleanup()
+
+
+    def cleanup(self)->None:
+        logger.info("Cleaning up")
+        for a in self.all_archivers_for_setup(): a.cleanup()
 
     def feed(self) -> Generator[Metadata]:
         for item in self.feeder:
             yield self.feed_item(item)
+        self.cleanup()
 
     def feed_item(self, item: Metadata) -> Metadata:
+        """
+        Takes one item (URL) to archive and calls self.archive, additionally:
+            - catches keyboard interruptions to do a clean exit
+            - catches any unexpected error, logs it, and does a clean exit
+        """
         try:
             ArchivingContext.reset()
             with tempfile.TemporaryDirectory(dir="./") as tmp_dir:
@@ -41,81 +58,101 @@ class ArchivingOrchestrator:
             # catches keyboard interruptions to do a clean exit
             logger.warning(f"caught interrupt on {item=}")
             for d in self.databases: d.aborted(item)
+            self.cleanup()
             exit()
         except Exception as e:
             logger.error(f'Got unexpected error on item {item}: {e}\n{traceback.format_exc()}')
-            for d in self.databases: d.failed(item)
+            for d in self.databases:
+                if type(e) == AssertionError: d.failed(item, str(e))
+                else: d.failed(item)
 
-        # how does this handle the parameters like folder which can be different for each archiver?
-        # the storage needs to know where to archive!!
-        # solution: feeders have context: extra metadata that they can read or ignore,
-        # all of it should have sensible defaults (eg: folder)
-        # default feeder is a list with 1 element
 
     def archive(self, result: Metadata) -> Union[Metadata, None]:
-        original_url = result.get_url()
+        """
+            Runs the archiving process for a single URL
+            1. Each archiver can sanitize its own URLs
+            2. Check for cached results in Databases, and signal start to the databases
+            3. Call Archivers until one succeeds
+            4. Call Enrichers
+            5. Store all downloaded/generated media
+            6. Call selected Formatter and store formatted if needed
+        """
+        original_url = result.get_url().strip()
+        self.assert_valid_url(original_url)
 
-        # 1 - cleanup
-        # each archiver is responsible for cleaning/expanding its own URLs
+        # 1 - sanitize - each archiver is responsible for cleaning/expanding its own URLs
         url = original_url
         for a in self.archivers: url = a.sanitize_url(url)
         result.set_url(url)
         if original_url != url: result.set("original_url", original_url)
 
-        # 2 - notify start to DB
-        # signal to DB that archiving has started
-        # and propagate already archived if it exists
+        # 2 - notify start to DBs, propagate already archived if feature enabled in DBs
         cached_result = None
         for d in self.databases:
-            # are the databases to decide whether to archive?
-            # they can simply return True by default, otherwise they can avoid duplicates. should this logic be more granular, for example on the archiver level: a tweet will not need be scraped twice, whereas an instagram profile might. the archiver could not decide from the link which parts to archive,
-            # instagram profile example: it would always re-archive everything
-            # maybe the database/storage could use a hash/key to decide if there's a need to re-archive
             d.started(result)
             if (local_result := d.fetch(result)):
                 cached_result = (cached_result or Metadata()).merge(local_result)
         if cached_result:
             logger.debug("Found previously archived entry")
             for d in self.databases:
-                d.done(cached_result, cached=True)
+                try: d.done(cached_result, cached=True)
+                except Exception as e:
+                    logger.error(f"ERROR database {d.name}: {e}: {traceback.format_exc()}")
             return cached_result
 
         # 3 - call archivers until one succeeds
         for a in self.archivers:
             logger.info(f"Trying archiver {a.name} for {url}")
             try:
-                # Q: should this be refactored so it's just a.download(result)?
                 result.merge(a.download(result))
                 if result.is_success(): break
-            except Exception as e: logger.error(f"Unexpected error with archiver {a.name}: {e}: {traceback.format_exc()}")
+            except Exception as e: 
+                logger.error(f"ERROR archiver {a.name}: {e}: {traceback.format_exc()}")
 
-        # what if an archiver returns multiple entries and one is to be part of HTMLgenerator?
-        # should it call the HTMLgenerator as if it's not an enrichment?
-        # eg: if it is enable: generates an HTML with all the returned media, should it include enrichers? yes
-        # then how to execute it last? should there also be post-processors? are there other examples?
-        # maybe as a PDF? or a Markdown file
-
-        # 4 - call enrichers: have access to archived content, can generate metadata and Media
-        # eg: screenshot, wacz, webarchive, thumbnails
+        # 4 - call enrichers to work with archived content
         for e in self.enrichers:
             try: e.enrich(result)
-            except Exception as exc: logger.error(f"Unexpected error with enricher {e.name}: {exc}: {traceback.format_exc()}")
+            except Exception as exc: 
+                logger.error(f"ERROR enricher {e.name}: {exc}: {traceback.format_exc()}")
 
-        # 5 - store media
-        # looks for Media in result.media and also result.media[x].properties (as list or dict values)
+        # 5 - store all downloaded/generated media
         result.store()
 
-
         # 6 - format and store formatted if needed
-        # enrichers typically need access to already stored URLs etc
         if (final_media := self.formatter.format(result)):
-            final_media.store(url=url)
+            final_media.store(url=url, metadata=result)
             result.set_final_media(final_media)
 
         if result.is_empty():
             result.status = "nothing archived"
 
-        # signal completion to databases (DBs, Google Sheets, CSV, ...)
-        for d in self.databases: d.done(result)
+        # signal completion to databases and archivers
+        for d in self.databases:
+            try: d.done(result)
+            except Exception as e:
+                logger.error(f"ERROR database {d.name}: {e}: {traceback.format_exc()}")
 
         return result
+
+    def assert_valid_url(self, url: str) -> bool:
+        """
+        Blocks localhost, private, reserved, and link-local IPs and all non-http/https schemes.
+        """
+        assert url.startswith("http://") or url.startswith("https://"), f"Invalid URL scheme"
+        
+        parsed = urlparse(url)
+        assert parsed.scheme in ["http", "https"], f"Invalid URL scheme"
+        assert parsed.hostname, f"Invalid URL hostname"
+        assert parsed.hostname != "localhost", f"Invalid URL"
+
+        try: # special rules for IP addresses
+            ip = ip_address(parsed.hostname)
+        except ValueError: pass
+        else:
+            assert ip.is_global, f"Invalid IP used"
+            assert not ip.is_reserved, f"Invalid IP used"
+            assert not ip.is_link_local, f"Invalid IP used"
+            assert not ip.is_private, f"Invalid IP used"
+
+    def all_archivers_for_setup(self) -> List[Archiver]:
+        return self.archivers + [e for e in self.enrichers if isinstance(e, Archiver)]

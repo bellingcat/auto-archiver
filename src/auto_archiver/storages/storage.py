@@ -1,12 +1,12 @@
 from __future__ import annotations
 from abc import abstractmethod
 from dataclasses import dataclass
-from typing import IO
+from typing import IO, Optional
 import os
 
 from ..utils.misc import random_str
 
-from ..core import Media, Step, ArchivingContext
+from ..core import Media, Step, ArchivingContext, Metadata
 from ..enrichers import HashEnricher
 from loguru import logger
 from slugify import slugify
@@ -43,12 +43,12 @@ class Storage(Step):
         # only for typing...
         return Step.init(name, config, Storage)
 
-    def store(self, media: Media, url: str) -> None:
+    def store(self, media: Media, url: str, metadata: Optional[Metadata]=None) -> None:
         if media.is_stored(): 
             logger.debug(f"{media.key} already stored, skipping")
             return
         self.set_key(media, url)
-        self.upload(media)
+        self.upload(media, metadata=metadata)
         media.add_url(self.get_cdn_url(media))
 
     @abstractmethod

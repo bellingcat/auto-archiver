@@ -22,7 +22,7 @@ class Database(Step, ABC):
         """signals the DB that the given item archival has started"""
         pass
 
-    def failed(self, item: Metadata) -> None:
+    def failed(self, item: Metadata, reason:str) -> None:
         """update DB accordingly for failure"""
         pass
 
@@ -32,7 +32,7 @@ class Database(Step, ABC):
 
     # @abstractmethod
     def fetch(self, item: Metadata) -> Union[Metadata, bool]:
-        """check if the given item has been archived already"""
+        """check and fetch if the given item has been archived already, each database should handle its own caching, and configuration mechanisms"""
         return False
 
     @abstractmethod

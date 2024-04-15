@@ -16,7 +16,8 @@ class ScreenshotEnricher(Enricher):
             "width": {"default": 1280, "help": "width of the screenshots"},
             "height": {"default": 720, "help": "height of the screenshots"},
             "timeout": {"default": 60, "help": "timeout for taking the screenshot"},
-            "sleep_before_screenshot": {"default": 4, "help": "seconds to wait for the pages to load before taking screenshot"}
+            "sleep_before_screenshot": {"default": 4, "help": "seconds to wait for the pages to load before taking screenshot"},
+            "http_proxy": {"default": "", "help": "http proxy to use for the webdriver, eg http://proxy-user:password@proxy-ip:port"},
         }
 
     def enrich(self, to_enrich: Metadata) -> None:
@@ -26,7 +27,7 @@ class ScreenshotEnricher(Enricher):
             return
 
         logger.debug(f"Enriching screenshot for {url=}")
-        with Webdriver(self.width, self.height, self.timeout, 'facebook.com' in url) as driver:
+        with Webdriver(self.width, self.height, self.timeout, 'facebook.com' in url, http_proxy=self.http_proxy) as driver:
             try:
                 driver.get(url)
                 time.sleep(int(self.sleep_before_screenshot))

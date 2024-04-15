@@ -177,9 +177,41 @@ To use Google Drive storage you need the id of the shared folder in the `config.
 #### Telethon + Instagram with telegram bot
 The first time you run, you will be prompted to do a authentication with the phone number associated, alternatively you can put your `anon.session` in the root.
 
+#### Atlos
+When integrating with [Atlos](https://atlos.org), you will need to provide an API token in your configuration. You can learn more about Atlos and how to get an API token [here](https://docs.atlos.org/technical/api). You will have to provide this token to the `atlos_feeder`, `atlos_storage`, and `atlos_db` steps in your orchestration file. If you use a custom or self-hosted Atlos instance, you can also specify the `atlos_url` option to point to your custom instance's URL. For example:
+
+```yaml
+# orchestration.yaml content
+steps:
+  feeder: atlos_feeder
+  archivers: # order matters
+    - youtubedl_archiver
+  enrichers:
+    - thumbnail_enricher
+    - hash_enricher
+  formatter: html_formatter
+  storages:
+    - atlos_storage
+  databases:
+    - console_db
+    - atlos_db
+
+configurations:
+  atlos_feeder:
+    atlos_url: "https://platform.atlos.org" # optional
+    api_token: "...your API token..."
+  atlos_db:
+    atlos_url: "https://platform.atlos.org" # optional
+    api_token: "...your API token..."
+  atlos_storage:
+    atlos_url: "https://platform.atlos.org" # optional
+    api_token: "...your API token..."
+  hash_enricher:
+    algorithm: "SHA-256"
+```
 
 ## Running on Google Sheets Feeder (gsheet_feeder)
-The `--gseets_feeder.sheet` property is the name of the Google Sheet to check for URLs. 
+The `--gsheet_feeder.sheet` property is the name of the Google Sheet to check for URLs. 
 This sheet must have been shared with the Google Service account used by `gspread`. 
 This sheet must also have specific columns (case-insensitive) in the `header` as specified in [Gsheet.configs](src/auto_archiver/utils/gsheet.py). The default names of these columns and their purpose is:
 
@@ -233,12 +265,12 @@ working with docker locally:
     * to use local archive, also create a volume `-v` for it by adding `-v $PWD/local_archive:/app/local_archive`
 
 
-release to docker hub
+manual release to docker hub
   * `docker image tag auto-archiver bellingcat/auto-archiver:latest`
   * `docker push bellingcat/auto-archiver`
 
 #### RELEASE
 * update version in [version.py](src/auto_archiver/version.py)
-* run `bash ./scripts/release.sh` and confirm
-* package is automatically updated in pypi
-* docker image is automatically pushed to dockerhup
+* go to github releases > new release > use `vx.y.z` for matching version notation
+  * package is automatically updated in pypi
+  * docker image is automatically pushed to dockerhup
