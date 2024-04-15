@@ -28,7 +28,7 @@ class ArchivingOrchestrator:
         ArchivingContext.set("storages", self.storages, keep_on_reset=True)
 
         try: 
-            for a in self.archivers: a.setup()
+            for a in self.all_archivers_for_setup(): a.setup()
         except (KeyboardInterrupt, Exception) as e:
             logger.error(f"Error during setup of archivers: {e}\n{traceback.format_exc()}")
             self.cleanup()
@@ -36,7 +36,7 @@ class ArchivingOrchestrator:
 
     def cleanup(self)->None:
         logger.info("Cleaning up")
-        for a in self.archivers: a.cleanup()
+        for a in self.all_archivers_for_setup(): a.cleanup()
 
     def feed(self) -> Generator[Metadata]:
         for item in self.feeder:
@@ -153,3 +153,6 @@ class ArchivingOrchestrator:
             assert not ip.is_reserved, f"Invalid IP used"
             assert not ip.is_link_local, f"Invalid IP used"
             assert not ip.is_private, f"Invalid IP used"
+
+    def all_archivers_for_setup(self) -> List[Archiver]:
+        return self.archivers + [e for e in self.enrichers if isinstance(e, Archiver)]

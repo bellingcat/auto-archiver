@@ -1,4 +1,4 @@
-FROM webrecorder/browsertrix-crawler:latest
+FROM webrecorder/browsertrix-crawler:1.0.4
 
 ENV RUNNING_IN_DOCKER=1
 
@@ -19,9 +19,8 @@ RUN pip install --upgrade pip && \
 
 COPY Pipfile* ./
 # install from pipenv, with browsertrix-only requirements
-RUN pipenv install && \
-	pipenv install pywb uwsgi
-	
+RUN pipenv install
+
 # doing this at the end helps during development, builds are quick
 COPY ./src/ . 
 
