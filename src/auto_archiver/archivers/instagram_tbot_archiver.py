@@ -54,8 +54,9 @@ class InstagramTbotArchiver(Archiver):
 
     def cleanup(self) -> None:
         logger.info(f"CLEANUP {self.name}.")
-        if os.path.exists(self.session_file):
-            os.remove(self.session_file)
+        session_file_name = self.session_file + ".session"
+        if os.path.exists(session_file_name):
+            os.remove(session_file_name)
         
     def download(self, item: Metadata) -> Metadata:
         url = item.get_url()
