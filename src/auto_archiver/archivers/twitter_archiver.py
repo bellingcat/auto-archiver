@@ -31,7 +31,8 @@ class TwitterArchiver(Archiver):
         # expand URL if t.co and clean tracker GET params
         if 'https://t.co/' in url:
             try:
-                r = requests.get(url)
+                # timeout for urls like https://t.co/KxNwn5yJz6 which caused this request to never come back
+                r = requests.get(url, timeout=30)
                 logger.debug(f'Expanded url {url} to {r.url}')
                 url = r.url
             except:
@@ -52,11 +53,21 @@ class TwitterArchiver(Archiver):
         result = Metadata()
 
         scr = TwitterTweetScraper(tweet_id)
+        do_alternative = False
         try:
             tweet = next(scr.get_items())
         except Exception as ex:
-            logger.warning(f"can't get tweet: {type(ex).__name__} occurred. args: {ex.args}")
-            return self.download_alternative(item, url, tweet_id)
+            logger.debug(f"can't get tweet: {type(ex).__name__} occurred. args: {ex.args}")
+
+        # Wrapping in another try except as we want to catch this and not throw an error 
+        # in our log files
+        # want twitter_api archiver to take over
+        if do_alternative:
+            try:
+                return self.download_alternative(item, url, tweet_id)
+            except Exception as ex:
+                logger.info("download alternative didn't work")
+                return False
 
         result.set_title(tweet.content).set_content(tweet.json()).set_timestamp(tweet.date)
         if tweet.media is None:
