@@ -98,11 +98,12 @@ class YoutubeDLArchiver(Archiver):
             result.set("comments", [{
                 "text": c["text"],
                 "author": c["author"], 
-                "timestamp": datetime.datetime.utcfromtimestamp(c.get("timestamp")).replace(tzinfo=datetime.timezone.utc)
+                "timestamp": datetime.datetime.fromtimestamp(c.get("timestamp"), tz = datetime.timezone.utc)
             } for c in info.get("comments", [])])
 
         if (timestamp := info.get("timestamp")):
-            timestamp = datetime.datetime.utcfromtimestamp(timestamp).replace(tzinfo=datetime.timezone.utc).isoformat()
+            #TODO: fix deprecated timestamp, 
+            timestamp = datetime.datetime.fromtimestamp(timestamp, tz = datetime.timezone.utc).isoformat()
             result.set_timestamp(timestamp)
         if (upload_date := info.get("upload_date")):
             upload_date = datetime.datetime.strptime(upload_date, '%Y%m%d').replace(tzinfo=datetime.timezone.utc)
