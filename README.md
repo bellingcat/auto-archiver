@@ -108,7 +108,7 @@ configurations:
   # ... configurations for the other steps here ...
 ```
 
-To see all available `steps` (which archivers, storages, databses, ...) exist check the [example.orchestration.yaml](example.orchestration.yaml).
+To see all available `steps` (which archivers, storages, databases, ...) exist check the [example.orchestration.yaml](example.orchestration.yaml).
 
 All the `configurations` in the `orchestration.yaml` file (you can name it differently but need to pass it in the `--config FILENAME` argument) can be seen in the console by using the `--help` flag. They can also be overwritten, for example if you are using the `cli_feeder` to archive from the command line and want to provide the URLs you should do:
 
