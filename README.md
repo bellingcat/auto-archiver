@@ -47,7 +47,7 @@ Docker works like a virtual machine running inside your computer, it isolates ev
 
 <details><summary><code>Python package instructions</code></summary>
 
-1. make sure you have python 3.8 or higher installed
+1. make sure you have python 3.10 or higher installed
 2. install the package `pip/pipenv/conda install auto-archiver`
 3. test it's installed with `auto-archiver --help`
 4. run it with your orchestration file and pass any flags you want in the command line `auto-archiver --config secrets/orchestration.yaml` if your orchestration file is inside a `secrets/`, which we advise
