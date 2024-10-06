@@ -34,6 +34,7 @@ class WaczArchiverEnricher(Enricher, Archiver):
             "extract_screenshot": {"default": True, "help": "If enabled the screenshot captured by browsertrix will be extracted into separate Media and appear in the html report. The .wacz file will be kept untouched."},
             "socks_proxy_host": {"default": None, "help": "SOCKS proxy host for browsertrix-crawler, use in combination with socks_proxy_port. eg: user:password@host"},
             "socks_proxy_port": {"default": None, "help": "SOCKS proxy port for browsertrix-crawler, use in combination with socks_proxy_host. eg 1234"},
+            "proxy_server": {"default": None, "help": "SOCKS server proxy URL, in development"},
         }
     
     def setup(self) -> None:
@@ -113,7 +114,10 @@ class WaczArchiverEnricher(Enricher, Archiver):
         try:
             logger.info(f"Running browsertrix-crawler: {' '.join(cmd)}")
             my_env = os.environ.copy()
-            if self.socks_proxy_host and self.socks_proxy_port:
+            if self.proxy_server:
+                logger.debug("Using PROXY_SERVER proxy for browsertrix-crawler")
+                my_env["PROXY_SERVER"] = self.proxy_server
+            elif self.socks_proxy_host and self.socks_proxy_port:
                 logger.debug("Using SOCKS proxy for browsertrix-crawler")
                 my_env["SOCKS_HOST"] = self.socks_proxy_host
                 my_env["SOCKS_PORT"] = str(self.socks_proxy_port)
