@@ -11,9 +11,20 @@ class HashEnricher(Enricher):
     """
     name = "hash_enricher"
 
-    def __init__(self, config: dict) -> None:
+    def __init__(self, config: dict = None) -> None:
+        final_config = {}
+        if not config:
+            # currently doesn't use user config in scenarios in which hash_enricher
+            # config is defined in yaml, but hash_enricher itself is not (as config
+            # parsing happens elsewhere)
+            he_configs = self.configs()
+            # handle potential future config options
+            for property_name in he_configs:
+                final_config[property_name] = he_configs[property_name]["default"]
+        else:
+            final_config = config
         # without this STEP.__init__ is not called
-        super().__init__(config)
+        super().__init__({self.name: final_config})
         algo_choices = self.configs()["algorithm"]["choices"]
         assert self.algorithm in algo_choices, f"Invalid hash algorithm selected, must be one of {algo_choices} (you selected {self.algorithm})."
         self.chunksize = int(self.chunksize)

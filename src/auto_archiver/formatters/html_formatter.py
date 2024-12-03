@@ -54,7 +54,17 @@ class HtmlFormatter(Formatter):
             outf.write(content)
         final_media = Media(filename=html_path, _mimetype="text/html")
 
-        he = HashEnricher({"hash_enricher": {"algorithm": ArchivingContext.get("hash_enricher.algorithm"), "chunksize": 1.6e7}})
+        # is defined when hash_enricher is included
+        if ArchivingContext.get("hash_enricher.algorithm"):
+            he = HashEnricher({"hash_enricher": {
+                "algorithm": ArchivingContext.get("hash_enricher.algorithm"),
+                "chunksize": 1.6e7 # could easily be redefined to pull from default config
+            }})
+        else:
+            # currently doesn't consider scenarios in which hash_enricher
+            # config is defined, but hash_enricher itself is not (as config
+            # parsing happens elsewhere)
+            he = HashEnricher()
         if len(hd := he.calculate_hash(final_media.filename)):
             final_media.set("hash", f"{he.algorithm}:{hd}")
 
