@@ -94,6 +94,14 @@ configurations:
     password: "vk pass"
     session_file: "secrets/vk_config.v2.json"
 
+  youtubedl_archiver:
+    subtitles: true
+    # use one of the following two methods to authenticate in youtube - either provide a cookies file or use the cookies of the given browser
+    # for more information, see https://github.com/yt-dlp/yt-dlp/wiki/FAQ#how-do-i-pass-cookies-to-yt-dlp
+    # cookie_file: "secrets/youtube_cookies.txt"
+    # cookies_from_browser: firefox
+    # proxy: socks5://proxy-user:password@proxy-ip:port
+
   screenshot_enricher:
     width: 1280
     height: 2300

@@ -30,6 +30,8 @@ class YoutubeDLArchiver(Archiver):
             "end_means_success": {"default": True, "help": "if True, any archived content will mean a 'success', if False this archiver will not return a 'success' stage; this is useful for cases when the yt-dlp will archive a video but ignore other types of content like images or text only pages that the subsequent archivers can retrieve."},
             'allow_playlist': {"default": False, "help": "If True will also download playlists, set to False if the expectation is to download a single video."},
             "max_downloads": {"default": "inf", "help": "Use to limit the number of videos to download when a channel or long page is being extracted. 'inf' means no limit."},
+            "cookies_from_browser": {"default": None, "help": "optional browser for ytdl to extract cookies from, can be one of: brave, chrome, chromium, edge, firefox, opera, safari, vivaldi, whale"},
+            "cookie_file": {"default": None, "help": "optional cookie file to use for Youtube, see instructions here on how to export from your browser: https://github.com/yt-dlp/yt-dlp/wiki/FAQ#how-do-i-pass-cookies-to-yt-dlp"},
         }
 
     def download(self, item: Metadata) -> Metadata:
@@ -38,8 +40,17 @@ class YoutubeDLArchiver(Archiver):
         if item.netloc in ['facebook.com', 'www.facebook.com'] and self.facebook_cookie:
             logger.debug('Using Facebook cookie')
             yt_dlp.utils.std_headers['cookie'] = self.facebook_cookie
-
+        
         ydl_options = {'outtmpl': os.path.join(ArchivingContext.get_tmp_dir(), f'%(id)s.%(ext)s'), 'quiet': False, 'noplaylist': not self.allow_playlist , 'writesubtitles': self.subtitles, 'writeautomaticsub': self.subtitles, "live_from_start": self.live_from_start, "proxy": self.proxy, "max_downloads": self.max_downloads, "playlistend": self.max_downloads}
+
+        if item.netloc in ['youtube.com', 'www.youtube.com']:
+            if self.cookies_from_browser:
+                logger.debug(f'Extracting cookies from browser {self.cookies_from_browser} for Youtube')
+                ydl_options['cookiesfrombrowser'] = (self.cookies_from_browser,)
+            elif self.cookie_file:
+                logger.debug(f'Using cookies from file {self.cookie_file}')
+                ydl_options['cookiefile'] = self.cookie_file
+
         ydl = yt_dlp.YoutubeDL(ydl_options) # allsubtitles and subtitleslangs not working as expected, so default lang is always "en"
 
         try:
