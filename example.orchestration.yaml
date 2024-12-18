@@ -97,6 +97,22 @@ configurations:
   screenshot_enricher:
     width: 1280
     height: 2300
+    # to save as pdf, uncomment the following lines and adjust the print options
+    # save_to_pdf: true
+    # print_options:
+      # for all options see https://www.selenium.dev/selenium/docs/api/py/webdriver/selenium.webdriver.common.print_page_options.html
+      # background: true
+      # orientation: "portrait"
+      # scale: 1
+      # page_width: 8.5in
+      # page_height: 11in
+      # margin_top: 0.4in
+      # margin_bottom: 0.4in
+      # margin_left: 0.4in
+      # margin_right: 0.4in
+      # page_ranges: ""
+      # shrink_to_fit: true
+
   wayback_archiver_enricher:
     timeout: 10
     key: "wayback key"
