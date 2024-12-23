@@ -1,3 +1,4 @@
+import json
 from loguru import logger
 import time, requests
 
@@ -70,10 +71,15 @@ class WaybackArchiverEnricher(Enricher, Archiver):
             return False
 
         # check job status
-        job_id = r.json().get('job_id')
-        if not job_id:
-            logger.error(f"Wayback failed with {r.json()}")
+        try:
+            job_id = r.json().get('job_id')
+            if not job_id:
+                logger.error(f"Wayback failed with {r.json()}")
+                return False
+        except json.decoder.JSONDecodeError as e:
+            logger.error(f"Expected a JSON with job_id from Wayback and got {r.text}")
             return False
+
 
         # waits at most timeout seconds until job is completed, otherwise only enriches the job_id information
         start_time = time.time()
@@ -91,6 +97,9 @@ class WaybackArchiverEnricher(Enricher, Archiver):
                     return False
             except requests.exceptions.RequestException as e:
                 logger.warning(f"RequestException: fetching status for {url=} due to: {e}")
+                break
+            except json.decoder.JSONDecodeError as e:
+                logger.error(f"Expected a JSON from Wayback and got {r.text} for {url=}")
                 break
             except Exception as e:
                 logger.warning(f"error fetching status for {url=} due to: {e}")
