@@ -48,6 +48,8 @@ class Archiver(Step):
         """
         downloads a URL to provided filename, or inferred from URL, returns local filename
         """
+        # TODO: should we refactor to use requests.get(url, stream=True) and write to file in chunks? compare approaches
+        # TODO: should we guess the extension?
         if not to_filename:
             to_filename = url.split('/')[-1].split('?')[0]
             if len(to_filename) > 64:
