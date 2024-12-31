@@ -1,11 +1,4 @@
-# This workflow will upload a Python Package using Twine when a release is created
-# For more information see: https://help.github.com/en/actions/language-and-framework-guides/using-python-with-github-actions#publishing-to-package-registries
-
-# This workflow uses actions that are not certified by GitHub.
-# They are provided by a third-party and are governed by
-# separate terms of service, privacy policy, and support
-# documentation.
-
+# This workflow uploads a Python Package to PyPI using Poetry when a release is created
 name: Pypi
 
 on:
@@ -28,17 +21,20 @@ jobs:
       with:
         python-version: "3.10"
 
+    - name: Install Poetry
+      run: |
+        python -m pip install --upgrade pip
+        curl -sSL https://install.python-poetry.org | python3 -
+        echo 'export PATH="$HOME/.local/bin:$PATH"' >> $GITHUB_ENV
+        poetry --version
+
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade --upgrade-strategy=eager pip setuptools wheel twine pipenv
-        python -m pip install -e . --upgrade
-        python -m pipenv install --dev --python 3.10
-      env:
-        PIPENV_DEFAULT_PYTHON_VERSION: "3.10"
+        poetry install --no-root
 
-    - name: Build wheels
+    - name: Build the package
       run: |
-        python -m pipenv run python setup.py sdist bdist_wheel
+        poetry build
 
     - name: Publish a Python distribution to PyPI
       uses: pypa/gh-action-pypi-publish@release/v1
