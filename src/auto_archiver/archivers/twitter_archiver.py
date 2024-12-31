@@ -147,10 +147,16 @@ class TwitterArchiver(Archiver):
         tie = TwitterIE(downloader)
         tweet = tie._extract_status(tweet_id)
         result = Metadata()
+        try:
+            timestamp = datetime.strptime(tweet["created_at"], "%a %b %d %H:%M:%S %z %Y")
+        except Exception as ex:
+            logger.warning(f"Failed to get timestamp: {type(ex).__name__} occurred. args: {ex.args}")
+            return False
+                
         result\
             .set_title(tweet.get('full_text', ''))\
             .set_content(json.dumps(tweet, ensure_ascii=False))\
-            .set_timestamp(datetime.strptime(tweet["created_at"], "%a %b %d %H:%M:%S %z %Y"))
+            .set_timestamp(timestamp)
         if not tweet.get("entities", {}).get("media"):
             logger.debug('No media found, archiving tweet text only')
             result.status = "twitter-ytdl"
