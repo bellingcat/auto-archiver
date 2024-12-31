@@ -66,12 +66,14 @@ class BlueskyArchiver(Archiver):
         """
         media = []
         embed = post.get("record", {}).get("embed", {})
-        if "images" in embed:
-            for image in embed["images"]:
-                image_media = self._download_bsky_file_as_media(image["image"]["ref"]["$link"], post["author"]["did"])
+        image_medias = embed.get("images", []) + embed.get("media", {}).get("images", [])
+        video_medias = [e for e in [embed.get("video"), embed.get("media", {}).get("video")] if e]
+
+        for image_media in image_medias:
+                image_media = self._download_bsky_file_as_media(image_media["image"]["ref"]["$link"], post["author"]["did"])
                 media.append(image_media)
-        if "video" in embed:
-            video_media = self._download_bsky_file_as_media(embed["video"]["ref"]["$link"], post["author"]["did"])
+        for video_media in video_medias:
+            video_media = self._download_bsky_file_as_media(video_media["ref"]["$link"], post["author"]["did"])
             media.append(video_media)
         return media
 
