@@ -1,10 +1,35 @@
 [tool.poetry]
 name = "auto-archiver"
-version = "0.13.0"
+version = "0.13.0"  # Ensure this matches your versioning strategy
 description = "Automatically archive links to videos, images, and social media content from Google Sheets (and more)."
 authors = ["Bellingcat <info@bellingcat.com>"]
 license = "MIT"
 readme = "README.md"
+keywords = ["archive", "oosi", "osint", "scraping"]
+homepage = "https://github.com/bellingcat/auto-archiver"
+repository = "https://github.com/bellingcat/auto-archiver"
+documentation = "https://github.com/bellingcat/auto-archiver"
+classifiers = [
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3"
+]
+packages = [
+    { include = "auto_archiver", from = "src" }
+]
+# Mimicing setup.cfg
+#packages = [
+#    {include = "auto_archiver*", exclude = [
+#        "examples*",
+#        ".eggs*",
+#        "build*",
+#        "secrets*",
+#        "tmp*",
+#        "docs*",
+#        "src.tests*"
+#    ]}
+#]
 
 [tool.poetry.dependencies]
 python = "~3.10"
@@ -49,7 +74,15 @@ certvalidator = "*"
 
 [tool.poetry.dev-dependencies]
 autopep8 = "*"
-setuptools-pipfile = "*"
+
+[tool.poetry.scripts]
+auto-archiver = "auto_archiver.__main__:main"
+
+#[tool.poetry.extras]
+# Mimicing setup.cfg
+# pdf = ["ReportLab>=1.2", "RXP"]
+# rest = ["docutils>=0.3", "pack==1.1", "pack==1.3"]
+
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
