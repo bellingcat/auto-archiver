@@ -1,4 +1,56 @@
+[tool.poetry]
+name = "auto-archiver"
+version = "0.13.0"
+description = "Automatically archive links to videos, images, and social media content from Google Sheets (and more)."
+authors = ["Bellingcat <info@bellingcat.com>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "~3.10"
+gspread = "*"
+argparse = "*"
+beautifulsoup4 = "*"
+tiktok-downloader = "*"
+bs4 = "*"
+loguru = "*"
+ffmpeg-python = "*"
+selenium = "*"
+snscrape = "*"
+telethon = "*"
+google-api-python-client = "*"
+google-auth-httplib2 = "*"
+google-auth-oauthlib = "*"
+oauth2client = "*"
+pdqhash = "*"
+pillow = "*"
+python-slugify = "*"
+pyyaml = "*"
+dateparser = "*"
+python-twitter-v2 = "*"
+instaloader = "*"
+tqdm = "*"
+jinja2 = "*"
+pyOpenSSL = "^23.0.0"
+cryptography = "^41.0.0"
+boto3 = "^1.28.0"
+dataclasses-json = "*"
+yt-dlp = "2024.09.27"
+vk-url-scraper = "*"
+requests = {extras = ["socks"], version = "*"}
+numpy = "1.26.4"
+warcio = "*"
+jsonlines = "*"
+pysubs2 = "*"
+minify-html = "*"
+retrying = "*"
+tsp-client = "*"
+certvalidator = "*"
+
+[tool.poetry.dev-dependencies]
+autopep8 = "*"
+setuptools-pipfile = "*"
+
 [build-system]
-requires = ["setuptools", "wheel", "setuptools-pipfile"]
-build-backend = "setuptools.build_meta"
-[tool.setuptools-pipfile]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
