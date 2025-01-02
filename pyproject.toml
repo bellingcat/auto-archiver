@@ -1,6 +1,7 @@
 [tool.poetry]
 name = "auto-archiver"
-version = "0.13.0"  # Ensure this matches your versioning strategy
+# TODO Add check for consistent versioning
+version = "0.13.0"
 description = "Automatically archive links to videos, images, and social media content from Google Sheets (and more)."
 authors = ["Bellingcat <info@bellingcat.com>"]
 license = "MIT"
