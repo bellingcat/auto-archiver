@@ -21,19 +21,24 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - name: Checkout Repository
+      uses: actions/checkout@v3
 
-    - name: Set up Python 3.10
+    - name: Extract Python Version from pyproject.toml
+      id: python-version
+      run: |
+        version=$(grep 'python =' pyproject.toml | awk -F'"' '{print $2}' | tr -d '^~<=>')
+        echo "python-version=$version" >> $GITHUB_ENV
+
+    - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: "3.10"
+        python-version: ${{ env.python-version }}
 
     - name: Install Poetry
       run: |
-        python -m pip install --upgrade pip
         curl -sSL https://install.python-poetry.org | python3 -
-        echo 'export PATH="$HOME/.local/bin:$PATH"' >> $GITHUB_ENV
-        poetry --version
+        export PATH="$HOME/.local/bin:$PATH"
 
     - name: Install dependencies
       run: |
@@ -43,11 +48,7 @@ jobs:
       run: |
         poetry build
 
-    - name: Publish a Python distribution to PyPI
-      uses: pypa/gh-action-pypi-publish@release/v1
-      with:
-        user: __token__
-        verbose: true
-        skip_existing: true
-        password: ${{ secrets.PYPI_API_TOKEN }}
-        packages_dir: dist/
+    # Step 6: Publish to PyPI
+    - name: Publish to PyPI
+      run: |
+        poetry publish --username __token__ --password ${{ secrets.PYPI_API_TOKEN }}
