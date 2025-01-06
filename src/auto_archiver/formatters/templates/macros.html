@@ -32,6 +32,10 @@ No URL available for {{ m.key }}.
         Your browser does not support the video element.
     </video>
 </div>
+{% elif 'application/pdf' in m.mimetype %}
+<div>
+    <embed src="{{ url }}" width="100%" height="400px"/>
+</div>
 {% elif 'audio' in m.mimetype %}
 <div>
     <audio controls>

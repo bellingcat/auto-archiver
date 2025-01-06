@@ -286,11 +286,11 @@
         // logic for enabled/disabled greyscale
         // Get references to the checkboxes and images/videos
         const safeImageViewCheckbox = document.getElementById('safe-media-view');
-        const imagesVideos = document.querySelectorAll('img, video');
+        const visualPreviews = document.querySelectorAll('img, video,embed');
 
         // Function to toggle grayscale effect
         function toggleGrayscale() {
-            imagesVideos.forEach(element => {
+            visualPreviews.forEach(element => {
                 if (safeImageViewCheckbox.checked) {
                     // Enable grayscale effect
                     element.style.filter = 'grayscale(1)';
@@ -307,7 +307,7 @@
         safeImageViewCheckbox.addEventListener('change', toggleGrayscale);
 
         // Handle the hover effect using JavaScript
-        imagesVideos.forEach(element => {
+        visualPreviews.forEach(element => {
             element.addEventListener('mouseenter', () => {
                 // Disable grayscale effect on hover
                 element.style.filter = 'none';
