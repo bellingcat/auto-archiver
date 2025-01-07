@@ -2,6 +2,7 @@ steps:
   # only 1 feeder allowed
   feeder: gsheet_feeder # defaults to cli_feeder
   archivers: # order matters, uncomment to activate
+    - bluesky_archiver
     # - vk_archiver
     # - telethon_archiver
     # - telegram_archiver
