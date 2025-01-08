@@ -113,8 +113,7 @@ class TwitterArchiver(Archiver):
             .set_timestamp(datetime.strptime(tweet["created_at"], "%a %b %d %H:%M:%S %z %Y"))
         if not tweet.get("entities", {}).get("media"):
             logger.debug('No media found, archiving tweet text only')
-            result.status = "twitter-ytdl"
-            return result
+            return result.success("twitter-ytdl")
         for i, tw_media in enumerate(tweet["entities"]["media"]):
             media = Media(filename="")
             mimetype = ""

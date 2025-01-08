@@ -7,7 +7,7 @@ name = "auto-archiver"
 version = "0.13.0"
 description = "Automatically archive links to videos, images, and social media content from Google Sheets (and more)."
 
-requires-python = ">=3.10,<3.12"
+requires-python = ">=3.10,<4.0"
 license = "MIT"
 authors = [
     { name = "Bellingcat", email = "tech@bellingcat.com" },
@@ -30,7 +30,6 @@ dependencies = [
     "loguru (>=0.0.0)",
     "ffmpeg-python (>=0.0.0)",
     "selenium (>=0.0.0)",
-    "snscrape (>=0.0.0)",
     "telethon (>=0.0.0)",
     "google-api-python-client (>=0.0.0)",
     "google-auth-httplib2 (>=0.0.0)",
