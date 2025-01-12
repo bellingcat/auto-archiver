@@ -2,7 +2,6 @@ import re, requests, mimetypes, json
 from typing import Union
 from datetime import datetime
 from loguru import logger
-from snscrape.modules.twitter import TwitterTweetScraper, Video, Gif, Photo
 from yt_dlp import YoutubeDL
 from yt_dlp.extractor.twitter import TwitterIE
 from slugify import slugify
@@ -49,7 +48,7 @@ class TwitterArchiver(Archiver):
         username, tweet_id = self.get_username_tweet_id(url)
         if not username: return False
 
-        strategies = [self.download_yt_dlp, self.download_snscrape, self.download_syndication]
+        strategies = [self.download_yt_dlp, self.download_syndication]
         for strategy in strategies:
             logger.debug(f"Trying {strategy.__name__} for {url=}")
             try:
@@ -60,45 +59,6 @@ class TwitterArchiver(Archiver):
         
         logger.warning(f"No free strategy worked for {url}")
         return False
-
-        
-    def download_snscrape(self, item: Metadata, url: str, tweet_id: str) -> Union[Metadata|bool]:
-        scr = TwitterTweetScraper(tweet_id)
-        try:
-            tweet = next(scr.get_items())
-        except Exception as ex:
-            logger.warning(f"SNSCRAPE FAILED, can't get tweet: {type(ex).__name__} occurred. args: {ex.args}")
-            return False
-        
-        result = Metadata()
-        result.set_title(tweet.content).set_content(tweet.json()).set_timestamp(tweet.date)
-        if tweet.media is None:
-            logger.debug(f'No media found, archiving tweet text only')
-            return result
-
-        for i, tweet_media in enumerate(tweet.media):
-            media = Media(filename="")
-            mimetype = ""
-            if type(tweet_media) == Video:
-                variant = max(
-                    [v for v in tweet_media.variants if v.bitrate], key=lambda v: v.bitrate)
-                media.set("src", variant.url).set("duration", tweet_media.duration)
-                mimetype = variant.contentType
-            elif type(tweet_media) == Gif:
-                variant = tweet_media.variants[0]
-                media.set("src", variant.url)
-                mimetype = variant.contentType
-            elif type(tweet_media) == Photo:
-                media.set("src", UrlUtil.twitter_best_quality_url(tweet_media.fullUrl))
-                mimetype = "image/jpeg"
-            else:
-                logger.warning(f"Could not get media URL of {tweet_media}")
-                continue
-            ext = mimetypes.guess_extension(mimetype)
-            media.filename = self.download_from_url(media.get("src"), f'{slugify(url)}_{i}{ext}')
-            result.add_media(media)
-
-        return result.success("twitter-snscrape")
 
     def download_syndication(self, item: Metadata, url: str, tweet_id: str) -> Union[Metadata|bool]:
         """

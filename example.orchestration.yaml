@@ -2,6 +2,7 @@ steps:
   # only 1 feeder allowed
   feeder: gsheet_feeder # defaults to cli_feeder
   archivers: # order matters, uncomment to activate
+    - bluesky_archiver
     # - vk_archiver
     # - telethon_archiver
     # - telegram_archiver
@@ -94,9 +95,33 @@ configurations:
     password: "vk pass"
     session_file: "secrets/vk_config.v2.json"
 
+  youtubedl_archiver:
+    subtitles: true
+    # use one of the following two methods to authenticate in youtube - either provide a cookies file or use the cookies of the given browser
+    # for more information, see https://github.com/yt-dlp/yt-dlp/wiki/FAQ#how-do-i-pass-cookies-to-yt-dlp
+    # cookie_file: "secrets/youtube_cookies.txt"
+    # cookies_from_browser: firefox
+    # proxy: socks5://proxy-user:password@proxy-ip:port
+
   screenshot_enricher:
     width: 1280
     height: 2300
+    # to save as pdf, uncomment the following lines and adjust the print options
+    # save_to_pdf: true
+    # print_options:
+      # for all options see https://www.selenium.dev/selenium/docs/api/py/webdriver/selenium.webdriver.common.print_page_options.html
+      # background: true
+      # orientation: "portrait"
+      # scale: 1
+      # page_width: 8.5in
+      # page_height: 11in
+      # margin_top: 0.4in
+      # margin_bottom: 0.4in
+      # margin_left: 0.4in
+      # margin_right: 0.4in
+      # page_ranges: ""
+      # shrink_to_fit: true
+
   wayback_archiver_enricher:
     timeout: 10
     key: "wayback key"
