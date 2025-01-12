@@ -38,7 +38,6 @@ class TestTwitterArchiver(TestArchiverBase, unittest.TestCase):
         test_url = "https://www.bellingcat.com/category/resources/?s=20&t=3d0g4ZQis7dCbSDg-mE7-w"
         self.assertEqual(test_url, self.archiver.sanitize_url(test_url))
 
-    
     def test_get_username_tweet_id_from_url(self):
 
         # test valid twitter URL
@@ -70,8 +69,18 @@ class TestTwitterArchiver(TestArchiverBase, unittest.TestCase):
             "As 2024 comes to a close, here’s some examples of what Bellingcat investigated per month in our 10th year! 🧵",
             datetime.datetime(2024, 12, 31, 14, 18, 33, tzinfo=datetime.timezone.utc)
         )
-        breakpoint()
+    
+    def test_download_nonexistend_tweet(self):
+        # this tweet does not exist
+        url = "https://x.com/Bellingcat/status/17197025860711058"
+        response = self.archiver.download(self.create_item(url))
+        self.assertFalse(response)
 
+    def test_download_malformed_tweetid(self):
+        # this tweet does not exist
+        url = "https://x.com/Bellingcat/status/1719702586071100058"
+        response = self.archiver.download(self.create_item(url))
+        self.assertFalse(response)
 
     def test_download_media_with_images(self):
         # url https://twitter.com/MeCookieMonster/status/1617921633456640001?s=20&t=3d0g4ZQis7dCbSDg-mE7-w

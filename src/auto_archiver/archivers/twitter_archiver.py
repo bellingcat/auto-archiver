@@ -108,9 +108,11 @@ class TwitterArchiver(Archiver):
         tweet = tie._extract_status(tweet_id)
         result = Metadata()
         try:
+            if not tweet.get("user") or not tweet.get("created_at"):
+                raise ValueError(f"Error retreiving post with id {tweet_id}. Are you sure it exists?")
             timestamp = datetime.strptime(tweet["created_at"], "%a %b %d %H:%M:%S %z %Y")
-        except Exception as ex:
-            logger.warning(f"Failed to get timestamp: {type(ex).__name__} occurred. args: {ex.args}")
+        except (ValueError, KeyError) as ex:
+            logger.warning(f"Unable to parse tweet: {str(ex)}\nRetreived tweet data: {tweet}")
             return False
                 
         result\
