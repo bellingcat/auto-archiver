@@ -1,4 +1,4 @@
-import re, requests, mimetypes, json
+import re, requests, mimetypes, json, math
 from typing import Union
 from datetime import datetime
 from loguru import logger
@@ -59,17 +59,54 @@ class TwitterArchiver(Archiver):
         
         logger.warning(f"No free strategy worked for {url}")
         return False
+    
 
+    def generate_token(self, tweet_id: str) -> str:
+        """Generates the syndication token for a tweet ID.
+        
+        Taken from https://github.com/JustAnotherArchivist/snscrape/issues/996#issuecomment-2211358215
+        And Vercel's code: https://github.com/vercel/react-tweet/blob/main/packages/react-tweet/src/api/fetch-tweet.ts#L27
+        """
+
+        # Perform the division and multiplication by π
+        result = (int(tweet_id) / 1e15) * math.pi
+        fractional_part = result % 1
+
+        # Convert to base 36
+        base_36 = ''
+        while result >= 1:
+            base_36 = "0123456789abcdefghijklmnopqrstuvwxyz"[int(result % 36)] + base_36
+            result = math.floor(result / 36)
+
+        # Append fractional part in base 36
+        while fractional_part > 0 and len(base_36) < 11:  # Limit to avoid infinite loop
+            fractional_part *= 36
+            digit = int(fractional_part)
+            base_36 += "0123456789abcdefghijklmnopqrstuvwxyz"[digit]
+            fractional_part -= digit
+        
+        # Remove leading zeros and dots
+        return base_36.replace('0', '').replace('.', '')
+
+
+    
     def download_syndication(self, item: Metadata, url: str, tweet_id: str) -> Union[Metadata|bool]:
         """
-        Hack alternative working again.
-        https://stackoverflow.com/a/71867055/6196010 (OUTDATED URL)
+        Downloads tweets using Twitter's own embed API (Hack).
+
+        Background on method can be found at:
         https://github.com/JustAnotherArchivist/snscrape/issues/996#issuecomment-1615937362
+        https://github.com/JustAnotherArchivist/snscrape/issues/996#issuecomment-2211358215
         next to test: https://cdn.embedly.com/widgets/media.html?&schema=twitter&url=https://twitter.com/bellingcat/status/1674700676612386816
         """
 
-        hack_url = f"https://cdn.syndication.twimg.com/tweet-result?id={tweet_id}"
-        r = requests.get(hack_url)
+        hack_url = "https://cdn.syndication.twimg.com/tweet-result"
+        params = {
+            'id': tweet_id,
+            'token': self.generate_token(tweet_id)
+        }
+
+        r = requests.get(hack_url, params=params, timeout=10)
         if r.status_code != 200 or r.json()=={}: 
             logger.warning(f"SyndicationHack: Failed to get tweet information from {hack_url}.")
             return False
@@ -86,7 +123,7 @@ class TwitterArchiver(Archiver):
             v = tweet["video"]
             urls.append(self.choose_variant(v.get("variants", []))['url'])
 
-        logger.debug(f"Twitter hack got {urls=}")
+        logger.debug(f"Twitter hack got media {urls=}")
 
         for i, u in enumerate(urls):
             media = Media(filename="")

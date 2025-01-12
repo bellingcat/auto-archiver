@@ -70,6 +70,30 @@ class TestTwitterArchiver(TestArchiverBase, unittest.TestCase):
             datetime.datetime(2024, 12, 31, 14, 18, 33, tzinfo=datetime.timezone.utc)
         )
     
+    def test_reverse_engineer_token(self):
+        # see Vercel's implementation here: https://github.com/vercel/react-tweet/blob/main/packages/react-tweet/src/api/fetch-tweet.ts#L27C1-L31C2
+        # and the discussion here: https://github.com/JustAnotherArchivist/snscrape/issues/996#issuecomment-2211358215
+
+        for tweet_id, real_token in [
+            ("1874097816571961839", "4jjngwkifa"),
+            ("1674700676612386816", "42586mwa3uv"),
+            ("1877747914073620506", "4jv4aahw36n"),
+            ("1876710769913450647", "4jruzjz5lux"),
+            ("1346554693649113090", "39ibqxei7mo"),]:
+            generated_token = self.archiver.generate_token(tweet_id)
+            self.assertEqual(real_token, generated_token)
+                         
+    def test_syndication_archiver(self):
+
+        url = "https://x.com/bellingcat/status/1874097816571961839"
+        post = self.archiver.download_syndication(self.create_item(url), url, "1874097816571961839")
+        self.assertTrue(post)
+        self.assertValidResponseMetadata(
+            post,
+            "As 2024 comes to a close, here’s some examples of what Bellingcat investigated per month in our 10th year! 🧵",
+            datetime.datetime(2024, 12, 31, 14, 18, 33, tzinfo=datetime.timezone.utc)
+        )
+
     def test_download_nonexistend_tweet(self):
         # this tweet does not exist
         url = "https://x.com/Bellingcat/status/17197025860711058"
