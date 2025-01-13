@@ -2,16 +2,15 @@ name: Core Tests
 
 on:
   push:
-    branches: [ main, staging ]
+    branches: [ main ]
     paths:
       - src/**
   pull_request:
-    branches: [ main, staging ]
     paths:
       - src/**
 
 jobs:
-  test_back:
+  tests:
     runs-on: ubuntu-latest
     strategy:
       matrix:
