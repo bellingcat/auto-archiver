@@ -31,4 +31,4 @@ jobs:
           pip install .
       - name: Run Core Tests
         run: |
-          pytest -m "not download"
+          pytest -ra -v -m "not download"
