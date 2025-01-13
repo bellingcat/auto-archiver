@@ -3,7 +3,7 @@
 {% for url in m.urls %}
 {% if url | length == 0 %}
 No URL available for {{ m.key }}.
-{% elif 'http' in url %}
+{% elif 'http://' in url or 'https://' in url or url.startswith('/') %}
 {% if 'image' in m.mimetype %}
 <div>
     <a href="{{ url }}">
