@@ -1,4 +1,4 @@
-# This workflow will upload a Python Package using Twine when a release is created
+# This workflow uploads a Python Package to PyPI using Poetry when a release is created
 # For more information see: https://help.github.com/en/actions/language-and-framework-guides/using-python-with-github-actions#publishing-to-package-registries
 
 # This workflow uses actions that are not certified by GitHub.
@@ -21,30 +21,34 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - name: Checkout Repository
+      uses: actions/checkout@v3
 
-    - name: Set up Python 3.10
+    - name: Extract Python Version from pyproject.toml
+      id: python-version
+      run: |
+        version=$(grep 'python =' pyproject.toml | awk -F'"' '{print $2}' | tr -d '^~<=>')
+        echo "python-version=$version" >> $GITHUB_ENV
+
+    - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: "3.10"
+        python-version: ${{ env.python-version }}
+
+    - name: Install Poetry
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install "poetry>=2.0.0,<3.0.0"
 
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade --upgrade-strategy=eager pip setuptools wheel twine pipenv
-        python -m pip install -e . --upgrade
-        python -m pipenv install --dev --python 3.10
-      env:
-        PIPENV_DEFAULT_PYTHON_VERSION: "3.10"
+        poetry install --no-root
 
-    - name: Build wheels
+    - name: Build the package
       run: |
-        python -m pipenv run python setup.py sdist bdist_wheel
+        poetry build
 
-    - name: Publish a Python distribution to PyPI
-      uses: pypa/gh-action-pypi-publish@release/v1
-      with:
-        user: __token__
-        verbose: true
-        skip_existing: true
-        password: ${{ secrets.PYPI_API_TOKEN }}
-        packages_dir: dist/
+    # Step 6: Publish to PyPI
+    - name: Publish to PyPI
+      run: |
+        poetry publish --username __token__ --password ${{ secrets.PYPI_API_TOKEN }}

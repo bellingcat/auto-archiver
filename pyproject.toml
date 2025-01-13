@@ -1,4 +1,76 @@
 [build-system]
-requires = ["setuptools", "wheel", "setuptools-pipfile"]
-build-backend = "setuptools.build_meta"
-[tool.setuptools-pipfile]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[project]
+name = "auto-archiver"
+version = "0.13.0"
+description = "Automatically archive links to videos, images, and social media content from Google Sheets (and more)."
+
+requires-python = ">=3.10,<3.13"
+license = "MIT"
+authors = [
+    { name = "Bellingcat", email = "tech@bellingcat.com" },
+]
+readme = "README.md"
+keywords = ["archive", "oosi", "osint", "scraping"]
+classifiers = [
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3"
+]
+
+dependencies = [
+    "gspread (>=0.0.0)",
+    "argparse (>=0.0.0)",
+    "beautifulsoup4 (>=0.0.0)",
+    "tiktok-downloader (>=0.0.0)",
+    "bs4 (>=0.0.0)",
+    "loguru (>=0.0.0)",
+    "ffmpeg-python (>=0.0.0)",
+    "selenium (>=0.0.0)",
+    "telethon (>=0.0.0)",
+    "google-api-python-client (>=0.0.0)",
+    "google-auth-httplib2 (>=0.0.0)",
+    "google-auth-oauthlib (>=0.0.0)",
+    "oauth2client (>=0.0.0)",
+    "pdqhash (>=0.0.0)",
+    "pillow (>=0.0.0)",
+    "python-slugify (>=0.0.0)",
+    "pyyaml (>=0.0.0)",
+    "dateparser (>=0.0.0)",
+    "python-twitter-v2 (>=0.0.0)",
+    "instaloader (>=0.0.0)",
+    "tqdm (>=0.0.0)",
+    "jinja2 (>=0.0.0)",
+    "pyOpenSSL (==24.2.1)",
+    "cryptography (>=41.0.0,<42.0.0)",
+    "boto3 (>=1.28.0,<2.0.0)",
+    "dataclasses-json (>=0.0.0)",
+    "yt-dlp (==2024.09.27)",
+    "numpy (==2.1.3)",
+    "vk-url-scraper (>=0.0.0)",
+    "requests[socks] (>=0.0.0)",
+    "warcio (>=0.0.0)",
+    "jsonlines (>=0.0.0)",
+    "pysubs2 (>=0.0.0)",
+    "minify-html (>=0.0.0)",
+    "retrying (>=0.0.0)",
+    "tsp-client (>=0.0.0)",
+    "certvalidator (>=0.0.0)",
+    "toml (>=0.10.2,<0.11.0)"
+]
+
+
+[poetry.group.dev.dependencies]
+autopep8 = "*"
+
+
+[project.scripts]
+auto-archiver = "auto_archiver.__main__:main"
+
+[project.urls]
+homepage = "https://github.com/bellingcat/auto-archiver"
+repository = "https://github.com/bellingcat/auto-archiver"
+documentation = "https://github.com/bellingcat/auto-archiver"
