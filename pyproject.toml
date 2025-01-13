@@ -1,5 +1,5 @@
 [build-system]
-requires = ["poetry-core>=2.0.0"]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [project]
@@ -7,7 +7,7 @@ name = "auto-archiver"
 version = "0.13.0"
 description = "Automatically archive links to videos, images, and social media content from Google Sheets (and more)."
 
-requires-python = ">=3.10,<4.0"
+requires-python = ">=3.10,<3.13"
 license = "MIT"
 authors = [
     { name = "Bellingcat", email = "tech@bellingcat.com" },
@@ -58,7 +58,8 @@ dependencies = [
     "minify-html (>=0.0.0)",
     "retrying (>=0.0.0)",
     "tsp-client (>=0.0.0)",
-    "certvalidator (>=0.0.0)"
+    "certvalidator (>=0.0.0)",
+    "toml (>=0.10.2,<0.11.0)"
 ]
 
 

@@ -30,7 +30,7 @@ ENV POETRY_NO_INTERACTION=1 \
 
 
 RUN pip install --upgrade pip && \
-    pip install "poetry>=2.0.0"
+    pip install "poetry>=2.0.0,<3.0.0"
 
 WORKDIR /app
 
