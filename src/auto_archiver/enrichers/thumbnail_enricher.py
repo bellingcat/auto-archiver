@@ -1,3 +1,11 @@
+"""Thumbnail Enricher for generating visual previews of video files.
+
+The `ThumbnailEnricher` processes video files in `Metadata` objects and
+creates evenly distributed thumbnail images. These thumbnails provide
+visual snapshots of the video's keyframes, helping users preview content
+and identify important moments without watching the entire video.
+
+"""
 import ffmpeg, os
 from loguru import logger
 

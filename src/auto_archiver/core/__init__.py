@@ -1,3 +1,6 @@
+""" Core modules to handle things such as orchestration, metadata and configs..
+
+"""
 from .metadata import Metadata
 from .media import Media
 from .step import Step

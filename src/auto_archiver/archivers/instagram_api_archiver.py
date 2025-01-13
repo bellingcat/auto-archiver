@@ -1,4 +1,15 @@
-import re, requests
+"""
+The `instagram_api_archiver` module provides tools for archiving various types of Instagram content
+using the [Instagrapi API](https://github.com/subzeroid/instagrapi).
+
+Connects to an Instagrapi API deployment and allows for downloading Instagram user profiles,
+posts, stories, highlights, and tagged content. It offers advanced configuration options for filtering
+data, reducing JSON output size, and handling large profiles.
+
+"""
+
+import re
+import requests
 from datetime import datetime
 from loguru import logger
 from retrying import retry

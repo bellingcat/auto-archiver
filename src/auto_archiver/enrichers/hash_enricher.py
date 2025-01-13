@@ -1,3 +1,12 @@
+""" Hash Enricher for generating cryptographic hashes of media files.
+
+The `HashEnricher` calculates cryptographic hashes (e.g., SHA-256, SHA3-512)
+for media files stored in `Metadata` objects. These hashes are used for
+validating content integrity, ensuring data authenticity, and identifying
+exact duplicates. The hash is computed by reading the file's bytes in chunks,
+making it suitable for handling large files efficiently.
+
+"""
 import hashlib
 from loguru import logger
 

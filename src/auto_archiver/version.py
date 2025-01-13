@@ -1,12 +1,12 @@
+""" Version information for the auto_archiver package.
+    TODO: This is a placeholder to replicate previous versioning.
 
-_MAJOR = "0"
-_MINOR = "13"
-# On main and in a nightly release the patch should be one ahead of the last
-# released build.
-_PATCH = "1"
+"""
+from importlib.metadata import version as get_version
+
+VERSION_SHORT = get_version("auto_archiver")
+
 # This is mainly for nightly builds which have the suffix ".dev$DATE". See
 # https://semver.org/#is-v123-a-semantic-version for the semantics.
 _SUFFIX = ""
-
-VERSION_SHORT = "{0}.{1}".format(_MAJOR, _MINOR)
-__version__ = "{0}.{1}.{2}{3}".format(_MAJOR, _MINOR, _PATCH, _SUFFIX)
+__version__ = f"{VERSION_SHORT}{_SUFFIX}"

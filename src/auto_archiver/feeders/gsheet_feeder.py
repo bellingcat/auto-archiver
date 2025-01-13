@@ -1,3 +1,13 @@
+"""
+GsheetsFeeder: A Google Sheets-based feeder for the Auto Archiver.
+
+This reads data from Google Sheets and filters rows based on user-defined rules.
+The filtered rows are processed into `Metadata` objects.
+
+### Key properties
+- validates the sheet's structure and filters rows based on input configurations.
+- Ensures only rows with valid URLs and unprocessed statuses are included.
+"""
 import gspread, os
 
 from loguru import logger

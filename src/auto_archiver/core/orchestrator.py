@@ -1,3 +1,9 @@
+""" Orchestrates all archiving steps, including feeding items,
+    archiving them with specific archivers, enrichment, storage,
+    formatting, database operations and clean up.
+
+"""
+
 from __future__ import annotations
 from typing import Generator, Union, List
 from urllib.parse import urlparse

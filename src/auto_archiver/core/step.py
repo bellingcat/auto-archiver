@@ -1,3 +1,9 @@
+"""
+Defines the Step abstract base class, which acts as a blueprint for steps in the archiving pipeline
+by handling user configuration, validating the steps properties, and implementing dynamic instantiation.
+
+"""
+
 from __future__ import annotations
 from dataclasses import dataclass
 from inspect import ClassFoundException
@@ -10,6 +16,7 @@ class Step(ABC):
     name: str = None
 
     def __init__(self, config: dict) -> None:
+        # Initialises each step by reading the relevant entries
         # reads the configs into object properties
         # self.config = config[self.name]
         for k, v in config.get(self.name, {}).items():
@@ -20,7 +27,9 @@ class Step(ABC):
 
     def init(name: str, config: dict, child: Type[Step]) -> Step:
         """
-        looks into direct subclasses of child for name and returns such an object
+        Attempts to instantiate a subclass of the provided `child` type
+        matching the given `name`.
+        Raises ClassFoundException if no matching subclass is found.
         TODO: cannot find subclasses of child.subclasses
         """
         for sub in child.__subclasses__():
@@ -30,7 +39,9 @@ class Step(ABC):
 
     def assert_valid_string(self, prop: str) -> None:
         """
-        receives a property name an ensures it exists and is a valid non-empty string, raises an exception if not
+        Receives a property name and ensures it exists and is a valid non-empty string,
+        raising an AssertionError if not.
+        TODO: replace assertions with custom exceptions.
         """
         assert hasattr(self, prop), f"property {prop} not found"
         s = getattr(self, prop)

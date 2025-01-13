@@ -1,3 +1,7 @@
+"""
+Manages media files and their associated metadata, supporting storage,
+nested media retrieval, and type validation.
+"""
 
 from __future__ import annotations
 import os
@@ -18,6 +22,16 @@ from loguru import logger
 @dataclass_json  # annotation order matters
 @dataclass
 class Media:
+    """
+    Represents a media file with associated properties and storage details.
+
+    Attributes:
+    - filename: The file path of the media.
+    - key: An optional identifier for the media.
+    - urls: A list of URLs where the media is stored or accessible.
+    - properties: Additional metadata or transformations for the media.
+    - _mimetype: The media's mimetype (e.g., image/jpeg, video/mp4).
+    """
     filename: str
     key: str = None
     urls: List[str] = field(default_factory=list)
@@ -40,8 +54,9 @@ class Media:
                 s.store(any_media, url, metadata=metadata)
 
     def all_inner_media(self, include_self=False):
-        """ Media can be inside media properties, examples include transformations on original media.
-        This function returns a generator for all the inner media.        
+        """Retrieves all media, including nested media within properties or transformations on original media.
+        This function returns a generator for all the inner media.
+
         """
         if include_self: yield self
         for prop in self.properties.values():

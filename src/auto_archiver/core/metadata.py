@@ -1,3 +1,13 @@
+"""
+Acts as a container for metadata and media objects associated with an archived item.
+
+Key Functionalities:
+- Store and retrieve metadata and associated media.
+- Merge metadata objects with conflict resolution.
+- Validate properties like URLs and timestamps.
+- Manage and deduplicate media objects.
+- Support for flexible metadata querying and appending.
+"""
 
 from __future__ import annotations
 import hashlib
@@ -25,7 +35,11 @@ class Metadata:
 
     def merge(self: Metadata, right: Metadata, overwrite_left=True) -> Metadata:
         """
-        merges two Metadata instances, will overwrite according to overwrite_left flag
+        Merges another `Metadata` instance into this one.
+
+        Conflicts are resolved based on the `overwrite_left` flag:
+        - If `True`, this instance's values are overwritten by `right`.
+        - If `False`, the inverse applies.
         """
         if not right: return self
         if overwrite_left:

@@ -1,4 +1,23 @@
-import datetime, os, yt_dlp, pysubs2
+"""
+This defines an archiver implementation using `yt-dlp`.
+
+This module is responsible for downloading and processing media content from platforms
+supported by `yt-dlp`, such as YouTube, Facebook, and others. It provides functionality
+for retrieving videos, subtitles, comments, and other metadata, and it integrates with
+the broader archiving framework.
+
+### Features
+- Supports downloading videos and playlists.
+- Retrieves metadata like titles, descriptions, upload dates, and durations.
+- Downloads subtitles and comments when enabled.
+- Configurable options for handling live streams, proxies, and more.
+
+"""
+import datetime
+import os
+import pysubs2
+import yt_dlp
+
 from loguru import logger
 
 from . import Archiver
@@ -37,6 +56,7 @@ class YoutubeDLArchiver(Archiver):
     def download(self, item: Metadata) -> Metadata:
         url = item.get_url()
 
+        # Handle Facebook cookies if enabled
         if item.netloc in ['facebook.com', 'www.facebook.com'] and self.facebook_cookie:
             logger.debug('Using Facebook cookie')
             yt_dlp.utils.std_headers['cookie'] = self.facebook_cookie
@@ -66,11 +86,12 @@ class YoutubeDLArchiver(Archiver):
             logger.debug(f'ytdlp exception which is normal for example a facebook page with images only will cause a IndexError: list index out of range. Exception is: \n  {e}')
             return False
 
-        # this time download
+        # This time download the content
         ydl = yt_dlp.YoutubeDL({**ydl_options, "getcomments": self.comments})
         #TODO: for playlist or long lists of videos, how to download one at a time so they can be stored before the next one is downloaded?
         info = ydl.extract_info(url, download=True)
 
+        # Process entries (e.g., for playlists)
         if "entries" in info:
             entries = info.get("entries", [])
             if not len(entries):
@@ -78,9 +99,11 @@ class YoutubeDLArchiver(Archiver):
                 return False
         else: entries = [info]
 
+        # Prepare enriched metadata
         result = Metadata()
         result.set_title(info.get("title"))
         if "description" in info: result.set_content(info["description"])
+        # Process individual entries
         for entry in entries:
             try:
                 filename = ydl.prepare_filename(entry)
@@ -112,6 +135,7 @@ class YoutubeDLArchiver(Archiver):
                 "timestamp": datetime.datetime.fromtimestamp(c.get("timestamp"), tz = datetime.timezone.utc)
             } for c in info.get("comments", [])])
 
+        # Set additional metadata
         if (timestamp := info.get("timestamp")):
             #TODO: fix deprecated timestamp, 
             timestamp = datetime.datetime.fromtimestamp(timestamp, tz = datetime.timezone.utc).isoformat()
@@ -120,6 +144,7 @@ class YoutubeDLArchiver(Archiver):
             upload_date = datetime.datetime.strptime(upload_date, '%Y%m%d').replace(tzinfo=datetime.timezone.utc)
             result.set("upload_date", upload_date)
 
+        # Update status for success
         if self.end_means_success: result.success("yt-dlp")
         else: result.status = "yt-dlp"
         return result

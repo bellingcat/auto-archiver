@@ -1,3 +1,15 @@
+"""
+PDQ Hash Enricher for generating perceptual hashes of media files.
+
+The `PdqHashEnricher` processes media files (e.g., images) in `Metadata`
+objects and calculates perceptual hashes using the PDQ hashing algorithm.
+These hashes are designed specifically for images and can be used
+for detecting duplicate or near-duplicate visual content.
+
+This enricher is typically used after thumbnail or screenshot enrichers
+to ensure images are available for hashing.
+
+"""
 import traceback
 import pdqhash
 import numpy as np

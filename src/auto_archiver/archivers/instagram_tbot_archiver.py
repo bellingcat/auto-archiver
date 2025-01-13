@@ -1,3 +1,11 @@
+"""
+InstagramTbotArchiver Module
+
+This module provides functionality to archive Instagram content (posts, stories, etc.) using a Telegram bot (`instagram_load_bot`).
+It interacts with the Telegram API via the Telethon library to send Instagram URLs to the bot, which retrieves the
+relevant media and metadata. The fetched content is saved as `Media` objects in a temporary directory and returned as a
+`Metadata` object.
+"""
 
 import shutil
 from telethon.sync import TelegramClient

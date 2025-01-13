@@ -32,7 +32,9 @@ class AAApiDb(Database):
             "tags": {"default": [], "help": "what tags to add to the archived URL", "cli_set": lambda cli_val, cur_val: set(cli_val.split(","))},
         }
     def fetch(self, item: Metadata) -> Union[Metadata, bool]:
-        """ query the database for the existence of this item"""
+        """ query the database for the existence of this item.
+            Helps avoid re-archiving the same URL multiple times.
+        """
         if not self.allow_rearchive: return
         
         params = {"url": item.get_url(), "limit": 15}
