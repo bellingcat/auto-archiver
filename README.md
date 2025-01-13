@@ -50,7 +50,7 @@ Docker works like a virtual machine running inside your computer, it isolates ev
 <details><summary><code>Python package instructions</code></summary>
 
 1. make sure you have python 3.10 or higher installed
-2. install the package `pip/pipenv/conda install auto-archiver`
+2. install the package with your preferred package manager: `pip/pipenv/conda install auto-archiver` or `poetry add auto-archiver`
 3. test it's installed with `auto-archiver --help`
 4. run it with your orchestration file and pass any flags you want in the command line `auto-archiver --config secrets/orchestration.yaml` if your orchestration file is inside a `secrets/`, which we advise
    
@@ -68,12 +68,13 @@ This can also be used for development.
 Install the following locally:
 1. [ffmpeg](https://www.ffmpeg.org/) must also be installed locally for this tool to work. 
 2. [firefox](https://www.mozilla.org/en-US/firefox/new/) and [geckodriver](https://github.com/mozilla/geckodriver/releases) on a path folder like `/usr/local/bin`. 
-3. (optional) [fonts-noto](https://fonts.google.com/noto) to deal with multiple unicode characters during selenium/geckodriver's screenshots: `sudo apt install fonts-noto -y`. 
+3. [Poetry](https://python-poetry.org/docs/#installation) for dependency management and packaging.
+4. (optional) [fonts-noto](https://fonts.google.com/noto) to deal with multiple unicode characters during selenium/geckodriver's screenshots: `sudo apt install fonts-noto -y`.
 
 Clone and run:
 1. `git clone https://github.com/bellingcat/auto-archiver`
-2. `pipenv install`
-3. `pipenv run python -m src.auto_archiver --config secrets/orchestration.yaml`
+2. `poetry install`
+3. `poetry run python -m src.auto_archiver --config secrets/orchestration.yaml`
 
 
 </details><br/>
@@ -119,7 +120,7 @@ auto-archiver --config secrets/orchestration.yaml --cli_feeder.urls="url1,url2,u
 ```
 
 Here's the complete workflow that the auto-archiver goes through:
-```mermaid
+```{mermaid}
 graph TD
     s((start)) --> F(fa:fa-table Feeder)
     F -->|get and clean URL| D1{fa:fa-database Database}
