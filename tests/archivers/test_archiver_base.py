@@ -1,4 +1,5 @@
 from auto_archiver.core import Metadata
+from auto_archiver.core.metadata import Metadata
 
 class TestArchiverBase(object):
 
@@ -16,7 +17,13 @@ class TestArchiverBase(object):
             item.set(key, value)
         return item
     
-    def assertValidResponseMetadata(self, test_response, title, timestamp):
-        assert test_response.is_success()
+    def assertValidResponseMetadata(self, test_response: Metadata, title: str, timestamp: str, status: str = ""):
+        assert test_response is not False
+
+        if not status:
+            assert test_response.is_success()
+        else:
+            assert status == test_response.status
+
         assert title == test_response.get_title()
         assert timestamp, test_response.get("timestamp")

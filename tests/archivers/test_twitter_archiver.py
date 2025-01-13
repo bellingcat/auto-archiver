@@ -1,10 +1,10 @@
 import unittest
 import datetime
+import pytest
 
 from auto_archiver.archivers.twitter_archiver import TwitterArchiver
 
 from .test_archiver_base import TestArchiverBase
-
 
 class TestTwitterArchiver(TestArchiverBase, unittest.TestCase):
 
@@ -60,6 +60,7 @@ class TestTwitterArchiver(TestArchiverBase, unittest.TestCase):
         assert not username
         assert not tweet_id
 
+    @pytest.mark.download
     def test_youtube_dlp_archiver(self):
 
         url = "https://x.com/bellingcat/status/1874097816571961839"
@@ -68,28 +69,45 @@ class TestTwitterArchiver(TestArchiverBase, unittest.TestCase):
         self.assertValidResponseMetadata(
             post,
             "As 2024 comes to a close, here’s some examples of what Bellingcat investigated per month in our 10th year! 🧵",
-            datetime.datetime(2024, 12, 31, 14, 18, 33, tzinfo=datetime.timezone.utc)
+            datetime.datetime(2024, 12, 31, 14, 18, 33, tzinfo=datetime.timezone.utc),
+            "twitter-ytdl"
         )
-        breakpoint()
 
-
-    def test_download_media_with_images(self):
+    @pytest.mark.download
+    def test_download_tweet_no_media(self):
         # url https://twitter.com/MeCookieMonster/status/1617921633456640001?s=20&t=3d0g4ZQis7dCbSDg-mE7-w
         
-        post = self.archiver.download()
+        item = self.create_item("https://twitter.com/MeCookieMonster/status/1617921633456640001?s=20&t=3d0g4ZQis7dCbSDg-mE7-w")
+        post = self.archiver.download(item)
 
-        # just make sure twitter haven't changed their format, images should be under "record/embed/media/images"
-        # there should be 2 images
-        assert "record" in post
-        assert "embed" in post["record"]
-        assert "media" in post["record"]["embed"]
-        assert "images" in post["record"]["embed"]["media"]
-        assert len(post["record"]["embed"]["media"]["images"]) == 2
+        self.assertValidResponseMetadata(
+            post,
+            "Onion rings are just vegetable donuts.",
+            datetime.datetime(2023, 1, 24, 16, 25, 51, tzinfo=datetime.timezone.utc),
+            "twitter-ytdl"
+        )
 
-        # try downloading the media files
-        media = self.archiver.download(post)
-        assert len(media) == 2
+    @pytest.mark.download
+    def test_download_sensitive_media(self):
 
-        # check the IDs
-        assert "bafkreiflrkfihcvwlhka5tb2opw2qog6gfvywsdzdlibveys2acozh75tq" in media[0].get('src')
-        assert "bafkreibsprmwchf7r6xcstqkdvvuj3ijw7efciw7l3y4crxr4cmynseo7u" in media[1].get('src')
+        """Download tweets with sensitive media
+        
+        Note: currently failing, youtube-dlp requres logged in users"""
+
+
+        test_data = [
+            ("https://x.com/SozinhoRamalho/status/1876710769913450647", "ignore tweet, testing sensitivity warning nudity", datetime.datetime(2024, 12, 31, 14, 18, 33, tzinfo=datetime.timezone.utc), "image_hash"),
+            ("https://x.com/SozinhoRamalho/status/1876710875475681357", "ignore tweet, testing sensitivity warning violence", datetime.datetime(2024, 12, 31, 14, 18, 33, tzinfo=datetime.timezone.utc), "image_hash"),
+            ("https://x.com/SozinhoRamalho/status/1876711053813227618", "ignore tweet, testing sensitivity warning sensitive", datetime.datetime(2024, 12, 31, 14, 18, 33, tzinfo=datetime.timezone.utc), "image_hash"),
+            ("https://x.com/SozinhoRamalho/status/1876711141314801937", "ignore tweet, testing sensitivity warning nudity, violence, sensitivity", datetime.datetime(2024, 12, 31, 14, 18, 33, tzinfo=datetime.timezone.utc), "image_hash")
+        ]
+
+        for url, title, timestamp, image_hash in test_data:
+            post = self.archiver.download(self.create_item(url))
+            self.assertValidResponseMetadata(
+                post,
+                title,
+                timestamp
+            )
+            assert len(post.media) == 1
+            assert post.media[0].hash == image_hash

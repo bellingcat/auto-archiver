@@ -1,7 +1,8 @@
+import pytest
+import unittest
+
 from auto_archiver.archivers.bluesky_archiver import BlueskyArchiver
 from .test_archiver_base import TestArchiverBase
-from vcr.unittest import VCRMixin
-import unittest
 
 class TestBlueskyArchiver(TestArchiverBase, unittest.TestCase):
     """Tests Bluesky Archiver
@@ -14,6 +15,7 @@ class TestBlueskyArchiver(TestArchiverBase, unittest.TestCase):
     archiver_class = BlueskyArchiver
     config = {}
 
+    @pytest.mark.download
     def test_download_media_with_images(self):
         # url https://bsky.app/profile/colborne.bsky.social/post/3lec2bqjc5s2y
         post = self.archiver._get_post_from_uri("https://bsky.app/profile/colborne.bsky.social/post/3lec2bqjc5s2y")
@@ -34,6 +36,7 @@ class TestBlueskyArchiver(TestArchiverBase, unittest.TestCase):
         assert "bafkreiflrkfihcvwlhka5tb2opw2qog6gfvywsdzdlibveys2acozh75tq" in media[0].get('src')
         assert "bafkreibsprmwchf7r6xcstqkdvvuj3ijw7efciw7l3y4crxr4cmynseo7u" in media[1].get('src')
 
+    @pytest.mark.download
     def test_download_post_with_single_image(self):
         # url https://bsky.app/profile/bellingcat.com/post/3lcxcpgt6j42l
         post = self.archiver._get_post_from_uri("https://bsky.app/profile/bellingcat.com/post/3lcxcpgt6j42l")
@@ -50,8 +53,9 @@ class TestBlueskyArchiver(TestArchiverBase, unittest.TestCase):
 
         # check the ID 
         assert "bafkreihljdtomy4yulx4nfxuqdatlgvdg45vxdmjzzhclsd4ludk7zfma4" in media[0].get('src')
-                         
+                        
 
+    @pytest.mark.download
     def test_download_post_with_video(self):
         # url https://bsky.app/profile/bellingcat.com/post/3le2l4gsxlk2i
         post = self.archiver._get_post_from_uri("https://bsky.app/profile/bellingcat.com/post/3le2l4gsxlk2i")
