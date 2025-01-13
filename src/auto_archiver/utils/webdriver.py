@@ -1,3 +1,4 @@
+""" This Webdriver class acts as a context manager for the selenium webdriver. """
 from __future__ import annotations
 from selenium import webdriver
 from selenium.common.exceptions import TimeoutException

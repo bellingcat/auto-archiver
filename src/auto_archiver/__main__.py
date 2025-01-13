@@ -1,3 +1,4 @@
+""" Entry point for the auto_archiver package. """
 from . import Config
 from . import ArchivingOrchestrator
 
