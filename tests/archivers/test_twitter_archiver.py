@@ -69,19 +69,6 @@ class TestTwitterArchiver(TestArchiverBase, unittest.TestCase):
         chosen_variant = self.archiver.choose_variant(variant_list)
         assert chosen_variant == variant_list[3]
 
-    @pytest.mark.download
-    def test_youtube_dlp_archiver(self):
-
-        url = "https://x.com/bellingcat/status/1874097816571961839"
-        post = self.archiver.download_yt_dlp(self.create_item(url), url, "1874097816571961839")
-        assert post
-        self.assertValidResponseMetadata(
-            post,
-            "As 2024 comes to a close, here’s some examples of what Bellingcat investigated per month in our 10th year! 🧵",
-            datetime.datetime(2024, 12, 31, 14, 18, 33, tzinfo=datetime.timezone.utc),
-            "twitter-ytdl"
-        )
-    
     def test_reverse_engineer_token(self):
         # see Vercel's implementation here: https://github.com/vercel/react-tweet/blob/main/packages/react-tweet/src/api/fetch-tweet.ts#L27C1-L31C2
         # and the discussion here: https://github.com/JustAnotherArchivist/snscrape/issues/996#issuecomment-2211358215
@@ -94,7 +81,21 @@ class TestTwitterArchiver(TestArchiverBase, unittest.TestCase):
             ("1346554693649113090", "39ibqxei7mo"),]:
             generated_token = self.archiver.generate_token(tweet_id)
             self.assertEqual(real_token, generated_token)
-                         
+
+    @pytest.mark.download
+    def test_youtube_dlp_archiver(self):
+
+        url = "https://x.com/bellingcat/status/1874097816571961839"
+        post = self.archiver.download_yt_dlp(self.create_item(url), url, "1874097816571961839")
+        assert post
+        self.assertValidResponseMetadata(
+            post,
+            "As 2024 comes to a close, here’s some examples of what Bellingcat investigated per month in our 10th year! 🧵",
+            datetime.datetime(2024, 12, 31, 14, 18, 33, tzinfo=datetime.timezone.utc),
+            "twitter-ytdl"
+        )
+            
+    @pytest.mark.download
     def test_syndication_archiver(self):
 
         url = "https://x.com/bellingcat/status/1874097816571961839"
@@ -106,12 +107,14 @@ class TestTwitterArchiver(TestArchiverBase, unittest.TestCase):
             datetime.datetime(2024, 12, 31, 14, 18, 33, tzinfo=datetime.timezone.utc)
         )
 
+    @pytest.mark.download
     def test_download_nonexistend_tweet(self):
         # this tweet does not exist
         url = "https://x.com/Bellingcat/status/17197025860711058"
         response = self.archiver.download(self.create_item(url))
         self.assertFalse(response)
-
+    
+    @pytest.mark.download
     def test_download_malformed_tweetid(self):
         # this tweet does not exist
         url = "https://x.com/Bellingcat/status/1719702586071100058"
@@ -147,8 +150,7 @@ class TestTwitterArchiver(TestArchiverBase, unittest.TestCase):
 
         """Download tweets with sensitive media
         
-        Note: currently failing, youtube-dlp requres logged in users"""
-
+        Note: currently failing, youtube-dlp requres logged in users + download_syndication requires logging in"""
 
         test_data = [
             ("https://x.com/SozinhoRamalho/status/1876710769913450647", "ignore tweet, testing sensitivity warning nudity", datetime.datetime(2024, 12, 31, 14, 18, 33, tzinfo=datetime.timezone.utc), "image_hash"),
