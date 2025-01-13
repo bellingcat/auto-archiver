@@ -1,12 +1,10 @@
 name: Download Tests
 
 on:
-  push:
-    branches: [ main, staging ]
-    paths:
-      - src/**
+  schedule:
+    - cron: '35 14 * * 1'
   pull_request:
-    branches: [ main, staging ]
+    branches: [ main ]
     paths:
       - src/**
 
@@ -15,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.10"]
+        python-version: ["3.10"] # only run expensive downloads on one python version
     defaults:
       run:
         working-directory: ./
