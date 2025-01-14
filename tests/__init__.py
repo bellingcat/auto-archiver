@@ -1,4 +1,6 @@
-import unittest
+import tempfile
 
-if __name__ == '__main__':
-    unittest.main()
+from auto_archiver.core.context import ArchivingContext
+
+ArchivingContext.reset(full_reset=True)
+ArchivingContext.set_tmp_dir(tempfile.gettempdir())
