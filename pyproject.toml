@@ -24,7 +24,6 @@ classifiers = [
 dependencies = [
     "gspread (>=0.0.0)",
     "beautifulsoup4 (>=0.0.0)",
-    "tiktok-downloader (>=0.0.0)",
     "bs4 (>=0.0.0)",
     "loguru (>=0.0.0)",
     "ffmpeg-python (>=0.0.0)",
