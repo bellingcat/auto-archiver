@@ -55,5 +55,5 @@ class MetaEnricher(Enricher):
     def enrich_archive_duration(self, to_enrich):
         logger.debug(f"calculating archive duration for url={to_enrich.get_url()} ")
 
-        archive_duration = datetime.datetime.utcnow() - to_enrich.get("_processed_at")
+        archive_duration = datetime.datetime.now(datetime.timezone.utc) - to_enrich.get("_processed_at")
         to_enrich.set("archive_duration_seconds", archive_duration.seconds)

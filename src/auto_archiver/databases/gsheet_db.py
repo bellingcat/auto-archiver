@@ -65,7 +65,7 @@ class GsheetsDb(Database):
         media: Media = item.get_final_media()
         if hasattr(media, "urls"):
             batch_if_valid('archive', "\n".join(media.urls))
-        batch_if_valid('date', True, datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc).isoformat())
+        batch_if_valid('date', True, datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=datetime.timezone.utc).isoformat())
         batch_if_valid('title', item.get_title())
         batch_if_valid('text', item.get("content", ""))
         batch_if_valid('timestamp', item.get_timestamp())
