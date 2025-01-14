@@ -75,3 +75,7 @@ repository = "https://github.com/bellingcat/auto-archiver"
 documentation = "https://github.com/bellingcat/auto-archiver"
 
 
+[tool.pytest.ini_options]
+markers = [
+    "download: marks tests that download content from the network",
+]

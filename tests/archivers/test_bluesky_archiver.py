@@ -1,10 +1,9 @@
 import pytest
-import unittest
 
 from auto_archiver.archivers.bluesky_archiver import BlueskyArchiver
 from .test_archiver_base import TestArchiverBase
 
-class TestBlueskyArchiver(TestArchiverBase, unittest.TestCase):
+class TestBlueskyArchiver(TestArchiverBase):
     """Tests Bluesky Archiver
     
     Note that these tests will download API responses from the bluesky API, so they may be slow.
