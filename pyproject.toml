@@ -54,7 +54,6 @@ dependencies = [
     "warcio (>=0.0.0)",
     "jsonlines (>=0.0.0)",
     "pysubs2 (>=0.0.0)",
-    "minify-html (>=0.0.0)",
     "retrying (>=0.0.0)",
     "tsp-client (>=0.0.0)",
     "certvalidator (>=0.0.0)",

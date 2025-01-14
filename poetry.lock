@@ -1447,42 +1447,6 @@ files = [
 ]
 
 [[package]]
-name = "minify-html"
-version = "0.15.0"
-description = "Extremely fast and smart HTML + JS + CSS minifier"
-optional = false
-python-versions = "*"
-groups = ["main"]
-files = [
-    {file = "minify_html-0.15.0-cp310-cp310-macosx_10_12_x86_64.whl", hash = "sha256:afd76ca2dc9afa53b66973a3a66eff9a64692811ead44102aa8044a37872e6e2"},
-    {file = "minify_html-0.15.0-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:f37ce536305500914fd4ee2bbaa4dd05a039f39eeceae45560c39767d99aede0"},
-    {file = "minify_html-0.15.0-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:7e6d4f97cebb725bc1075f225bdfcd824e0f5c20a37d9ea798d900f96e1b80c0"},
-    {file = "minify_html-0.15.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:e47197849a1c09a95892d32df3c9e15f6d0902c9ae215e73249b9f5bca9aeb97"},
-    {file = "minify_html-0.15.0-cp310-none-win_amd64.whl", hash = "sha256:7af72438d3ae6ea8b0a94c038d35c9c22c5f8540967f5fa2487f77b2cdb12605"},
-    {file = "minify_html-0.15.0-cp311-cp311-macosx_10_12_x86_64.whl", hash = "sha256:a23a8055e65fa01175ddd7d18d101c05e267410fa5956c65597dcc332c7f91dd"},
-    {file = "minify_html-0.15.0-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:597c86f9792437eee0698118fb38dff42b5b4be6d437b6d577453c2f91524ccc"},
-    {file = "minify_html-0.15.0-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:7b2aadba6987e6c15a916a4627b94b1db3cbac65e6ae3613b61b3ab0d2bb4c96"},
-    {file = "minify_html-0.15.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:d4c4ae3909e2896c865ebaa3a96939191f904dd337a87d7594130f3dfca55510"},
-    {file = "minify_html-0.15.0-cp311-none-win_amd64.whl", hash = "sha256:dc2df1e5203d89197f530d14c9a82067f3d04b9cb0118abc8f2ef8f88efce109"},
-    {file = "minify_html-0.15.0-cp312-cp312-macosx_10_12_x86_64.whl", hash = "sha256:2a9aef71b24c3d38c6bece2db3bf707443894958b01f1c27d3a6459ba4200e59"},
-    {file = "minify_html-0.15.0-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:70251bd7174b62c91333110301b27000b547aa2cc06d4fe6ba6c3f11612eecc9"},
-    {file = "minify_html-0.15.0-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:1056819ea46e9080db6fed678d03511c7e94c2a615e72df82190ea898dc82609"},
-    {file = "minify_html-0.15.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:ea315ad6ac33d7463fac3f313bba8c8d9a55f4811971c203eed931203047e5c8"},
-    {file = "minify_html-0.15.0-cp312-none-win_amd64.whl", hash = "sha256:01ea40dc5ae073c47024f02758d5e18e55d853265eb9c099040a6c00ab0abb99"},
-    {file = "minify_html-0.15.0-cp38-cp38-macosx_10_12_x86_64.whl", hash = "sha256:3b38ea5b446cc69e691a0bf64d1160332ffc220bb5b411775983c87311cab2c7"},
-    {file = "minify_html-0.15.0-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:b6356541799951c5e8205aabf5970dda687f4ffa736479ce8df031919861e51d"},
-    {file = "minify_html-0.15.0-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:40f38ddfefbb63beb28df20c2c81c12e6af6838387520506b4eceec807d794a3"},
-    {file = "minify_html-0.15.0-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:5f707b233b9c163a546b15ce9af433ddd456bd113f0326e5ffb382b8ee5c1a2d"},
-    {file = "minify_html-0.15.0-cp38-none-win_amd64.whl", hash = "sha256:bd682207673246c78fb895e7065425cc94cb712d94cff816dd9752ce014f23e8"},
-    {file = "minify_html-0.15.0-cp39-cp39-macosx_10_12_x86_64.whl", hash = "sha256:7a5eb7e830277762da69498ee0f15d4a9fa6e91887a93567d388e4f5aee01ec3"},
-    {file = "minify_html-0.15.0-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:92375f0cb3b4074e45005e1b4708b5b4c0781b335659d52918671c083c19c71e"},
-    {file = "minify_html-0.15.0-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:cda674cc68ec3b9ebf61f2986f3ef62de60ce837a58860c6f16b011862b5d533"},
-    {file = "minify_html-0.15.0-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:7b071ded7aacbb140a7e751d49e246052f204b896d69663a4a5c3a27203d27f6"},
-    {file = "minify_html-0.15.0-cp39-none-win_amd64.whl", hash = "sha256:ef6dc1950e04b7566c1ece72712674416f86fef8966ca026f6c5580d840cd354"},
-    {file = "minify_html-0.15.0.tar.gz", hash = "sha256:cf4c36b6f9af3b0901bd2a0a29db3b09c0cdf0c38d3dde28e6835bce0f605d37"},
-]
-
-[[package]]
 name = "multidict"
 version = "6.1.0"
 description = "multidict implementation"
@@ -3162,4 +3126,4 @@ test = ["pytest (>=8.1,<9.0)"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10,<3.13"
-content-hash = "f0bcb91c5efc5789e77c6da1f0afc8bbed7dcfa38ace8c9099b50e05009ae584"
+content-hash = "08a86c82340c012e316422c69d8d68f894f2e4e04fb6740750494ee4339d5968"

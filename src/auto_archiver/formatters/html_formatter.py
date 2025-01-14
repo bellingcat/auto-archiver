@@ -4,7 +4,7 @@ import mimetypes, os, pathlib
 from jinja2 import Environment, FileSystemLoader
 from urllib.parse import quote
 from loguru import logger
-import minify_html, json
+import json
 import base64
 
 from ..version import __version__
@@ -47,7 +47,6 @@ class HtmlFormatter(Formatter):
             metadata=item.metadata,
             version=__version__
         )
-        content = minify_html.minify(content, minify_js=False, minify_css=True)
 
         html_path = os.path.join(ArchivingContext.get_tmp_dir(), f"formatted{random_str(24)}.html")
         with open(html_path, mode="w", encoding="utf-8") as outf:
