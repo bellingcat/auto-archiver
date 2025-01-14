@@ -11,7 +11,7 @@ on:
 
 jobs:
   tests:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
         python-version: ["3.10", "3.11", "3.12"]
@@ -20,34 +20,19 @@ jobs:
         working-directory: ./
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
+
+      - name: Install Poetry
+        run: pipx install poetry
+
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Install Poetry
-        uses: snok/install-poetry@v1
-        with:
-          virtualenvs-create: true
-          virtualenvs-in-project: true
-          virtualenvs-path: .venv
-
-      - name: Load cached venv
-        id: cached-poetry-dependencies
-        uses: actions/cache@v4
-        with:
-          path: .venv
-          key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}-dev
+          cache: 'poetry'
 
       - name: Install dependencies
-        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
-        run: poetry install --no-interaction --no-root --with dev
+        run: poetry install --no-interaction --with dev
 
-      - name: Install project
-        run: poetry install --no-interaction
-
-      - name: Run Download Tests
-        run: |
-          source .venv/bin/activate
-          pytest -ra -v -m "download"
-          coverage report
+      - name: Run Core Tests
+        run: poetry run pytest -ra -v -m "not download"
