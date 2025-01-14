@@ -2,6 +2,8 @@
 
 [![PyPI version](https://badge.fury.io/py/auto-archiver.svg)](https://badge.fury.io/py/auto-archiver)
 [![Docker Image Version (latest by date)](https://img.shields.io/docker/v/bellingcat/auto-archiver?label=version&logo=docker)](https://hub.docker.com/r/bellingcat/auto-archiver)
+[![Core Test Status](https://github.com/bellingcat/auto-archiver/workflows/Core%20Tests/badge.svg)](https://github.com/bellingcat/auto-archiver/actions/workflows/tests-core.yaml)
+[![Download Test Status](https://github.com/bellingcat/auto-archiver/workflows/Download%20Tests/badge.svg)](https://github.com/bellingcat/auto-archiver/actions/workflows/tests-download.yaml)
 <!-- ![Docker Pulls](https://img.shields.io/docker/pulls/bellingcat/auto-archiver) -->
 <!-- [![PyPI download month](https://img.shields.io/pypi/dm/auto-archiver.svg)](https://pypi.python.org/pypi/auto-archiver/) -->
 <!-- [![Documentation Status](https://readthedocs.org/projects/vk-url-scraper/badge/?version=latest)](https://vk-url-scraper.readthedocs.io/en/latest/?badge=latest) -->
@@ -258,6 +260,20 @@ The "archive location" link contains the path of the archived file, in local sto
 ---
 ## Development
 Use `python -m src.auto_archiver --config secrets/orchestration.yaml` to run from the local development environment.
+
+### Testing
+
+Tests are split using `pytest.mark` into 'core' and 'download' tests. Download tests will hit the network and make API calls (e.g. Twitter, Bluesky etc.) and should be run regularly to make sure that APIs have not changed.
+
+Tests can be run as follows:
+```
+# run core tests
+pytest -ra -v -m "not download" # or poetry run pytest -ra -v -m "not download"
+# run download tests
+pytest -ra -v -m "download" # or poetry run pytest -ra -v -m "download"
+# run all tests
+pytest -ra -v # or poetry run pytest -ra -v
+```
 
 #### Docker development
 working with docker locally:

@@ -114,6 +114,10 @@ class TwitterArchiver(Archiver):
         result = Metadata()
         tweet = r.json()
 
+        if tweet.get('__typename') == 'TweetTombstone':
+            logger.error(f"Failed to get tweet {tweet_id}: {tweet['tombstone']['text']['text']}")
+            return False
+
         urls = []
         for p in tweet.get("photos", []):
             urls.append(p["url"])
@@ -135,7 +139,7 @@ class TwitterArchiver(Archiver):
 
             media.filename = self.download_from_url(u, f'{slugify(url)}_{i}{ext}')
             result.add_media(media)
-
+        
         result.set_title(tweet.get("text")).set_content(json.dumps(tweet, ensure_ascii=False)).set_timestamp(datetime.strptime(tweet["created_at"], "%Y-%m-%dT%H:%M:%S.%fZ"))
         return result.success("twitter-syndication")
 
@@ -158,7 +162,8 @@ class TwitterArchiver(Archiver):
             .set_timestamp(timestamp)
         if not tweet.get("entities", {}).get("media"):
             logger.debug('No media found, archiving tweet text only')
-            return result.success("twitter-ytdl")
+            result.status = "twitter-ytdl"
+            return result
         for i, tw_media in enumerate(tweet["entities"]["media"]):
             media = Media(filename="")
             mimetype = ""

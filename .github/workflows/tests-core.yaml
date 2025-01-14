@@ -1,0 +1,38 @@
+name: Core Tests
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - src/**
+  pull_request:
+    paths:
+      - src/**
+
+jobs:
+  tests:
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+    defaults:
+      run:
+        working-directory: ./
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Poetry
+        run: pipx install poetry
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'poetry'
+
+      - name: Install dependencies
+        run: poetry install --no-interaction --with dev
+
+      - name: Run Core Tests
+        run: poetry run pytest -ra -v -m "not download"

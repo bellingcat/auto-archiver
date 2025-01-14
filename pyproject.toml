@@ -60,10 +60,9 @@ dependencies = [
     "toml (>=0.10.2,<0.11.0)"
 ]
 
-
-[poetry.group.dev.dependencies]
-autopep8 = "*"
-
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.4"
+autopep8 = "^2.3.1"
 
 [project.scripts]
 auto-archiver = "auto_archiver.__main__:main"
@@ -72,3 +71,9 @@ auto-archiver = "auto_archiver.__main__:main"
 homepage = "https://github.com/bellingcat/auto-archiver"
 repository = "https://github.com/bellingcat/auto-archiver"
 documentation = "https://github.com/bellingcat/auto-archiver"
+
+
+[tool.pytest.ini_options]
+markers = [
+    "download: marks tests that download content from the network",
+]
