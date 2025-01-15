@@ -55,3 +55,9 @@ class TestYoutubeDLArchiver(TestArchiverBase):
         assert len(result.media) == 2
         assert Path(result.media[0].filename).name == "J---aiyznGQ.webm"
         assert Path(result.media[1].filename).name == "hqdefault.jpg"
+
+    @pytest.mark.skip("ytdlp supports bluesky, but there's currently no way to extract info from pages without videos")
+    @pytest.mark.download
+    def test_download_bluesky_with_images(self, make_item):
+        item = make_item("https://bsky.app/profile/colborne.bsky.social/post/3lec2bqjc5s2y")
+        result = self.archiver.download(item)
