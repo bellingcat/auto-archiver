@@ -21,7 +21,7 @@ class Metadata:
     media: List[Media] = field(default_factory=list)
 
     def __post_init__(self):
-        self.set("_processed_at", datetime.datetime.utcnow())
+        self.set("_processed_at", datetime.datetime.now(datetime.timezone.utc))
 
     def merge(self: Metadata, right: Metadata, overwrite_left=True) -> Metadata:
         """
