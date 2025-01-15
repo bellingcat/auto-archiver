@@ -34,6 +34,14 @@ class Archiver(Step):
     def sanitize_url(self, url: str) -> str:
         # used to clean unnecessary URL parameters OR unfurl redirect links
         return url
+    
+    def suitable(self, url: str) -> bool:
+        """
+        Returns True if this archiver can handle the given URL
+        
+        Should be overridden by subclasses
+        """
+        return True
 
     def _guess_file_type(self, path: str) -> str:
         """
