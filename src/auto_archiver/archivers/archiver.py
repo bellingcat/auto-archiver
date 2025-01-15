@@ -1,6 +1,8 @@
 from __future__ import annotations
+from pathlib import Path
 from abc import abstractmethod
 from dataclasses import dataclass
+import filetype
 import os
 import mimetypes, requests
 from loguru import logger
@@ -46,10 +48,8 @@ class Archiver(Step):
     @retry(wait_random_min=500, wait_random_max=3500, stop_max_attempt_number=5)
     def download_from_url(self, url: str, to_filename: str = None, verbose=True) -> str:
         """
-        downloads a URL to provided filename, or inferred from URL, returns local filename
+            downloads a URL to provided filename, or inferred from URL, returns local filename
         """
-        # TODO: should we refactor to use requests.get(url, stream=True) and write to file in chunks? compare approaches
-        # TODO: should we guess the extension?
         if not to_filename:
             to_filename = url.split('/')[-1].split('?')[0]
             if len(to_filename) > 64:
@@ -59,11 +59,28 @@ class Archiver(Step):
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36'
         }
-        d = requests.get(url, headers=headers)
-        assert d.status_code == 200, f"got response code {d.status_code} for {url=}"
-        with open(to_filename, 'wb') as f:
-            f.write(d.content)
-        return to_filename
+        try:
+            d = requests.get(url, stream=True, headers=headers)
+            d.raise_for_status()
+
+            # Peek at the first 256 bytes
+            first_256 = d.raw.read(256)
+
+            # Use filetype to guess the extension if there isn't already one
+            if not Path(to_filename).suffix:
+                guessed = filetype.guess(first_256)
+                extension = guessed.extension if guessed else None
+                if extension:
+                    to_filename += f".{extension}"
+
+            with open(to_filename, 'wb') as f:
+                f.write(first_256)
+                for chunk in d.iter_content(chunk_size=8192):
+                    f.write(chunk)
+            return to_filename
+        
+        except requests.RequestException as e:
+            logger.warning(f"Failed to fetch the Media URL: {e}")
 
     @abstractmethod
     def download(self, item: Metadata) -> Metadata: pass
