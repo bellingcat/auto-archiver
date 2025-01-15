@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  auto-archiver:
+  # point to the local dockerfile
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: auto-archiver
+    volumes:
+      - ./secrets:/app/secrets
+      - ./local_archive:/app/local_archive
+    environment:
+      - WACZ_ENABLE_DOCKER=true
+      - RUNNING_IN_DOCKER=true
+    command: --config secrets/orchestration.yaml

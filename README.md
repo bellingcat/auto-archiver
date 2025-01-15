@@ -277,9 +277,9 @@ pytest -ra -v # or poetry run pytest -ra -v
 
 #### Docker development
 working with docker locally:
-  * `docker build . -t auto-archiver` to build a local image
-  * `docker run --rm -v $PWD/secrets:/app/secrets auto-archiver  --config secrets/orchestration.yaml`
-    * to use local archive, also create a volume `-v` for it by adding `-v $PWD/local_archive:/app/local_archive`
+  * `docker compose up` to build the first time and run a local image with the settings in `secrets/orchestration.yaml`
+  * To modify/pass additional command line args, use `docker compose run auto-archiver --config secrets/orchestration.yaml [OTHER ARGUMENTS]`
+  * To rebuild after code changes, just pass the `--build` flag, e.g. `docker compose up --build`
 
 
 manual release to docker hub

@@ -23,9 +23,7 @@ classifiers = [
 
 dependencies = [
     "gspread (>=0.0.0)",
-    "argparse (>=0.0.0)",
     "beautifulsoup4 (>=0.0.0)",
-    "tiktok-downloader (>=0.0.0)",
     "bs4 (>=0.0.0)",
     "loguru (>=0.0.0)",
     "ffmpeg-python (>=0.0.0)",
@@ -55,12 +53,10 @@ dependencies = [
     "warcio (>=0.0.0)",
     "jsonlines (>=0.0.0)",
     "pysubs2 (>=0.0.0)",
-    "minify-html (>=0.0.0)",
     "retrying (>=0.0.0)",
     "tsp-client (>=0.0.0)",
     "certvalidator (>=0.0.0)",
-    "toml (>=0.10.2,<0.11.0)",
-    "filetype (>=1.2.0,<2.0.0)"
+    "filetype (>=1.2.0,<2.0.0)",
 ]
 
 [tool.poetry.group.dev.dependencies]
