@@ -25,6 +25,11 @@ Below is the content of the `example.orchestration.yaml` file:
 
 
 Configs
-=======
+-------
 
 This section of the documentation will show the custom configurations for the individual steps of the tool.
+
+
+.. include:: configs.rst
+
+
