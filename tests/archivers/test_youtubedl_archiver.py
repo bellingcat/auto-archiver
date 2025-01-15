@@ -61,3 +61,11 @@ class TestYoutubeDLArchiver(TestArchiverBase):
     def test_download_bluesky_with_images(self, make_item):
         item = make_item("https://bsky.app/profile/colborne.bsky.social/post/3lec2bqjc5s2y")
         result = self.archiver.download(item)
+        assert result is not False
+
+    @pytest.mark.skip("ytdlp supports twitter, but there's currently no way to extract info from pages without videos")
+    @pytest.mark.download
+    def test_download_twitter_textonly(self, make_item):
+        item = make_item("https://x.com/bellingcat/status/1874097816571961839")
+        result = self.archiver.download(item)
+        assert result is not False
