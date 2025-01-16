@@ -13,7 +13,7 @@ RUN add-apt-repository ppa:mozillateam/ppa && \
     apt-get install -y --no-install-recommends gcc ffmpeg fonts-noto exiftool && \
 	apt-get install -y --no-install-recommends firefox-esr && \
     ln -s /usr/bin/firefox-esr /usr/bin/firefox && \
-    wget https://github.com/mozilla/geckodriver/releases/download/v0.33.0/geckodriver-v0.33.0-linux64.tar.gz && \
+    wget https://github.com/mozilla/geckodriver/releases/download/v0.35.0/geckodriver-v0.35.0-linux64.tar.gz && \
     tar -xvzf geckodriver* -C /usr/local/bin && \
     chmod +x /usr/local/bin/geckodriver && \
     rm geckodriver-v* && \
