@@ -30,3 +30,5 @@ logs*
 *.csv
 archived/
 dist*
+docs/_build/
+docs/source/autoapi/

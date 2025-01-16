@@ -20,8 +20,8 @@ Auto Archiver documentation
    :hidden:
    :caption: Contents:
 
+   user_guidelines
    developer_guidelines
    configurations
-   user_guidelines
    configs
 

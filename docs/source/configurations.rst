@@ -30,6 +30,4 @@ Configs
 This section of the documentation will show the custom configurations for the individual steps of the tool.
 
 
-.. include:: configs.rst
-
 
