@@ -9,7 +9,7 @@ from auto_archiver.archivers.archiver import Archiver
 from ...core import Metadata, Media, ArchivingContext
 
 
-class BaseArchiver(Archiver):
+class GenericArchiver(Archiver):
     name = "youtubedl_archiver" #left as is for backwards compat
 
     def __init__(self, config: dict) -> None:
@@ -76,7 +76,8 @@ class BaseArchiver(Archiver):
             return base_keys + [] 
         elif extractor_key == "Bluesky":
             # bluesky API response for non video URLs is already clean, nothing to add
-            return base_keys + [] 
+            return base_keys + []
+        
         
         return base_keys
     
