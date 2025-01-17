@@ -1,6 +1,6 @@
-
-
-import argparse, yaml
+import importlib
+import argparse
+import yaml
 from dataclasses import dataclass, field
 from typing import List
 from collections import defaultdict
@@ -54,6 +54,7 @@ class Config:
             )
 
             parser.add_argument('--config', action='store', dest='config', help='the filename of the YAML configuration file (defaults to \'config.yaml\')', default='orchestration.yaml')
+            parser.add_argument('--version', action='version', version=importlib.metadata.version('auto_archiver'))
 
         for configurable in self.configurable_parents:
             child: Step
