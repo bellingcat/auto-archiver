@@ -56,7 +56,6 @@ dependencies = [
     "retrying (>=0.0.0)",
     "tsp-client (>=0.0.0)",
     "certvalidator (>=0.0.0)",
-    "filetype (>=1.2.0,<2.0.0)",
 ]
 
 [tool.poetry.group.dev.dependencies]

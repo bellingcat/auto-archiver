@@ -2,7 +2,7 @@ from __future__ import annotations
 from pathlib import Path
 from abc import abstractmethod
 from dataclasses import dataclass
-import filetype
+import mimetypes
 import os
 import mimetypes, requests
 from loguru import logger
@@ -68,21 +68,17 @@ class Archiver(Step):
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36'
         }
         try:
-            d = requests.get(url, stream=True, headers=headers)
+            d = requests.get(url, stream=True, headers=headers, timeout=30)
             d.raise_for_status()
 
-            # Peek at the first 256 bytes
-            first_256 = d.raw.read(256)
-
-            # Use filetype to guess the extension if there isn't already one
+            # get mimetype from the response headers
             if not Path(to_filename).suffix:
-                guessed = filetype.guess(first_256)
-                extension = guessed.extension if guessed else None
+                content_type = d.headers.get('Content-Type')
+                extension = mimetypes.guess_extension(content_type)
                 if extension:
-                    to_filename += f".{extension}"
+                    to_filename += extension
 
             with open(to_filename, 'wb') as f:
-                f.write(first_256)
                 for chunk in d.iter_content(chunk_size=8192):
                     f.write(chunk)
             return to_filename

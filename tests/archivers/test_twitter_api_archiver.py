@@ -1,0 +1,112 @@
+import os
+import datetime
+
+import pytest
+
+from pytwitter.models.media import MediaVariant
+from .test_archiver_base import TestArchiverBase
+from auto_archiver.archivers import TwitterApiArchiver
+
+
+@pytest.mark.incremental
+class TestTwitterApiArchiver(TestArchiverBase):
+
+    archiver_class = TwitterApiArchiver
+    config = {
+        "bearer_tokens": [],
+        "bearer_token": os.environ.get("TWITTER_BEARER_TOKEN"),
+        "consumer_key": os.environ.get("TWITTER_CONSUMER_KEY"),
+        "consumer_secret": os.environ.get("TWITTER_CONSUMER_SECRET"),
+        "access_token": os.environ.get("TWITTER_ACCESS_TOKEN"),
+        "access_secret": os.environ.get("TWITTER_ACCESS_SECRET"),
+    }
+
+    @pytest.mark.parametrize("url, expected", [
+        ("https://t.co/yl3oOJatFp", "https://www.bellingcat.com/category/resources/"),  # t.co URL
+        ("https://x.com/bellingcat/status/1874097816571961839", "https://x.com/bellingcat/status/1874097816571961839"), # x.com urls unchanged
+        ("https://twitter.com/bellingcat/status/1874097816571961839", "https://twitter.com/bellingcat/status/1874097816571961839"), # twitter urls unchanged
+        ("https://twitter.com/bellingcat/status/1874097816571961839?s=20&t=3d0g4ZQis7dCbSDg-mE7-w", "https://twitter.com/bellingcat/status/1874097816571961839?s=20&t=3d0g4ZQis7dCbSDg-mE7-w"), # don't strip params from twitter urls (changed Jan 2025)
+        ("https://www.bellingcat.com/category/resources/", "https://www.bellingcat.com/category/resources/"), # non-twitter/x urls unchanged
+        ("https://www.bellingcat.com/category/resources/?s=20&t=3d0g4ZQis7dCbSDg-mE7-w", "https://www.bellingcat.com/category/resources/?s=20&t=3d0g4ZQis7dCbSDg-mE7-w"), # shouldn't strip params from non-twitter/x URLs
+    ])
+    def test_sanitize_url(self, url, expected):
+        assert expected == self.archiver.sanitize_url(url)
+    
+    @pytest.mark.parametrize("url, exptected_username, exptected_tweetid", [
+        ("https://twitter.com/bellingcat/status/1874097816571961839", "bellingcat", "1874097816571961839"),
+        ("https://x.com/bellingcat/status/1874097816571961839", "bellingcat", "1874097816571961839"),
+        ("https://www.bellingcat.com/category/resources/", False, False)
+        ])
+    def test_get_username_tweet_id_from_url(self, url, exptected_username, exptected_tweetid):
+    
+        username, tweet_id = self.archiver.get_username_tweet_id(url)
+        assert exptected_username == username
+        assert exptected_tweetid == tweet_id
+
+    def test_choose_variants(self):
+        # taken from the response for url https://x.com/bellingcat/status/1871552600346415571
+        variant_list = [MediaVariant(content_type='application/x-mpegURL', url='https://video.twimg.com/ext_tw_video/1871551993677852672/pu/pl/ovWo7ux-bKROwYIC.m3u8?tag=12&v=e1b'),
+                        MediaVariant(bit_rate=256000, content_type='video/mp4', url='https://video.twimg.com/ext_tw_video/1871551993677852672/pu/vid/avc1/480x270/OqZIrKV0LFswMvxS.mp4?tag=12'),
+                        MediaVariant(bit_rate=832000, content_type='video/mp4', url='https://video.twimg.com/ext_tw_video/1871551993677852672/pu/vid/avc1/640x360/uiDZDSmZ8MZn9hsi.mp4?tag=12'),
+                        MediaVariant(bit_rate=2176000, content_type='video/mp4', url='https://video.twimg.com/ext_tw_video/1871551993677852672/pu/vid/avc1/1280x720/6Y340Esh568WZnRZ.mp4?tag=12')
+                        ]
+        chosen_variant = self.archiver.choose_variant(variant_list)
+        assert chosen_variant == variant_list[3]
+    
+
+    @pytest.mark.download
+    def test_download_nonexistent_tweet(self, make_item):
+        # this tweet does not exist
+        url = "https://x.com/Bellingcat/status/17197025860711058"
+        response = self.archiver.download(make_item(url))
+        assert not response
+    
+    @pytest.mark.download
+    def test_download_malformed_tweetid(self, make_item):
+        # this tweet does not exist
+        url = "https://x.com/Bellingcat/status/1719702586071100058"
+        response = self.archiver.download(make_item(url))
+        assert not response
+
+    @pytest.mark.download
+    def test_download_tweet_no_media(self, make_item):
+        
+        item = make_item("https://twitter.com/MeCookieMonster/status/1617921633456640001?s=20&t=3d0g4ZQis7dCbSDg-mE7-w")
+        post = self.archiver.download(item)
+
+        self.assertValidResponseMetadata(
+            post,
+            "Onion rings are just vegetable donuts.",
+            datetime.datetime(2023, 1, 24, 16, 25, 51, tzinfo=datetime.timezone.utc),
+            "twitter-api: success"
+        )
+
+    @pytest.mark.download
+    def test_download_video(self, make_item):
+        url = "https://x.com/bellingcat/status/1871552600346415571"
+        post = self.archiver.download(make_item(url))
+        self.assertValidResponseMetadata(
+            post,
+            "This month's Bellingchat Premium is with @KolinaKoltai. She reveals how she investigated a platform allowing users to create AI-generated child sexual abuse material and explains why it's crucial to investigate the people behind these services https://t.co/SfBUq0hSD0 https://t.co/rIHx0WlKp8",
+            datetime.datetime(2024, 12, 24, 13, 44, 46, tzinfo=datetime.timezone.utc)
+        )
+
+    @pytest.mark.parametrize("url, title, timestamp, image_hash", [
+            ("https://x.com/SozinhoRamalho/status/1876710769913450647", "ignore tweet, testing sensitivity warning nudity https://t.co/t3u0hQsSB1", datetime.datetime(2024, 12, 31, 14, 18, 33, tzinfo=datetime.timezone.utc), "image_hash"),
+            ("https://x.com/SozinhoRamalho/status/1876710875475681357", "ignore tweet, testing sensitivity warning violence https://t.co/syYDSkpjZD", datetime.datetime(2024, 12, 31, 14, 18, 33, tzinfo=datetime.timezone.utc), "image_hash"),
+            ("https://x.com/SozinhoRamalho/status/1876711053813227618", "ignore tweet, testing sensitivity warning sensitive https://t.co/XE7cRdjzYq", datetime.datetime(2024, 12, 31, 14, 18, 33, tzinfo=datetime.timezone.utc), "image_hash"),
+            ("https://x.com/SozinhoRamalho/status/1876711141314801937", "ignore tweet, testing sensitivity warning nudity, violence, sensitivity https://t.co/YxCFbbhYE3", datetime.datetime(2024, 12, 31, 14, 18, 33, tzinfo=datetime.timezone.utc), "image_hash"),
+        ])
+    @pytest.mark.download
+    def test_download_sensitive_media(self, url, title, timestamp, image_hash, make_item):
+
+        """Download tweets with sensitive media"""
+
+        post = self.archiver.download(make_item(url))
+        self.assertValidResponseMetadata(
+            post,
+            title,
+            timestamp
+        )
+        assert len(post.media) == 1
+        assert post.media[0].hash == image_hash
