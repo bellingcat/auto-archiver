@@ -74,4 +74,5 @@ documentation = "https://github.com/bellingcat/auto-archiver"
 [tool.pytest.ini_options]
 markers = [
     "download: marks tests that download content from the network",
+    "incremental: marks a class to run tests incrementally. If a test fails in the class, the remaining tests will be skipped",
 ]

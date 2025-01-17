@@ -14,7 +14,7 @@ class TestTwitterApiArchiver(TestArchiverBase):
     archiver_class = TwitterApiArchiver
     config = {
         "bearer_tokens": [],
-        "bearer_token": os.environ.get("TWITTER_BEARER_TOKEN"),
+        "bearer_token": os.environ.get("TWITTER_BEARER_TOKEN", "TEST_KEY"),
         "consumer_key": os.environ.get("TWITTER_CONSUMER_KEY"),
         "consumer_secret": os.environ.get("TWITTER_CONSUMER_SECRET"),
         "access_token": os.environ.get("TWITTER_ACCESS_TOKEN"),
