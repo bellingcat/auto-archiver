@@ -53,14 +53,15 @@ class TestTwitterApiArchiver(TestArchiverBase):
         chosen_variant = self.archiver.choose_variant(variant_list)
         assert chosen_variant == variant_list[3]
     
-
+    @pytest.mark.skipif(not os.environ.get("TWITTER_BEARER_TOKEN"), reason="No Twitter bearer token provided")
     @pytest.mark.download
     def test_download_nonexistent_tweet(self, make_item):
         # this tweet does not exist
         url = "https://x.com/Bellingcat/status/17197025860711058"
         response = self.archiver.download(make_item(url))
         assert not response
-    
+
+    @pytest.mark.skipif(not os.environ.get("TWITTER_BEARER_TOKEN"), reason="No Twitter bearer token provided")
     @pytest.mark.download
     def test_download_malformed_tweetid(self, make_item):
         # this tweet does not exist
@@ -68,6 +69,7 @@ class TestTwitterApiArchiver(TestArchiverBase):
         response = self.archiver.download(make_item(url))
         assert not response
 
+    @pytest.mark.skipif(not os.environ.get("TWITTER_BEARER_TOKEN"), reason="No Twitter bearer token provided")
     @pytest.mark.download
     def test_download_tweet_no_media(self, make_item):
         
@@ -81,6 +83,7 @@ class TestTwitterApiArchiver(TestArchiverBase):
             "twitter-api: success"
         )
 
+    @pytest.mark.skipif(not os.environ.get("TWITTER_BEARER_TOKEN"), reason="No Twitter bearer token provided")
     @pytest.mark.download
     def test_download_video(self, make_item):
         url = "https://x.com/bellingcat/status/1871552600346415571"
@@ -91,14 +94,15 @@ class TestTwitterApiArchiver(TestArchiverBase):
             datetime.datetime(2024, 12, 24, 13, 44, 46, tzinfo=datetime.timezone.utc)
         )
 
-    @pytest.mark.parametrize("url, title, timestamp, image_hash", [
-            ("https://x.com/SozinhoRamalho/status/1876710769913450647", "ignore tweet, testing sensitivity warning nudity https://t.co/t3u0hQsSB1", datetime.datetime(2024, 12, 31, 14, 18, 33, tzinfo=datetime.timezone.utc), "image_hash"),
-            ("https://x.com/SozinhoRamalho/status/1876710875475681357", "ignore tweet, testing sensitivity warning violence https://t.co/syYDSkpjZD", datetime.datetime(2024, 12, 31, 14, 18, 33, tzinfo=datetime.timezone.utc), "image_hash"),
-            ("https://x.com/SozinhoRamalho/status/1876711053813227618", "ignore tweet, testing sensitivity warning sensitive https://t.co/XE7cRdjzYq", datetime.datetime(2024, 12, 31, 14, 18, 33, tzinfo=datetime.timezone.utc), "image_hash"),
-            ("https://x.com/SozinhoRamalho/status/1876711141314801937", "ignore tweet, testing sensitivity warning nudity, violence, sensitivity https://t.co/YxCFbbhYE3", datetime.datetime(2024, 12, 31, 14, 18, 33, tzinfo=datetime.timezone.utc), "image_hash"),
+    @pytest.mark.skipif(not os.environ.get("TWITTER_BEARER_TOKEN"), reason="No Twitter bearer token provided")
+    @pytest.mark.parametrize("url, title, timestamp, image_src", [
+            ("https://x.com/SozinhoRamalho/status/1876710769913450647", "ignore tweet, testing sensitivity warning nudity https://t.co/t3u0hQsSB1", datetime.datetime(2024, 12, 31, 14, 18, 33, tzinfo=datetime.timezone.utc), "https://pbs.twimg.com/media/GgtqkomWkAAHUUl.jpg"),
+            ("https://x.com/SozinhoRamalho/status/1876710875475681357", "ignore tweet, testing sensitivity warning violence https://t.co/syYDSkpjZD", datetime.datetime(2024, 12, 31, 14, 18, 33, tzinfo=datetime.timezone.utc), "https://pbs.twimg.com/media/GgtqkomWkAAHUUl.jpg"),
+            ("https://x.com/SozinhoRamalho/status/1876711053813227618", "ignore tweet, testing sensitivity warning sensitive https://t.co/XE7cRdjzYq", datetime.datetime(2024, 12, 31, 14, 18, 33, tzinfo=datetime.timezone.utc), "https://pbs.twimg.com/media/GgtqkomWkAAHUUl.jpg"),
+            ("https://x.com/SozinhoRamalho/status/1876711141314801937", "ignore tweet, testing sensitivity warning nudity, violence, sensitivity https://t.co/YxCFbbhYE3", datetime.datetime(2024, 12, 31, 14, 18, 33, tzinfo=datetime.timezone.utc), "https://pbs.twimg.com/media/GgtqkomWkAAHUUl.jpg"),
         ])
     @pytest.mark.download
-    def test_download_sensitive_media(self, url, title, timestamp, image_hash, make_item):
+    def test_download_sensitive_media(self, url, title, timestamp, image_src, make_item):
 
         """Download tweets with sensitive media"""
 
@@ -109,4 +113,4 @@ class TestTwitterApiArchiver(TestArchiverBase):
             timestamp
         )
         assert len(post.media) == 1
-        assert post.media[0].hash == image_hash
+        assert post.media[0].get('src') == image_src
