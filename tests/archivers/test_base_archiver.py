@@ -2,14 +2,14 @@ import pytest
 from pathlib import Path
 import datetime 
 
-from auto_archiver.archivers.base_archiver import BaseArchiver
+from auto_archiver.archivers.generic_archiver import GenericArchiver
 
 from .test_archiver_base import TestArchiverBase
 
-class TestBaseArchiver(TestArchiverBase):
+class TestGenericArchiver(TestArchiverBase):
     """Tests Base Archiver
     """
-    archiver_class = BaseArchiver
+    archiver_class = GenericArchiver
     config = {
         'subtitles': False,
         'comments': False,
