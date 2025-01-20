@@ -4,7 +4,7 @@ from yt_dlp.extractor.common import InfoExtractor
 
 from loguru import logger
 
-from . import bluesky, twitter
+from . import bluesky, twitter, truth
 from auto_archiver.archivers.archiver import Archiver
 from ...core import Metadata, Media, ArchivingContext
 
@@ -91,13 +91,6 @@ class GenericArchiver(Archiver):
 
         # keep both 'title' and 'fulltitle', but prefer 'title', falling back to 'fulltitle' if it doesn't exist
         result.set_title(video_data.pop('title', video_data.pop('fulltitle', "")))
-
-        # then add the platform specific additional metadata
-        for key, mapping in self.video_data_metadata_mapping(extractor_key, video_data).items():
-            if isinstance(mapping, str):
-                result.set(key, eval(f"video_data{mapping}"))
-            elif callable(mapping):
-                result.set(key, mapping(video_data))
         result.set_url(url)
 
         # extract comments if enabled
@@ -126,13 +119,6 @@ class GenericArchiver(Archiver):
                 result.set(k, v)
 
         return result
-
-    def video_data_metadata_mapping(self, extractor_key: str, video_data: dict) -> dict:
-        """
-        Returns a key->value mapping to map from the yt-dlp produced 'video_data' to the Metadata object.
-        Can be either a string for direct mapping, or a function, or a lambda.
-        """
-        return {}
     
     def suitable_extractors(self, url: str) -> list[str]:
         """
@@ -148,14 +134,20 @@ class GenericArchiver(Archiver):
         """
         return any(self.suitable_extractors(url))
 
-    def create_metadata_for_post(self, info_extractor: InfoExtractor, video_data: dict, url: str) -> Metadata:
+    def create_metadata_for_post(self, info_extractor: InfoExtractor, post_data: dict, url: str) -> Metadata:
         """
-        Standardizes the output of the ytdlp InfoExtractor to a common format
+        Standardizes the output of the 'post' data from a ytdlp InfoExtractor to Metadata object.
+
+        This is only required for platforms that don't have videos, and therefore cannot be converted into ytdlp valid 'video_data'.
+        In these instances, we need to use the extractor's _extract_post (or similar) method to get the post metadata, and then convert
+        it into a Metadata object via a platform-specific function.
         """
         if info_extractor.ie_key() == 'Bluesky':
-            return bluesky.create_metadata(video_data, self, url)
+            return bluesky.create_metadata(post_data, self, url)
         if info_extractor.ie_key() == 'Twitter':
-            return twitter.create_metadata(video_data, self, url)
+            return twitter.create_metadata(post_data, self, url)
+        if info_extractor.ie_key() == 'Truth':
+            return truth.create_metadata(post_data, self, url)
 
     def get_metatdata_for_post(self, info_extractor: Type[InfoExtractor], url: str, ydl: yt_dlp.YoutubeDL) -> Metadata:
         """
@@ -174,23 +166,22 @@ class GenericArchiver(Archiver):
             twid = ie_instance._match_valid_url(url).group('id')
             # TODO: if ytdlp PR https://github.com/yt-dlp/yt-dlp/pull/12098 is merged, change to _extract_post
             post_data = ie_instance._extract_status(twid=twid)
-
-        elif info_extractor.ie_key() == 'TikTok':
-            pass
-
+        elif info_extractor.ie_key() == 'Truth':
+            video_id = ie_instance._match_id(url)
+            truthsocial_url = f'https://truthsocial.com/api/v1/statuses/{video_id}'
+            post_data = ie_instance._download_json(truthsocial_url, video_id)
         else:
             # lame attempt at trying to get data for an unknown extractor
             # TODO: test some more video platforms and see if there's any improvement to be made
             try:
                 post_data = ie_instance._extract_post(url)
             except (NotImplementedError, AttributeError) as e:
-                logger.debug(f"Extractor {info_extractor.ie_key()} does not support extracting post info: {e}")
+                logger.debug(f"Extractor {info_extractor.ie_key()} does not support extracting post info from non-video URLs: {e}")
                 return False
 
         return self.create_metadata_for_post(ie_instance, post_data, url)
         
     def get_metatdata_for_video(self, info: dict, info_extractor: Type[InfoExtractor], url: str, ydl: yt_dlp.YoutubeDL) -> Metadata:
-
         # this time download
         ydl.params['getcomments'] = self.comments
         #TODO: for playlist or long lists of videos, how to download one at a time so they can be stored before the next one is downloaded?
@@ -250,12 +241,16 @@ class GenericArchiver(Archiver):
             # it's a valid video, that the youtubdedl can download out of the box
             result = self.get_metatdata_for_video(info, info_extractor, url, ydl)
 
-        except yt_dlp.utils.DownloadError as e:
-            logger.debug(f'No video found, attempting to use extractor directly: {e}')
-            result = self.get_metatdata_for_post(info_extractor, url, ydl)
         except Exception as e:
-            logger.debug(f'ytdlp exception which is normal for example a facebook page with images only will cause a IndexError: list index out of range. Exception is: \n  {e}')
-            return False
+            logger.debug(f'Issue using "{info_extractor.IE_NAME}" extractor to download video (error: {repr(e)}), attempting to use extractor to get post data instead')
+            try:
+                result = self.get_metatdata_for_post(info_extractor, url, ydl)
+            except (yt_dlp.utils.DownloadError, yt_dlp.utils.ExtractorError) as post_e:
+                logger.error(f'Error downloading metadata for post: {post_e}')
+                return False
+            except Exception as generic_e:
+                logger.debug(f'Attempt to extract using ytdlp extractor "{info_extractor.IE_NAME}" failed:  \n  {repr(generic_e)}', exc_info=True)
+                return False
         
         if result:
             extractor_name = "yt-dlp"

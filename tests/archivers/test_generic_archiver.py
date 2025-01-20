@@ -47,6 +47,23 @@ class TestGenericArchiver(TestArchiverBase):
         assert result.get_url() == "https://www.tiktok.com/@funnycats0ftiktok/video/7345101300750748970"
 
     @pytest.mark.download
+    @pytest.mark.parametrize("url", [
+        "https://bsky.app/profile/colborne.bsky.social/post/3lcxcpgt6j42l",
+        "twitter.com/bellingcat/status/123",
+        "https://www.youtube.com/watch?v=1"
+    ])
+    def test_download_nonexistend_media(self, make_item, url):
+        """
+        Test to make sure that the extractor doesn't break on non-existend posts/media
+
+        It should return 'False'
+        """
+        item = make_item(url)
+        result = self.archiver.download(item)
+        assert not result
+
+
+    @pytest.mark.download
     def test_youtube_download(self, make_item):
         # url https://www.youtube.com/watch?v=5qap5aO4i9A
         item = make_item("https://www.youtube.com/watch?v=J---aiyznGQ")
@@ -60,14 +77,13 @@ class TestGenericArchiver(TestArchiverBase):
 
     @pytest.mark.download
     def test_bluesky_download_multiple_images(self, make_item):
-        item = make_item("https://bsky.app/profile/colborne.bsky.social/post/3lec2bqjc5s2y")
+        item = make_item("https://bsky.app/profile/bellingcat.com/post/3lffjoxcu7k2w")
         result = self.archiver.download(item)
         assert result is not False
 
-    @pytest.mark.skip("ytdlp supports bluesky, but there's currently no way to extract info from pages without videos")
     @pytest.mark.download
     def test_bluesky_download_single_image(self, make_item):
-        item = make_item("https://bsky.app/profile/colborne.bsky.social/post/3lcxcpgt6j42l")
+        item = make_item("https://bsky.app/profile/bellingcat.com/post/3lfn3hbcxgc2q")
         result = self.archiver.download(item)
         assert result is not False
     
@@ -82,6 +98,39 @@ class TestGenericArchiver(TestArchiverBase):
         item = make_item("https://bsky.app/profile/bellingcat.com/post/3le2l4gsxlk2i")
         result = self.archiver.download(item)
         assert result is not False
+    
+    @pytest.mark.download
+    def test_truthsocial_download_video(self, make_item):
+        item = make_item("https://truthsocial.com/@DaynaTrueman/posts/110602446619561579")
+        result = self.archiver.download(item)
+        assert len(result.media) == 1
+        assert result is not False
+
+    @pytest.mark.download
+    def test_truthsocial_download_no_media(self, make_item):
+        item = make_item("https://truthsocial.com/@bbcnewa/posts/109598702184774628")
+        result = self.archiver.download(item)
+        assert result is not False
+    
+    @pytest.mark.download
+    def test_truthsocial_download_poll(self, make_item):
+        item = make_item("https://truthsocial.com/@CNN_US/posts/113724326568555098")
+        result = self.archiver.download(item)
+        assert result is not False
+    
+    @pytest.mark.download
+    def test_truthsocial_download_single_image(self, make_item):
+        item = make_item("https://truthsocial.com/@mariabartiromo/posts/113861116433335006")
+        result = self.archiver.download(item)
+        assert len(result.media) == 1
+        assert result is not False
+
+    @pytest.mark.skip("Currently failing, multiple images are not being downloaded - this is due to an issue with ytdlp extractor")
+    @pytest.mark.download
+    def test_truthsocial_download_multiple_images(self, make_item):
+        item = make_item("https://truthsocial.com/@trrth/posts/113861302149349135")
+        result = self.archiver.download(item)
+        assert len(result.media) == 3
 
     @pytest.mark.download
     def test_twitter_download_nonexistend_tweet(self, make_item):

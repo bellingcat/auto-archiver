@@ -18,13 +18,13 @@ def create_metadata(post: dict, archiver: Archiver, url: str) -> Metadata:
         if v: result.set(k, v)
 
     # download if embeds present (1 video XOR >=1 images)
-    for media in _download_bsky_embeds(post):
+    for media in _download_bsky_embeds(post, archiver):
         result.add_media(media)
     logger.debug(f"Downloaded {len(result.media)} media files")
 
     return result
 
-def _download_bsky_embeds(post: dict) -> list[Media]:
+def _download_bsky_embeds(post: dict, archiver: Archiver) -> list[Media]:
     """
     Iterates over image(s) or video in a Bluesky post and downloads them        
     """
@@ -33,30 +33,17 @@ def _download_bsky_embeds(post: dict) -> list[Media]:
     image_medias = embed.get("images", []) + embed.get("media", {}).get("images", [])
     video_medias = [e for e in [embed.get("video"), embed.get("media", {}).get("video")] if e]
 
+    media_url = "https://bsky.social/xrpc/com.atproto.sync.getBlob?cid={}&did={}"
     for image_media in image_medias:
-        image_media = _download_bsky_file_as_media(image_media["image"]["ref"]["$link"], post["author"]["did"])
+        url = media_url.format(image_media['image']['ref']['$link'], post['author']['did'])
+        image_media = archiver.download_from_url(url)
         media.append(image_media)
     for video_media in video_medias:
-        video_media = _download_bsky_file_as_media(video_media["ref"]["$link"], post["author"]["did"])
+        url = media_url.format(video_media['ref']['$link'], post['author']['did'])
+        video_media = archiver.download_from_url(url)
         media.append(video_media)
     return media
 
-def _download_bsky_file_as_media(cid: str, did: str) -> Media:
-    """
-    Uses the Bluesky API to download a file by its `cid` and `did`.
-    """
-    # TODO: replace with self.download_from_url once that function has been cleaned-up
-    file_url = f"https://bsky.social/xrpc/com.atproto.sync.getBlob?cid={cid}&did={did}"
-    response = requests.get(file_url, stream=True)
-    response.raise_for_status()
-    ext = mimetypes.guess_extension(response.headers["Content-Type"])
-    filename = os.path.join(ArchivingContext.get_tmp_dir(), f"{cid}{ext}")
-    with open(filename, "wb") as f:
-        for chunk in response.iter_content(chunk_size=8192):
-            f.write(chunk)
-    media = Media(filename=filename)
-    media.set("src", file_url)
-    return media
 
 def _get_post_data(post: dict) -> dict:
     """
