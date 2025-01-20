@@ -125,7 +125,6 @@ class TestGenericArchiver(TestArchiverBase):
         assert len(result.media) == 1
         assert result is not False
 
-    @pytest.mark.skip("Currently failing, multiple images are not being downloaded - this is due to an issue with ytdlp extractor")
     @pytest.mark.download
     def test_truthsocial_download_multiple_images(self, make_item):
         item = make_item("https://truthsocial.com/@trrth/posts/113861302149349135")

@@ -181,7 +181,8 @@ class GenericArchiver(Archiver):
 
         return self.create_metadata_for_post(ie_instance, post_data, url)
         
-    def get_metatdata_for_video(self, info: dict, info_extractor: Type[InfoExtractor], url: str, ydl: yt_dlp.YoutubeDL) -> Metadata:
+    def get_metadata_for_video(self, info: dict, info_extractor: Type[InfoExtractor], url: str, ydl: yt_dlp.YoutubeDL) -> Metadata:
+
         # this time download
         ydl.params['getcomments'] = self.comments
         #TODO: for playlist or long lists of videos, how to download one at a time so they can be stored before the next one is downloaded?
@@ -233,13 +234,18 @@ class GenericArchiver(Archiver):
         result = False
 
         try:
+            if info_extractor.ie_key() == "Truth":
+                # the ytdlp truth extractor currently only gets the first image/video in the 'media' section, as opposed to all of them
+                # we don't want this
+                raise yt_dlp.utils.ExtractorError("Use the 'post data' method for Truth posts")
+
             # don't download since it can be a live stream
             info = ydl.extract_info(url, ie_key=info_extractor.ie_key(), download=False)
             if info.get('is_live', False) and not self.livestreams:
                 logger.warning("Livestream detected, skipping due to 'livestreams' configuration setting")
                 return False
             # it's a valid video, that the youtubdedl can download out of the box
-            result = self.get_metatdata_for_video(info, info_extractor, url, ydl)
+            result = self.get_metadata_for_video(info, info_extractor, url, ydl)
 
         except Exception as e:
             logger.debug(f'Issue using "{info_extractor.IE_NAME}" extractor to download video (error: {repr(e)}), attempting to use extractor to get post data instead')
