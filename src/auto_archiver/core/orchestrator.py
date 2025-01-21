@@ -5,9 +5,13 @@
 """
 
 from __future__ import annotations
+import ast
+import os
+from os.path import dirname, join
 from typing import Generator, Union, List
 from urllib.parse import urlparse
 from ipaddress import ip_address
+import argparse
 
 from .context import ArchivingContext
 
@@ -18,27 +22,78 @@ from ..storages import Storage
 from ..enrichers import Enricher
 from ..databases import Database
 from .metadata import Metadata
+from ..version import __version__
+from .config import read_yaml
+from .loader import available_modules, load_manifest
 
 import tempfile, traceback
 from loguru import logger
 
 
+DEFAULT_CONFIG_FILE = "orchestration.yaml"
 class ArchivingOrchestrator:
-    def __init__(self, config) -> None:
-        self.feeder: Feeder = config.feeder
-        self.formatter: Formatter = config.formatter
-        self.enrichers: List[Enricher] = config.enrichers
-        self.archivers: List[Archiver] = config.archivers
-        self.databases: List[Database] = config.databases
-        self.storages: List[Storage] = config.storages
-        ArchivingContext.set("storages", self.storages, keep_on_reset=True)
 
-        try: 
-            for a in self.all_archivers_for_setup(): a.setup()
-        except (KeyboardInterrupt, Exception) as e:
-            logger.error(f"Error during setup of archivers: {e}\n{traceback.format_exc()}")
-            self.cleanup()
+    # def __init__(self, config: Config) -> None:
+    #     self.feeder: Feeder = config.feeder
+    #     self.formatter: Formatter = config.formatter
+    #     self.enrichers: List[Enricher] = config.enrichers
+    #     self.archivers: List[Archiver] = config.archivers
+    #     self.databases: List[Database] = config.databases
+    #     self.storages: List[Storage] = config.storages
+    #     ArchivingContext.set("storages", self.storages, keep_on_reset=True)
 
+    #     try: 
+    #         for a in self.all_archivers_for_setup(): a.setup()
+    #     except (KeyboardInterrupt, Exception) as e:
+    #         logger.error(f"Error during setup of archivers: {e}\n{traceback.format_exc()}")
+    #         self.cleanup()
+
+    def setup_parser(self):
+        parser = argparse.ArgumentParser(
+                # prog = "auto-archiver",
+                description="Auto Archiver is a CLI tool to archive media/metadata from online URLs; it can read URLs from many sources (Google Sheets, Command Line, ...); and write results to many destinations too (CSV, Google Sheets, MongoDB, ...)!",
+                epilog="Check the code at https://github.com/bellingcat/auto-archiver"
+        )
+        parser.add_argument('--config', action='store', dest='config_file', help='the filename of the YAML configuration file (defaults to \'config.yaml\')', default=DEFAULT_CONFIG_FILE)
+        parser.add_argument('--version', action='version', version=__version__)
+        parser.add_argument('--mode', action='store', dest='mode', type=str, choices=['simple', 'full'], help='the mode to run the archiver in', default='simple')
+        self.parser = parser
+    
+    def setup_config(self):
+        # check what mode we're in
+        # if simple, we'll load just the modules that has requires_setup = False
+        # if full, we'll load all modules
+        if self.config.mode == 'simple':
+            for module in available_modules():
+                # load the module
+                manifest = load_manifest(module)
+                
+
+    def run(self) -> None:
+        self.setup_parser()
+
+        # parse the known arguments for now (basically, we want the config file)
+
+        # load the config file to get the list of enabled items
+        self.config, _ = self.parser.parse_known_args()
+
+        # load the config file
+        try:
+            config = read_yaml(self.config.config_file)
+        except FileNotFoundError:
+            if self.settings.config == DEFAULT_CONFIG_FILE:
+                # no config file found, let's do the setup with the default values
+                self.setup_config()
+            else:
+                logger.error(f"The configuration file {self.config.config_file} was  not found. Make sure the file exists and try again, or run without the --config file to use the default settings.")
+                exit()
+
+        breakpoint()
+        config.parse()
+
+
+        for item in self.feed():
+            pass
 
     def cleanup(self)->None:
         logger.info("Cleaning up")

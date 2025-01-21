@@ -1,15 +1,16 @@
 {
-    'name': 'Generic Archiver',
+    'name': 'Generic Extractor',
     'version': '0.1.0',
     'author': 'Bellingcat',
-    'type': ['archiver'],
+    'type': ['extractor'],
+    'entry_point': 'generic_extractor:GenericExtractor',
     'requires_setup': False,
     'depends': ['core'],
     'external_dependencies': {
         'python': ['yt_dlp', 'requests', 'loguru', 'slugify'],
     },
     'description': """
-This is the generic archiver used by auto-archiver, which uses `yt-dlp` under the hood.
+This is the generic extractor used by auto-archiver, which uses `yt-dlp` under the hood.
 
 This module is responsible for downloading and processing media content from platforms
 supported by `yt-dlp`, such as YouTube, Facebook, and others. It provides functionality

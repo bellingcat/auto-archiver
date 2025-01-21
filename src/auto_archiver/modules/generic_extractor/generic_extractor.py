@@ -8,7 +8,7 @@ from loguru import logger
 from auto_archiver.archivers.archiver import Archiver
 from ...core import Metadata, Media, ArchivingContext
 
-class GenericArchiver(Archiver):
+class GenericExtractor(Archiver):
     name = "youtubedl_archiver" #left as is for backwards compat
     _dropins = {}
 

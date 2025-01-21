@@ -6,13 +6,13 @@ from os.path import dirname
 
 import pytest
 
-from auto_archiver.archivers.generic_archiver import GenericArchiver
+from auto_archiver.archivers.generic_extractor.generic_extractor import GenericExtractor
 from .test_archiver_base import TestArchiverBase
 
-class TestGenericArchiver(TestArchiverBase):
+class TestGenericExtractor(TestArchiverBase):
     """Tests Base Archiver
     """
-    archiver_class = GenericArchiver
+    archiver_class = GenericExtractor
     config = {
         'subtitles': False,
         'comments': False,
