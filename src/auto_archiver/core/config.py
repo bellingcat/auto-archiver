@@ -21,6 +21,7 @@ from ..storages import Storage
 from ..enrichers import Enricher
 from . import Step
 from ..utils import update_nested_dict
+from ..version import __version__
 
 
 @dataclass
@@ -61,7 +62,7 @@ class Config:
             )
 
             parser.add_argument('--config', action='store', dest='config', help='the filename of the YAML configuration file (defaults to \'config.yaml\')', default='orchestration.yaml')
-            parser.add_argument('--version', action='version', version=importlib.metadata.version('auto_archiver'))
+            parser.add_argument('--version', action='version', version=__version__)
 
         # Iterate over all step subclasses to gather default configs and CLI arguments
         for configurable in self.configurable_parents:
