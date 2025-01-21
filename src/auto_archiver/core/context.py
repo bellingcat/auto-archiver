@@ -1,6 +1,21 @@
+""" ArchivingContext provides a global context for managing configurations and temporary data during the archiving process.
+
+This singleton class allows for:
+- Storing and retrieving key-value pairs that are accessible throughout the application lifecycle.
+- Marking certain values to persist across resets using `keep_on_reset`.
+- Managing temporary directories and other shared data used during the archiving process.
+
+### Key Features:
+- Creates a single global instance.
+- Reset functionality allows for clearing configurations, with options for partial or full resets.
+- Custom getters and setters for commonly used context values like temporary directories.
+
+"""
+
 class ArchivingContext:
     """
-    Singleton context class.
+    Singleton context class for managing global configurations and temporary data.
+
     ArchivingContext._get_instance() to retrieve it if needed
     otherwise just 
     ArchivingContext.set(key, value)

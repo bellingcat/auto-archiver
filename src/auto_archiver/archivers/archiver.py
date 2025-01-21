@@ -1,3 +1,10 @@
+""" The `archiver` module defines the base functionality for implementing archivers in the media archiving framework.
+    This class provides common utility methods and a standard interface for archivers.
+
+    Factory method to initialize an archiver instance based on its name.
+
+
+"""
 from __future__ import annotations
 from pathlib import Path
 from abc import abstractmethod
@@ -13,6 +20,11 @@ from ..core import Metadata, Step, ArchivingContext
 
 @dataclass
 class Archiver(Step):
+    """
+    Base class for implementing archivers in the media archiving framework.
+    Subclasses must implement the `download` method to define platform-specific behavior.
+    """
+
     name = "archiver"
 
     def __init__(self, config: dict) -> None:
@@ -87,4 +99,5 @@ class Archiver(Step):
             logger.warning(f"Failed to fetch the Media URL: {e}")
 
     @abstractmethod
-    def download(self, item: Metadata) -> Metadata: pass
+    def download(self, item: Metadata) -> Metadata:
+        pass

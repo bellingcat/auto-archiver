@@ -1,3 +1,10 @@
+"""
+The Config class initializes and parses configurations for all other steps.
+It supports CLI argument parsing, loading from YAML file, and overrides to allow
+flexible setup in various environments.
+
+"""
+
 import importlib
 import argparse
 import yaml
@@ -56,6 +63,7 @@ class Config:
             parser.add_argument('--config', action='store', dest='config', help='the filename of the YAML configuration file (defaults to \'config.yaml\')', default='orchestration.yaml')
             parser.add_argument('--version', action='version', version=importlib.metadata.version('auto_archiver'))
 
+        # Iterate over all step subclasses to gather default configs and CLI arguments
         for configurable in self.configurable_parents:
             child: Step
             for child in configurable.__subclasses__():

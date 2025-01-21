@@ -1,3 +1,8 @@
+""" Uses the Instaloader library to download content from Instagram. This class handles both individual posts
+    and user profiles, downloading as much information as possible, including images, videos, text, stories,
+    highlights, and tagged posts. Authentication is required via username/password or a session file.
+
+"""
 import re, os, shutil, traceback
 import instaloader  # https://instaloader.github.io/as-module.html
 from loguru import logger
