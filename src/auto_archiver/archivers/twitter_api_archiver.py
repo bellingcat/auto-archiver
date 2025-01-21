@@ -1,17 +1,19 @@
-
-import json, mimetypes
+import json
+import re
+import mimetypes
+import requests
 from datetime import datetime
+
 from loguru import logger
 from pytwitter import Api
 from slugify import slugify
 
 from . import Archiver
-from .twitter_archiver import TwitterArchiver
 from ..core import Metadata,Media
 
-
-class TwitterApiArchiver(TwitterArchiver, Archiver):
+class TwitterApiArchiver(Archiver):
     name = "twitter_api_archiver"
+    link_pattern = re.compile(r"(?:twitter|x).com\/(?:\#!\/)?(\w+)\/status(?:es)?\/(\d+)")
 
     def __init__(self, config: dict) -> None:
         super().__init__(config)
@@ -47,6 +49,17 @@ class TwitterApiArchiver(TwitterArchiver, Archiver):
     def api_client(self) -> str:
         return self.apis[self.api_index]
     
+    def sanitize_url(self, url: str) -> str:
+        # expand URL if t.co and clean tracker GET params
+        if 'https://t.co/' in url:
+            try:
+                r = requests.get(url, timeout=30)
+                logger.debug(f'Expanded url {url} to {r.url}')
+                url = r.url
+            except:
+                logger.error(f'Failed to expand url {url}')
+        return url
+
 
     def download(self, item: Metadata) -> Metadata:
         # call download retry until success or no more apis
@@ -55,6 +68,16 @@ class TwitterApiArchiver(TwitterArchiver, Archiver):
             self.api_index += 1
         self.api_index = 0
         return False
+
+    def get_username_tweet_id(self, url):
+        # detect URLs that we definitely cannot handle
+        matches = self.link_pattern.findall(url)
+        if not len(matches): return False, False
+
+        username, tweet_id = matches[0]  # only one URL supported
+        logger.debug(f"Found {username=} and {tweet_id=} in {url=}")
+
+        return username, tweet_id
 
     def download_retry(self, item: Metadata) -> Metadata:
         url = item.get_url()
@@ -102,10 +125,13 @@ class TwitterApiArchiver(TwitterArchiver, Archiver):
             "lang": tweet.data.lang,
             "media": urls
         }, ensure_ascii=False, indent=4))
-        return result.success("twitter")
+        return result.success("twitter-api")
 
     def choose_variant(self, variants):
-        # choosing the highest quality possible
+
+        """
+        Chooses the highest quality variable possible out of a list of variants
+        """
         variant, bit_rate = None, -1
         for var in variants:
             if var.content_type == "video/mp4":

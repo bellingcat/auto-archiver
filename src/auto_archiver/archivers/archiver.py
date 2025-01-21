@@ -6,8 +6,10 @@
 
 """
 from __future__ import annotations
+from pathlib import Path
 from abc import abstractmethod
 from dataclasses import dataclass
+import mimetypes
 import os
 import mimetypes, requests
 from loguru import logger
@@ -44,6 +46,14 @@ class Archiver(Step):
     def sanitize_url(self, url: str) -> str:
         # used to clean unnecessary URL parameters OR unfurl redirect links
         return url
+    
+    def suitable(self, url: str) -> bool:
+        """
+        Returns True if this archiver can handle the given URL
+        
+        Should be overridden by subclasses
+        """
+        return True
 
     def _guess_file_type(self, path: str) -> str:
         """
@@ -58,10 +68,8 @@ class Archiver(Step):
     @retry(wait_random_min=500, wait_random_max=3500, stop_max_attempt_number=5)
     def download_from_url(self, url: str, to_filename: str = None, verbose=True) -> str:
         """
-        downloads a URL to provided filename, or inferred from URL, returns local filename
+            downloads a URL to provided filename, or inferred from URL, returns local filename
         """
-        # TODO: should we refactor to use requests.get(url, stream=True) and write to file in chunks? compare approaches
-        # TODO: should we guess the extension?
         if not to_filename:
             to_filename = url.split('/')[-1].split('?')[0]
             if len(to_filename) > 64:
@@ -71,11 +79,24 @@ class Archiver(Step):
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36'
         }
-        d = requests.get(url, headers=headers)
-        assert d.status_code == 200, f"got response code {d.status_code} for {url=}"
-        with open(to_filename, 'wb') as f:
-            f.write(d.content)
-        return to_filename
+        try:
+            d = requests.get(url, stream=True, headers=headers, timeout=30)
+            d.raise_for_status()
+
+            # get mimetype from the response headers
+            if not Path(to_filename).suffix:
+                content_type = d.headers.get('Content-Type')
+                extension = mimetypes.guess_extension(content_type)
+                if extension:
+                    to_filename += extension
+
+            with open(to_filename, 'wb') as f:
+                for chunk in d.iter_content(chunk_size=8192):
+                    f.write(chunk)
+            return to_filename
+        
+        except requests.RequestException as e:
+            logger.warning(f"Failed to fetch the Media URL: {e}")
 
     @abstractmethod
     def download(self, item: Metadata) -> Metadata:

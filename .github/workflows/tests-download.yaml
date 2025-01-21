@@ -35,4 +35,6 @@ jobs:
         run: poetry install --no-interaction --with dev
 
       - name: Run Download Tests
-        run: poetry run pytest -ra -v -m "download"
+        run: poetry run pytest -ra -v -x -m "download"
+        env:
+          TWITTER_BEARER_TOKEN: ${{ secrets.TWITTER_BEARER_TOKEN }}
