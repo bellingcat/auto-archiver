@@ -7,9 +7,9 @@ import re, os, shutil, traceback
 import instaloader  # https://instaloader.github.io/as-module.html
 from loguru import logger
 
-from . import Archiver
-from ..core import Metadata
-from ..core import Media
+from auto_archiver.archivers import Archiver
+from auto_archiver.core import Metadata
+from auto_archiver.core import Media
 
 class InstagramArchiver(Archiver):
     """

@@ -8,9 +8,9 @@ from loguru import logger
 from tqdm import tqdm
 import re, time, json, os
 
-from . import Archiver
-from ..core import Metadata, Media, ArchivingContext
-from ..utils import random_str
+from auto_archiver.archivers import Archiver
+from auto_archiver.core import Metadata, Media, ArchivingContext
+from auto_archiver.utils import random_str
 
 
 class TelethonArchiver(Archiver):

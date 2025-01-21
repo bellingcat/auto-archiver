@@ -8,8 +8,8 @@ from loguru import logger
 from pytwitter import Api
 from slugify import slugify
 
-from . import Archiver
-from ..core import Metadata,Media
+from auto_archiver.archivers import Archiver
+from auto_archiver.core import Metadata,Media
 
 class TwitterApiArchiver(Archiver):
     name = "twitter_api_archiver"
