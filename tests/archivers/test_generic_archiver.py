@@ -1,10 +1,12 @@
-import pytest
 from pathlib import Path
-import datetime 
+import datetime
 import os
 
-from auto_archiver.archivers.generic_archiver import GenericArchiver
+from os.path import dirname
 
+import pytest
+
+from auto_archiver.archivers.generic_archiver import GenericArchiver
 from .test_archiver_base import TestArchiverBase
 
 class TestGenericArchiver(TestArchiverBase):
@@ -23,6 +25,17 @@ class TestGenericArchiver(TestArchiverBase):
         'cookies_from_browser': False,
         'cookie_file': None,
         }
+    
+    def test_load_dropin(self):
+        # test loading dropins that are in the generic_archiver package
+        package = "auto_archiver.archivers.generic_archiver"
+        assert self.archiver.dropin_for_name("bluesky", package=package)
+
+        # test loading dropings via filepath
+        path = os.path.join(dirname(dirname(__file__)), "data/")
+        assert self.archiver.dropin_for_name("dropin", additional_paths=[path])
+
+
 
     @pytest.mark.parametrize("url, is_suitable", [
         ("https://www.youtube.com/watch?v=5qap5aO4i9A", True),

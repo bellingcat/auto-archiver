@@ -79,7 +79,7 @@ class GenericArchiver(Archiver):
             except Exception as e:
                 logger.error(f"Error downloading cover image {thumbnail_url}: {e}")
 
-        dropin = self.dropin_for_extractor(info_extractor)
+        dropin = self.dropin_for_name(info_extractor.ie_key())
         if dropin:
             try:
                 metadata = dropin.download_additional_media(video_data, info_extractor, metadata)
@@ -102,7 +102,7 @@ class GenericArchiver(Archiver):
                      '_format_sort_fields', 'chapters', 'requested_formats', 'format_note',
                      'audio_channels', 'asr', 'fps', 'was_live', 'is_live', 'heatmap', 'age_limit', 'stretched_ratio']
         
-        dropin = self.dropin_for_extractor(info_extractor)
+        dropin = self.dropin_for_name(info_extractor.ie_key())
         if dropin:
             try:
                 base_keys += dropin.keys_to_clean(video_data, info_extractor)
@@ -157,7 +157,7 @@ class GenericArchiver(Archiver):
 
         ie_instance = info_extractor(downloader=ydl)
         post_data = None
-        dropin = self.dropin_for_extractor(info_extractor)
+        dropin = self.dropin_for_name(info_extractor.ie_key())
         if not dropin:
             # TODO: add a proper link to 'how to create your own dropin'
             logger.debug(f"""Could not find valid dropin for {info_extractor.IE_NAME}.
@@ -207,8 +207,7 @@ class GenericArchiver(Archiver):
 
         return self.add_metadata(data, info_extractor, url, result)
     
-    def dropin_for_extractor(self, info_extractor: Type[InfoExtractor], additional_paths = []):
-        dropin_name = info_extractor.ie_key().lower()
+    def dropin_for_name(self, dropin_name: str, additional_paths = [], package=__package__) -> Type[InfoExtractor]:
 
         if dropin_name == "generic":
             # no need for a dropin for the generic extractor (?)
@@ -241,7 +240,7 @@ class GenericArchiver(Archiver):
         
         # fallback to loading the dropins within auto-archiver
         try:
-            return _load_dropin(importlib.import_module(f".{dropin_name}", package=__package__))
+            return _load_dropin(importlib.import_module(f".{dropin_name}", package=package))
         except ModuleNotFoundError:
             pass
 
@@ -258,7 +257,7 @@ class GenericArchiver(Archiver):
         ydl.params['getcomments'] = False
         result = False
 
-        dropin_submodule = self.dropin_for_extractor(info_extractor)
+        dropin_submodule = self.dropin_for_name(info_extractor.ie_key())
 
         try:
             if dropin_submodule and dropin_submodule.skip_ytdlp_download(info_extractor, url):
