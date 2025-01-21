@@ -16,12 +16,11 @@ Auto Archiver documentation
 
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :hidden:
    :caption: Contents:
 
    user_guidelines
    developer_guidelines
    configurations
-   configs
 

@@ -1,5 +1,6 @@
+
 Configs
-=======
+-------
 
 This section documents all configuration options available for various components.
 
