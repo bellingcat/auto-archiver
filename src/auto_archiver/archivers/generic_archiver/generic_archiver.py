@@ -150,13 +150,12 @@ class GenericArchiver(Archiver):
 
         return result
 
-    def get_metatdata_for_post(self, info_extractor: Type[InfoExtractor], url: str, ydl: yt_dlp.YoutubeDL) -> Metadata:
+    def get_metadata_for_post(self, info_extractor: Type[InfoExtractor], url: str, ydl: yt_dlp.YoutubeDL) -> Metadata:
         """
         Calls into the ytdlp InfoExtract subclass to use the prive _extract_post method to get the post metadata.
         """
 
         ie_instance = info_extractor(downloader=ydl)
-        post_data = None
         dropin = self.dropin_for_name(info_extractor.ie_key())
         if not dropin:
             # TODO: add a proper link to 'how to create your own dropin'
@@ -274,7 +273,7 @@ class GenericArchiver(Archiver):
         except Exception as e:
             logger.debug(f'Issue using "{info_extractor.IE_NAME}" extractor to download video (error: {repr(e)}), attempting to use extractor to get post data instead')
             try:
-                result = self.get_metatdata_for_post(info_extractor, url, ydl)
+                result = self.get_metadata_for_post(info_extractor, url, ydl)
             except (yt_dlp.utils.DownloadError, yt_dlp.utils.ExtractorError) as post_e:
                 logger.error(f'Error downloading metadata for post: {post_e}')
                 return False
