@@ -1,16 +1,16 @@
 import datetime, os, yt_dlp, pysubs2
+import importlib
 from typing import Type
 from yt_dlp.extractor.common import InfoExtractor
 
 from loguru import logger
 
-from . import bluesky, twitter, truth
 from auto_archiver.archivers.archiver import Archiver
 from ...core import Metadata, Media, ArchivingContext
 
-
 class GenericArchiver(Archiver):
     name = "youtubedl_archiver" #left as is for backwards compat
+    _dropins = {}
 
     def __init__(self, config: dict) -> None:
         super().__init__(config)
@@ -22,23 +22,22 @@ class GenericArchiver(Archiver):
         self.allow_playlist = bool(self.allow_playlist)
         self.max_downloads = self.max_downloads
 
-    @staticmethod
-    def configs() -> dict:
-        return {
-            "facebook_cookie": {"default": None, "help": "optional facebook cookie to have more access to content, from browser, looks like 'cookie: datr= xxxx'"},
-            "subtitles": {"default": True, "help": "download subtitles if available"},
-            "comments": {"default": False, "help": "download all comments if available, may lead to large metadata"},
-            "livestreams": {"default": False, "help": "if set, will download live streams, otherwise will skip them; see --max-filesize for more control"},
-            "live_from_start": {"default": False, "help": "if set, will download live streams from their earliest available moment, otherwise starts now."},
-            "proxy": {"default": "", "help": "http/socks (https seems to not work atm) proxy to use for the webdriver, eg https://proxy-user:password@proxy-ip:port"},
-            "end_means_success": {"default": True, "help": "if True, any archived content will mean a 'success', if False this archiver will not return a 'success' stage; this is useful for cases when the yt-dlp will archive a video but ignore other types of content like images or text only pages that the subsequent archivers can retrieve."},
-            'allow_playlist': {"default": False, "help": "If True will also download playlists, set to False if the expectation is to download a single video."},
-            "max_downloads": {"default": "inf", "help": "Use to limit the number of videos to download when a channel or long page is being extracted. 'inf' means no limit."},
-            "cookies_from_browser": {"default": None, "help": "optional browser for ytdl to extract cookies from, can be one of: brave, chrome, chromium, edge, firefox, opera, safari, vivaldi, whale"},
-            "cookie_file": {"default": None, "help": "optional cookie file to use for Youtube, see instructions here on how to export from your browser: https://github.com/yt-dlp/yt-dlp/wiki/FAQ#how-do-i-pass-cookies-to-yt-dlp"},
-        }
+
+    def suitable_extractors(self, url: str) -> list[str]:
+        """
+        Returns a list of valid extractors for the given URL"""
+        for info_extractor in yt_dlp.YoutubeDL()._ies.values():
+            if info_extractor.suitable(url) and info_extractor.working():
+                yield info_extractor
+        
+    def suitable(self, url: str) -> bool:
+        """
+        Checks for valid URLs out of all ytdlp extractors.
+        Returns False for the GenericIE, which as labelled by yt-dlp: 'Generic downloader that works on some sites'
+        """
+        return any(self.suitable_extractors(url))
     
-    def download_additional_media(self, extractor_key: str, video_data: dict, metadata: Metadata) -> Metadata:
+    def download_additional_media(self, video_data: dict, info_extractor: InfoExtractor, metadata: Metadata) -> Metadata:
         """
         Downloads additional media like images, comments, subtitles, etc.
 
@@ -56,11 +55,18 @@ class GenericArchiver(Archiver):
             except Exception as e:
                 logger.error(f"Error downloading cover image {thumbnail_url}: {e}")
 
+        dropin = self.dropin_for_extractor(info_extractor)
+        if dropin:
+            try:
+                metadata = dropin.download_additional_media(video_data, info_extractor, metadata)
+            except AttributeError:
+                pass
+
         return metadata
 
-    def keys_to_clean(self, extractor_key: str, video_data: dict) -> dict:
+    def keys_to_clean(self, info_extractor: InfoExtractor, video_data: dict) -> dict:
         """
-        Clean up the video data to make it more readable and remove unnecessary keys that ytdlp adds
+        Clean up the ytdlp generic video data to make it more readable and remove unnecessary keys that ytdlp adds
         """
 
         base_keys = ['formats', 'thumbnail', 'display_id', 'epoch', 'requested_downloads',
@@ -71,23 +77,23 @@ class GenericArchiver(Archiver):
                      'channel_id', 'subtitles', 'tbr', 'url', 'original_url', 'automatic_captions', 'playable_in_embed', 'live_status',
                      '_format_sort_fields', 'chapters', 'requested_formats', 'format_note',
                      'audio_channels', 'asr', 'fps', 'was_live', 'is_live', 'heatmap', 'age_limit', 'stretched_ratio']
-        if extractor_key == 'TikTok':
-            # Tiktok: only has videos so a valid ytdlp `video_data` object is returned. Base keys are enough
-            return base_keys + [] 
-        elif extractor_key == "Bluesky":
-            # bluesky API response for non video URLs is already clean, nothing to add
-            return base_keys + []
         
-        
+        dropin = self.dropin_for_extractor(info_extractor)
+        if dropin:
+            try:
+                base_keys += dropin.keys_to_clean(video_data, info_extractor)
+            except AttributeError:
+                pass
+
         return base_keys
     
-    def add_metadata(self, extractor_key: str, video_data: dict, url:str, result: Metadata) -> Metadata:
+    def add_metadata(self, video_data: dict, info_extractor: InfoExtractor, url:str, result: Metadata) -> Metadata:
         """
-        Creates a Metadata object from the give video_data
+        Creates a Metadata object from the given video_data
         """
 
         # first add the media
-        result = self.download_additional_media(extractor_key, video_data, result)
+        result = self.download_additional_media(video_data, info_extractor, result)
 
         # keep both 'title' and 'fulltitle', but prefer 'title', falling back to 'fulltitle' if it doesn't exist
         result.set_title(video_data.pop('title', video_data.pop('fulltitle', "")))
@@ -110,7 +116,7 @@ class GenericArchiver(Archiver):
             result.set("upload_date", upload_date)
         
         # then clean away any keys we don't want
-        for clean_key in self.keys_to_clean(extractor_key, video_data):
+        for clean_key in self.keys_to_clean(info_extractor, video_data):
             video_data.pop(clean_key, None)
         
         # then add the rest of the video data
@@ -119,35 +125,6 @@ class GenericArchiver(Archiver):
                 result.set(k, v)
 
         return result
-    
-    def suitable_extractors(self, url: str) -> list[str]:
-        """
-        Returns a list of valid extractors for the given URL"""
-        for info_extractor in yt_dlp.YoutubeDL()._ies.values():
-            if info_extractor.suitable(url) and info_extractor.working():
-                yield info_extractor
-        
-    def suitable(self, url: str) -> bool:
-        """
-        Checks for valid URLs out of all ytdlp extractors.
-        Returns False for the GenericIE, which as labelled by yt-dlp: 'Generic downloader that works on some sites'
-        """
-        return any(self.suitable_extractors(url))
-
-    def create_metadata_for_post(self, info_extractor: InfoExtractor, post_data: dict, url: str) -> Metadata:
-        """
-        Standardizes the output of the 'post' data from a ytdlp InfoExtractor to Metadata object.
-
-        This is only required for platforms that don't have videos, and therefore cannot be converted into ytdlp valid 'video_data'.
-        In these instances, we need to use the extractor's _extract_post (or similar) method to get the post metadata, and then convert
-        it into a Metadata object via a platform-specific function.
-        """
-        if info_extractor.ie_key() == 'Bluesky':
-            return bluesky.create_metadata(post_data, self, url)
-        if info_extractor.ie_key() == 'Twitter':
-            return twitter.create_metadata(post_data, self, url)
-        if info_extractor.ie_key() == 'Truth':
-            return truth.create_metadata(post_data, self, url)
 
     def get_metatdata_for_post(self, info_extractor: Type[InfoExtractor], url: str, ydl: yt_dlp.YoutubeDL) -> Metadata:
         """
@@ -156,45 +133,29 @@ class GenericArchiver(Archiver):
 
         ie_instance = info_extractor(downloader=ydl)
         post_data = None
-
-        if info_extractor.ie_key() == 'Bluesky':
-            # bluesky kwargs are handle, video_id
-            handle, video_id = ie_instance._match_valid_url(url).group('handle', 'id')
-            post_data = ie_instance._extract_post(handle=handle, post_id=video_id)
-        elif info_extractor.ie_key() == 'Twitter':
-            # twitter kwargs are tweet_id
-            twid = ie_instance._match_valid_url(url).group('id')
-            # TODO: if ytdlp PR https://github.com/yt-dlp/yt-dlp/pull/12098 is merged, change to _extract_post
-            post_data = ie_instance._extract_status(twid=twid)
-        elif info_extractor.ie_key() == 'Truth':
-            video_id = ie_instance._match_id(url)
-            truthsocial_url = f'https://truthsocial.com/api/v1/statuses/{video_id}'
-            post_data = ie_instance._download_json(truthsocial_url, video_id)
-        else:
-            # lame attempt at trying to get data for an unknown extractor
-            # TODO: test some more video platforms and see if there's any improvement to be made
-            try:
-                post_data = ie_instance._extract_post(url)
-            except (NotImplementedError, AttributeError) as e:
-                logger.debug(f"Extractor {info_extractor.ie_key()} does not support extracting post info from non-video URLs: {e}")
-                return False
-
-        return self.create_metadata_for_post(ie_instance, post_data, url)
+        dropin = self.dropin_for_extractor(info_extractor)
+        if not dropin:
+            # TODO: add a proper link to 'how to create your own dropin'
+            logger.debug(f"""Could not find valid dropin for {info_extractor.IE_NAME}.
+                     Why not try creating your own, and make sure it has a valid function called 'create_metadata'. Learn more: https://auto-archiver.readthedocs.io/en/latest/user_guidelines.html#""")
+            return False
         
-    def get_metadata_for_video(self, info: dict, info_extractor: Type[InfoExtractor], url: str, ydl: yt_dlp.YoutubeDL) -> Metadata:
+        post_data = dropin.extract_post(url, ie_instance)
+        return dropin.create_metadata(post_data, ie_instance, self, url)
+
+    def get_metadata_for_video(self, data: dict, info_extractor: Type[InfoExtractor], url: str, ydl: yt_dlp.YoutubeDL) -> Metadata:
 
         # this time download
         ydl.params['getcomments'] = self.comments
         #TODO: for playlist or long lists of videos, how to download one at a time so they can be stored before the next one is downloaded?
-        info = ydl.extract_info(url, ie_key=info_extractor.ie_key(), download=True)
-        if "entries" in info:
-            entries = info.get("entries", [])
+        data = ydl.extract_info(url, ie_key=info_extractor.ie_key(), download=True)
+        if "entries" in data:
+            entries = data.get("entries", [])
             if not len(entries):
                 logger.warning('YoutubeDLArchiver could not find any video')
                 return False
-        else: entries = [info]
+        else: entries = [data]
 
-        extractor_key = info['extractor_key']
         result = Metadata()
 
         for entry in entries:
@@ -209,7 +170,7 @@ class GenericArchiver(Archiver):
 
                 # read text from subtitles if enabled
                 if self.subtitles:
-                    for lang, val in (info.get('requested_subtitles') or {}).items():
+                    for lang, val in (data.get('requested_subtitles') or {}).items():
                         try:    
                             subs = pysubs2.load(val.get('filepath'), encoding="utf-8")
                             text = " ".join([line.text for line in subs])
@@ -220,9 +181,49 @@ class GenericArchiver(Archiver):
             except Exception as e:
                 logger.error(f"Error processing entry {entry}: {e}")
 
-        return self.add_metadata(extractor_key, info, url, result)
+        return self.add_metadata(data, info_extractor, url, result)
+    
+    def dropin_for_extractor(self, info_extractor: Type[InfoExtractor], additional_paths = []):
+        dropin_name = info_extractor.ie_key().lower()
 
-    def download_for_extractor(self, info_extractor: Type[InfoExtractor], url: str, ydl: yt_dlp.YoutubeDL) -> Metadata:
+        if dropin_name == "generic":
+            # no need for a dropin for the generic extractor (?)
+            return None
+
+        dropin_class_name = dropin_name.title()
+        def _load_dropin(dropin):
+            dropin_class = getattr(dropin, dropin_class_name)()
+            return self._dropins.setdefault(dropin_name, dropin_class)
+
+        try:
+            return self._dropins[dropin_name]
+        except KeyError:
+            pass
+
+        # TODO: user should be able to pass --dropins="/some/folder,/other/folder" as a cmd line option
+        # which would allow the user to override the default dropins/add their own
+        paths = [] + additional_paths
+        for path in paths:
+            dropin_path = os.path.join(path, f"{dropin_name}.py")
+            dropin_spec = importlib.util.spec_from_file_location(dropin_name, dropin_path)
+            if not dropin_spec:
+                continue
+            try:
+                dropin = importlib.util.module_from_spec(dropin_spec)
+                dropin_spec.loader.exec_module(dropin)
+                return _load_dropin(dropin)
+            except (FileNotFoundError, ModuleNotFoundError):
+                pass
+        
+        # fallback to loading the dropins within auto-archiver
+        try:
+            return _load_dropin(importlib.import_module(f".{dropin_name}", package=__package__))
+        except ModuleNotFoundError:
+            pass
+
+        return None
+
+    def download_for_extractor(self, info_extractor: InfoExtractor, url: str, ydl: yt_dlp.YoutubeDL) -> Metadata:
         """
         Tries to download the given url using the specified extractor
         
@@ -233,19 +234,19 @@ class GenericArchiver(Archiver):
         ydl.params['getcomments'] = False
         result = False
 
+        dropin_submodule = self.dropin_for_extractor(info_extractor)
+
         try:
-            if info_extractor.ie_key() == "Truth":
-                # the ytdlp truth extractor currently only gets the first image/video in the 'media' section, as opposed to all of them
-                # we don't want this
-                raise yt_dlp.utils.ExtractorError("Use the 'post data' method for Truth posts")
+            if dropin_submodule and dropin_submodule.skip_ytdlp_download(info_extractor, url):
+                raise Exception(f"Skipping using ytdlp to download files for {info_extractor.ie_key()}")
 
             # don't download since it can be a live stream
-            info = ydl.extract_info(url, ie_key=info_extractor.ie_key(), download=False)
-            if info.get('is_live', False) and not self.livestreams:
+            data = ydl.extract_info(url, ie_key=info_extractor.ie_key(), download=False)
+            if data.get('is_live', False) and not self.livestreams:
                 logger.warning("Livestream detected, skipping due to 'livestreams' configuration setting")
                 return False
             # it's a valid video, that the youtubdedl can download out of the box
-            result = self.get_metadata_for_video(info, info_extractor, url, ydl)
+            result = self.get_metadata_for_video(data, info_extractor, url, ydl)
 
         except Exception as e:
             logger.debug(f'Issue using "{info_extractor.IE_NAME}" extractor to download video (error: {repr(e)}), attempting to use extractor to get post data instead')
