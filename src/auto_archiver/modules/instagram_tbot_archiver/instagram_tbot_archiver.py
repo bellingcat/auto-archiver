@@ -7,14 +7,17 @@ relevant media and metadata. The fetched content is saved as `Media` objects in 
 `Metadata` object.
 """
 
+import os
 import shutil
-from telethon.sync import TelegramClient
-from loguru import logger
-import time, os
+import time
 from sqlite3 import OperationalError
-from . import Archiver
-from ..core import Metadata, Media, ArchivingContext
-from ..utils import random_str
+
+from loguru import logger
+from telethon.sync import TelegramClient
+
+from auto_archiver.archivers import Archiver
+from auto_archiver.core import Metadata, Media, ArchivingContext
+from auto_archiver.utils import random_str
 
 
 class InstagramTbotArchiver(Archiver):

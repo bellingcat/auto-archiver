@@ -1,9 +1,9 @@
 from loguru import logger
 from vk_url_scraper import VkScraper
 
-from ..utils.misc import dump_payload
-from . import Archiver
-from ..core import Metadata, Media, ArchivingContext
+from auto_archiver.utils.misc import dump_payload
+from auto_archiver.archivers import Archiver
+from auto_archiver.core import Metadata, Media, ArchivingContext
 
 
 class VkArchiver(Archiver):
