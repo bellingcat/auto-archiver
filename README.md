@@ -120,7 +120,7 @@ auto-archiver --config secrets/orchestration.yaml --cli_feeder.urls="url1,url2,u
 ```
 
 Here's the complete workflow that the auto-archiver goes through:
-```{mermaid}
+```mermaid
 graph TD
     s((start)) --> F(fa:fa-table Feeder)
     F -->|get and clean URL| D1{fa:fa-database Database}
