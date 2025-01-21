@@ -271,6 +271,10 @@ class GenericArchiver(Archiver):
             result = self.get_metadata_for_video(data, info_extractor, url, ydl)
 
         except Exception as e:
+            if info_extractor.ie_key() == "generic":
+                # don't clutter the logs with issues about the 'generic' extractor not having a dropin
+                return False
+
             logger.debug(f'Issue using "{info_extractor.IE_NAME}" extractor to download video (error: {repr(e)}), attempting to use extractor to get post data instead')
             try:
                 result = self.get_metadata_for_post(info_extractor, url, ydl)
