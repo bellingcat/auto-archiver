@@ -30,7 +30,7 @@ the broader archiving framework.
 custom dropins can be created to handle additional websites and passed to the archiver
 via the command line using the `--dropins` option (TODO!).
 """,
-    'config': {
+    'configs': {
             "facebook_cookie": {"default": None, "help": "optional facebook cookie to have more access to content, from browser, looks like 'cookie: datr= xxxx'"},
             "subtitles": {"default": True, "help": "download subtitles if available"},
             "comments": {"default": False, "help": "download all comments if available, may lead to large metadata"},
@@ -40,7 +40,7 @@ via the command line using the `--dropins` option (TODO!).
             "end_means_success": {"default": True, "help": "if True, any archived content will mean a 'success', if False this archiver will not return a 'success' stage; this is useful for cases when the yt-dlp will archive a video but ignore other types of content like images or text only pages that the subsequent archivers can retrieve."},
             'allow_playlist': {"default": False, "help": "If True will also download playlists, set to False if the expectation is to download a single video."},
             "max_downloads": {"default": "inf", "help": "Use to limit the number of videos to download when a channel or long page is being extracted. 'inf' means no limit."},
-            "cookies_from_browser": {"default": None, "help": "optional browser for ytdl to extract cookies from, can be one of: brave, chrome, chromium, edge, firefox, opera, safari, vivaldi, whale"},
+            "cookies_from_browser": {"default": None, 'type': 'str', "help": "optional browser for ytdl to extract cookies from, can be one of: brave, chrome, chromium, edge, firefox, opera, safari, vivaldi, whale"},
             "cookie_file": {"default": None, "help": "optional cookie file to use for Youtube, see instructions here on how to export from your browser: https://github.com/yt-dlp/yt-dlp/wiki/FAQ#how-do-i-pass-cookies-to-yt-dlp"},
         }
 }

@@ -4,14 +4,11 @@ It supports CLI argument parsing, loading from YAML file, and overrides to allow
 flexible setup in various environments.
 
 """
-
 import argparse
-import yaml
+from configparser import ConfigParser
 from dataclasses import dataclass, field
 
 
-# @dataclass
-# class Config:
 #     configurable_parents = [
 #         Feeder,
 #         Enricher,
@@ -50,21 +47,6 @@ from dataclasses import dataclass, field
         #     parser.add_argument('--config', action='store', dest='config', help='the filename of the YAML configuration file (defaults to \'config.yaml\')', default='orchestration.yaml')
         #     parser.add_argument('--version', action='version', version=__version__)
 
-def format_config(config: dict) -> dict:
-    # Iterate over all step subclasses to gather default configs and CLI arguments
-    new_config = {}
-    for step, values in config['steps'].items():
-        new_config[f"--{step}"] = values
-    
-    # format configurations
-    for name, confg_vals in config['configurations'].items():
-        for key, value in confg_vals.items():
-            assert "." not in key, "config key cannot contain '.'"
-            config_path = f"--{name}.{key}"
-            new_config[config_path] = value
-
-    return new_config
-
 
 class LoadFromFile (argparse.Action):
     def __call__ (self, parser, namespace, values, option_string = None):
@@ -72,6 +54,14 @@ class LoadFromFile (argparse.Action):
             # parse arguments in the file and store them in the target namespace
             parser.parse_args(f.read().split(), namespace)
 
-def read_yaml(yaml_filename: str) -> dict:
-    with open(yaml_filename, "r", encoding="utf-8") as inf:
-        return format_config(yaml.safe_load(inf))
+def read_config(config_filename: str) -> dict:
+    config = ConfigParser()
+    config.read(config_filename)
+    # setup basic format
+    if 'STEPS' not in config.sections():
+        config.add_section("STEPS")
+    return config
+
+def store_config(config: ConfigParser, config_filename: str):
+    with open(config_filename, "w", encoding="utf-8") as outf:
+        config.write(outf)
