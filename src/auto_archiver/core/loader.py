@@ -10,6 +10,8 @@ from loguru import logger
 import sys
 import shutil
 
+_LOADED_MODULES = {}
+
 MODULE_TYPES = [
     'feeder',
     'enricher',
@@ -68,6 +70,9 @@ class Module:
 
 def load_module(module: str) -> object: # TODO: change return type to Step
 
+    if module in _LOADED_MODULES:
+        return _LOADED_MODULES[module]
+
     # load a module by name
     module = get_module(module)
     if not module:
@@ -83,11 +88,11 @@ def load_module(module: str) -> object: # TODO: change return type to Step
     check_deps(module.dependencies.get('bin', []), lambda dep: shutil.which(dep))
 
     qualname = f'auto_archiver.modules.{module.name}'
-    if qualname in sys.modules:
-        return
+
     logger.info(f"Loading module '{module.display_name}'...")
     loaded_module = __import__(qualname)
-    return getattr(sys.modules[qualname], module.entry_point)()
+    _LOADED_MODULES[module.name] = getattr(sys.modules[qualname], module.entry_point)()
+    return _LOADED_MODULES[module.name]
 
 
     # finally, load the module
@@ -144,6 +149,6 @@ def available_modules(with_manifest: bool=False, limit_to_modules: List[str]= []
     if not suppress_warnings:
         for module in limit_to_modules:
             if not any(module == m.name for m in all_modules):
-                logger.warning(f"Module {module} not found in available modules. Are you sure it's installed?")
+                logger.warning(f"Module '{module}' not found in available modules. Are you sure it's installed?")
 
     return all_modules

@@ -85,7 +85,7 @@ class ArchivingOrchestrator:
                 if modules := getattr(basic_config, f"{module_type}s", []):
                     enabled_modules.extend(modules)
 
-            self.add_module_args(available_modules(with_manifest=True, limit_to_modules=enabled_modules), parser)
+            self.add_module_args(available_modules(with_manifest=True, limit_to_modules=set(enabled_modules)), parser)
         elif basic_config.mode == 'simple':
             simple_modules = [module for module in available_modules(with_manifest=True) if not module.requires_setup]
             self.add_module_args(simple_modules, parser)
@@ -98,6 +98,7 @@ class ArchivingOrchestrator:
             self.add_module_args(available_modules(with_manifest=True), parser)
         
 
+        breakpoint()
         parser.set_defaults(**to_dot_notation(yaml_config))
 
         # reload the parser with the new arguments, now that we have them
@@ -106,13 +107,13 @@ class ArchivingOrchestrator:
             logger.warning(f"Ignoring unknown/unused arguments: {unknown}\nPerhaps you don't have this module enabled?")
 
         # merge the new config with the old one
-        yaml_config = merge_dicts(vars(parsed), yaml_config)
+        merged_yaml_config = merge_dicts(vars(parsed), yaml_config)
 
-        if basic_config.store or not os.path.isfile(join(dirname(__file__), basic_config.config_file)):
+        if (merged_yaml_config != yaml_config and basic_config.store) or not os.path.isfile(basic_config.config_file):
             logger.info(f"Storing configuration file to {basic_config.config_file}")
             store_yaml(yaml_config, basic_config.config_file)
         
-        self.config = yaml_config
+        self.config = merged_yaml_config
 
         return self.config
     
@@ -120,12 +121,12 @@ class ArchivingOrchestrator:
         if not parser:
             parser = self.parser
 
-        parser.add_argument('--feeders', action='store', dest='steps.feeders', nargs='+', required=True, help='the feeders to use')
-        parser.add_argument('--enrichers', action='store', dest='steps.enrichers',  nargs='+', required=True, help='the enrichers to use')
-        parser.add_argument('--extractors', action='store', dest='steps.extractors', nargs='+', required=True, help='the extractors to use')
-        parser.add_argument('--databases', action='store', dest='steps.databases', nargs='+', required=True, help='the databases to use')
-        parser.add_argument('--storages', action='store', dest='steps.storages', nargs='+', required=True, help='the storages to use')
-        parser.add_argument('--formatters', action='store', dest='steps.formatters', nargs='+', required=True, help='the formatter to use')
+        parser.add_argument('--feeders', action='store', dest='steps.feeders', nargs='+', help='the feeders to use')
+        parser.add_argument('--enrichers', action='store', dest='steps.enrichers',  nargs='+', help='the enrichers to use')
+        parser.add_argument('--extractors', action='store', dest='steps.extractors', nargs='+', help='the extractors to use')
+        parser.add_argument('--databases', action='store', dest='steps.databases', nargs='+', help='the databases to use')
+        parser.add_argument('--storages', action='store', dest='steps.storages', nargs='+', help='the storages to use')
+        parser.add_argument('--formatters', action='store', dest='steps.formatters', nargs='+', help='the formatter to use')
 
     def add_module_args(self, modules: list[Module] = None, parser: argparse.ArgumentParser = None):
 
@@ -163,6 +164,8 @@ class ArchivingOrchestrator:
         """
             
         for module_type in MODULE_TYPES:
+            if module_type == 'enricher':
+                breakpoint()
             step_items = []
             modules_to_load = self.config['steps'][f"{module_type}s"]
 
