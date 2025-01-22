@@ -19,21 +19,11 @@ from ..core import Metadata, Step, ArchivingContext
 
 
 @dataclass
-class Archiver(Step):
+class Archiver:
     """
     Base class for implementing archivers in the media archiving framework.
     Subclasses must implement the `download` method to define platform-specific behavior.
     """
-
-    name = "archiver"
-
-    def __init__(self, config: dict) -> None:
-        # without this STEP.__init__ is not called
-        super().__init__(config)
-
-    def init(name: str, config: dict) -> Archiver:
-        # only for typing...
-        return Step.init(name, config, Archiver)
 
     def setup(self) -> None:
         # used when archivers need to login or do other one-time setup
