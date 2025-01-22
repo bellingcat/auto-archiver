@@ -4,7 +4,6 @@
     "type": ["extractor"],
     "entry_point": "telethon_archiver:TelethonArchiver",
     "requires_setup": True,
-    "depends": [""],
     "external_dependencies": {
         "python": ["telethon",
                    "loguru",

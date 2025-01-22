@@ -3,7 +3,6 @@
     "type": ["extractor"],
     "entry_point": "twitter_api_archiver:TwitterApiArchiver",
     "requires_setup": True,
-    "depends": ["core"],
     "external_dependencies": {
         "python": ["requests",
                    "loguru",

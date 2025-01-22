@@ -3,7 +3,6 @@
     "type": ["extractor"],
     "entry_point": "telegram_archiver:TelegramArchiver",
     "requires_setup": False,
-    "depends": ["core"],
     "external_dependencies": {
         "python": [
             "requests",

@@ -2,7 +2,6 @@
     "name": "Instagram API Archiver",
     "type": ["extractor"],
     "entry_point": "instagram_api_archiver:InstagramApiArchiver",
-    "depends": ["core"],
     "external_dependencies":
         {"python": ["requests",
                     "loguru",

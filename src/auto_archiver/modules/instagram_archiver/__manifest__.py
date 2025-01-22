@@ -2,7 +2,6 @@
     "name": "Instagram Archiver",
     "type": ["extractor"],
     "entry_point": "instagram_archiver:InstagramArchiver",
-    "depends": ["core"],
     "external_dependencies": {
         "python": ["instaloader",
                    "loguru",],

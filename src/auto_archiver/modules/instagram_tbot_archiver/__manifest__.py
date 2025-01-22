@@ -2,7 +2,6 @@
     "name": "Instagram Telegram Bot Archiver",
     "type": ["extractor"],
     "entry_point": "instagram_tbot_archiver:InstagramTbotArchiver",
-    "depends": ["core", "utils"],
     "external_dependencies": {"python": ["loguru",
                                          "telethon",],
                               },
