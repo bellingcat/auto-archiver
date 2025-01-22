@@ -9,7 +9,6 @@ from typing import Generator, Union, List
 from urllib.parse import urlparse
 from ipaddress import ip_address
 import argparse
-import configparser
 import os
 from os.path import join, dirname
 
@@ -17,16 +16,10 @@ from rich_argparse import RichHelpFormatter
 
 from .context import ArchivingContext
 
-from ..archivers import Archiver
-from ..feeders import Feeder
-from ..formatters import Formatter
-from ..storages import Storage
-from ..enrichers import Enricher
-from ..databases import Database
 from .metadata import Metadata
 from ..version import __version__
-from .config import read_config, store_config
-from .loader import available_modules, Module, MODULE_TYPES
+from .config import read_yaml, store_yaml, to_dot_notation, merge_dicts, EMPTY_CONFIG
+from .loader import available_modules, Module, MODULE_TYPES, load_modules
 
 import tempfile, traceback
 from loguru import logger
@@ -69,72 +62,76 @@ class ArchivingOrchestrator:
         parser.add_argument('-s', '--store', action='store_true', dest='store', help='Store the created config in the config file')
         self.basic_parser = parser
 
-    def setup_complete_parser(self, basic_config: dict, ini_config: dict, unused_args: list[str]) -> None:
+    def setup_complete_parser(self, basic_config: dict, yaml_config: dict, unused_args: list[str]) -> None:
         parser = argparse.ArgumentParser(
             parents = [self.basic_parser],
             add_help=False,
         )
+        self.add_steps_args(parser)
 
         # check what mode we're in
         # if we have a config file, use that to decide which modules to load
         # if simple, we'll load just the modules that has requires_setup = False
         # if full, we'll load all modules
-        if ini_config:
+        if yaml_config != EMPTY_CONFIG:
             # only load the modules enabled in config
+            # TODO: if some steps are empty (e.g. 'feeders' is empty), should we default to the 'simple' ones? Or only if they are ALL empty?
             enabled_modules = []
             for module_type in MODULE_TYPES:
-                try:
-                    enabled_modules.extend(ini_config.get("STEPS", module_type))
-                except configparser.NoOptionError:
-                    pass
+                enabled_modules.extend(yaml_config['steps'].get(f"{module_type}s", []))
 
             # add in any extra modules that have been passed on the command line for 'feeders', 'enrichers', 'archivers', 'databases', 'storages', 'formatter'
             for module_type in MODULE_TYPES:
                 if modules := getattr(basic_config, f"{module_type}s", []):
                     enabled_modules.extend(modules)
 
-            self.add_module_args(available_modules(enabled_modules, with_manifest=True), parser)
+            self.add_module_args(available_modules(with_manifest=True, limit_to_modules=enabled_modules), parser)
         elif basic_config.mode == 'simple':
             simple_modules = [module for module in available_modules(with_manifest=True) if not module.requires_setup]
             self.add_module_args(simple_modules, parser)
             # add them to the config
             for module in simple_modules:
                 for module_type in module.type:
-                    existing_modules = config['STEPS'] = module.name
-                    ini_config.setdefault(f"{module_type}s", []).append(module.name)
-
+                    yaml_config['steps'].setdefault(f"{module_type}s", []).append(module.name)
         else:
             # load all modules, they're not using the 'simple' mode
             self.add_module_args(available_modules(with_manifest=True), parser)
+        
 
-        parser.set_defaults(**ini_config)
+        parser.set_defaults(**to_dot_notation(yaml_config))
 
         # reload the parser with the new arguments, now that we have them
-        self.config, unknown = parser.parse_known_args(unused_args)
+        parsed, unknown = parser.parse_known_args(unused_args)
         if unknown:
-            logger.warning(f"Ignoring unknown/unused arguments: {unknown}")
+            logger.warning(f"Ignoring unknown/unused arguments: {unknown}\nPerhaps you don't have this module enabled?")
 
-        if self.config and basic_config.store or not os.path.isfile(join(dirname(__file__), basic_config.config_file)):
+        # merge the new config with the old one
+        yaml_config = merge_dicts(vars(parsed), yaml_config)
+
+        if basic_config.store or not os.path.isfile(join(dirname(__file__), basic_config.config_file)):
             logger.info(f"Storing configuration file to {basic_config.config_file}")
-            store_config(ini_config, basic_config.config_file)
-        breakpoint()
-        logger.info(f"FEEDER: {self.config.feeders}")
-        logger.info(f"ENRICHERS: {self.config.enrichers}")
-        logger.info(f"ARCHIVERS: {self.config.archivers}")
-        logger.info(f"DATABASES: {self.config.databases}")
-        logger.info(f"STORAGES: {self.config.storages}")
-        logger.info(f"FORMATTER: {self.formatter.name}")
+            store_yaml(yaml_config, basic_config.config_file)
+        
+        self.config = yaml_config
+
+        logger.info("FEEDERS: " + ", ".join(self.config['steps']['feeders']))
+        logger.info("EXTRACTORS: " + ", ".join(self.config['steps']['extractors']))
+        logger.info("ENRICHERS: " + ", ".join(self.config['steps']['enrichers']))
+        logger.info("DATABASES: " + ", ".join(self.config['steps']['databases']))
+        logger.info("STORAGES: " + ", ".join(self.config['steps']['storages']))
+        logger.info("FORMATTERS: " + ", ".join(self.config['steps']['formatters']))
+        return self.config
     
     def add_steps_args(self, parser: argparse.ArgumentParser = None):
         if not parser:
             parser = self.parser
 
-        parser.add_argument('--feeders', action='store', dest='feeders', nargs='+', required=True, help='the feeders to use')
-        parser.add_argument('--enrichers', action='store', dest='enrichers',  nargs='+', required=True, help='the enrichers to use')
-        parser.add_argument('--archivers', action='store', dest='archivers', nargs='+', required=True, help='the archivers to use')
-        parser.add_argument('--databases', action='store', dest='databases', nargs='+', required=True, help='the databases to use')
-        parser.add_argument('--storages', action='store', dest='storages', nargs='+', required=True, help='the storages to use')
-        parser.add_argument('--formatter', action='store', dest='formatter', nargs='+', required=True, help='the formatter to use')
+        parser.add_argument('--feeders', action='store', dest='steps.feeders', nargs='+', required=True, help='the feeders to use')
+        parser.add_argument('--enrichers', action='store', dest='steps.enrichers',  nargs='+', required=True, help='the enrichers to use')
+        parser.add_argument('--extractors', action='store', dest='steps.extractors', nargs='+', required=True, help='the extractors to use')
+        parser.add_argument('--databases', action='store', dest='steps.databases', nargs='+', required=True, help='the databases to use')
+        parser.add_argument('--storages', action='store', dest='steps.storages', nargs='+', required=True, help='the storages to use')
+        parser.add_argument('--formatters', action='store', dest='steps.formatters', nargs='+', required=True, help='the formatter to use')
 
     def add_module_args(self, modules: list[Module] = None, parser: argparse.ArgumentParser = None):
 
@@ -165,6 +162,12 @@ class ArchivingOrchestrator:
 
         self.basic_parser.print_help()
         exit()
+    
+    def install_modules(self):
+        modules = set()
+        [modules.update(*m) for m in self.config['steps'].values()]
+
+        load_modules(modules)
 
     def run(self) -> None:
         self.setup_basic_parser()
@@ -179,19 +182,18 @@ class ArchivingOrchestrator:
             self.show_help()
 
         # load the config file
-        ini_config = {}
+        yaml_config = {}
 
-        try:
-            ini_config = read_config(basic_config.config_file)
-        except FileNotFoundError:
-            if basic_config.config_file != DEFAULT_CONFIG_FILE:
-                logger.error(f"The configuration file {basic_config.config_file} was  not found. Make sure the file exists and try again, or run without the --config file to use the default settings.")
-                exit()
+        if not os.path.exists(basic_config.config_file) and basic_config.config_file != DEFAULT_CONFIG_FILE:
+            logger.error(f"The configuration file {basic_config.config_file} was  not found. Make sure the file exists and try again, or run without the --config file to use the default settings.")
+            exit()
 
-        self.setup_complete_parser(basic_config, ini_config, unused_args)
+        yaml_config = read_yaml(basic_config.config_file)
+            
+        breakpoint()
+        self.setup_complete_parser(basic_config, yaml_config, unused_args)
 
-        config.parse()
-
+        self.install_modules()
 
         for item in self.feed():
             pass
@@ -201,8 +203,9 @@ class ArchivingOrchestrator:
         for a in self.all_archivers_for_setup(): a.cleanup()
 
     def feed(self) -> Generator[Metadata]:
-        for item in self.feeder:
-            yield self.feed_item(item)
+        for feeder in self.config['steps']['feeders']:
+            for item in feeder:
+                yield self.feed_item(item)
         self.cleanup()
 
     def feed_item(self, item: Metadata) -> Metadata:

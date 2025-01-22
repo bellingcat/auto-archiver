@@ -4,12 +4,14 @@ import os
 import copy
 from os.path import join, dirname
 from typing import List
-
+from loguru import logger
+import sys
+import shutil
 
 MODULE_TYPES = [
     'feeder',
     'enricher',
-    'archiver',
+    'extractor',
     'database',
     'storage',
     'formatter'
@@ -59,10 +61,47 @@ class Module:
     def __repr__(self):
         return f"Module<'{self.display_name}' ({self.name})>"
 
+def load_modules(modules):
+    modules = available_modules(limit_to_modules=modules, with_manifest=True)
+    for module in modules:
+        _load_module(module)
 
+def _load_module(module):
+    # first make sure that the 'depends' are installed and available in sys.args
+    for dependency in module.depends:
+        if dependency not in sys.modules:
+            logger.error(f"""
+                            Module {module.name} depends on {dependency} which is not available.
+                            
+                            Have you set up the '{module.name}' module correctly? See the README for more information.
+                            """)
+            exit()
+    # then check the external dependencies, these are binary dependencies that should be available on the path
+    for dep_type, deps in module.external_dependencies.items():
+        if dep_type == 'python':
+            for dep in deps:
+                if dep not in sys.modules:
+                    logger.error(f"""
+                                Module {module.name} requires {dep} which is not available.
+                                
+                                Have you installed the required dependencies for the '{module.name}' module? See the README for more information.
+                                """)
+
+        elif dep_type == 'binary':
+            for dep in deps:
+                if not shutil.which(dep):
+                    logger.error(f"""
+                                Module {module.name} requires {dep} which is not available.
+                                
+                                Have you installed the required dependencies for the '{module.name}' module? See the README for more information.
+                                """)
+    # finally, load the module
+    logger.info(f"Loading module {module.display_name}")
+    module = __import__(module.entry_point, fromlist=[module.entry_point])
+    logger.info(f"Module {module.display_name} loaded")
 
 def load_manifest(module_path):
-    print(f"Loading manifest for module {module_path}")
+    # print(f"Loading manifest for module {module_path}")
     # load the manifest file
     manifest = copy.deepcopy(_DEFAULT_MANIFEST)
 
@@ -70,7 +109,7 @@ def load_manifest(module_path):
         manifest.update(ast.literal_eval(f.read()))
     return manifest
 
-def available_modules(additional_paths: List[str] = [], with_manifest: bool=False) -> List[Module]:
+def available_modules(with_manifest: bool=False, limit_to_modules: List[str]= [], additional_paths: List[str] = [], ) -> List[Module]:
     # search through all valid 'modules' paths. Default is 'modules' in the current directory
     
     # see odoo/modules/module.py -> get_modules
@@ -83,7 +122,16 @@ def available_modules(additional_paths: List[str] = [], with_manifest: bool=Fals
 
     for module_folder in default_path + additional_paths:
         # walk through each module in module_folder and check if it has a valid manifest
-        for possible_module in os.listdir(module_folder):
+        try:
+            possible_modules = os.listdir(module_folder)
+        except FileNotFoundError:
+            logger.warning(f"Module folder {module_folder} does not exist")
+            continue
+
+        for possible_module in possible_modules:
+            if limit_to_modules and possible_module not in limit_to_modules:
+                continue
+
             possible_module_path = join(module_folder, possible_module)
             if not is_really_module(possible_module_path):
                 continue
@@ -93,5 +141,9 @@ def available_modules(additional_paths: List[str] = [], with_manifest: bool=Fals
             else:
                 manifest = {}
             all_modules.append(Module(possible_module, possible_module_path, manifest))
+    
+    for module in limit_to_modules:
+        if not any(module == m.name for m in all_modules):
+            logger.warning(f"Module {module} not found in available modules. Are you sure it's installed?")
 
     return all_modules
