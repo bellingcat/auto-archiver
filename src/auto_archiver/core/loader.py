@@ -62,7 +62,7 @@ class Module:
 
 
 def load_manifest(module_path):
-    print(f"Loading manifest for module {module_path}")
+    # print(f"Loading manifest for module {module_path}")
     # load the manifest file
     manifest = copy.deepcopy(_DEFAULT_MANIFEST)
 

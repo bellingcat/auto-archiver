@@ -9,7 +9,6 @@ from typing import Generator, Union, List
 from urllib.parse import urlparse
 from ipaddress import ip_address
 import argparse
-import configparser
 import os
 from os.path import join, dirname
 
@@ -25,7 +24,7 @@ from ..enrichers import Enricher
 from ..databases import Database
 from .metadata import Metadata
 from ..version import __version__
-from .config import read_config, store_config
+from .config import read_yaml, store_yaml, to_dot_notation, merge_dicts, EMPTY_CONFIG
 from .loader import available_modules, Module, MODULE_TYPES
 
 import tempfile, traceback
@@ -69,24 +68,23 @@ class ArchivingOrchestrator:
         parser.add_argument('-s', '--store', action='store_true', dest='store', help='Store the created config in the config file')
         self.basic_parser = parser
 
-    def setup_complete_parser(self, basic_config: dict, ini_config: dict, unused_args: list[str]) -> None:
+    def setup_complete_parser(self, basic_config: dict, yaml_config: dict, unused_args: list[str]) -> None:
         parser = argparse.ArgumentParser(
             parents = [self.basic_parser],
             add_help=False,
         )
-
+        self.add_steps_args(parser)
+        breakpoint()
         # check what mode we're in
         # if we have a config file, use that to decide which modules to load
         # if simple, we'll load just the modules that has requires_setup = False
         # if full, we'll load all modules
-        if ini_config:
+        if yaml_config != EMPTY_CONFIG:
             # only load the modules enabled in config
+            # TODO: if some steps are empty (e.g. 'feeders' is empty), should we default to the 'simple' ones? Or only if they are ALL empty?
             enabled_modules = []
             for module_type in MODULE_TYPES:
-                try:
-                    enabled_modules.extend(ini_config.get("STEPS", module_type))
-                except configparser.NoOptionError:
-                    pass
+                enabled_modules.extend(yaml_config['steps'].get(f"{module_type}s", []))
 
             # add in any extra modules that have been passed on the command line for 'feeders', 'enrichers', 'archivers', 'databases', 'storages', 'formatter'
             for module_type in MODULE_TYPES:
@@ -100,23 +98,25 @@ class ArchivingOrchestrator:
             # add them to the config
             for module in simple_modules:
                 for module_type in module.type:
-                    existing_modules = config['STEPS'] = module.name
-                    ini_config.setdefault(f"{module_type}s", []).append(module.name)
-
+                    yaml_config['steps'].setdefault(f"{module_type}s", []).append(module.name)
         else:
             # load all modules, they're not using the 'simple' mode
             self.add_module_args(available_modules(with_manifest=True), parser)
-
-        parser.set_defaults(**ini_config)
+        
+        breakpoint()
+        parser.set_defaults(**to_dot_notation(yaml_config))
 
         # reload the parser with the new arguments, now that we have them
-        self.config, unknown = parser.parse_known_args(unused_args)
+        parsed, unknown = parser.parse_known_args(unused_args)
         if unknown:
-            logger.warning(f"Ignoring unknown/unused arguments: {unknown}")
+            logger.warning(f"Ignoring unknown/unused arguments: {unknown}\nPerhaps you don't have this module enabled?")
+
+        # merge the new config with the old one
+        yaml_config = merge_dicts(vars(parsed), yaml_config)
 
         if self.config and basic_config.store or not os.path.isfile(join(dirname(__file__), basic_config.config_file)):
             logger.info(f"Storing configuration file to {basic_config.config_file}")
-            store_config(ini_config, basic_config.config_file)
+            store_yaml(yaml_config, basic_config.config_file)
         breakpoint()
         logger.info(f"FEEDER: {self.config.feeders}")
         logger.info(f"ENRICHERS: {self.config.enrichers}")
@@ -179,16 +179,16 @@ class ArchivingOrchestrator:
             self.show_help()
 
         # load the config file
-        ini_config = {}
+        yaml_config = {}
 
-        try:
-            ini_config = read_config(basic_config.config_file)
-        except FileNotFoundError:
-            if basic_config.config_file != DEFAULT_CONFIG_FILE:
-                logger.error(f"The configuration file {basic_config.config_file} was  not found. Make sure the file exists and try again, or run without the --config file to use the default settings.")
-                exit()
+        if not os.path.exists(basic_config.config_file) and basic_config.config_file != DEFAULT_CONFIG_FILE:
+            logger.error(f"The configuration file {basic_config.config_file} was  not found. Make sure the file exists and try again, or run without the --config file to use the default settings.")
+            exit()
 
-        self.setup_complete_parser(basic_config, ini_config, unused_args)
+        yaml_config = read_yaml(basic_config.config_file)
+            
+
+        self.setup_complete_parser(basic_config, yaml_config, unused_args)
 
         config.parse()
 
