@@ -16,16 +16,10 @@ from rich_argparse import RichHelpFormatter
 
 from .context import ArchivingContext
 
-from ..archivers import Archiver
-from ..feeders import Feeder
-from ..formatters import Formatter
-from ..storages import Storage
-from ..enrichers import Enricher
-from ..databases import Database
 from .metadata import Metadata
 from ..version import __version__
 from .config import read_yaml, store_yaml, to_dot_notation, merge_dicts, EMPTY_CONFIG
-from .loader import available_modules, Module, MODULE_TYPES
+from .loader import available_modules, Module, MODULE_TYPES, load_modules
 
 import tempfile, traceback
 from loguru import logger
@@ -74,7 +68,7 @@ class ArchivingOrchestrator:
             add_help=False,
         )
         self.add_steps_args(parser)
-        breakpoint()
+
         # check what mode we're in
         # if we have a config file, use that to decide which modules to load
         # if simple, we'll load just the modules that has requires_setup = False
@@ -91,7 +85,7 @@ class ArchivingOrchestrator:
                 if modules := getattr(basic_config, f"{module_type}s", []):
                     enabled_modules.extend(modules)
 
-            self.add_module_args(available_modules(enabled_modules, with_manifest=True), parser)
+            self.add_module_args(available_modules(with_manifest=True, limit_to_modules=enabled_modules), parser)
         elif basic_config.mode == 'simple':
             simple_modules = [module for module in available_modules(with_manifest=True) if not module.requires_setup]
             self.add_module_args(simple_modules, parser)
@@ -103,7 +97,7 @@ class ArchivingOrchestrator:
             # load all modules, they're not using the 'simple' mode
             self.add_module_args(available_modules(with_manifest=True), parser)
         
-        breakpoint()
+
         parser.set_defaults(**to_dot_notation(yaml_config))
 
         # reload the parser with the new arguments, now that we have them
@@ -114,27 +108,30 @@ class ArchivingOrchestrator:
         # merge the new config with the old one
         yaml_config = merge_dicts(vars(parsed), yaml_config)
 
-        if self.config and basic_config.store or not os.path.isfile(join(dirname(__file__), basic_config.config_file)):
+        if basic_config.store or not os.path.isfile(join(dirname(__file__), basic_config.config_file)):
             logger.info(f"Storing configuration file to {basic_config.config_file}")
             store_yaml(yaml_config, basic_config.config_file)
-        breakpoint()
-        logger.info(f"FEEDER: {self.config.feeders}")
-        logger.info(f"ENRICHERS: {self.config.enrichers}")
-        logger.info(f"ARCHIVERS: {self.config.archivers}")
-        logger.info(f"DATABASES: {self.config.databases}")
-        logger.info(f"STORAGES: {self.config.storages}")
-        logger.info(f"FORMATTER: {self.formatter.name}")
+        
+        self.config = yaml_config
+
+        logger.info("FEEDERS: " + ", ".join(self.config['steps']['feeders']))
+        logger.info("EXTRACTORS: " + ", ".join(self.config['steps']['extractors']))
+        logger.info("ENRICHERS: " + ", ".join(self.config['steps']['enrichers']))
+        logger.info("DATABASES: " + ", ".join(self.config['steps']['databases']))
+        logger.info("STORAGES: " + ", ".join(self.config['steps']['storages']))
+        logger.info("FORMATTERS: " + ", ".join(self.config['steps']['formatters']))
+        return self.config
     
     def add_steps_args(self, parser: argparse.ArgumentParser = None):
         if not parser:
             parser = self.parser
 
-        parser.add_argument('--feeders', action='store', dest='feeders', nargs='+', required=True, help='the feeders to use')
-        parser.add_argument('--enrichers', action='store', dest='enrichers',  nargs='+', required=True, help='the enrichers to use')
-        parser.add_argument('--archivers', action='store', dest='archivers', nargs='+', required=True, help='the archivers to use')
-        parser.add_argument('--databases', action='store', dest='databases', nargs='+', required=True, help='the databases to use')
-        parser.add_argument('--storages', action='store', dest='storages', nargs='+', required=True, help='the storages to use')
-        parser.add_argument('--formatter', action='store', dest='formatter', nargs='+', required=True, help='the formatter to use')
+        parser.add_argument('--feeders', action='store', dest='steps.feeders', nargs='+', required=True, help='the feeders to use')
+        parser.add_argument('--enrichers', action='store', dest='steps.enrichers',  nargs='+', required=True, help='the enrichers to use')
+        parser.add_argument('--extractors', action='store', dest='steps.extractors', nargs='+', required=True, help='the extractors to use')
+        parser.add_argument('--databases', action='store', dest='steps.databases', nargs='+', required=True, help='the databases to use')
+        parser.add_argument('--storages', action='store', dest='steps.storages', nargs='+', required=True, help='the storages to use')
+        parser.add_argument('--formatters', action='store', dest='steps.formatters', nargs='+', required=True, help='the formatter to use')
 
     def add_module_args(self, modules: list[Module] = None, parser: argparse.ArgumentParser = None):
 
@@ -165,6 +162,12 @@ class ArchivingOrchestrator:
 
         self.basic_parser.print_help()
         exit()
+    
+    def install_modules(self):
+        modules = set()
+        [modules.update(*m) for m in self.config['steps'].values()]
+
+        load_modules(modules)
 
     def run(self) -> None:
         self.setup_basic_parser()
@@ -187,11 +190,10 @@ class ArchivingOrchestrator:
 
         yaml_config = read_yaml(basic_config.config_file)
             
-
+        breakpoint()
         self.setup_complete_parser(basic_config, yaml_config, unused_args)
 
-        config.parse()
-
+        self.install_modules()
 
         for item in self.feed():
             pass
@@ -201,8 +203,9 @@ class ArchivingOrchestrator:
         for a in self.all_archivers_for_setup(): a.cleanup()
 
     def feed(self) -> Generator[Metadata]:
-        for item in self.feeder:
-            yield self.feed_item(item)
+        for feeder in self.config['steps']['feeders']:
+            for item in feeder:
+                yield self.feed_item(item)
         self.cleanup()
 
     def feed_item(self, item: Metadata) -> Metadata:

@@ -61,9 +61,6 @@ class LoadFromFile (argparse.Action):
 
 def to_dot_notation(yaml_conf: str) -> argparse.ArgumentParser:
     dotdict = {}
-    for step, vals in yaml_conf.pop('steps', {}).items():
-        if vals:
-            dotdict[f"{step}s"] = vals
 
     def process_subdict(subdict, prefix=""):
         for key, value in subdict.items():

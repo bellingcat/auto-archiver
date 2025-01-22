@@ -11,9 +11,6 @@ from dataclasses import dataclass, field
 from dataclasses_json import dataclass_json, config
 import mimetypes
 
-import ffmpeg
-from ffmpeg._run import Error
-
 from .context import ArchivingContext
 
 from loguru import logger
@@ -106,6 +103,12 @@ class Media:
         return self.mimetype.startswith("image")
 
     def is_valid_video(self) -> bool:
+        # Note: this is intentional, to only import ffmpeg here - when the method is called
+        # this speeds up loading the module. We check that 'ffmpeg' is available on startup
+        # when we load each manifest file
+        import ffmpeg
+        from ffmpeg._run import Error
+
         # checks for video streams with ffmpeg, or min file size for a video
         # self.is_video() should be used together with this method
         try:

@@ -1,6 +1,5 @@
 """ Entry point for the auto_archiver package. """
-from . import ArchivingOrchestrator
-
+from auto_archiver.core.orchestrator import ArchivingOrchestrator
 
 def main():
     ArchivingOrchestrator().run()
