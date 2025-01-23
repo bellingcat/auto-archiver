@@ -6,7 +6,14 @@ m = {
         "python": ["loguru"],
     },
     "configs": {
-        # TODO: get base storage configs
+        "path_generator": {
+            "default": "url",
+            "help": "how to store the file in terms of directory structure: 'flat' sets to root; 'url' creates a directory based on the provided URL; 'random' creates a random directory.",
+        },
+        "filename_generator": {
+            "default": "random",
+            "help": "how to name stored files: 'random' creates a random string; 'static' uses a replicable strategy such as a hash.",
+        },
         "save_to": {"default": "./archived", "help": "folder where to save archived content"},
         "save_absolute": {"default": False, "help": "whether the path to the stored file is absolute or relative in the output result inc. formatters (WARN: leaks the file structure)"},
     },

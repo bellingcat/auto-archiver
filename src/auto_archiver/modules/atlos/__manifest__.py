@@ -2,23 +2,25 @@
     "name": "atlos_storage",
     "type": ["storage"],
     "requires_setup": True,
-    "external_dependencies": {
-        "python": ["loguru", "requests"],
-        "bin": [""]
-    },
+    "external_dependencies": {"python": ["loguru", "requests"], "bin": [""]},
     "configs": {
-        # TODO: get base storage configs
-        # TODO also? get_atlos_config_options()
-
+        "path_generator": {
+            "default": "url",
+            "help": "how to store the file in terms of directory structure: 'flat' sets to root; 'url' creates a directory based on the provided URL; 'random' creates a random directory.",
+        },
+        "filename_generator": {
+            "default": "random",
+            "help": "how to name stored files: 'random' creates a random string; 'static' uses a replicable strategy such as a hash.",
+        },
         "api_token": {
             "default": None,
             "help": "An Atlos API token. For more information, see https://docs.atlos.org/technical/api/",
-            "cli_set": lambda cli_val, _: cli_val
+            "cli_set": lambda cli_val, _: cli_val,
         },
         "atlos_url": {
             "default": "https://platform.atlos.org",
             "help": "The URL of your Atlos instance (e.g., https://platform.atlos.org), without a trailing slash.",
-            "cli_set": lambda cli_val, _: cli_val
+            "cli_set": lambda cli_val, _: cli_val,
         },
     },
     "description": """
@@ -34,5 +36,5 @@
     ### Notes
     - Requires Atlos API configuration, including `atlos_url` and `api_token`.
     - Files are linked to an `atlos_id` in the metadata, ensuring proper association with Atlos source materials.
-    """
+    """,
 }

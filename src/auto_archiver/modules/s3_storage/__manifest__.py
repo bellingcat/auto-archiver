@@ -6,7 +6,14 @@ m = {
         "python": ["boto3", "loguru"],
     },
     "configs": {
-                # TODO: get base storage configs
+                "path_generator": {
+                    "default": "url",
+                    "help": "how to store the file in terms of directory structure: 'flat' sets to root; 'url' creates a directory based on the provided URL; 'random' creates a random directory.",
+                },
+                "filename_generator": {
+                    "default": "random",
+                    "help": "how to name stored files: 'random' creates a random string; 'static' uses a replicable strategy such as a hash.",
+                },
                 "bucket": {"default": None, "help": "S3 bucket name"},
                 "region": {"default": None, "help": "S3 region name"},
                 "key": {"default": None, "help": "S3 API key"},

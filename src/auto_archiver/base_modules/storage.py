@@ -15,29 +15,6 @@ from slugify import slugify
 @dataclass
 class Storage(Step):
     name = "storage"
-    PATH_GENERATOR_OPTIONS = ["flat", "url", "random"]
-    FILENAME_GENERATOR_CHOICES = ["random", "static"]
-
-    def __init__(self, config: dict) -> None:
-        # without this STEP.__init__ is not called
-        super().__init__(config)
-        assert self.path_generator in Storage.PATH_GENERATOR_OPTIONS, f"path_generator must be one of {Storage.PATH_GENERATOR_OPTIONS}"
-        assert self.filename_generator in Storage.FILENAME_GENERATOR_CHOICES, f"filename_generator must be one of {Storage.FILENAME_GENERATOR_CHOICES}"
-
-    @staticmethod
-    def configs() -> dict:
-        return {
-            "path_generator": {
-                "default": "url",
-                "help": "how to store the file in terms of directory structure: 'flat' sets to root; 'url' creates a directory based on the provided URL; 'random' creates a random directory.",
-                "choices": Storage.PATH_GENERATOR_OPTIONS
-            },
-            "filename_generator": {
-                "default": "random",
-                "help": "how to name stored files: 'random' creates a random string; 'static' uses a replicable strategy such as a hash.",
-                "choices": Storage.FILENAME_GENERATOR_CHOICES
-            }
-        }
 
     def init(name: str, config: dict) -> Storage:
         # only for typing...
@@ -68,19 +45,27 @@ class Storage(Step):
         folder = ArchivingContext.get("folder", "")
         filename, ext = os.path.splitext(media.filename)
 
-        # path_generator logic
-        if self.path_generator == "flat":
+        # Handle path_generator logic
+        path_generator = ArchivingContext.get("path_generator", "url")
+        if path_generator == "flat":
             path = ""
-            filename = slugify(filename)  # in case it comes with os.sep
-        elif self.path_generator == "url": path = slugify(url)
-        elif self.path_generator == "random":
+            filename = slugify(filename)  # Ensure filename is slugified
+        elif path_generator == "url":
+            path = slugify(url)
+        elif path_generator == "random":
             path = ArchivingContext.get("random_path", random_str(24), True)
+        else:
+            raise ValueError(f"Invalid path_generator: {path_generator}")
 
-        # filename_generator logic
-        if self.filename_generator == "random": filename = random_str(24)
-        elif self.filename_generator == "static":
+        # Handle filename_generator logic
+        filename_generator = ArchivingContext.get("filename_generator", "random")
+        if filename_generator == "random":
+            filename = random_str(24)
+        elif filename_generator == "static":
             he = HashEnricher({"hash_enricher": {"algorithm": ArchivingContext.get("hash_enricher.algorithm"), "chunksize": 1.6e7}})
             hd = he.calculate_hash(media.filename)
             filename = hd[:24]
+        else:
+            raise ValueError(f"Invalid filename_generator: {filename_generator}")
 
         media.key = os.path.join(folder, path, f"{filename}{ext}")
