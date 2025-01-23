@@ -33,7 +33,7 @@ class ArchivingOrchestrator:
     #     self.feeder: Feeder = config.feeder
     #     self.formatter: Formatter = config.formatter
     #     self.enrichers: List[Enricher] = config.enrichers
-    #     self.extractors: List[Extractor] = config.extractors
+    #     self.archivers: List[Archiver] = config.archivers
     #     self.databases: List[Database] = config.databases
     #     self.storages: List[Storage] = config.storages
     #     ArchivingContext.set("storages", self.storages, keep_on_reset=True)
@@ -80,7 +80,7 @@ class ArchivingOrchestrator:
             for module_type in MODULE_TYPES:
                 enabled_modules.extend(yaml_config['steps'].get(f"{module_type}s", []))
 
-            # add in any extra modules that have been passed on the command line for 'feeders', 'enrichers', 'extractors', 'databases', 'storages', 'formatter'
+            # add in any extra modules that have been passed on the command line for 'feeders', 'enrichers', 'archivers', 'databases', 'storages', 'formatter'
             for module_type in MODULE_TYPES:
                 if modules := getattr(basic_config, f"{module_type}s", []):
                     enabled_modules.extend(modules)
@@ -98,7 +98,7 @@ class ArchivingOrchestrator:
             self.add_module_args(available_modules(with_manifest=True), parser)
         
 
-        # breakpoint()
+        breakpoint()
         parser.set_defaults(**to_dot_notation(yaml_config))
 
         # reload the parser with the new arguments, now that we have them
@@ -165,8 +165,7 @@ class ArchivingOrchestrator:
             
         for module_type in MODULE_TYPES:
             if module_type == 'enricher':
-                pass
-                # breakpoint()
+                breakpoint()
             step_items = []
             modules_to_load = self.config['steps'][f"{module_type}s"]
 
@@ -229,7 +228,7 @@ class ArchivingOrchestrator:
     def cleanup(self)->None:
         logger.info("Cleaning up")
         for e in self.config['steps']['extractors']:
-            # breakpoint()
+            breakpoint()
             e.cleanup()
 
     def feed(self) -> Generator[Metadata]:
