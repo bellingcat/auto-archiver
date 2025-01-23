@@ -34,15 +34,6 @@ class InstagramTbotArchiver(Archiver):
         self.assert_valid_string("api_hash")
         self.timeout = int(self.timeout)
 
-    @staticmethod
-    def configs() -> dict:
-        return {
-            "api_id": {"default": None, "help": "telegram API_ID value, go to https://my.telegram.org/apps"},
-            "api_hash": {"default": None, "help": "telegram API_HASH value, go to https://my.telegram.org/apps"},
-            "session_file": {"default": "secrets/anon-insta", "help": "optional, records the telegram login session for future usage, '.session' will be appended to the provided value."},
-            "timeout": {"default": 45, "help": "timeout to fetch the instagram content in seconds."},
-        }
-
     def setup(self) -> None:
         """
         1. makes a copy of session_file that is removed in cleanup

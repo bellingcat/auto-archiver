@@ -8,7 +8,7 @@
                     "retrying",
                     "tqdm",],
          },
-    "no_setup_required": False,
+    "requires_setup": True,
     "configs": {
         "access_token": {"default": None, "help": "a valid instagrapi-api token"},
         "api_endpoint": {"default": None, "help": "API endpoint to use"},
@@ -25,5 +25,22 @@
             "help": "if true, will remove empty values from the json output",
         },
     },
-    "description": "",
+    "description": """
+Archives various types of Instagram content using the Instagrapi API.
+
+### Features
+- Connects to an Instagrapi API deployment to fetch Instagram profiles, posts, stories, highlights, reels, and tagged content.
+- Supports advanced configuration options, including:
+  - Full profile download (all posts, stories, highlights, and tagged content).
+  - Limiting the number of posts to fetch for large profiles.
+  - Minimising JSON output to remove empty fields and redundant data.
+- Provides robust error handling and retries for API calls.
+- Ensures efficient media scraping, including handling nested or carousel media items.
+- Adds downloaded media and metadata to the result for further processing.
+
+### Notes
+- Requires a valid Instagrapi API token (`access_token`) and API endpoint (`api_endpoint`).
+- Full-profile downloads can be limited by setting `full_profile_max_posts`.
+- Designed to fetch content in batches for large profiles, minimising API load.
+""",
 }

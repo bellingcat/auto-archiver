@@ -3,10 +3,12 @@
     "type": ["extractor"],
     "entry_point": "instagram_archiver:InstagramArchiver",
     "external_dependencies": {
-        "python": ["instaloader",
-                   "loguru",],
+        "python": [
+            "instaloader",
+            "loguru",
+        ],
     },
-    "no_setup_required": False,
+    "requires_setup": True,
     "configs": {
         "username": {"default": None, "help": "a valid Instagram username"},
         "password": {

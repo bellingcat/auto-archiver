@@ -34,17 +34,6 @@ class TwitterApiArchiver(Archiver):
                              access_token=self.access_token, access_secret=self.access_secret))
         assert self.api_client is not None, "Missing Twitter API configurations, please provide either AND/OR (consumer_key, consumer_secret, access_token, access_secret) to use this archiver, you can provide both for better rate-limit results."
 
-    @staticmethod
-    def configs() -> dict:
-        return {
-            "bearer_token": {"default": None, "help": "[deprecated: see bearer_tokens] twitter API bearer_token which is enough for archiving, if not provided you will need consumer_key, consumer_secret, access_token, access_secret"},
-            "bearer_tokens": {"default": [], "help": " a list of twitter API bearer_token which is enough for archiving, if not provided you will need consumer_key, consumer_secret, access_token, access_secret, if provided you can still add those for better rate limits. CSV of bearer tokens if provided via the command line", "cli_set": lambda cli_val, cur_val: list(set(cli_val.split(",")))},
-            "consumer_key": {"default": None, "help": "twitter API consumer_key"},
-            "consumer_secret": {"default": None, "help": "twitter API consumer_secret"},
-            "access_token": {"default": None, "help": "twitter API access_token"},
-            "access_secret": {"default": None, "help": "twitter API access_secret"},
-        }
-    
     @property  # getter .mimetype
     def api_client(self) -> str:
         return self.apis[self.api_index]

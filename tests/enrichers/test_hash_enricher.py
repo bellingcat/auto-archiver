@@ -1,6 +1,6 @@
 import pytest
 
-from auto_archiver.enrichers.hash_enricher import HashEnricher
+from auto_archiver.modules.hash_enricher import HashEnricher
 from auto_archiver.core import Metadata, Media
 
 @pytest.mark.parametrize("algorithm, filename, expected_hash", [

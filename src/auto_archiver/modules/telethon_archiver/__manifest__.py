@@ -21,7 +21,7 @@
                 "default": {},
                 "help": "(JSON string) private channel invite links (format: t.me/joinchat/HASH OR t.me/+HASH) and (optional but important to avoid hanging for minutes on startup) channel id (format: CHANNEL_ID taken from a post url like https://t.me/c/CHANNEL_ID/1), the telegram account will join any new channels on setup",
                 # TODO
-                #"cli_set": lambda cli_val, cur_val: dict(cur_val, **json.loads(cli_val))
+                "cli_set": lambda cli_val, cur_val: dict(cur_val, **json.loads(cli_val))
             }
         },
     "description": """

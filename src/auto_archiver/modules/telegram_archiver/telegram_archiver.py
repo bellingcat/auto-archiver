@@ -16,9 +16,6 @@ class TelegramArchiver(Archiver):
     def __init__(self, config: dict) -> None:
         super().__init__(config)
 
-    @staticmethod
-    def configs() -> dict:
-        return {}
 
     def download(self, item: Metadata) -> Metadata:
         url = item.get_url()

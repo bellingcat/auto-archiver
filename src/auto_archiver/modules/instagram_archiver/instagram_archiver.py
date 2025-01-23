@@ -45,16 +45,7 @@ class InstagramArchiver(Archiver):
             except Exception as e2:
                 logger.error(f"Unable to finish login (retrying from file): {e2}\n{traceback.format_exc()}")
 
-    @staticmethod
-    def configs() -> dict:
-        return {
-            "username": {"default": None, "help": "a valid Instagram username"},
-            "password": {"default": None, "help": "the corresponding Instagram account password"},
-            "download_folder": {"default": "instaloader", "help": "name of a folder to temporarily download content to"},
-            "session_file": {"default": "secrets/instaloader.session", "help": "path to the instagram session which saves session credentials"},
-            #TODO: fine-grain
-            # "download_stories": {"default": True, "help": "if the link is to a user profile: whether to get stories information"},
-        }
+
 
     def download(self, item: Metadata) -> Metadata:
         url = item.get_url()

@@ -190,7 +190,6 @@ class ArchivingOrchestrator:
 
         yaml_config = read_yaml(basic_config.config_file)
             
-        breakpoint()
         self.setup_complete_parser(basic_config, yaml_config, unused_args)
 
         self.install_modules()
