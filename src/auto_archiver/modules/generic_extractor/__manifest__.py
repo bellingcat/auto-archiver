@@ -2,11 +2,10 @@
     'name': 'Generic Extractor',
     'version': '0.1.0',
     'author': 'Bellingcat',
-    'type': ['extractor'],
-    'entry_point': 'generic_extractor:GenericExtractor',
+    'type': ['extractor', 'feeder', 'enricher'],
+    'entry_point': 'GenericExtractor', # this class should be present in the __init__.py
     'requires_setup': False,
-    'depends': ['core'],
-    'external_dependencies': {
+    'dependencies': {
         'python': ['yt_dlp', 'requests', 'loguru', 'slugify'],
     },
     'description': """

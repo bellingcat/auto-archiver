@@ -19,7 +19,7 @@ from .context import ArchivingContext
 from .metadata import Metadata
 from ..version import __version__
 from .config import read_yaml, store_yaml, to_dot_notation, merge_dicts, EMPTY_CONFIG
-from .loader import available_modules, Module, MODULE_TYPES, load_modules
+from .loader import available_modules, Module, MODULE_TYPES, load_module
 
 import tempfile, traceback
 from loguru import logger
@@ -85,7 +85,7 @@ class ArchivingOrchestrator:
                 if modules := getattr(basic_config, f"{module_type}s", []):
                     enabled_modules.extend(modules)
 
-            self.add_module_args(available_modules(with_manifest=True, limit_to_modules=enabled_modules), parser)
+            self.add_module_args(available_modules(with_manifest=True, limit_to_modules=set(enabled_modules)), parser)
         elif basic_config.mode == 'simple':
             simple_modules = [module for module in available_modules(with_manifest=True) if not module.requires_setup]
             self.add_module_args(simple_modules, parser)
@@ -98,6 +98,7 @@ class ArchivingOrchestrator:
             self.add_module_args(available_modules(with_manifest=True), parser)
         
 
+        breakpoint()
         parser.set_defaults(**to_dot_notation(yaml_config))
 
         # reload the parser with the new arguments, now that we have them
@@ -106,32 +107,26 @@ class ArchivingOrchestrator:
             logger.warning(f"Ignoring unknown/unused arguments: {unknown}\nPerhaps you don't have this module enabled?")
 
         # merge the new config with the old one
-        yaml_config = merge_dicts(vars(parsed), yaml_config)
+        merged_yaml_config = merge_dicts(vars(parsed), yaml_config)
 
-        if basic_config.store or not os.path.isfile(join(dirname(__file__), basic_config.config_file)):
+        if (merged_yaml_config != yaml_config and basic_config.store) or not os.path.isfile(basic_config.config_file):
             logger.info(f"Storing configuration file to {basic_config.config_file}")
             store_yaml(yaml_config, basic_config.config_file)
         
-        self.config = yaml_config
+        self.config = merged_yaml_config
 
-        logger.info("FEEDERS: " + ", ".join(self.config['steps']['feeders']))
-        logger.info("EXTRACTORS: " + ", ".join(self.config['steps']['extractors']))
-        logger.info("ENRICHERS: " + ", ".join(self.config['steps']['enrichers']))
-        logger.info("DATABASES: " + ", ".join(self.config['steps']['databases']))
-        logger.info("STORAGES: " + ", ".join(self.config['steps']['storages']))
-        logger.info("FORMATTERS: " + ", ".join(self.config['steps']['formatters']))
         return self.config
     
     def add_steps_args(self, parser: argparse.ArgumentParser = None):
         if not parser:
             parser = self.parser
 
-        parser.add_argument('--feeders', action='store', dest='steps.feeders', nargs='+', required=True, help='the feeders to use')
-        parser.add_argument('--enrichers', action='store', dest='steps.enrichers',  nargs='+', required=True, help='the enrichers to use')
-        parser.add_argument('--extractors', action='store', dest='steps.extractors', nargs='+', required=True, help='the extractors to use')
-        parser.add_argument('--databases', action='store', dest='steps.databases', nargs='+', required=True, help='the databases to use')
-        parser.add_argument('--storages', action='store', dest='steps.storages', nargs='+', required=True, help='the storages to use')
-        parser.add_argument('--formatters', action='store', dest='steps.formatters', nargs='+', required=True, help='the formatter to use')
+        parser.add_argument('--feeders', action='store', dest='steps.feeders', nargs='+', help='the feeders to use')
+        parser.add_argument('--enrichers', action='store', dest='steps.enrichers',  nargs='+', help='the enrichers to use')
+        parser.add_argument('--extractors', action='store', dest='steps.extractors', nargs='+', help='the extractors to use')
+        parser.add_argument('--databases', action='store', dest='steps.databases', nargs='+', help='the databases to use')
+        parser.add_argument('--storages', action='store', dest='steps.storages', nargs='+', help='the storages to use')
+        parser.add_argument('--formatters', action='store', dest='steps.formatters', nargs='+', help='the formatter to use')
 
     def add_module_args(self, modules: list[Module] = None, parser: argparse.ArgumentParser = None):
 
@@ -164,10 +159,35 @@ class ArchivingOrchestrator:
         exit()
     
     def install_modules(self):
-        modules = set()
-        [modules.update(*m) for m in self.config['steps'].values()]
+        """
+        Swaps out the previous 'strings' in the config with the actual modules
+        """
+            
+        for module_type in MODULE_TYPES:
+            if module_type == 'enricher':
+                breakpoint()
+            step_items = []
+            modules_to_load = self.config['steps'][f"{module_type}s"]
 
-        load_modules(modules)
+            def check_steps_ok():
+                if not len(step_items):
+                    logger.error(f"NO {module_type.upper()}S LOADED. Please check your configuration file and try again. Tried to load the following modules, but none were available: {modules_to_load}")
+                    exit()
+
+                if (module_type == 'feeder' or module_type == 'formatter') and len(step_items) > 1:
+                    logger.error(f"Only one feeder is allowed, found {len(step_items)} {module_type}s. Please remove one of the following from your configuration file: {modules_to_load}")
+                    exit()
+
+            for i, module in enumerate(modules_to_load):
+                loaded_module = load_module(module)
+                if loaded_module:
+                    step_items.append(loaded_module)
+            check_steps_ok()
+            self.config['steps'][f"{module_type}s"] = step_items
+            
+
+            assert len(step_items) > 0, f"No {module_type}s were loaded. Please check your configuration file and try again."
+            self.config['steps'][f"{module_type}s"] = step_items
 
     def run(self) -> None:
         self.setup_basic_parser()
@@ -190,16 +210,26 @@ class ArchivingOrchestrator:
 
         yaml_config = read_yaml(basic_config.config_file)
             
+
         self.setup_complete_parser(basic_config, yaml_config, unused_args)
 
         self.install_modules()
+
+        logger.info("FEEDERS: " + ", ".join(m.name for m in self.config['steps']['feeders']))
+        logger.info("EXTRACTORS: " + ", ".join(m.name for m in self.config['steps']['extractors']))
+        logger.info("ENRICHERS: " + ", ".join(m.name for m in self.config['steps']['enrichers']))
+        logger.info("DATABASES: " + ", ".join(m.name for m in self.config['steps']['databases']))
+        logger.info("STORAGES: " + ", ".join(m.name for m in self.config['steps']['storages']))
+        logger.info("FORMATTERS: " + ", ".join(m.name for m in self.config['steps']['formatters']))
 
         for item in self.feed():
             pass
 
     def cleanup(self)->None:
         logger.info("Cleaning up")
-        for a in self.all_archivers_for_setup(): a.cleanup()
+        for e in self.config['steps']['extractors']:
+            breakpoint()
+            e.cleanup()
 
     def feed(self) -> Generator[Metadata]:
         for feeder in self.config['steps']['feeders']:
@@ -221,12 +251,12 @@ class ArchivingOrchestrator:
         except KeyboardInterrupt:
             # catches keyboard interruptions to do a clean exit
             logger.warning(f"caught interrupt on {item=}")
-            for d in self.databases: d.aborted(item)
+            for d in self.config['steps']['databases']: d.aborted(item)
             self.cleanup()
             exit()
         except Exception as e:
             logger.error(f'Got unexpected error on item {item}: {e}\n{traceback.format_exc()}')
-            for d in self.databases:
+            for d in self.config['steps']['databases']:
                 if type(e) == AssertionError: d.failed(item, str(e))
                 else: d.failed(item)
 
@@ -317,6 +347,3 @@ class ArchivingOrchestrator:
             assert not ip.is_reserved, f"Invalid IP used"
             assert not ip.is_link_local, f"Invalid IP used"
             assert not ip.is_private, f"Invalid IP used"
-
-    def all_archivers_for_setup(self) -> List[Archiver]:
-        return self.archivers + [e for e in self.enrichers if isinstance(e, Archiver)]

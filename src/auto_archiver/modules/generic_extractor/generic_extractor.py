@@ -12,17 +12,6 @@ class GenericExtractor(Archiver):
     name = "youtubedl_archiver" #left as is for backwards compat
     _dropins = {}
 
-    def __init__(self, config: dict) -> None:
-        super().__init__(config)
-        self.subtitles = bool(self.subtitles)
-        self.comments = bool(self.comments)
-        self.livestreams = bool(self.livestreams)
-        self.live_from_start = bool(self.live_from_start)
-        self.end_means_success = bool(self.end_means_success)
-        self.allow_playlist = bool(self.allow_playlist)
-        self.max_downloads = self.max_downloads
-
-
     def suitable_extractors(self, url: str) -> list[str]:
         """
         Returns a list of valid extractors for the given URL"""

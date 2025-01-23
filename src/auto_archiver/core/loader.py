@@ -1,5 +1,7 @@
 import ast
-from dataclasses import dataclass, field
+from typing import Type
+from importlib.util import find_spec
+from dataclasses import dataclass
 import os
 import copy
 from os.path import join, dirname
@@ -7,6 +9,8 @@ from typing import List
 from loguru import logger
 import sys
 import shutil
+
+_LOADED_MODULES = {}
 
 MODULE_TYPES = [
     'feeder',
@@ -22,9 +26,8 @@ _DEFAULT_MANIFEST = {
     'name': '',
     'author': 'Bellingcat',
     'requires_setup': True,
-    'depends': [],
     'description': '',
-    'external_dependencies': {},
+    'dependencies': {},
     'entry_point': '',
     'version': '1.0',
     'configs': {}
@@ -35,9 +38,7 @@ class Module:
     name: str
     display_name: str
     type: list
-    entry_point: str
-    depends: list
-    external_dependencies: dict
+    dependencies: dict
     requires_setup: bool
     configs: dict
     description: str
@@ -51,54 +52,50 @@ class Module:
         if manifest:
             self.display_name = manifest['name']
             self.type = manifest['type']
-            self.entry_point = manifest['entry_point']
-            self.depends = manifest['depends']
-            self.external_dependencies = manifest['external_dependencies']
+            self._entry_point = manifest['entry_point']
+            self.dependencies = manifest['dependencies']
             self.requires_setup = manifest['requires_setup']
             self.configs = manifest['configs']
             self.description = manifest['description']
+    
+    @property
+    def entry_point(self):
+        if not self._entry_point:
+            # try to create the entry point from the module name
+            self._entry_point = f"{self.name}::{self.name.replace('_', ' ').title().replace(' ', '')}"
+        return self._entry_point
 
     def __repr__(self):
         return f"Module<'{self.display_name}' ({self.name})>"
 
-def load_modules(modules):
-    modules = available_modules(limit_to_modules=modules, with_manifest=True)
-    for module in modules:
-        _load_module(module)
+def load_module(module: str) -> object: # TODO: change return type to Step
 
-def _load_module(module):
-    # first make sure that the 'depends' are installed and available in sys.args
-    for dependency in module.depends:
-        if dependency not in sys.modules:
-            logger.error(f"""
-                            Module {module.name} depends on {dependency} which is not available.
-                            
-                            Have you set up the '{module.name}' module correctly? See the README for more information.
-                            """)
-            exit()
-    # then check the external dependencies, these are binary dependencies that should be available on the path
-    for dep_type, deps in module.external_dependencies.items():
-        if dep_type == 'python':
-            for dep in deps:
-                if dep not in sys.modules:
-                    logger.error(f"""
-                                Module {module.name} requires {dep} which is not available.
-                                
-                                Have you installed the required dependencies for the '{module.name}' module? See the README for more information.
-                                """)
+    if module in _LOADED_MODULES:
+        return _LOADED_MODULES[module]
 
-        elif dep_type == 'binary':
-            for dep in deps:
-                if not shutil.which(dep):
-                    logger.error(f"""
-                                Module {module.name} requires {dep} which is not available.
-                                
-                                Have you installed the required dependencies for the '{module.name}' module? See the README for more information.
-                                """)
+    # load a module by name
+    module = get_module(module)
+    if not module:
+        return None
+    # check external dependencies are installed
+    def check_deps(deps, check):
+        for dep in deps:
+            if not check(dep):
+                logger.error(f"Module '{module.name}' requires external dependency '{dep}' which is not available. Have you installed the required dependencies for the '{module.name}' module? See the README for more information.")
+                exit(1)
+    
+    check_deps(module.dependencies.get('python', []), lambda dep: find_spec(dep))
+    check_deps(module.dependencies.get('bin', []), lambda dep: shutil.which(dep))
+
+    qualname = f'auto_archiver.modules.{module.name}'
+
+    logger.info(f"Loading module '{module.display_name}'...")
+    loaded_module = __import__(qualname)
+    _LOADED_MODULES[module.name] = getattr(sys.modules[qualname], module.entry_point)()
+    return _LOADED_MODULES[module.name]
+
+
     # finally, load the module
-    logger.info(f"Loading module {module.display_name}")
-    module = __import__(module.entry_point, fromlist=[module.entry_point])
-    logger.info(f"Module {module.display_name} loaded")
 
 def load_manifest(module_path):
     # print(f"Loading manifest for module {module_path}")
@@ -109,7 +106,14 @@ def load_manifest(module_path):
         manifest.update(ast.literal_eval(f.read()))
     return manifest
 
-def available_modules(with_manifest: bool=False, limit_to_modules: List[str]= [], additional_paths: List[str] = [], ) -> List[Module]:
+def get_module(module_name):
+    # get a module by name
+    try:
+        return available_modules(limit_to_modules=[module_name], with_manifest=True, suppress_warnings=True)[0]
+    except IndexError:
+        return None
+
+def available_modules(with_manifest: bool=False, limit_to_modules: List[str]= [], additional_paths: List[str] = [], suppress_warnings: bool = False) -> List[Module]:
     # search through all valid 'modules' paths. Default is 'modules' in the current directory
     
     # see odoo/modules/module.py -> get_modules
@@ -142,8 +146,9 @@ def available_modules(with_manifest: bool=False, limit_to_modules: List[str]= []
                 manifest = {}
             all_modules.append(Module(possible_module, possible_module_path, manifest))
     
-    for module in limit_to_modules:
-        if not any(module == m.name for m in all_modules):
-            logger.warning(f"Module {module} not found in available modules. Are you sure it's installed?")
+    if not suppress_warnings:
+        for module in limit_to_modules:
+            if not any(module == m.name for m in all_modules):
+                logger.warning(f"Module '{module}' not found in available modules. Are you sure it's installed?")
 
     return all_modules
