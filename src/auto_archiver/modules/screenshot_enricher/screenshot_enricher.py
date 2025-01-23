@@ -5,7 +5,7 @@ import base64
 from selenium.common.exceptions import TimeoutException
 
 
-from auto_archiver.enrichers import Enricher
+from auto_archiver.base_modules import Enricher
 from auto_archiver.utils import Webdriver, UrlUtil, random_str
 from auto_archiver.core import Media, Metadata, ArchivingContext
 

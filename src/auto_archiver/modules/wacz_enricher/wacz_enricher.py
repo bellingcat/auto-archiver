@@ -6,12 +6,11 @@ from loguru import logger
 from warcio.archiveiterator import ArchiveIterator
 
 from auto_archiver.core import Media, Metadata, ArchivingContext
-from auto_archiver.enrichers import Enricher
-from auto_archiver.archivers import Archiver
+from auto_archiver.base_modules import Extractor, Enricher
 from auto_archiver.utils import UrlUtil, random_str
 
 
-class WaczArchiverEnricher(Enricher, Archiver):
+class WaczExtractorEnricher(Enricher, Extractor):
     """
     Uses https://github.com/webrecorder/browsertrix-crawler to generate a .WACZ archive of the URL
     If used with [profiles](https://github.com/webrecorder/browsertrix-crawler#creating-and-using-browser-profiles)

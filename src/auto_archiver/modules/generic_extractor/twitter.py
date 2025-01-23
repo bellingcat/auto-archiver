@@ -6,7 +6,7 @@ from slugify import slugify
 
 from auto_archiver.core.metadata import Metadata, Media
 from auto_archiver.utils import UrlUtil
-from auto_archiver.archivers.archiver import Archiver
+from auto_archiver.base_modules.extractor import Extractor
 
 from .dropin import GenericDropin, InfoExtractor
 
@@ -32,7 +32,7 @@ class Twitter(GenericDropin):
         twid = ie_instance._match_valid_url(url).group('id')
         return ie_instance._extract_status(twid=twid)
 
-    def create_metadata(self, tweet: dict, ie_instance: InfoExtractor, archiver: Archiver, url: str) -> Metadata:
+    def create_metadata(self, tweet: dict, ie_instance: InfoExtractor, archiver: Extractor, url: str) -> Metadata:
         result = Metadata()
         try:
             if not tweet.get("user") or not tweet.get("created_at"):

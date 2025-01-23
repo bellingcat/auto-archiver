@@ -2,7 +2,7 @@ from typing import Union
 import requests, os
 from loguru import logger
 
-from auto_archiver.databases import Database
+from auto_archiver.base_modules import Database
 from auto_archiver.core import Metadata
 
 

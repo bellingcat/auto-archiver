@@ -2,12 +2,11 @@ import json
 from loguru import logger
 import time, requests
 
-from auto_archiver.enrichers import Enricher
-from auto_archiver.archivers import Archiver
+from auto_archiver.base_modules import Extractor, Enricher
 from auto_archiver.utils import UrlUtil
 from auto_archiver.core import Metadata
 
-class WaybackArchiverEnricher(Enricher, Archiver):
+class WaybackExtractorEnricher(Enricher, Extractor):
     """
     Submits the current URL to the webarchive and returns a job_id or completed archive.
 

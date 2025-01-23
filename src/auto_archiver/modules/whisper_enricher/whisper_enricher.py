@@ -2,9 +2,9 @@ import traceback
 import requests, time
 from loguru import logger
 
-from auto_archiver.enrichers import Enricher
+from auto_archiver.base_modules import Enricher
 from auto_archiver.core import Metadata, Media, ArchivingContext
-from auto_archiver.storages import S3Storage
+from auto_archiver.modules import S3Storage
 
 
 class WhisperEnricher(Enricher):

@@ -3,7 +3,7 @@ from loguru import logger
 from csv import DictWriter
 from dataclasses import asdict
 
-from auto_archiver.databases import Database
+from auto_archiver.base_modules import Database
 from auto_archiver.core import Metadata
 
 

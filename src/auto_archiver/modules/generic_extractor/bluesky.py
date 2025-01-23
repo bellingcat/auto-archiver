@@ -1,17 +1,12 @@
-import os
-import mimetypes
-
-import requests
 from loguru import logger
 
-from auto_archiver.core.context import ArchivingContext
-from auto_archiver.archivers.archiver import Archiver
+from auto_archiver.base_modules.extractor import Extractor
 from auto_archiver.core.metadata import Metadata, Media
 from .dropin import GenericDropin, InfoExtractor
 
 class Bluesky(GenericDropin):
 
-    def create_metadata(self, post: dict, ie_instance: InfoExtractor, archiver: Archiver, url: str) -> Metadata:
+    def create_metadata(self, post: dict, ie_instance: InfoExtractor, archiver: Extractor, url: str) -> Metadata:
         result = Metadata()
         result.set_url(url)
         result.set_title(post["record"]["text"])
@@ -42,7 +37,7 @@ class Bluesky(GenericDropin):
 
 
 
-    def _download_bsky_embeds(self, post: dict, archiver: Archiver) -> list[Media]:
+    def _download_bsky_embeds(self, post: dict, archiver: Extractor) -> list[Media]:
         """
         Iterates over image(s) or video in a Bluesky post and downloads them        
         """

@@ -10,7 +10,7 @@ making it suitable for handling large files efficiently.
 import hashlib
 from loguru import logger
 
-from auto_archiver.enrichers import Enricher
+from auto_archiver.base_modules import Enricher
 from auto_archiver.core import Metadata, ArchivingContext
 
 
@@ -40,7 +40,11 @@ class HashEnricher(Enricher):
             else:
                 self.chunksize = self.configs()["chunksize"]["default"]
 
-        self.chunksize = int(self.chunksize)
+        try:
+            self.chunksize = int(self.chunksize)
+        except ValueError:
+            raise ValueError(f"Invalid chunksize value: {self.chunksize}. Must be an integer.")
+
         assert self.chunksize >= -1, "read length must be non-negative or -1"
 
         ArchivingContext.set("hash_enricher.algorithm", self.algorithm, keep_on_reset=True)

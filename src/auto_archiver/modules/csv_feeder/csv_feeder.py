@@ -1,7 +1,7 @@
 from loguru import logger
 import csv
 
-from auto_archiver.feeders import Feeder
+from auto_archiver.base_modules import Feeder
 from auto_archiver.core import Metadata, ArchivingContext
 from auto_archiver.utils import url_or_none
 

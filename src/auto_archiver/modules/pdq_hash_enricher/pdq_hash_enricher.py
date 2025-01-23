@@ -16,7 +16,7 @@ import numpy as np
 from PIL import Image, UnidentifiedImageError
 from loguru import logger
 
-from auto_archiver.enrichers import Enricher
+from auto_archiver.base_modules import Enricher
 from auto_archiver.core import Metadata
 
 
