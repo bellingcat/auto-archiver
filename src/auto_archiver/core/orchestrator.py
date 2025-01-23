@@ -109,7 +109,6 @@ class ArchivingOrchestrator:
         
         parser.set_defaults(**to_dot_notation(yaml_config))
 
-        breakpoint()
         # reload the parser with the new arguments, now that we have them
         parsed, unknown = parser.parse_known_args(unused_args)
 
@@ -180,7 +179,6 @@ class ArchivingOrchestrator:
     def setup_logging(self):
         # setup loguru logging
         logger.remove() # remove the default logger
-
         logging_config = self.config['logging']
         logger.add(sys.stderr, level=logging_config['level'])
         if log_file := logging_config['file']:

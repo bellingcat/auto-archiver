@@ -49,17 +49,21 @@ def test_merge_dicts():
             "key1": ["a"],
             "key2": "old_value",
             "key3": ["a", "b", "c"],
+            "key5": "value5",
         })
 
     dotdict = {
         "settings.key1": ["b", "c"],
         "settings.key2": "new_value",
         "settings.key3": ["b", "c", "d"],
+        "settings.key4": "value4",
     }
     merged = config.merge_dicts(dotdict, yaml_dict)
     assert merged["settings"]["key1"] == ["a", "b", "c"]
     assert merged["settings"]["key2"] == "new_value"
     assert merged["settings"]["key3"] == ["a", "b", "c", "d"]
+    assert merged["settings"]["key4"] == "value4"
+    assert merged["settings"]["key5"] == "value5"
 
 
 def test_check_types():

@@ -3,7 +3,6 @@
     'version': '0.1.0',
     'author': 'Bellingcat',
     'type': ['extractor', 'feeder', 'enricher'],
-    'entry_point': 'GenericExtractor', # this class should be present in the __init__.py
     'requires_setup': False,
     'dependencies': {
         'python': ['yt_dlp', 'requests', 'loguru', 'slugify'],

@@ -25,6 +25,7 @@ MANIFEST_FILE = "__manifest__.py"
 _DEFAULT_MANIFEST = {
     'name': '',
     'author': 'Bellingcat',
+    'type': [],
     'requires_setup': True,
     'description': '',
     'dependencies': {},
@@ -90,8 +91,18 @@ def load_module(module: str) -> object: # TODO: change return type to Step
     qualname = f'auto_archiver.modules.{module.name}'
 
     logger.info(f"Loading module '{module.display_name}'...")
-    loaded_module = __import__(qualname)
-    instance = getattr(sys.modules[qualname], module.entry_point)()
+    # first import the whole module, to make sure it's working properly
+    __import__(qualname)
+
+    
+    # then import the file for the entry point
+    file_name, class_name = module.entry_point.split('::')
+    sub_qualname = f'{qualname}.{file_name}'
+
+    __import__(f'{qualname}.{file_name}', fromlist=[module.entry_point])
+    
+    # finally, get the class instance
+    instance = getattr(sys.modules[sub_qualname], class_name)()
     if not getattr(instance, 'name', None):
         instance.name = module.name
 
@@ -107,7 +118,11 @@ def load_manifest(module_path):
     manifest = copy.deepcopy(_DEFAULT_MANIFEST)
 
     with open(join(module_path, MANIFEST_FILE)) as f:
-        manifest.update(ast.literal_eval(f.read()))
+        try:
+            manifest.update(ast.literal_eval(f.read()))
+        except ( ValueError, TypeError, SyntaxError, MemoryError, RecursionError) as e:
+            logger.error(f"Error loading manifest from file {module_path}/{MANIFEST_FILE}: {e}")
+            return manifest
     return manifest
 
 def get_module(module_name):

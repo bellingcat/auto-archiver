@@ -100,16 +100,17 @@ def merge_dicts(dotdict: dict, yaml_dict: CommentedMap) -> CommentedMap:
 
     # first deal with lists, since 'update' replaces lists from a in b, but we want to extend
     def update_dict(subdict, yaml_subdict):
-        for key, value in yaml_subdict.items():
-            if not subdict.get(key):
+        for key, value in subdict.items():
+            if not yaml_subdict.get(key):
+                yaml_subdict[key] = value
                 continue
 
             if is_dict_type(value):
-                update_dict(subdict[key], value)
+                update_dict(value, yaml_subdict[key])
             elif is_list_type(value):
-                yaml_subdict[key].extend(s for s in subdict[key] if s not in yaml_subdict[key])
+                yaml_subdict[key].extend(s for s in value if s not in yaml_subdict[key])
             else:
-                yaml_subdict[key] = subdict[key]
+                yaml_subdict[key] = value
 
     update_dict(from_dot_notation(dotdict), yaml_dict)
 
