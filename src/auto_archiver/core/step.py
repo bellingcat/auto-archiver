@@ -7,5 +7,5 @@ by handling user configuration, validating the steps properties, and implementin
 from __future__ import annotations
 
 class Step:
-    # TODO: try and get this name from the manifest, so we don't have to set it twice
-    name: str
+    # Nothing to see here :)
+    pass

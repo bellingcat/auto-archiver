@@ -91,7 +91,11 @@ def load_module(module: str) -> object: # TODO: change return type to Step
 
     logger.info(f"Loading module '{module.display_name}'...")
     loaded_module = __import__(qualname)
-    _LOADED_MODULES[module.name] = getattr(sys.modules[qualname], module.entry_point)()
+    instance = getattr(sys.modules[qualname], module.entry_point)()
+    if not getattr(instance, 'name', None):
+        instance.name = module.name
+
+    _LOADED_MODULES[module.name] = instance
     return _LOADED_MODULES[module.name]
 
 
@@ -109,7 +113,7 @@ def load_manifest(module_path):
 def get_module(module_name):
     # get a module by name
     try:
-        return available_modules(limit_to_modules=[module_name], with_manifest=True, suppress_warnings=True)[0]
+        return available_modules(limit_to_modules=[module_name], with_manifest=True)[0]
     except IndexError:
         return None
 
@@ -149,6 +153,6 @@ def available_modules(with_manifest: bool=False, limit_to_modules: List[str]= []
     if not suppress_warnings:
         for module in limit_to_modules:
             if not any(module == m.name for m in all_modules):
-                logger.warning(f"Module '{module}' not found in available modules. Are you sure it's installed?")
+                logger.warning(f"Module '{module}' not found. Are you sure it's installed?")
 
     return all_modules
