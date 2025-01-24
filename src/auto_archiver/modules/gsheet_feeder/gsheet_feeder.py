@@ -8,23 +8,62 @@ The filtered rows are processed into `Metadata` objects.
 - validates the sheet's structure and filters rows based on input configurations.
 - Ensures only rows with valid URLs and unprocessed statuses are included.
 """
-import gspread, os
+import os
+import gspread
 
 from loguru import logger
 from slugify import slugify
 
 from auto_archiver.base_processors import Feeder
 from auto_archiver.core import Metadata, ArchivingContext
-from auto_archiver.utils import Gsheets, GWorksheet
+from . import GWorksheet
 
 
-class GsheetsFeeder(Gsheets, Feeder):
+class GsheetsFeeder(Feeder):
     name = "gsheet_feeder"
 
-    def __init__(self, config: dict) -> None:
-        # without this STEP.__init__ is not called
-        super().__init__(config)
-        self.gsheets_client = gspread.service_account(filename=self.service_account)
+    # def __init__(self, config: dict) -> None:
+    #     """
+    #     Initializes the GsheetsFeeder with preloaded configurations.
+    #     """
+    #     super().__init__(config)
+    #     # Initialize the gspread client with the provided service account file
+    #     self.gsheets_client = gspread.service_account(filename=config["service_account"])
+    #
+    #     # Set up feeder-specific configurations from the config
+    #     self.sheet_name = config.get("sheet")
+    #     self.sheet_id = config.get("sheet_id")
+    #     self.header = config.get("header", 1)
+    #     self.columns = config.get("columns", {})
+    #     assert self.sheet_name or self.sheet_id, (
+    #         "You need to define either a 'sheet' name or a 'sheet_id' in your manifest."
+    #     )
+
+
+        # # Configuration attributes
+        # self.sheet = config.get("sheet")
+        # self.sheet_id = config.get("sheet_id")
+        # self.header = config.get("header", 1)
+        # self.columns = config.get("columns", {})
+        # self.allow_worksheets = config.get("allow_worksheets", set())
+        # self.block_worksheets = config.get("block_worksheets", set())
+        # self.use_sheet_names_in_stored_paths = config.get("use_sheet_names_in_stored_paths", True)
+
+        # Ensure the header is an integer
+    #     try:
+    #         self.header = int(self.header)
+    #     except ValueError:
+    #         pass
+    #     assert isinstance(self.header, int), f"Header must be an integer, got {type(self.header)}"
+    #     assert self.sheet or self.sheet_id, "Either 'sheet' or 'sheet_id' must be defined."
+    #
+
+    def open_sheet(self):
+        if self.sheet:
+            return self.gsheets_client.open(self.sheet)
+        else:  # self.sheet_id
+            return self.gsheets_client.open_by_key(self.sheet_id)
+
 
     def __iter__(self) -> Metadata:
         sh = self.open_sheet()

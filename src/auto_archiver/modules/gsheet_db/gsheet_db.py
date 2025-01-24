@@ -7,7 +7,7 @@ from loguru import logger
 
 from auto_archiver.base_processors import Database
 from auto_archiver.core import Metadata, Media, ArchivingContext
-from auto_archiver.utils import GWorksheet
+from auto_archiver.modules.gsheet_feeder import GWorksheet
 
 
 class GsheetsDb(Database):
