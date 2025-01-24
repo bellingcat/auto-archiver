@@ -9,7 +9,7 @@
         "urls": {
             "default": None,
             "help": "URL(s) to archive, either a single URL or a list of urls, should not come from config.yaml",
-            "type": lambda val: set(val.split(",")),
+            "type": "auto_archiver.utils.parse_csv_to_set",
         },
     },
     "description": """

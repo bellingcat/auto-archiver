@@ -17,7 +17,7 @@ class CSVFeeder(Feeder):
                 "default": None,
                 "help": "Path to the input file(s) to read the URLs from, comma separated. \
                         Input files should be formatted with one URL per line",
-                "type": lambda val: set(val.split(",")),
+                "type": "auto_archiver.utils.parse_csv_to_set",
             },
             "column": {
                 "default": None,

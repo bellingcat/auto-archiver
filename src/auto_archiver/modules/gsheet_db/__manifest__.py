@@ -9,12 +9,12 @@
         "allow_worksheets": {
             "default": set(),
             "help": "(CSV) only worksheets whose name is included in allow are included (overrides worksheet_block), leave empty so all are allowed",
-            "type": lambda val: set(val.split(",")),
+            "type": "auto_archiver.utils.parse_csv_to_set",
         },
         "block_worksheets": {
             "default": set(),
             "help": "(CSV) explicitly block some worksheets from being processed",
-            "type": lambda val: set(val.split(",")),
+            "type": auto_archiver.utils.parse_csv_to_set,
         },
         "use_sheet_names_in_stored_paths": {
             "default": True,

@@ -54,3 +54,10 @@ def update_nested_dict(dictionary, update_dict):
 def random_str(length: int = 32) -> str:
     assert length <= 32, "length must be less than 32 as UUID4 is used"
     return str(uuid.uuid4()).replace("-", "")[:length]
+
+
+def parse_csv_to_set(cli_val, cur_val):
+    return set(cli_val.split(","))
+
+def json_loader(cli_val):
+    return json.loads(cli_val)

@@ -16,7 +16,7 @@
             "allow_rearchive": {"default": True, "help": "if False then the API database will be queried prior to any archiving operations and stop if the link has already been archived"},
             "store_results": {"default": True, "help": "when set, will send the results to the API database."},
             "tags": {"default": [], "help": "what tags to add to the archived URL",
-                     "type": lambda val: set(val.split(",")),
+                     "type": "auto_archiver.utils.parse_csv_to_set",
                      }
         },
     "description": """
