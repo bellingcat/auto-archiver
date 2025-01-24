@@ -1,4 +1,4 @@
-m = {
+{
     "name": "HTML Formatter",
     "type": ["formatter"],
     "requires_setup": False,

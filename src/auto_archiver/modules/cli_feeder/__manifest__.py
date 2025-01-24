@@ -9,7 +9,7 @@
         "urls": {
             "default": None,
             "help": "URL(s) to archive, either a single URL or a list of urls, should not come from config.yaml",
-            "cli_set": lambda cli_val, cur_val: list(set(cli_val.split(",")))
+            "type": lambda val: set(val.split(",")),
         },
     },
     "description": """

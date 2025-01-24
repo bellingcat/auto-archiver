@@ -10,7 +10,7 @@ from google.oauth2.credentials import Credentials
 from google.auth.transport.requests import Request
 
 from auto_archiver.core import Media
-from auto_archiver.base_modules import Storage
+from auto_archiver.base_processors import Storage
 
 
 class GDriveStorage(Storage):

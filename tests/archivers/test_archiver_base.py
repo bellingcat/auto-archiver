@@ -1,7 +1,7 @@
 import pytest
 
 from auto_archiver.core.metadata import Metadata
-from auto_archiver.base_modules.extractor import Extractor
+from auto_archiver.base_processors.extractor import Extractor
 class TestArchiverBase(object):
 
     archiver_class: str = None

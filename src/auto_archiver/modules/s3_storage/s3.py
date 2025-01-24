@@ -4,7 +4,7 @@ import boto3, os
 
 from auto_archiver.utils.misc import random_str
 from auto_archiver.core import Media
-from auto_archiver.base_modules import Storage
+from auto_archiver.base_processors import Storage
 # TODO
 from auto_archiver.modules.hash_enricher import HashEnricher
 from loguru import logger

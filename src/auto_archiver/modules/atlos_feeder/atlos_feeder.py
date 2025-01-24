@@ -1,7 +1,7 @@
 from loguru import logger
 import requests
 
-from auto_archiver.base_modules import Feeder
+from auto_archiver.base_processors import Feeder
 from auto_archiver.core import Metadata, ArchivingContext
 from auto_archiver.utils import get_atlos_config_options
 

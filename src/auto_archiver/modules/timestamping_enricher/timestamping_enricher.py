@@ -8,9 +8,9 @@ from certvalidator import CertificateValidator, ValidationContext
 from asn1crypto import pem
 import certifi
 
-from auto_archiver.base_modules import Enricher
+from auto_archiver.base_processors import Enricher
 from auto_archiver.core import Metadata, ArchivingContext, Media
-from auto_archiver.base_modules import Extractor
+from auto_archiver.base_processors import Extractor
 
 
 class TimestampingEnricher(Enricher):

@@ -8,7 +8,7 @@ from loguru import logger
 from tqdm import tqdm
 import re, time, json, os
 
-from auto_archiver.base_modules import Extractor
+from auto_archiver.base_processors import Extractor
 from auto_archiver.core import Metadata, Media, ArchivingContext
 from auto_archiver.utils import random_str
 

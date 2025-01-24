@@ -5,7 +5,7 @@ from yt_dlp.extractor.common import InfoExtractor
 
 from loguru import logger
 
-from auto_archiver.base_modules.extractor import Extractor
+from auto_archiver.base_processors.extractor import Extractor
 from ...core import Metadata, Media, ArchivingContext
 
 class GenericExtractor(Extractor):

@@ -11,7 +11,7 @@
                 "default": None,
                 "help": "Path to the input file(s) to read the URLs from, comma separated. \
                         Input files should be formatted with one URL per line",
-                "cli_set": lambda cli_val, cur_val: list(set(cli_val.split(",")))
+                "type": lambda val: set(val.split(",")),
             },
             "column": {
                 "default": None,

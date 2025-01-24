@@ -13,7 +13,7 @@ import gspread, os
 from loguru import logger
 from slugify import slugify
 
-from auto_archiver.base_modules import Feeder
+from auto_archiver.base_processors import Feeder
 from auto_archiver.core import Metadata, ArchivingContext
 from auto_archiver.utils import Gsheets, GWorksheet
 

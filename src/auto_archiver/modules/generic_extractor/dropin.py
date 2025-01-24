@@ -1,6 +1,6 @@
 from yt_dlp.extractor.common import InfoExtractor
 from auto_archiver.core.metadata import Metadata
-from auto_archiver.base_modules.extractor import Extractor
+from auto_archiver.base_processors.extractor import Extractor
 
 class GenericDropin:
     """Base class for dropins for the generic extractor.

@@ -5,7 +5,7 @@ import requests
 import hashlib
 
 from auto_archiver.core import Media, Metadata
-from auto_archiver.base_modules import Storage
+from auto_archiver.base_processors import Storage
 from auto_archiver.utils import get_atlos_config_options
 
 

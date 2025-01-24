@@ -5,7 +5,7 @@ import os
 from loguru import logger
 
 from auto_archiver.core import Media
-from auto_archiver.base_modules import Storage
+from auto_archiver.base_processors import Storage
 
 
 class LocalStorage(Storage):

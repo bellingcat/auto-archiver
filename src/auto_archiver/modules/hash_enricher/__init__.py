@@ -1,1 +1,1 @@
-from hash_enricher import HashEnricher
+from .hash_enricher import HashEnricher

@@ -2,7 +2,7 @@ from loguru import logger
 from vk_url_scraper import VkScraper
 
 from auto_archiver.utils.misc import dump_payload
-from auto_archiver.base_modules import Extractor
+from auto_archiver.base_processors import Extractor
 from auto_archiver.core import Metadata, Media, ArchivingContext
 
 

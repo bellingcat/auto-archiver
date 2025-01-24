@@ -2,7 +2,7 @@ import json
 from loguru import logger
 import time, requests
 
-from auto_archiver.base_modules import Extractor, Enricher
+from auto_archiver.base_processors import Extractor, Enricher
 from auto_archiver.utils import UrlUtil
 from auto_archiver.core import Metadata
 

@@ -15,7 +15,9 @@
             "group_id": {"default": None, "help": "which group of users have access to the archive in case public=false as author"},
             "allow_rearchive": {"default": True, "help": "if False then the API database will be queried prior to any archiving operations and stop if the link has already been archived"},
             "store_results": {"default": True, "help": "when set, will send the results to the API database."},
-            "tags": {"default": [], "help": "what tags to add to the archived URL", "cli_set": lambda cli_val, cur_val: set(cli_val.split(","))},
+            "tags": {"default": [], "help": "what tags to add to the archived URL",
+                     "type": lambda val: set(val.split(",")),
+                     }
         },
     "description": """
      Provides integration with the Auto-Archiver API for querying and storing archival data.

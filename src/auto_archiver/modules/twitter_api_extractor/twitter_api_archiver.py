@@ -8,7 +8,7 @@ from loguru import logger
 from pytwitter import Api
 from slugify import slugify
 
-from auto_archiver.base_modules import Extractor
+from auto_archiver.base_processors import Extractor
 from auto_archiver.core import Metadata,Media
 
 class TwitterApiExtractor(Extractor):

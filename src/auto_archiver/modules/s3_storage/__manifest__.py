@@ -1,4 +1,4 @@
-m = {
+{
     "name": "S3 Storage",
     "type": ["storage"],
     "requires_setup": True,
@@ -6,29 +6,31 @@ m = {
         "python": ["boto3", "loguru"],
     },
     "configs": {
-                "path_generator": {
-                    "default": "url",
-                    "help": "how to store the file in terms of directory structure: 'flat' sets to root; 'url' creates a directory based on the provided URL; 'random' creates a random directory.",
-                },
-                "filename_generator": {
-                    "default": "random",
-                    "help": "how to name stored files: 'random' creates a random string; 'static' uses a replicable strategy such as a hash.",
-                },
-                "bucket": {"default": None, "help": "S3 bucket name"},
-                "region": {"default": None, "help": "S3 region name"},
-                "key": {"default": None, "help": "S3 API key"},
-                "secret": {"default": None, "help": "S3 API secret"},
-                "random_no_duplicate": {"default": False, "help": f"if set, it will override `path_generator`, `filename_generator` and `folder`. It will check if the file already exists and if so it will not upload it again. Creates a new root folder path `{NO_DUPLICATES_FOLDER}`"},
-                "endpoint_url": {
-                    "default": 'https://{region}.digitaloceanspaces.com',
-                    "help": "S3 bucket endpoint, {region} are inserted at runtime"
-                },
-                "cdn_url": {
-                    "default": 'https://{bucket}.{region}.cdn.digitaloceanspaces.com/{key}',
-                    "help": "S3 CDN url, {bucket}, {region} and {key} are inserted at runtime"
-                },
-                "private": {"default": False, "help": "if true S3 files will not be readable online"},
-            },
+        "path_generator": {
+            "default": "url",
+            "help": "how to store the file in terms of directory structure: 'flat' sets to root; 'url' creates a directory based on the provided URL; 'random' creates a random directory.",
+            "choices": ["flat", "url", "random"],
+        },
+        "filename_generator": {
+            "default": "random",
+            "help": "how to name stored files: 'random' creates a random string; 'static' uses a replicable strategy such as a hash.",
+            "choices": ["random", "static"],
+        },
+        "bucket": {"default": None, "help": "S3 bucket name"},
+        "region": {"default": None, "help": "S3 region name"},
+        "key": {"default": None, "help": "S3 API key"},
+        "secret": {"default": None, "help": "S3 API secret"},
+        "random_no_duplicate": {"default": False, "help": f"if set, it will override `path_generator`, `filename_generator` and `folder`. It will check if the file already exists and if so it will not upload it again. Creates a new root folder path `{NO_DUPLICATES_FOLDER}`"},
+        "endpoint_url": {
+            "default": 'https://{region}.digitaloceanspaces.com',
+            "help": "S3 bucket endpoint, {region} are inserted at runtime"
+        },
+        "cdn_url": {
+            "default": 'https://{bucket}.{region}.cdn.digitaloceanspaces.com/{key}',
+            "help": "S3 CDN url, {bucket}, {region} and {key} are inserted at runtime"
+        },
+        "private": {"default": False, "help": "if true S3 files will not be readable online"},
+    },
     "description": """
     S3Storage: A storage module for saving media files to an S3-compatible object storage.
 

@@ -16,7 +16,7 @@ from loguru import logger
 from retrying import retry
 from tqdm import tqdm
 
-from auto_archiver.base_modules import Extractor
+from auto_archiver.base_processors import Extractor
 from auto_archiver.core import Media
 from auto_archiver.core import Metadata
 

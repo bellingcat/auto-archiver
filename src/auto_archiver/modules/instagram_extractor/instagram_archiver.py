@@ -7,7 +7,7 @@ import re, os, shutil, traceback
 import instaloader  # https://instaloader.github.io/as-module.html
 from loguru import logger
 
-from auto_archiver.base_modules import Extractor
+from auto_archiver.base_processors import Extractor
 from auto_archiver.core import Metadata
 from auto_archiver.core import Media
 

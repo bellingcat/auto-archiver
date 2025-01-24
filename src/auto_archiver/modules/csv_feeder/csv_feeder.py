@@ -1,7 +1,7 @@
 from loguru import logger
 import csv
 
-from auto_archiver.base_modules import Feeder
+from auto_archiver.base_processors import Feeder
 from auto_archiver.core import Metadata, ArchivingContext
 from auto_archiver.utils import url_or_none
 
@@ -17,7 +17,7 @@ class CSVFeeder(Feeder):
                 "default": None,
                 "help": "Path to the input file(s) to read the URLs from, comma separated. \
                         Input files should be formatted with one URL per line",
-                "cli_set": lambda cli_val, cur_val: list(set(cli_val.split(",")))
+                "type": lambda val: set(val.split(",")),
             },
             "column": {
                 "default": None,

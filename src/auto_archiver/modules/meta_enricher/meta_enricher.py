@@ -2,7 +2,7 @@ import datetime
 import os
 from loguru import logger
 
-from auto_archiver.base_modules import Enricher
+from auto_archiver.base_processors import Enricher
 from auto_archiver.core import Metadata
 
 

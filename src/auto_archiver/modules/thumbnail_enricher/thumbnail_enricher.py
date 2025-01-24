@@ -9,7 +9,7 @@ and identify important moments without watching the entire video.
 import ffmpeg, os
 from loguru import logger
 
-from auto_archiver.base_modules import Enricher
+from auto_archiver.base_processors import Enricher
 from auto_archiver.core import Media, Metadata, ArchivingContext
 from auto_archiver.utils.misc import random_str
 

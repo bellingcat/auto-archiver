@@ -21,7 +21,7 @@
                 "http://tss.accv.es:8318/tsa"
             ],
             "help": "List of RFC3161 Time Stamp Authorities to use, separate with commas if passed via the command line.",
-            "cli_set": lambda cli_val, cur_val: set(cli_val.split(","))
+            "type": lambda val: set(val.split(",")),
         }
     },
     "description": """

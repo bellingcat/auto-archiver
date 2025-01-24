@@ -9,7 +9,7 @@ import base64
 
 from auto_archiver.version import __version__
 from auto_archiver.core import Metadata, Media, ArchivingContext
-from auto_archiver.base_modules import Formatter
+from auto_archiver.base_processors import Formatter
 from auto_archiver.modules.hash_enricher import HashEnricher
 from auto_archiver.utils.misc import random_str
 

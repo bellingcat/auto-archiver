@@ -6,7 +6,7 @@ from loguru import logger
 from warcio.archiveiterator import ArchiveIterator
 
 from auto_archiver.core import Media, Metadata, ArchivingContext
-from auto_archiver.base_modules import Extractor, Enricher
+from auto_archiver.base_processors import Extractor, Enricher
 from auto_archiver.utils import UrlUtil, random_str
 
 

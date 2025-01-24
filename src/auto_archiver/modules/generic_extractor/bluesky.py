@@ -1,6 +1,6 @@
 from loguru import logger
 
-from auto_archiver.base_modules.extractor import Extractor
+from auto_archiver.base_processors.extractor import Extractor
 from auto_archiver.core.metadata import Metadata, Media
 from .dropin import GenericDropin, InfoExtractor
 
