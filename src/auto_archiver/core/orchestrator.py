@@ -197,7 +197,9 @@ class ArchivingOrchestrator:
 
             def check_steps_ok():
                 if not len(step_items):
-                    logger.error(f"NO {module_type.upper()}S LOADED. Please check your configuration file and try again. Tried to load the following modules, but none were available: {modules_to_load}")
+                    logger.error(f"NO {module_type.upper()}S LOADED. Please check your configuration and try again.")
+                    if len(modules_to_load):
+                        logger.error(f"Tried to load the following modules, but none were available: {modules_to_load}")
                     exit()
 
                 if (module_type == 'feeder' or module_type == 'formatter') and len(step_items) > 1:
