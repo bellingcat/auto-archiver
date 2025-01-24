@@ -22,6 +22,7 @@ classifiers = [
 ]
 
 dependencies = [
+    "oscrypto @ git+https://github.com/wbond/oscrypto.git@d5f3437ed24257895ae1edd9e503cfb352e635a8",
     "gspread (>=0.0.0)",
     "beautifulsoup4 (>=0.0.0)",
     "bs4 (>=0.0.0)",
@@ -71,6 +72,7 @@ sphinx-autobuild = "^2024.10.3"
 sphinx-copybutton = "^0.5.2"
 myst-parser = "^4.0.0"
 furo = "^2024.8.6"
+
 
 [project.scripts]
 auto-archiver = "auto_archiver.__main__:main"

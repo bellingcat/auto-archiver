@@ -84,7 +84,8 @@ class WaczArchiverEnricher(Enricher, Archiver):
             "--behaviors", "autoscroll,autoplay,autofetch,siteSpecific",
             "--behaviorTimeout", str(self.timeout),
             "--timeout", str(self.timeout),
-            "--blockAds" # TODO: test
+            "--diskUtilization", "99",
+            # "--blockAds" # note: this has been known to cause issues on cloudflare protected sites
         ]
         
         if self.docker_in_docker:
