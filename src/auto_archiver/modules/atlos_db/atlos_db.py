@@ -22,11 +22,6 @@ class AtlosDb(Database):
         # without this STEP.__init__ is not called
         super().__init__(config)
 
-    # TODO
-    @staticmethod
-    def configs() -> dict:
-        return get_atlos_config_options()
-
     def failed(self, item: Metadata, reason: str) -> None:
         """Update DB accordingly for failure"""
         # If the item has no Atlos ID, there's nothing for us to do

@@ -15,15 +15,6 @@ class LocalStorage(Storage):
         super().__init__(config)
         os.makedirs(self.save_to, exist_ok=True)
 
-    @staticmethod
-    def configs() -> dict:
-        return dict(
-            Storage.configs(),
-            ** {
-                "save_to": {"default": "./archived", "help": "folder where to save archived content"},
-                "save_absolute": {"default": False, "help": "whether the path to the stored file is absolute or relative in the output result inc. formatters (WARN: leaks the file structure)"},
-            })
-
     def get_cdn_url(self, media: Media) -> str:
         # TODO: is this viable with Storage.configs on path/filename?
         dest = os.path.join(self.save_to, media.key)

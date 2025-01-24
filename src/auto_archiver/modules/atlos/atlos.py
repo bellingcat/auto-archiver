@@ -15,10 +15,6 @@ class AtlosStorage(Storage):
     def __init__(self, config: dict) -> None:
         super().__init__(config)
 
-    @staticmethod
-    def configs() -> dict:
-        return dict(Storage.configs(), **get_atlos_config_options())
-
     def get_cdn_url(self, _media: Media) -> str:
         # It's not always possible to provide an exact URL, because it's
         # possible that the media once uploaded could have been copied to

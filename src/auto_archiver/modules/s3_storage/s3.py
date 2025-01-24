@@ -26,27 +26,6 @@ class S3Storage(Storage):
         if self.random_no_duplicate:
             logger.warning("random_no_duplicate is set to True, this will override `path_generator`, `filename_generator` and `folder`.")
 
-    @staticmethod
-    def configs() -> dict:
-        return dict(
-            Storage.configs(),
-            ** {
-                "bucket": {"default": None, "help": "S3 bucket name"},
-                "region": {"default": None, "help": "S3 region name"},
-                "key": {"default": None, "help": "S3 API key"},
-                "secret": {"default": None, "help": "S3 API secret"},
-                "random_no_duplicate": {"default": False, "help": f"if set, it will override `path_generator`, `filename_generator` and `folder`. It will check if the file already exists and if so it will not upload it again. Creates a new root folder path `{NO_DUPLICATES_FOLDER}`"},
-                "endpoint_url": {
-                    "default": 'https://{region}.digitaloceanspaces.com',
-                    "help": "S3 bucket endpoint, {region} are inserted at runtime"
-                },
-                "cdn_url": {
-                    "default": 'https://{bucket}.{region}.cdn.digitaloceanspaces.com/{key}',
-                    "help": "S3 CDN url, {bucket}, {region} and {key} are inserted at runtime"
-                },
-                "private": {"default": False, "help": "if true S3 files will not be readable online"},
-            })
-
     def get_cdn_url(self, media: Media) -> str:
         return self.cdn_url.format(bucket=self.bucket, region=self.region, key=media.key)
 

@@ -9,23 +9,6 @@ class CSVFeeder(Feeder):
 
     name = "csv_feeder"
 
-
-    @staticmethod
-    def configs() -> dict:
-        return {
-            "files": {
-                "default": None,
-                "help": "Path to the input file(s) to read the URLs from, comma separated. \
-                        Input files should be formatted with one URL per line",
-                "type": "auto_archiver.utils.parse_csv_to_set",
-            },
-            "column": {
-                "default": None,
-                "help": "Column number or name to read the URLs from, 0-indexed",
-            }
-        }
-    
-
     def __iter__(self) -> Metadata:
         url_column = self.column or 0
         for file in self.files:

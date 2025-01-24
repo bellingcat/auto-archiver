@@ -26,27 +26,6 @@ class GsheetsFeeder(Gsheets, Feeder):
         super().__init__(config)
         self.gsheets_client = gspread.service_account(filename=self.service_account)
 
-    # @staticmethod
-    # def configs() -> dict:
-    #     return dict(
-    #         Gsheets.configs(),
-    #         ** {
-    #             "allow_worksheets": {
-    #                 "default": set(),
-    #                 "help": "(CSV) only worksheets whose name is included in allow are included (overrides worksheet_block), leave empty so all are allowed",
-    #                 "cli_set": lambda cli_val, cur_val: set(cli_val.split(","))
-    #             },
-    #             "block_worksheets": {
-    #                 "default": set(),
-    #                 "help": "(CSV) explicitly block some worksheets from being processed",
-    #                 "cli_set": lambda cli_val, cur_val: set(cli_val.split(","))
-    #             },
-    #             "use_sheet_names_in_stored_paths": {
-    #                 "default": True,
-    #                 "help": "if True the stored files path will include 'workbook_name/worksheet_name/...'",
-    #             }
-    #         })
-
     def __iter__(self) -> Metadata:
         sh = self.open_sheet()
         for ii, wks in enumerate(sh.worksheets()):

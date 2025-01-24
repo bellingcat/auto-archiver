@@ -15,11 +15,6 @@ class AtlosFeeder(Feeder):
         if type(self.api_token) != str:
             raise Exception("Atlos Feeder did not receive an Atlos API token")
 
-    # TODO
-    @staticmethod
-    def configs() -> dict:
-        return get_atlos_config_options()
-
     def __iter__(self) -> Metadata:
         # Get all the urls from the Atlos API
         count = 0

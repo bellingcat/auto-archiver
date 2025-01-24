@@ -14,7 +14,7 @@
         "block_worksheets": {
             "default": set(),
             "help": "(CSV) explicitly block some worksheets from being processed",
-            "type": auto_archiver.utils.parse_csv_to_set,
+            "type": "auto_archiver.utils.parse_csv_to_set",
         },
         "use_sheet_names_in_stored_paths": {
             "default": True,
