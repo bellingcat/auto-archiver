@@ -168,13 +168,14 @@ class ArchivingOrchestrator:
                 # TODO: go through all the manifests and make sure we're not breaking anything with removing cli_set
                 # in most cases it'll mean replacing it with 'type': 'str' or 'type': 'int' or something
                 kwargs.pop('cli_set', None)
-                    
+                should_store = kwargs.pop('should_store', False)
                 kwargs['dest'] = f"{module.name}.{kwargs.pop('dest', name)}"
                 try:
                     kwargs['type'] = __builtins__.get(kwargs.get('type'), str)
                 except KeyError:
                     kwargs['type'] = getattr(validators, kwargs['type'])
-                group.add_argument(f"--{module.name}.{name}", **kwargs)
+                arg = group.add_argument(f"--{module.name}.{name}", **kwargs)
+                arg.should_store = should_store
 
     def show_help(self):
         # for the help message, we want to load *all* possible modules and show the help
@@ -255,7 +256,7 @@ class ArchivingOrchestrator:
             exit()
 
         yaml_config = read_yaml(basic_config.config_file)
-            
+
 
         self.setup_complete_parser(basic_config, yaml_config, unused_args)
         

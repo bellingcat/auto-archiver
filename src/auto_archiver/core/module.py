@@ -100,7 +100,6 @@ class LazyBaseModule:
     name: str
     display_name: str
     type: list
-    requires_setup: bool
     description: str
     path: str
 
@@ -111,7 +110,7 @@ class LazyBaseModule:
     def __init__(self, module_name, path):
         self.name = module_name
         self.path = path
-    
+
     @property
     def entry_point(self):
         if not self._entry_point and not self.manifest['entry_point']:
@@ -126,6 +125,10 @@ class LazyBaseModule:
     @property
     def configs(self):
         return self.manifest['configs']
+    
+    @property
+    def requires_setup(self):
+        return self.manifest['requires_setup']
 
     @property
     def manifest(self):
@@ -145,7 +148,6 @@ class LazyBaseModule:
         self.display_name = manifest['name']
         self.type = manifest['type']
         self._entry_point = manifest['entry_point']
-        self.requires_setup = manifest['requires_setup']
         self.description = manifest['description']
 
         return manifest

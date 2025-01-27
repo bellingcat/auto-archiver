@@ -13,47 +13,23 @@ from .module import MODULE_TYPES
 
 from typing import Any, List, Type
 
-#     configurable_parents = [
-#         Feeder,
-#         Enricher,
-#         Extractor,
-#         Database,
-#         Storage,
-#         Formatter
-#         # Util
-#     ]
-#     feeder: Feeder
-#     formatter: Formatter
-#     extractors: List[Extractor] = field(default_factory=[])
-#     enrichers: List[Enricher] = field(default_factory=[])
-#     storages: List[Storage] = field(default_factory=[])
-#     databases: List[Database] = field(default_factory=[])
+yaml = YAML()
 
-#     def __init__(self) -> None:
-#         self.defaults = {}
-#         self.cli_ops = {}
-#         self.config = {}
+EMPTY_CONFIG = yaml.load("""
+# Auto Archiver Configuration
+# Steps are the modules that will be run in the order they are defined
 
-    # def parse(self, use_cli=True, yaml_config_filename: str = None, overwrite_configs: str = {}):
-    #     """
-    #     if yaml_config_filename is provided, the --config argument is ignored, 
-    #     useful for library usage when the config values are preloaded
-    #     overwrite_configs is a dict that overwrites the yaml file contents
-    #     """
-        # # 1. parse CLI values
-        # if use_cli:
-        #     parser = argparse.ArgumentParser(
-        #         # prog = "auto-archiver",
-        #         description="Auto Archiver is a CLI tool to archive media/metadata from online URLs; it can read URLs from many sources (Google Sheets, Command Line, ...); and write results to many destinations too (CSV, Google Sheets, MongoDB, ...)!",
-        #         epilog="Check the code at https://github.com/bellingcat/auto-archiver"
-        #     )
+steps:""" + "".join([f"\n   {module}s: []" for module in MODULE_TYPES]) + \
+"""
 
-        #     parser.add_argument('--config', action='store', dest='config', help='the filename of the YAML configuration file (defaults to \'config.yaml\')', default='orchestration.yaml')
-        #     parser.add_argument('--version', action='version', version=__version__)
+# Global configuration
+# These are the global configurations that are used by the modules
 
-EMPTY_CONFIG = CommentedMap(**{
-    "steps": dict((f"{module_type}s", []) for module_type in MODULE_TYPES)
-})
+logging:
+  level: INFO
+""")
+# note: 'logging' is explicitly added above in order to better format the config file
+
 
 def to_dot_notation(yaml_conf: CommentedMap | dict) -> argparse.ArgumentParser:
     dotdict = {}
@@ -111,8 +87,6 @@ def merge_dicts(dotdict: dict, yaml_dict: CommentedMap) -> CommentedMap:
     update_dict(from_dot_notation(dotdict), yaml_dict)
 
     return yaml_dict
-
-yaml = YAML()
 
 def read_yaml(yaml_filename: str) -> CommentedMap:
     config = None
