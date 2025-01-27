@@ -21,48 +21,19 @@ from . import GWorksheet
 
 class GsheetsFeeder(Feeder):
 
-    def __init__(self) -> None:
-        """
-        Initializes the GsheetsFeeder with preloaded configurations.
-        """
-        super().__init__()
-        # Initialize the gspread client with the provided service account file
-        # self.gsheets_client = gspread.service_account(filename=self.config["service_account"])
-    #
-    #     # Set up feeder-specific configurations from the config
-    #     self.sheet_name = config.get("sheet")
-    #     self.sheet_id = config.get("sheet_id")
-    #     self.header = config.get("header", 1)
-    #     self.columns = config.get("columns", {})
-    #     assert self.sheet_name or self.sheet_id, (
-    #         "You need to define either a 'sheet' name or a 'sheet_id' in your manifest."
-    #     )
-
-
-        # # Configuration attributes
-        # self.sheet = config.get("sheet")
-        # self.sheet_id = config.get("sheet_id")
-        # self.header = config.get("header", 1)
-        # self.columns = config.get("columns", {})
-        # self.allow_worksheets = config.get("allow_worksheets", set())
-        # self.block_worksheets = config.get("block_worksheets", set())
-        # self.use_sheet_names_in_stored_paths = config.get("use_sheet_names_in_stored_paths", True)
-
-        # Ensure the header is an integer
-    #     try:
-    #         self.header = int(self.header)
-    #     except ValueError:
-    #         pass
-    #     assert isinstance(self.header, int), f"Header must be an integer, got {type(self.header)}"
-    #     assert self.sheet or self.sheet_id, "Either 'sheet' or 'sheet_id' must be defined."
-    #
+    def setup(self, config: dict):
+        super().setup(config)
+        self.gsheets_client = gspread.service_account(filename=self.service_account)
+        # TODO mv to validators
+        assert self.sheet or self.sheet_id, (
+            "You need to define either a 'sheet' name or a 'sheet_id' in your manifest."
+        )
 
     def open_sheet(self):
         if self.sheet:
             return self.gsheets_client.open(self.sheet)
         else:  # self.sheet_id
             return self.gsheets_client.open_by_key(self.sheet_id)
-
 
     def __iter__(self) -> Metadata:
         sh = self.open_sheet()

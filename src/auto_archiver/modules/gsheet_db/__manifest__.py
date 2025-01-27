@@ -1,6 +1,7 @@
 {
     "name": "Google Sheets Database",
     "type": ["database"],
+    "entry_point": "gsheet_db::GsheetsDb",
     "requires_setup": True,
     "external_dependencies": {
         "python": ["loguru", "gspread", "python-slugify"],
