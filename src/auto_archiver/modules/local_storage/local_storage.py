@@ -9,7 +9,6 @@ from auto_archiver.core import Storage
 
 
 class LocalStorage(Storage):
-    name = "local_storage"
 
     def get_cdn_url(self, media: Media) -> str:
         # TODO: is this viable with Storage.configs on path/filename?
@@ -22,7 +21,7 @@ class LocalStorage(Storage):
         # override parent so that we can use shutil.copy2 and keep metadata
         dest = os.path.join(self.save_to, media.key)
         os.makedirs(os.path.dirname(dest), exist_ok=True)
-        logger.debug(f'[{self.__class__.name}] storing file {media.filename} with key {media.key} to {dest}')
+        logger.debug(f'[{self.__class__.__name__}] storing file {media.filename} with key {media.key} to {dest}')
         res = shutil.copy2(media.filename, dest)
         logger.info(res)
         return True
