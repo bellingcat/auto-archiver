@@ -10,11 +10,10 @@ from google.oauth2.credentials import Credentials
 from google.auth.transport.requests import Request
 
 from auto_archiver.core import Media
-from auto_archiver.base_processors import Storage
+from auto_archiver.core import Storage
 
 
 class GDriveStorage(Storage):
-    name = "gdrive_storage"
 
     def __init__(self, config: dict) -> None:
         super().__init__(config)

@@ -2,7 +2,7 @@ import traceback
 import requests, time
 from loguru import logger
 
-from auto_archiver.base_processors import Enricher
+from auto_archiver.core import Enricher
 from auto_archiver.core import Metadata, Media, ArchivingContext
 from auto_archiver.modules.s3_storage import S3Storage
 
@@ -13,14 +13,6 @@ class WhisperEnricher(Enricher):
     whisper API repository: https://github.com/bellingcat/whisperbox-transcribe/
     Only works if an S3 compatible storage is used
     """
-    name = "whisper_enricher"
-
-    def __init__(self, config: dict) -> None:
-        # without this STEP.__init__ is not called
-        super().__init__(config)
-        assert type(self.api_endpoint) == str and len(self.api_endpoint) > 0, "please provide a value for the whisper_enricher api_endpoint"
-        assert type(self.api_key) == str and len(self.api_key) > 0, "please provide a value for the whisper_enricher api_key"
-        self.timeout = int(self.timeout)
 
     def enrich(self, to_enrich: Metadata) -> None:
         if not self._get_s3_storage():

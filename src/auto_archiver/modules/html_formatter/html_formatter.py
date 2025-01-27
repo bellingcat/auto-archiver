@@ -9,24 +9,30 @@ import base64
 
 from auto_archiver.version import __version__
 from auto_archiver.core import Metadata, Media, ArchivingContext
-from auto_archiver.base_processors import Formatter
+from auto_archiver.core import Formatter
 from auto_archiver.modules.hash_enricher import HashEnricher
 from auto_archiver.utils.misc import random_str
 
 
 @dataclass
 class HtmlFormatter(Formatter):
+    environment: Environment = None
+    template: any = None
 
-    # TODO: fix setting up template with new config method
-    # def __init__(self, config: dict) -> None:
-    #     # without this STEP.__init__ is not called
-    #     super().__init__(config)
-    #     self.environment = Environment(loader=FileSystemLoader(os.path.join(pathlib.Path(__file__).parent.resolve(), "templates/")), autoescape=True)
-    #     # JinjaHelper class static methods are added as filters
-    #     self.environment.filters.update({
-    #         k: v.__func__ for k, v in JinjaHelpers.__dict__.items() if isinstance(v, staticmethod)
-    #     })
-    #     self.template = self.environment.get_template("html_template.html")
+    def setup(self, config: dict) -> None:
+        """Sets up the Jinja2 environment and loads the template."""
+        super().setup(config)  # Ensure the base class logic is executed
+        template_dir = os.path.join(pathlib.Path(__file__).parent.resolve(), "templates/")
+        self.environment = Environment(loader=FileSystemLoader(template_dir), autoescape=True)
+
+        # JinjaHelper class static methods are added as filters
+        self.environment.filters.update({
+            k: v.__func__ for k, v in JinjaHelpers.__dict__.items() if isinstance(v, staticmethod)
+        })
+
+        # Load a specific template or default to "html_template.html"
+        template_name = self.config.get("template_name", "html_template.html")
+        self.template = self.environment.get_template(template_name)
 
     def format(self, item: Metadata) -> Media:
         url = item.get_url()

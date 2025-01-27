@@ -2,7 +2,7 @@ from typing import Type
 
 from auto_archiver.utils import traverse_obj
 from auto_archiver.core.metadata import Metadata, Media
-from auto_archiver.base_processors.extractor import Extractor
+from auto_archiver.core.extractor import Extractor
 from yt_dlp.extractor.common import InfoExtractor
 
 from dateutil.parser import parse as parse_dt

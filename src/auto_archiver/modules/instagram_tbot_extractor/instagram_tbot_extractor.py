@@ -15,7 +15,7 @@ from sqlite3 import OperationalError
 from loguru import logger
 from telethon.sync import TelegramClient
 
-from auto_archiver.base_processors import Extractor
+from auto_archiver.core import Extractor
 from auto_archiver.core import Metadata, Media, ArchivingContext
 from auto_archiver.utils import random_str
 
@@ -26,13 +26,6 @@ class InstagramTbotExtractor(Extractor):
     https://github.com/adw0rd/instagrapi
     https://t.me/instagram_load_bot
     """
-    name = "instagram_tbot_extractor"
-
-    def __init__(self, config: dict) -> None:
-        super().__init__(config)
-        self.assert_valid_string("api_id")
-        self.assert_valid_string("api_hash")
-        self.timeout = int(self.timeout)
 
     def setup(self) -> None:
         """

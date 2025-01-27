@@ -14,13 +14,12 @@ import gspread
 from loguru import logger
 from slugify import slugify
 
-from auto_archiver.base_processors import Feeder
+from auto_archiver.core import Feeder
 from auto_archiver.core import Metadata, ArchivingContext
 from . import GWorksheet
 
 
 class GsheetsFeeder(Feeder):
-    name = "gsheet_feeder"
 
     def __init__(self) -> None:
         """

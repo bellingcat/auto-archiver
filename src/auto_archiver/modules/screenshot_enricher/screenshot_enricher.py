@@ -5,15 +5,11 @@ import base64
 from selenium.common.exceptions import TimeoutException
 
 
-from auto_archiver.base_processors import Enricher
+from auto_archiver.core import Enricher
 from auto_archiver.utils import Webdriver, UrlUtil, random_str
 from auto_archiver.core import Media, Metadata, ArchivingContext
 
 class ScreenshotEnricher(Enricher):
-    name = "screenshot_enricher"
-
-    def __init__(self, config: dict) -> None:
-        super().__init__(config)
 
     def enrich(self, to_enrich: Metadata) -> None:
         url = to_enrich.get_url()

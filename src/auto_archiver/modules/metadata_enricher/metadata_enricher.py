@@ -2,7 +2,7 @@ import subprocess
 import traceback
 from loguru import logger
 
-from auto_archiver.base_processors import Enricher
+from auto_archiver.core import Enricher
 from auto_archiver.core import Metadata
 
 

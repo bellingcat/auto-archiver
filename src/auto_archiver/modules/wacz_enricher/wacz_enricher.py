@@ -6,7 +6,7 @@ from loguru import logger
 from warcio.archiveiterator import ArchiveIterator
 
 from auto_archiver.core import Media, Metadata, ArchivingContext
-from auto_archiver.base_processors import Extractor, Enricher
+from auto_archiver.core import Extractor, Enricher
 from auto_archiver.utils import UrlUtil, random_str
 
 
@@ -17,11 +17,6 @@ class WaczExtractorEnricher(Enricher, Extractor):
     it can become quite powerful for archiving private content.
     When used as an archiver it will extract the media from the .WACZ archive so it can be enriched.
     """
-    name = "wacz_archiver_enricher"
-
-    def __init__(self, config: dict) -> None:
-        # without this STEP.__init__ is not called
-        super().__init__(config)
 
     def setup(self) -> None:
         self.use_docker = os.environ.get('WACZ_ENABLE_DOCKER') or not os.environ.get('RUNNING_IN_DOCKER')

@@ -15,19 +15,15 @@ import mimetypes, requests
 from loguru import logger
 from retrying import retry
 
-from ..core import Metadata, ArchivingContext
+from ..core import Metadata, ArchivingContext, BaseModule
 
 
 @dataclass
-class Extractor:
+class Extractor(BaseModule):
     """
     Base class for implementing extractors in the media archiving framework.
     Subclasses must implement the `download` method to define platform-specific behavior.
     """
-
-    def setup(self, *args, **kwargs) -> None:
-        # used when extractors need to login or do other one-time setup
-        pass
 
     def cleanup(self) -> None:
         # called when extractors are done, or upon errors, cleanup any resources

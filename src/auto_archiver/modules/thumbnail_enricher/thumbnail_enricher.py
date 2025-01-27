@@ -9,7 +9,7 @@ and identify important moments without watching the entire video.
 import ffmpeg, os
 from loguru import logger
 
-from auto_archiver.base_processors import Enricher
+from auto_archiver.core import Enricher
 from auto_archiver.core import Media, Metadata, ArchivingContext
 from auto_archiver.utils.misc import random_str
 
@@ -42,7 +42,7 @@ class ThumbnailEnricher(Enricher):
                         logger.error(f"error getting duration of video {m.filename}: {e}")
                         return
 
-                num_thumbs = int(min(max(1, duration * self.thumbnails_per_second), self.max_thumbnails))
+                num_thumbs = int(min(max(1, duration * self.thumbnails_per_minute), self.max_thumbnails))
                 timestamps = [duration / (num_thumbs + 1) * i for i in range(1, num_thumbs + 1)]
 
                 thumbnails_media = []

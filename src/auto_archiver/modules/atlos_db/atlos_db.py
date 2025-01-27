@@ -6,7 +6,7 @@ from csv import DictWriter
 from dataclasses import asdict
 import requests
 
-from auto_archiver.base_processors import Database
+from auto_archiver.core import Database
 from auto_archiver.core import Metadata
 from auto_archiver.utils import get_atlos_config_options
 
@@ -15,12 +15,6 @@ class AtlosDb(Database):
     """
     Outputs results to Atlos
     """
-
-    name = "atlos_db"
-
-    def __init__(self, config: dict) -> None:
-        # without this STEP.__init__ is not called
-        super().__init__(config)
 
     def failed(self, item: Metadata, reason: str) -> None:
         """Update DB accordingly for failure"""

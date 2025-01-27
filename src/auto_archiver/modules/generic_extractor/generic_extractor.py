@@ -5,11 +5,10 @@ from yt_dlp.extractor.common import InfoExtractor
 
 from loguru import logger
 
-from auto_archiver.base_processors.extractor import Extractor
+from auto_archiver.core.extractor import Extractor
 from ...core import Metadata, Media, ArchivingContext
 
 class GenericExtractor(Extractor):
-    name = "youtubedl_archiver" #left as is for backwards compat
     _dropins = {}
 
     def suitable_extractors(self, url: str) -> list[str]:
@@ -268,7 +267,7 @@ class GenericExtractor(Extractor):
         if item.netloc in ['facebook.com', 'www.facebook.com'] and self.facebook_cookie:
             logger.debug('Using Facebook cookie')
             yt_dlp.utils.std_headers['cookie'] = self.facebook_cookie
-        
+
         ydl_options = {'outtmpl': os.path.join(ArchivingContext.get_tmp_dir(), f'%(id)s.%(ext)s'), 'quiet': False, 'noplaylist': not self.allow_playlist , 'writesubtitles': self.subtitles, 'writeautomaticsub': self.subtitles, "live_from_start": self.live_from_start, "proxy": self.proxy, "max_downloads": self.max_downloads, "playlistend": self.max_downloads}
 
         if item.netloc in ['youtube.com', 'www.youtube.com']:
@@ -285,6 +284,6 @@ class GenericExtractor(Extractor):
             result = self.download_for_extractor(info_extractor, url, ydl)
             if result:
                 return result
-       
+
 
         return False

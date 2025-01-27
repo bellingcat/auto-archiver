@@ -1,13 +1,11 @@
 from loguru import logger
 import csv
 
-from auto_archiver.base_processors import Feeder
+from auto_archiver.core import Feeder
 from auto_archiver.core import Metadata, ArchivingContext
 from auto_archiver.utils import url_or_none
 
 class CSVFeeder(Feeder):
-
-    name = "csv_feeder"
 
     def __iter__(self) -> Metadata:
         url_column = self.column or 0

@@ -227,6 +227,10 @@ class ArchivingOrchestrator:
                     continue
                 if loaded_module:
                     step_items.append(loaded_module)
+                    # TODO temp solution
+                    if module_type == "storage":
+                        ArchivingContext.set("storages", step_items, keep_on_reset=True)
+
             check_steps_ok()
             self.config['steps'][f"{module_type}s"] = step_items
             
@@ -256,10 +260,7 @@ class ArchivingOrchestrator:
             exit()
 
         yaml_config = read_yaml(basic_config.config_file)
-
-
         self.setup_complete_parser(basic_config, yaml_config, unused_args)
-        
         self.install_modules()
 
         # log out the modules that were loaded
@@ -301,7 +302,7 @@ class ArchivingOrchestrator:
             logger.error(f'Got unexpected error on item {item}: {e}\n{traceback.format_exc()}')
             for d in self.config['steps']['databases']:
                 if type(e) == AssertionError: d.failed(item, str(e))
-                else: d.failed(item)
+                else: d.failed(item, reason="unexpected error")
 
 
     def archive(self, result: Metadata) -> Union[Metadata, None]:
@@ -319,27 +320,27 @@ class ArchivingOrchestrator:
 
         # 1 - sanitize - each archiver is responsible for cleaning/expanding its own URLs
         url = original_url
-        for a in self.archivers: url = a.sanitize_url(url)
+        for a in self.config["steps"]["extractors"]: url = a.sanitize_url(url)
         result.set_url(url)
         if original_url != url: result.set("original_url", original_url)
 
         # 2 - notify start to DBs, propagate already archived if feature enabled in DBs
         cached_result = None
-        for d in self.databases:
+        for d in self.config["steps"]["databases"]:
             d.started(result)
             if (local_result := d.fetch(result)):
                 cached_result = (cached_result or Metadata()).merge(local_result)
         if cached_result:
             logger.debug("Found previously archived entry")
-            for d in self.databases:
+            for d in self.config["steps"]["databases"]:
                 try: d.done(cached_result, cached=True)
                 except Exception as e:
                     logger.error(f"ERROR database {d.name}: {e}: {traceback.format_exc()}")
             return cached_result
 
-        # 3 - call archivers until one succeeds
-        for a in self.archivers:
-            logger.info(f"Trying archiver {a.name} for {url}")
+        # 3 - call extractors until one succeeds
+        for a in self.config["steps"]["extractors"]:
+            logger.info(f"Trying extractor {a.name} for {url}")
             try:
                 result.merge(a.download(result))
                 if result.is_success(): break
@@ -347,7 +348,7 @@ class ArchivingOrchestrator:
                 logger.error(f"ERROR archiver {a.name}: {e}: {traceback.format_exc()}")
 
         # 4 - call enrichers to work with archived content
-        for e in self.enrichers:
+        for e in self.config["steps"]["enrichers"]:
             try: e.enrich(result)
             except Exception as exc: 
                 logger.error(f"ERROR enricher {e.name}: {exc}: {traceback.format_exc()}")
@@ -356,7 +357,7 @@ class ArchivingOrchestrator:
         result.store()
 
         # 6 - format and store formatted if needed
-        if (final_media := self.formatter.format(result)):
+        if final_media := self.config["steps"]["formatters"][0].format(result):
             final_media.store(url=url, metadata=result)
             result.set_final_media(final_media)
 
@@ -364,7 +365,7 @@ class ArchivingOrchestrator:
             result.status = "nothing archived"
 
         # signal completion to databases and archivers
-        for d in self.databases:
+        for d in self.config["steps"]["databases"]:
             try: d.done(result)
             except Exception as e:
                 logger.error(f"ERROR database {d.name}: {e}: {traceback.format_exc()}")

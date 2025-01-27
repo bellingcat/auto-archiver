@@ -16,7 +16,7 @@ from loguru import logger
 from retrying import retry
 from tqdm import tqdm
 
-from auto_archiver.base_processors import Extractor
+from auto_archiver.core import Extractor
 from auto_archiver.core import Media
 from auto_archiver.core import Metadata
 
@@ -27,8 +27,6 @@ class InstagramAPIExtractor(Extractor):
 
     # TODO: improvement collect aggregates of locations[0].location and mentions for all posts
     """
-
-    name = "instagram_api_extractor"
 
     global_pattern = re.compile(
         r"(?:(?:http|https):\/\/)?(?:www.)?(?:instagram.com)\/(stories(?:\/highlights)?|p|reel)?\/?([^\/\?]*)\/?(\d+)?"

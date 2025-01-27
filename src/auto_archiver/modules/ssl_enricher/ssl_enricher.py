@@ -3,7 +3,7 @@ from slugify import slugify
 from urllib.parse import urlparse
 from loguru import logger
 
-from auto_archiver.base_processors import Enricher
+from auto_archiver.core import Enricher
 from auto_archiver.core import Metadata, ArchivingContext, Media
 
 

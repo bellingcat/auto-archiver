@@ -153,46 +153,47 @@ class LazyBaseModule:
         return manifest
 
     def load(self):
-            if self._instance:
-                return self._instance
 
-            # check external dependencies are installed
-            def check_deps(deps, check):
-                for dep in deps:
-                    if not check(dep):
-                        logger.error(f"Module '{self.name}' requires external dependency '{dep}' which is not available. Have you installed the required dependencies for the '{self.name}' module? See the README for more information.")
-                        exit(1)
-            
-            check_deps(self.dependencies.get('python', []), lambda dep: find_spec(dep))
-            check_deps(self.dependencies.get('bin', []), lambda dep: shutil.which(dep))
-            
+        if self._instance:
+            return self._instance
 
-            logger.debug(f"Loading module '{self.display_name}'...")
+        # check external dependencies are installed
+        def check_deps(deps, check):
+            for dep in deps:
+                if not check(dep):
+                    logger.error(f"Module '{self.name}' requires external dependency '{dep}' which is not available. Have you installed the required dependencies for the '{self.name}' module? See the README for more information.")
+                    exit(1)
 
-            for qualname in [self.name, f'auto_archiver.modules.{self.name}']:
-                try:
-                    # first import the whole module, to make sure it's working properly
-                    __import__(qualname)
-                    break
-                except ImportError:
-                    pass
+        check_deps(self.dependencies.get('python', []), lambda dep: find_spec(dep))
+        check_deps(self.dependencies.get('bin', []), lambda dep: shutil.which(dep))
 
-            # then import the file for the entry point
-            file_name, class_name = self.entry_point.split('::')
-            sub_qualname = f'{qualname}.{file_name}'
 
-            __import__(f'{qualname}.{file_name}', fromlist=[self.entry_point])
-            
-            # finally, get the class instance
-            instance = getattr(sys.modules[sub_qualname], class_name)()
-            if not getattr(instance, 'name', None):
-                instance.name = self.name
-            
-            if not getattr(instance, 'display_name', None):
-                instance.display_name = self.display_name
+        logger.debug(f"Loading module '{self.display_name}'...")
 
-            self._instance = instance
-            return instance
+        for qualname in [self.name, f'auto_archiver.modules.{self.name}']:
+            try:
+                # first import the whole module, to make sure it's working properly
+                __import__(qualname)
+                break
+            except ImportError:
+                pass
+
+        # then import the file for the entry point
+        file_name, class_name = self.entry_point.split('::')
+        sub_qualname = f'{qualname}.{file_name}'
+
+        __import__(f'{qualname}.{file_name}', fromlist=[self.entry_point])
+
+        # finally, get the class instance
+        instance = getattr(sys.modules[sub_qualname], class_name)()
+        if not getattr(instance, 'name', None):
+            instance.name = self.name
+
+        if not getattr(instance, 'display_name', None):
+            instance.display_name = self.display_name
+
+        self._instance = instance
+        return instance
 
     def __repr__(self):
         return f"Module<'{self.display_name}' ({self.name})>"

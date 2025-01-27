@@ -8,9 +8,9 @@ from certvalidator import CertificateValidator, ValidationContext
 from asn1crypto import pem
 import certifi
 
-from auto_archiver.base_processors import Enricher
+from auto_archiver.core import Enricher
 from auto_archiver.core import Metadata, ArchivingContext, Media
-from auto_archiver.base_processors import Extractor
+from auto_archiver.core import Extractor
 
 
 class TimestampingEnricher(Enricher):
@@ -21,10 +21,6 @@ class TimestampingEnricher(Enricher):
 
     See https://gist.github.com/Manouchehri/fd754e402d98430243455713efada710 for list of timestamp authorities.
     """
-    name = "timestamping_enricher"
-
-    def __init__(self, config: dict) -> None:
-        super().__init__(config)
 
     def enrich(self, to_enrich: Metadata) -> None:
         url = to_enrich.get_url()

@@ -2,7 +2,7 @@ import json
 from loguru import logger
 import time, requests
 
-from auto_archiver.base_processors import Extractor, Enricher
+from auto_archiver.core import Extractor, Enricher
 from auto_archiver.utils import UrlUtil
 from auto_archiver.core import Metadata
 
@@ -12,13 +12,6 @@ class WaybackExtractorEnricher(Enricher, Extractor):
 
     The Wayback machine will rate-limit IP heavy usage. 
     """
-    name = "wayback_archiver_enricher"
-
-    def __init__(self, config: dict) -> None:
-        # without this STEP.__init__ is not called
-        super().__init__(config)
-        assert type(self.secret) == str and len(self.secret) > 0, "please provide a value for the wayback_enricher API key"
-        assert type(self.secret) == str and len(self.secret) > 0, "please provide a value for the wayback_enricher API secret"
 
     def download(self, item: Metadata) -> Metadata:
         # this new Metadata object is required to avoid duplication

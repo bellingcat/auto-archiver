@@ -1,9 +1,9 @@
 import json, gspread
 
-from ..core import Step
+from ..core import BaseModule
 
 
-class Gsheets(Step):
+class Gsheets(BaseModule):
     name = "gsheets"
 
     def __init__(self, config: dict) -> None:

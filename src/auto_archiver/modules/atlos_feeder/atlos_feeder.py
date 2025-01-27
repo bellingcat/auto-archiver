@@ -1,13 +1,12 @@
 from loguru import logger
 import requests
 
-from auto_archiver.base_processors import Feeder
+from auto_archiver.core import Feeder
 from auto_archiver.core import Metadata, ArchivingContext
 from auto_archiver.utils import get_atlos_config_options
 
 
 class AtlosFeeder(Feeder):
-    name = "atlos_feeder"
 
     def __init__(self, config: dict) -> None:
         # without this STEP.__init__ is not called

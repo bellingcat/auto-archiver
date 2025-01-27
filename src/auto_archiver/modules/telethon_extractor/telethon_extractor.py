@@ -8,20 +8,14 @@ from loguru import logger
 from tqdm import tqdm
 import re, time, json, os
 
-from auto_archiver.base_processors import Extractor
+from auto_archiver.core import Extractor
 from auto_archiver.core import Metadata, Media, ArchivingContext
 from auto_archiver.utils import random_str
 
 
 class TelethonArchiver(Extractor):
-    name = "telethon_extractor"
     link_pattern = re.compile(r"https:\/\/t\.me(\/c){0,1}\/(.+)\/(\d+)")
     invite_pattern = re.compile(r"t.me(\/joinchat){0,1}\/\+?(.+)")
-
-    def __init__(self, config: dict) -> None:
-        super().__init__(config)
-        self.assert_valid_string("api_id")
-        self.assert_valid_string("api_hash")
 
 
     def setup(self) -> None:

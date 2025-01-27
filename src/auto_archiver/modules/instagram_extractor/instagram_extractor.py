@@ -7,7 +7,7 @@ import re, os, shutil, traceback
 import instaloader  # https://instaloader.github.io/as-module.html
 from loguru import logger
 
-from auto_archiver.base_processors import Extractor
+from auto_archiver.core import Extractor
 from auto_archiver.core import Metadata
 from auto_archiver.core import Media
 
@@ -15,8 +15,6 @@ class InstagramExtractor(Extractor):
     """
     Uses Instaloader to download either a post (inc images, videos, text) or as much as possible from a profile (posts, stories, highlights, ...)
     """
-    name = "instagram_extractor"
-
     # NB: post regex should be tested before profile
     # https://regex101.com/r/MGPquX/1
     post_pattern = re.compile(r"(?:(?:http|https):\/\/)?(?:www.)?(?:instagram.com|instagr.am|instagr.com)\/(?:p|reel)\/(\w+)")

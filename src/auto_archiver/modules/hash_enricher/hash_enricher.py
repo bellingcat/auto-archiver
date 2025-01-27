@@ -10,7 +10,7 @@ making it suitable for handling large files efficiently.
 import hashlib
 from loguru import logger
 
-from auto_archiver.base_processors import Enricher
+from auto_archiver.core import Enricher
 from auto_archiver.core import Metadata, ArchivingContext
 
 
@@ -18,6 +18,17 @@ class HashEnricher(Enricher):
     """
     Calculates hashes for Media instances
     """
+
+    def __init__(self, config: dict = None):
+        """
+        Initialize the HashEnricher with a configuration dictionary.
+        """
+        super().__init__()
+        # TODO set these from the manifest?
+        # Set default values
+        self.algorithm = config.get("algorithm", "SHA-256") if config else "SHA-256"
+        self.chunksize = config.get("chunksize", int(1.6e7)) if config else int(1.6e7)
+
 
     def enrich(self, to_enrich: Metadata) -> None:
         url = to_enrich.get_url()

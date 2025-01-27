@@ -5,15 +5,11 @@ import requests
 import hashlib
 
 from auto_archiver.core import Media, Metadata
-from auto_archiver.base_processors import Storage
+from auto_archiver.core import Storage
 from auto_archiver.utils import get_atlos_config_options
 
 
 class AtlosStorage(Storage):
-    name = "atlos_storage"
-
-    def __init__(self, config: dict) -> None:
-        super().__init__(config)
 
     def get_cdn_url(self, _media: Media) -> str:
         # It's not always possible to provide an exact URL, because it's

@@ -2,7 +2,7 @@ from typing import Union
 import requests, os
 from loguru import logger
 
-from auto_archiver.base_processors import Database
+from auto_archiver.core import Database
 from auto_archiver.core import Metadata
 
 
@@ -10,7 +10,6 @@ class AAApiDb(Database):
     """
         Connects to auto-archiver-api instance
     """
-    name = "auto_archiver_api_db"
 
     def __init__(self, config: dict) -> None:
         # without this STEP.__init__ is not called

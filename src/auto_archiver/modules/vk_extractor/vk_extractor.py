@@ -2,7 +2,7 @@ from loguru import logger
 from vk_url_scraper import VkScraper
 
 from auto_archiver.utils.misc import dump_payload
-from auto_archiver.base_processors import Extractor
+from auto_archiver.core import Extractor
 from auto_archiver.core import Metadata, Media, ArchivingContext
 
 
@@ -11,7 +11,6 @@ class VkExtractor(Extractor):
     VK videos are handled by YTDownloader, this archiver gets posts text and images.
     Currently only works for /wall posts
     """
-    name = "vk_extractor"
 
     def __init__(self, config: dict) -> None:
         super().__init__(config)

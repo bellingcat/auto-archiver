@@ -5,7 +5,7 @@ from urllib.parse import quote
 
 from loguru import logger
 
-from auto_archiver.base_processors import Database
+from auto_archiver.core import Database
 from auto_archiver.core import Metadata, Media, ArchivingContext
 from auto_archiver.modules.gsheet_feeder import GWorksheet
 
@@ -15,11 +15,6 @@ class GsheetsDb(Database):
         NB: only works if GsheetFeeder is used. 
         could be updated in the future to support non-GsheetFeeder metadata 
     """
-    name = "gsheet_db"
-
-    def __init__(self, config: dict) -> None:
-        # without this STEP.__init__ is not called
-        super().__init__(config)
 
     def started(self, item: Metadata) -> None:
         logger.warning(f"STARTED {item}")

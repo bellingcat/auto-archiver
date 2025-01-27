@@ -1,6 +1,6 @@
 from loguru import logger
 
-from auto_archiver.base_processors import Feeder
+from auto_archiver.core import Feeder
 from auto_archiver.core import Metadata, ArchivingContext
 
 

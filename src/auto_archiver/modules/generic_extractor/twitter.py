@@ -6,7 +6,7 @@ from slugify import slugify
 
 from auto_archiver.core.metadata import Metadata, Media
 from auto_archiver.utils import UrlUtil
-from auto_archiver.base_processors.extractor import Extractor
+from auto_archiver.core.extractor import Extractor
 
 from .dropin import GenericDropin, InfoExtractor
 

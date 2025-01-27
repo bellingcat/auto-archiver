@@ -8,11 +8,10 @@ from loguru import logger
 from pytwitter import Api
 from slugify import slugify
 
-from auto_archiver.base_processors import Extractor
+from auto_archiver.core import Extractor
 from auto_archiver.core import Metadata,Media
 
 class TwitterApiExtractor(Extractor):
-    name = "twitter_api_extractor"
     link_pattern = re.compile(r"(?:twitter|x).com\/(?:\#!\/)?(\w+)\/status(?:es)?\/(\d+)")
 
     def __init__(self, config: dict) -> None:
