@@ -19,8 +19,9 @@ from .context import ArchivingContext
 from .metadata import Metadata
 from ..version import __version__
 from .config import read_yaml, store_yaml, to_dot_notation, merge_dicts, EMPTY_CONFIG
-from .loader import available_modules, Module, MODULE_TYPES, load_module
+from .module import available_modules, LazyBaseModule, MODULE_TYPES, get_module
 from . import validators
+from .module import BaseModule
 
 import tempfile, traceback
 from loguru import logger
@@ -107,7 +108,7 @@ class ArchivingOrchestrator:
         else:
             # load all modules, they're not using the 'simple' mode
             self.add_module_args(available_modules(with_manifest=True), parser)
-        
+
         parser.set_defaults(**to_dot_notation(yaml_config))
 
         # reload the parser with the new arguments, now that we have them
@@ -147,22 +148,27 @@ class ArchivingOrchestrator:
         parser.add_argument('--logging.file', action='store', dest='logging.file', help='the logging file to write to', default=None)
         parser.add_argument('--logging.rotation', action='store', dest='logging.rotation', help='the logging rotation to use', default=None)
 
-    def add_module_args(self, modules: list[Module] = None, parser: argparse.ArgumentParser = None):
+        # additional modules
+        parser.add_argument('--additional-modules', dest='additional_modules', nargs='+', help='additional paths to search for modules', action=UniqueAppendAction)
+
+    def add_module_args(self, modules: list[LazyBaseModule] = None, parser: argparse.ArgumentParser = None):
 
         if not modules:
             modules = available_modules(with_manifest=True)
 
-        module: Module
+        module: LazyBaseModule
         for module in modules:
             if not module.configs:
                 # this module has no configs, don't show anything in the help
                 # (TODO: do we want to show something about this module though, like a description?)
                 continue
             group = parser.add_argument_group(module.display_name or module.name, f"{module.description[:100]}...")
+
             for name, kwargs in module.configs.items():
                 # TODO: go through all the manifests and make sure we're not breaking anything with removing cli_set
                 # in most cases it'll mean replacing it with 'type': 'str' or 'type': 'int' or something
                 kwargs.pop('cli_set', None)
+                    
                 kwargs['dest'] = f"{module.name}.{kwargs.pop('dest', name)}"
                 try:
                     kwargs['type'] = __builtins__.get(kwargs.get('type'), str)
@@ -210,10 +216,11 @@ class ArchivingOrchestrator:
                     logger.error(f"Only one {module_type} is allowed, found {len(step_items)} {module_type}s. Please remove one of the following from your configuration file: {modules_to_load}")
                     exit()
 
-            for i, module in enumerate(modules_to_load):
+            for module in modules_to_load:
                 if module in invalid_modules:
                     continue
-                loaded_module = load_module(module)
+                loaded_module: BaseModule = get_module(module).load()
+                loaded_module.setup(self.config)
                 if not loaded_module:
                     invalid_modules.append(module)
                     continue
@@ -238,6 +245,8 @@ class ArchivingOrchestrator:
         if basic_config.help:
             self.show_help()
 
+        logger.info(f"======== Welcome to the AUTO ARCHIVER ({__version__}) ==========")
+
         # load the config file
         yaml_config = {}
 
@@ -252,12 +261,9 @@ class ArchivingOrchestrator:
         
         self.install_modules()
 
-        logger.info("FEEDERS: " + ", ".join(m.name for m in self.config['steps']['feeders']))
-        logger.info("EXTRACTORS: " + ", ".join(m.name for m in self.config['steps']['extractors']))
-        logger.info("ENRICHERS: " + ", ".join(m.name for m in self.config['steps']['enrichers']))
-        logger.info("DATABASES: " + ", ".join(m.name for m in self.config['steps']['databases']))
-        logger.info("STORAGES: " + ", ".join(m.name for m in self.config['steps']['storages']))
-        logger.info("FORMATTERS: " + ", ".join(m.name for m in self.config['steps']['formatters']))
+        # log out the modules that were loaded
+        for module_type in MODULE_TYPES:
+            logger.info(f"{module_type.upper()}S: " + ", ".join(m.display_name for m in self.config['steps'][f"{module_type}s"]))
 
         for item in self.feed():
             pass

@@ -6,19 +6,14 @@ import os
 
 from auto_archiver.utils.misc import random_str
 
-from auto_archiver.core import Media, Step, ArchivingContext, Metadata
+from auto_archiver.core import Media, BaseModule, ArchivingContext, Metadata
 from auto_archiver.modules.hash_enricher.hash_enricher import HashEnricher
 from loguru import logger
 from slugify import slugify
 
 
 @dataclass
-class Storage(Step):
-    name = "storage"
-
-    def init(name: str, config: dict) -> Storage:
-        # only for typing...
-        return Step.init(name, config, Storage)
+class Storage(BaseModule):
 
     def store(self, media: Media, url: str, metadata: Optional[Metadata]=None) -> None:
         if media.is_stored(): 

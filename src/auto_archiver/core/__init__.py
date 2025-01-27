@@ -3,7 +3,7 @@
 """
 from .metadata import Metadata
 from .media import Media
-from .step import Step
+from .module import BaseModule
 from .context import ArchivingContext
 
 # cannot import ArchivingOrchestrator/Config to avoid circular dep

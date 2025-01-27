@@ -3,13 +3,11 @@ from dataclasses import dataclass
 from abc import abstractmethod, ABC
 from typing import Union
 
-from auto_archiver.core import Metadata, Step
+from auto_archiver.core import Metadata, BaseModule
 
 
 @dataclass
-class Database(Step, ABC):
-
-    name = "database"
+class Database(BaseModule):
 
     def started(self, item: Metadata) -> None:
         """signals the DB that the given item archival has started"""

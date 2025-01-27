@@ -1,5 +1,5 @@
 {
-    "name": "csv_db",
+    "name": "CSV Database",
     "type": ["database"],
     "requires_setup": False,
     "external_dependencies": {"python": ["loguru"]

@@ -9,7 +9,7 @@ import argparse
 from ruamel.yaml import YAML, CommentedMap, add_representer
 
 from copy import deepcopy
-from .loader import MODULE_TYPES
+from .module import MODULE_TYPES
 
 from typing import Any, List, Type
 

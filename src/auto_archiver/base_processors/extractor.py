@@ -25,7 +25,7 @@ class Extractor:
     Subclasses must implement the `download` method to define platform-specific behavior.
     """
 
-    def setup(self) -> None:
+    def setup(self, *args, **kwargs) -> None:
         # used when extractors need to login or do other one-time setup
         pass
 
