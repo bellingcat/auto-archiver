@@ -11,11 +11,6 @@ class SSLEnricher(Enricher):
     """
     Retrieves SSL certificate information for a domain, as a file
     """
-    name = "ssl_enricher"
-
-    def __init__(self, config: dict) -> None:
-        super().__init__(config)
-        self.skip_when_nothing_archived = bool(self.skip_when_nothing_archived)
 
     def enrich(self, to_enrich: Metadata) -> None:
         if not to_enrich.media and self.skip_when_nothing_archived: return

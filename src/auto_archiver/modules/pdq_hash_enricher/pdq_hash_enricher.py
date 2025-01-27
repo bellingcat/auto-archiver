@@ -25,11 +25,6 @@ class PdqHashEnricher(Enricher):
     Calculates perceptual hashes for Media instances using PDQ, allowing for (near-)duplicate detection.
     Ideally this enrichment is orchestrated to run after the thumbnail_enricher.
     """
-    name = "pdq_hash_enricher"
-
-    def __init__(self, config: dict) -> None:
-        # Without this STEP.__init__ is not called
-        super().__init__(config)
 
     def enrich(self, to_enrich: Metadata) -> None:
         url = to_enrich.get_url()

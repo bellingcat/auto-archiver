@@ -1,1 +1,1 @@
-from .local import LocalStorage
+from .local_storage import LocalStorage

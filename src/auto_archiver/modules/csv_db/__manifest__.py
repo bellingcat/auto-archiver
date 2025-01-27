@@ -4,6 +4,7 @@
     "requires_setup": False,
     "external_dependencies": {"python": ["loguru"]
                               },
+    'entry_point': 'csv_db::CSVDb',
     "configs": {
             "csv_file": {"default": "db.csv", "help": "CSV file name"}
         },

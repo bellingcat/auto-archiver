@@ -6,16 +6,12 @@ flexible setup in various environments.
 """
 
 import argparse
-from ruamel.yaml import YAML, CommentedMap
-from ruamel.yaml.comments import CommentedMap
+from ruamel.yaml import YAML, CommentedMap, add_representer
 
-from dataclasses import dataclass, field
-from collections import OrderedDict
-from collections.abc import Iterable
 from copy import deepcopy
 from .loader import MODULE_TYPES
 
-from typing import Any, List
+from typing import Any, List, Type
 
 #     configurable_parents = [
 #         Feeder,

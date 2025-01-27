@@ -2,7 +2,7 @@
     'name': 'Generic Extractor',
     'version': '0.1.0',
     'author': 'Bellingcat',
-    'type': ['extractor', 'feeder', 'enricher'],
+    'type': ['extractor'],
     'requires_setup': False,
     'dependencies': {
         'python': ['yt_dlp', 'requests', 'loguru', 'slugify'],

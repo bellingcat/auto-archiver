@@ -8,7 +8,10 @@
     "configs": {
             "algorithm": {"default": "SHA-256", "help": "hash algorithm to use", "choices": ["SHA-256", "SHA3-512"]},
             # TODO add non-negative requirement to match previous implementation?
-            "chunksize": {"default": 1.6e7, "help": "number of bytes to use when reading files in chunks (if this value is too large you will run out of RAM), default is 16MB"},
+            "chunksize": {"default": 1.6e7,
+                          "help": "number of bytes to use when reading files in chunks (if this value is too large you will run out of RAM), default is 16MB",
+                          'type': 'positive_number',
+                          },
         },
     "description": """
 Generates cryptographic hashes for media files to ensure data integrity and authenticity.

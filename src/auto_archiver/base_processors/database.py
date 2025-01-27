@@ -10,13 +10,6 @@ from auto_archiver.core import Metadata, Step
 class Database(Step, ABC):
 
     name = "database"
-    def __init__(self, config: dict) -> None:
-        # without this STEP.__init__ is not called
-        super().__init__(config)
-
-    def init(name: str, config: dict) -> Database:
-        # only for typing...
-        return Step.init(name, config, Database)
 
     def started(self, item: Metadata) -> None:
         """signals the DB that the given item archival has started"""

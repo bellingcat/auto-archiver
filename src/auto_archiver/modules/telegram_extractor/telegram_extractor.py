@@ -11,11 +11,6 @@ class TelegramExtractor(Extractor):
     Extractor for telegram that does not require login, but the telethon_extractor is much more advised,
     will only return if at least one image or one video is found
     """
-    name = "telegram_extractor"
-
-    def __init__(self, config: dict) -> None:
-        super().__init__(config)
-
 
     def download(self, item: Metadata) -> Metadata:
         url = item.get_url()

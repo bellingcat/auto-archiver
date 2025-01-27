@@ -8,11 +8,6 @@ class ConsoleDb(Database):
     """
         Outputs results to the console
     """
-    name = "console_db"
-
-    def __init__(self, config: dict) -> None:
-        # without this STEP.__init__ is not called
-        super().__init__(config)
 
     def started(self, item: Metadata) -> None:
         logger.warning(f"STARTED {item}")

@@ -18,14 +18,5 @@ class Enricher(Step, ABC):
     """Base classes and utilities for enrichers in the Auto-Archiver system."""
     name = "enricher"
 
-    def __init__(self, config: dict) -> None:
-        # without this STEP.__init__ is not called
-        super().__init__(config)
-        
-
-    # only for typing...
-    def init(name: str, config: dict) -> Enricher:
-        return Step.init(name, config, Enricher)
-
     @abstractmethod
     def enrich(self, to_enrich: Metadata) -> None: pass

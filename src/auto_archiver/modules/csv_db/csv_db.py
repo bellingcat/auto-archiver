@@ -11,13 +11,6 @@ class CSVDb(Database):
     """
         Outputs results to a CSV file
     """
-    name = "csv_db"
-
-    def __init__(self, config: dict) -> None:
-        # without this STEP.__init__ is not called
-        super().__init__(config)
-        self.assert_valid_string("csv_file")
-
 
     def done(self, item: Metadata, cached: bool=False) -> None:
         """archival result ready - should be saved to DB"""

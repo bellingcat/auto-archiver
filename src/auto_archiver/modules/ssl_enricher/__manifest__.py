@@ -5,6 +5,7 @@
     "external_dependencies": {
         "python": ["loguru", "python-slugify"],
     },
+    'entry_point': 'ssl_enricher::SSLEnricher',
     "configs": {
         "skip_when_nothing_archived": {"default": True, "help": "if true, will skip enriching when no media is archived"},
     },

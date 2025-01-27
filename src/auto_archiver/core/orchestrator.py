@@ -152,12 +152,12 @@ class ArchivingOrchestrator:
         if not modules:
             modules = available_modules(with_manifest=True)
 
+        module: Module
         for module in modules:
             if not module.configs:
                 # this module has no configs, don't show anything in the help
                 # (TODO: do we want to show something about this module though, like a description?)
                 continue
-
             group = parser.add_argument_group(module.display_name or module.name, f"{module.description[:100]}...")
             for name, kwargs in module.configs.items():
                 # TODO: go through all the manifests and make sure we're not breaking anything with removing cli_set
@@ -165,8 +165,8 @@ class ArchivingOrchestrator:
                 kwargs.pop('cli_set', None)
                 kwargs['dest'] = f"{module.name}.{kwargs.pop('dest', name)}"
                 try:
-                    kwargs['type'] = getattr(__builtins__, kwargs.get('type', 'str'))
-                except AttributeError:
+                    kwargs['type'] = __builtins__.get(kwargs.get('type'), str)
+                except KeyError:
                     kwargs['type'] = getattr(validators, kwargs['type'])
                 group.add_argument(f"--{module.name}.{name}", **kwargs)
 
@@ -207,7 +207,7 @@ class ArchivingOrchestrator:
                     exit()
 
                 if (module_type == 'feeder' or module_type == 'formatter') and len(step_items) > 1:
-                    logger.error(f"Only one feeder is allowed, found {len(step_items)} {module_type}s. Please remove one of the following from your configuration file: {modules_to_load}")
+                    logger.error(f"Only one {module_type} is allowed, found {len(step_items)} {module_type}s. Please remove one of the following from your configuration file: {modules_to_load}")
                     exit()
 
             for i, module in enumerate(modules_to_load):

@@ -10,11 +10,6 @@ class MetadataEnricher(Enricher):
     """
     Extracts metadata information from files using exiftool.
     """
-    name = "metadata_enricher"
-
-    def __init__(self, config: dict) -> None:
-        # without this STEP.__init__ is not called
-        super().__init__(config)
 
 
     def enrich(self, to_enrich: Metadata) -> None:

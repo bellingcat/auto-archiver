@@ -18,36 +18,6 @@ class HashEnricher(Enricher):
     """
     Calculates hashes for Media instances
     """
-    name = "hash_enricher"
-
-    def __init__(self, config: dict) -> None:
-        # without this STEP.__init__ is not called
-        super().__init__(config)
-        algos = self.configs()["algorithm"]
-        algo_choices = algos["choices"]
-        if not getattr(self, 'algorithm', None):
-            if not config.get('algorithm'):
-                logger.warning(f"No hash algorithm selected, defaulting to {algos['default']}")
-                self.algorithm = algos["default"]
-            else:
-                self.algorithm = config["algorithm"]
-
-        assert self.algorithm in algo_choices, f"Invalid hash algorithm selected, must be one of {algo_choices} (you selected {self.algorithm})."
-
-        if not getattr(self, 'chunksize', None):
-            if config.get('chunksize'):
-                self.chunksize = config["chunksize"]
-            else:
-                self.chunksize = self.configs()["chunksize"]["default"]
-
-        try:
-            self.chunksize = int(self.chunksize)
-        except ValueError:
-            raise ValueError(f"Invalid chunksize value: {self.chunksize}. Must be an integer.")
-
-        assert self.chunksize >= -1, "read length must be non-negative or -1"
-
-        ArchivingContext.set("hash_enricher.algorithm", self.algorithm, keep_on_reset=True)
 
     def enrich(self, to_enrich: Metadata) -> None:
         url = to_enrich.get_url()

@@ -5,10 +5,12 @@
     "external_dependencies": {
         "python": ["loguru"],
     },
+    'entry_point': 'cli_feeder::CLIFeeder',
     "configs": {
         "urls": {
             "default": None,
             "help": "URL(s) to archive, either a single URL or a list of urls, should not come from config.yaml",
+            "nargs": "+",
         },
     },
     "description": """

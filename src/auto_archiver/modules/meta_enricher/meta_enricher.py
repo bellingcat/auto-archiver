@@ -10,12 +10,6 @@ class MetaEnricher(Enricher):
     """
     Adds metadata information about the archive operations, to be included at the end of all enrichments
     """
-    name = "meta_enricher"
-
-
-    def __init__(self, config: dict) -> None:
-        # without this STEP.__init__ is not called
-        super().__init__(config)
 
     def enrich(self, to_enrich: Metadata) -> None:
         url = to_enrich.get_url()

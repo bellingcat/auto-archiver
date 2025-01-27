@@ -1,7 +1,7 @@
 {
     "name": "Google Sheets Feeder",
     "type": ["feeder"],
-    "entry_point": "GsheetsFeeder",
+    "entry_point": "gsheet_feeder::GsheetsFeeder",
     "requires_setup": True,
     "external_dependencies": {
         "python": ["loguru", "gspread", "python-slugify"],

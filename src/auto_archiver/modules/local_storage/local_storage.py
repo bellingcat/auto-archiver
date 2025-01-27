@@ -11,9 +11,10 @@ from auto_archiver.base_processors import Storage
 class LocalStorage(Storage):
     name = "local_storage"
 
-    def __init__(self, config: dict) -> None:
-        super().__init__(config)
-        os.makedirs(self.save_to, exist_ok=True)
+    def __init__(self) -> None:
+        super().__init__()
+        # TODO: fix up passing config values to 'steps'
+        # os.makedirs(self.save_to, exist_ok=True)
 
     def get_cdn_url(self, media: Media) -> str:
         # TODO: is this viable with Storage.configs on path/filename?

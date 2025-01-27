@@ -1,4 +1,3 @@
-import json
 {
     "name": "telethon_extractor",
     "type": ["extractor"],

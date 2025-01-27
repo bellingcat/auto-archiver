@@ -6,6 +6,8 @@
         "python": ["loguru"],
         "bin": [""]
     },
+    'requires_setup': True,
+    'entry_point': "csv_feeder::CSVFeeder",
     "configs": {
             "files": {
                 "default": None,

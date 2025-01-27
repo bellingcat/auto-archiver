@@ -18,13 +18,6 @@ class ThumbnailEnricher(Enricher):
     """
     Generates thumbnails for all the media
     """
-    name = "thumbnail_enricher"
-
-    def __init__(self, config: dict) -> None:
-        # without this STEP.__init__ is not called
-        super().__init__(config)
-        self.thumbnails_per_second = int(self.thumbnails_per_minute) / 60
-        self.max_thumbnails = int(self.max_thumbnails)
     
     def enrich(self, to_enrich: Metadata) -> None:
         """
