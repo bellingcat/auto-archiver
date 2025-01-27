@@ -1,1 +1,1 @@
-from .instagram_api_archiver import InstagramAPIExtractor
+from .instagram_api_extractor import InstagramAPIExtractor

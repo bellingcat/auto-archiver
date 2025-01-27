@@ -1,1 +1,1 @@
-from .instagram_archiver import InstagramExtractor
+from .instagram_extractor import InstagramExtractor

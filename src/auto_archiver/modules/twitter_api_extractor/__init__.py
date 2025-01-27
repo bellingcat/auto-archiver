@@ -1,1 +1,1 @@
-from .twitter_api_archiver import TwitterApiExtractor
+from .twitter_api_extractor import TwitterApiExtractor

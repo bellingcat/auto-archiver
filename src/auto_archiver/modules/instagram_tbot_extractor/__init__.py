@@ -1,1 +1,1 @@
-from .instagram_tbot_archiver import InstagramTbotExtractor
+from .instagram_tbot_extractor import InstagramTbotExtractor

@@ -1,1 +1,1 @@
-from .telethon_archiver import TelethonArchiver
+from .telethon_extractor import TelethonArchiver

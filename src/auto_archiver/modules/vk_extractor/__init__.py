@@ -1,1 +1,1 @@
-from .vk_archiver import VkExtractor
+from .vk_extractor import VkExtractor
