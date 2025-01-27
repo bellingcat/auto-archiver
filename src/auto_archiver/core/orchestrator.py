@@ -20,6 +20,7 @@ from .metadata import Metadata
 from ..version import __version__
 from .config import read_yaml, store_yaml, to_dot_notation, merge_dicts, EMPTY_CONFIG
 from .loader import available_modules, Module, MODULE_TYPES, load_module
+from . import validators
 
 import tempfile, traceback
 from loguru import logger
@@ -163,7 +164,10 @@ class ArchivingOrchestrator:
                 # in most cases it'll mean replacing it with 'type': 'str' or 'type': 'int' or something
                 kwargs.pop('cli_set', None)
                 kwargs['dest'] = f"{module.name}.{kwargs.pop('dest', name)}"
-                kwargs['type'] = type(kwargs.get('type', 'str'))
+                try:
+                    kwargs['type'] = getattr(__builtins__, kwargs.get('type', 'str'))
+                except AttributeError:
+                    kwargs['type'] = getattr(validators, kwargs['type'])
                 group.add_argument(f"--{module.name}.{name}", **kwargs)
 
     def show_help(self):
