@@ -15,7 +15,7 @@
         "atlos_url": {
             "default": "https://platform.atlos.org",
             "help": "The URL of your Atlos instance (e.g., https://platform.atlos.org), without a trailing slash.",
-            "type": str
+            "type": "str"
         },
     },
     "description": """

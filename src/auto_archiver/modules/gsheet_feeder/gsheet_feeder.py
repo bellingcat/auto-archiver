@@ -22,13 +22,13 @@ from . import GWorksheet
 class GsheetsFeeder(Feeder):
     name = "gsheet_feeder"
 
-    # def __init__(self, config: dict) -> None:
-    #     """
-    #     Initializes the GsheetsFeeder with preloaded configurations.
-    #     """
-    #     super().__init__(config)
-    #     # Initialize the gspread client with the provided service account file
-    #     self.gsheets_client = gspread.service_account(filename=config["service_account"])
+    def __init__(self) -> None:
+        """
+        Initializes the GsheetsFeeder with preloaded configurations.
+        """
+        super().__init__()
+        # Initialize the gspread client with the provided service account file
+        # self.gsheets_client = gspread.service_account(filename=self.config["service_account"])
     #
     #     # Set up feeder-specific configurations from the config
     #     self.sheet_name = config.get("sheet")
