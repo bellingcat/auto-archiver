@@ -1,6 +1,6 @@
 from yt_dlp.extractor.common import InfoExtractor
 from auto_archiver.core.metadata import Metadata
-from auto_archiver.archivers.archiver import Archiver
+from auto_archiver.base_processors.extractor import Extractor
 
 class GenericDropin:
     """Base class for dropins for the generic extractor.
@@ -30,7 +30,7 @@ class GenericDropin:
         raise NotImplementedError("This method should be implemented in the subclass")
     
 
-    def create_metadata(self, post: dict, ie_instance: InfoExtractor, archiver: Archiver, url: str) -> Metadata:
+    def create_metadata(self, post: dict, ie_instance: InfoExtractor, archiver: Extractor, url: str) -> Metadata:
         """
         This method should create a Metadata object from the post data.
         """

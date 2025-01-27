@@ -16,6 +16,7 @@ class Gsheets(Step):
         assert type(self.header) == int, f"header ({self.header}) value must be an integer not {type(self.header)}"
         assert self.sheet is not None or self.sheet_id is not None, "You need to define either a 'sheet' name or a 'sheet_id' in your orchestration file when using gsheets."
 
+    # TODO merge this into gsheets processors manifest
     @staticmethod
     def configs() -> dict:
         return {

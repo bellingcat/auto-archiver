@@ -1,5 +1,5 @@
 
-from auto_archiver.databases.csv_db import CSVDb
+from auto_archiver.modules.csv_db import CSVDb
 from auto_archiver.core import Metadata
 
 

@@ -5,10 +5,10 @@ from yt_dlp.extractor.common import InfoExtractor
 
 from loguru import logger
 
-from auto_archiver.archivers.archiver import Archiver
+from auto_archiver.base_processors.extractor import Extractor
 from ...core import Metadata, Media, ArchivingContext
 
-class GenericExtractor(Archiver):
+class GenericExtractor(Extractor):
     name = "youtubedl_archiver" #left as is for backwards compat
     _dropins = {}
 

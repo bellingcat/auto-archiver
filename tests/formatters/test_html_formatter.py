@@ -1,5 +1,4 @@
-from auto_archiver.core.context import ArchivingContext
-from auto_archiver.formatters.html_formatter import HtmlFormatter
+from auto_archiver.modules.html_formatter import HtmlFormatter
 from auto_archiver.core import Metadata, Media
 
 

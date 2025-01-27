@@ -20,7 +20,7 @@ from typing import Any, List
 #     configurable_parents = [
 #         Feeder,
 #         Enricher,
-#         Archiver,
+#         Extractor,
 #         Database,
 #         Storage,
 #         Formatter
@@ -28,7 +28,7 @@ from typing import Any, List
 #     ]
 #     feeder: Feeder
 #     formatter: Formatter
-#     archivers: List[Archiver] = field(default_factory=[])
+#     extractors: List[Extractor] = field(default_factory=[])
 #     enrichers: List[Enricher] = field(default_factory=[])
 #     storages: List[Storage] = field(default_factory=[])
 #     databases: List[Database] = field(default_factory=[])
