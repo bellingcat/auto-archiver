@@ -51,7 +51,7 @@ class BaseModule(ABC):
         for key, val in config.get(self.name, {}).items():
             setattr(self, key, val)
 
-def get_module(module_name: str, additional_paths: List[str] = []):
+def get_module(module_name: str, additional_paths: List[str] = []) -> LazyBaseModule:
     if module_name in _LAZY_LOADED_MODULES:
         return _LAZY_LOADED_MODULES[module_name]
 
@@ -119,19 +119,19 @@ class LazyBaseModule:
         return self._entry_point
 
     @property
-    def dependencies(self):
+    def dependencies(self) -> dict:
         return self.manifest['dependencies']
     
     @property
-    def configs(self):
+    def configs(self) -> dict:
         return self.manifest['configs']
     
     @property
-    def requires_setup(self):
+    def requires_setup(self) -> bool:
         return self.manifest['requires_setup']
 
     @property
-    def manifest(self):
+    def manifest(self) -> dict:
         if self._manifest:
             return self._manifest
         # print(f"Loading manifest for module {module_path}")
@@ -149,10 +149,11 @@ class LazyBaseModule:
         self.type = manifest['type']
         self._entry_point = manifest['entry_point']
         self.description = manifest['description']
+        self.version = manifest['version']
 
         return manifest
 
-    def load(self):
+    def load(self) -> BaseModule:
 
         if self._instance:
             return self._instance

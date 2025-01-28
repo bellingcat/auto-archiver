@@ -172,7 +172,6 @@ class GenericExtractor(Extractor):
         return self.add_metadata(data, info_extractor, url, result)
     
     def dropin_for_name(self, dropin_name: str, additional_paths = [], package=__package__) -> Type[InfoExtractor]:
-
         dropin_name = dropin_name.lower()
 
         if dropin_name == "generic":

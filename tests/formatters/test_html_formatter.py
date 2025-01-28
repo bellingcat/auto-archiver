@@ -2,8 +2,9 @@ from auto_archiver.modules.html_formatter import HtmlFormatter
 from auto_archiver.core import Metadata, Media
 
 
-def test_format():
-    formatter = HtmlFormatter({})
+def test_format(setup_module):
+    formatter = setup_module(HtmlFormatter)
+
     metadata = Metadata().set("content", "Hello, world!").set_url('https://example.com')
 
     final_media = formatter.format(metadata)

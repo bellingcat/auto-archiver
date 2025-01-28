@@ -6,13 +6,15 @@ from os.path import dirname
 
 import pytest
 
-from auto_archiver.archivers.generic_extractor.generic_extractor import GenericExtractor
-from .test_archiver_base import TestArchiverBase
+from auto_archiver.modules.generic_extractor.generic_extractor import GenericExtractor
+from .test_extractor_base import TestExtractorBase
 
-class TestGenericExtractor(TestArchiverBase):
-    """Tests Base Archiver
+class TestGenericExtractor(TestExtractorBase):
+    """Tests Generic Extractor
     """
-    archiver_class = GenericExtractor
+    extractor_module = 'generic_extractor'
+    extractor: GenericExtractor
+
     config = {
         'subtitles': False,
         'comments': False,
@@ -28,12 +30,12 @@ class TestGenericExtractor(TestArchiverBase):
     
     def test_load_dropin(self):
         # test loading dropins that are in the generic_archiver package
-        package = "auto_archiver.archivers.generic_archiver"
-        assert self.archiver.dropin_for_name("bluesky", package=package)
+        package = "auto_archiver.modules.generic_extractor"
+        assert self.extractor.dropin_for_name("bluesky", package=package)
 
         # test loading dropings via filepath
         path = os.path.join(dirname(dirname(__file__)), "data/")
-        assert self.archiver.dropin_for_name("dropin", additional_paths=[path])
+        assert self.extractor.dropin_for_name("dropin", additional_paths=[path])
 
 
 
@@ -51,12 +53,12 @@ class TestGenericExtractor(TestArchiverBase):
             This behaviour may be changed in the future (e.g. if we want the youtubedl archiver to just handle URLs it has extractors for,
             and then if and only if all archivers fails, does it fall back to the generic archiver)
         """
-        assert self.archiver.suitable(url) == is_suitable
+        assert self.extractor.suitable(url) == is_suitable
 
     @pytest.mark.download
     def test_download_tiktok(self, make_item):
         item = make_item("https://www.tiktok.com/@funnycats0ftiktok/video/7345101300750748970")
-        result = self.archiver.download(item)
+        result = self.extractor.download(item)
         assert result.get_url() == "https://www.tiktok.com/@funnycats0ftiktok/video/7345101300750748970"
 
     @pytest.mark.download
@@ -72,7 +74,7 @@ class TestGenericExtractor(TestArchiverBase):
         It should return 'False'
         """
         item = make_item(url)
-        result = self.archiver.download(item)
+        result = self.extractor.download(item)
         assert not result
 
 
@@ -80,7 +82,7 @@ class TestGenericExtractor(TestArchiverBase):
     def test_youtube_download(self, make_item):
         # url https://www.youtube.com/watch?v=5qap5aO4i9A
         item = make_item("https://www.youtube.com/watch?v=J---aiyznGQ")
-        result = self.archiver.download(item)
+        result = self.extractor.download(item)
         assert result.get_url() == "https://www.youtube.com/watch?v=J---aiyznGQ"
         assert result.get_title() == "Keyboard Cat! - THE ORIGINAL!"
         assert result.get('description') == "Buy NEW Keyboard Cat Merch! https://keyboardcat.creator-spring.com\n\nxo Keyboard Cat memes make your day better!\nhttp://www.keyboardcatstore.com/\nhttps://www.facebook.com/thekeyboardcat\nhttp://www.charlieschmidt.com/"
@@ -91,78 +93,78 @@ class TestGenericExtractor(TestArchiverBase):
     @pytest.mark.download
     def test_bluesky_download_multiple_images(self, make_item):
         item = make_item("https://bsky.app/profile/bellingcat.com/post/3lffjoxcu7k2w")
-        result = self.archiver.download(item)
+        result = self.extractor.download(item)
         assert result is not False
 
     @pytest.mark.download
     def test_bluesky_download_single_image(self, make_item):
         item = make_item("https://bsky.app/profile/bellingcat.com/post/3lfn3hbcxgc2q")
-        result = self.archiver.download(item)
+        result = self.extractor.download(item)
         assert result is not False
     
     @pytest.mark.download
     def test_bluesky_download_no_media(self, make_item):
         item = make_item("https://bsky.app/profile/bellingcat.com/post/3lfphwmcs4c2z")
-        result = self.archiver.download(item)
+        result = self.extractor.download(item)
         assert result is not False
 
     @pytest.mark.download
     def test_bluesky_download_video(self, make_item):
         item = make_item("https://bsky.app/profile/bellingcat.com/post/3le2l4gsxlk2i")
-        result = self.archiver.download(item)
+        result = self.extractor.download(item)
         assert result is not False
     
     @pytest.mark.download
     def test_truthsocial_download_video(self, make_item):
         item = make_item("https://truthsocial.com/@DaynaTrueman/posts/110602446619561579")
-        result = self.archiver.download(item)
+        result = self.extractor.download(item)
         assert len(result.media) == 1
         assert result is not False
 
     @pytest.mark.download
     def test_truthsocial_download_no_media(self, make_item):
         item = make_item("https://truthsocial.com/@bbcnewa/posts/109598702184774628")
-        result = self.archiver.download(item)
+        result = self.extractor.download(item)
         assert result is not False
     
     @pytest.mark.download
     def test_truthsocial_download_poll(self, make_item):
         item = make_item("https://truthsocial.com/@CNN_US/posts/113724326568555098")
-        result = self.archiver.download(item)
+        result = self.extractor.download(item)
         assert result is not False
     
     @pytest.mark.download
     def test_truthsocial_download_single_image(self, make_item):
         item = make_item("https://truthsocial.com/@mariabartiromo/posts/113861116433335006")
-        result = self.archiver.download(item)
+        result = self.extractor.download(item)
         assert len(result.media) == 1
         assert result is not False
 
     @pytest.mark.download
     def test_truthsocial_download_multiple_images(self, make_item):
         item = make_item("https://truthsocial.com/@trrth/posts/113861302149349135")
-        result = self.archiver.download(item)
+        result = self.extractor.download(item)
         assert len(result.media) == 3
 
     @pytest.mark.download
     def test_twitter_download_nonexistend_tweet(self, make_item):
         # this tweet does not exist
         url = "https://x.com/Bellingcat/status/17197025860711058"
-        response = self.archiver.download(make_item(url))
+        response = self.extractor.download(make_item(url))
         assert not response
     
     @pytest.mark.download
     def test_twitter_download_malformed_tweetid(self, make_item):
         # this tweet does not exist
         url = "https://x.com/Bellingcat/status/1719702a586071100058"
-        response = self.archiver.download(make_item(url))
+        response = self.extractor.download(make_item(url))
         assert not response
 
     @pytest.mark.download
     def test_twitter_download_tweet_no_media(self, make_item):
         
         item = make_item("https://twitter.com/MeCookieMonster/status/1617921633456640001?s=20&t=3d0g4ZQis7dCbSDg-mE7-w")
-        post = self.archiver.download(item)
+        post = self.extractor.download(item)
 
         self.assertValidResponseMetadata(
             post,
@@ -174,7 +176,7 @@ class TestGenericExtractor(TestArchiverBase):
     @pytest.mark.download
     def test_twitter_download_video(self, make_item):
         url = "https://x.com/bellingcat/status/1871552600346415571"
-        post = self.archiver.download(make_item(url))
+        post = self.extractor.download(make_item(url))
         self.assertValidResponseMetadata(
             post,
             "Bellingcat - This month's Bellingchat Premium is with @KolinaKoltai. She reveals how she investigated a platform allowing users to create AI-generated child sexual abuse material and explains why it's crucial to investigate the people behind these services",
@@ -193,7 +195,7 @@ class TestGenericExtractor(TestArchiverBase):
 
         """Download tweets with sensitive media"""
 
-        post = self.archiver.download(make_item(url))
+        post = self.extractor.download(make_item(url))
         self.assertValidResponseMetadata(
             post,
             title,

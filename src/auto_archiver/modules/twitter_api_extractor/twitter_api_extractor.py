@@ -14,21 +14,16 @@ from auto_archiver.core import Metadata,Media
 class TwitterApiExtractor(Extractor):
     link_pattern = re.compile(r"(?:twitter|x).com\/(?:\#!\/)?(\w+)\/status(?:es)?\/(\d+)")
 
-    def __init__(self, config: dict) -> None:
-        super().__init__(config)
+    def setup(self, config: dict) -> None:
+        super().setup(config)
 
         self.api_index = 0
         self.apis = []
         if len(self.bearer_tokens):
             self.apis.extend([Api(bearer_token=bearer_token) for bearer_token in self.bearer_tokens])
         if self.bearer_token:
-            self.assert_valid_string("bearer_token")
             self.apis.append(Api(bearer_token=self.bearer_token))
         if self.consumer_key and self.consumer_secret and self.access_token and self.access_secret:
-            self.assert_valid_string("consumer_key")
-            self.assert_valid_string("consumer_secret")
-            self.assert_valid_string("access_token")
-            self.assert_valid_string("access_secret")
             self.apis.append(Api(consumer_key=self.consumer_key, consumer_secret=self.consumer_secret,
                              access_token=self.access_token, access_secret=self.access_secret))
         assert self.api_client is not None, "Missing Twitter API configurations, please provide either AND/OR (consumer_key, consumer_secret, access_token, access_secret) to use this archiver, you can provide both for better rate-limit results."
