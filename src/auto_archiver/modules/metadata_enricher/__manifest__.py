@@ -1,11 +1,10 @@
 {
     "name": "Media Metadata Enricher",
     "type": ["enricher"],
-    "requires_setup": False,
+    "requires_setup": True,
     "external_dependencies": {
         "python": ["loguru"], 
         "bin": ["exiftool"]
-
     },
     "description": """
     Extracts metadata information from files using ExifTool.
