@@ -8,6 +8,8 @@ flexible setup in various environments.
 import argparse
 from ruamel.yaml import YAML, CommentedMap, add_representer
 
+from loguru import logger
+
 from copy import deepcopy
 from .module import MODULE_TYPES
 
@@ -30,8 +32,22 @@ logging:
 """)
 # note: 'logging' is explicitly added above in order to better format the config file
 
+class DefaultValidatingParser(argparse.ArgumentParser):
+    def parse_known_args(self, args=None, namespace=None):
+        for action in self._actions:
+            if not namespace or action.dest not in namespace:
+                if action.default is not None:
+                    try:
+                        self._check_value(action, action.default)
+                    except argparse.ArgumentError as e:
+                        logger.error(f"You have an invalid setting in your configuration file ({action.dest}):")
+                        logger.error(e)
+                        exit()
 
-def to_dot_notation(yaml_conf: CommentedMap | dict) -> argparse.ArgumentParser:
+        return super().parse_known_args(args, namespace)
+
+
+def to_dot_notation(yaml_conf: CommentedMap | dict) -> dict:
     dotdict = {}
 
     def process_subdict(subdict, prefix=""):

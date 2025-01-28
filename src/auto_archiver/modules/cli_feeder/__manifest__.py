@@ -12,6 +12,7 @@
             "nargs": "+",
             "required": True,
             "do_not_store": True,
+            "metavar": "INPUT URLS",
         },
     },
     "description": """

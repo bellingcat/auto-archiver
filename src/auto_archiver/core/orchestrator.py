@@ -18,7 +18,7 @@ from .context import ArchivingContext
 
 from .metadata import Metadata
 from ..version import __version__
-from .config import read_yaml, store_yaml, to_dot_notation, merge_dicts, EMPTY_CONFIG
+from .config import read_yaml, store_yaml, to_dot_notation, merge_dicts, EMPTY_CONFIG, DefaultValidatingParser
 from .module import available_modules, LazyBaseModule, MODULE_TYPES, get_module
 from . import validators
 from .module import BaseModule
@@ -56,12 +56,12 @@ class ArchivingOrchestrator:
         parser.add_argument('--mode', action='store', dest='mode', type=str, choices=['simple', 'full'], help='the mode to run the archiver in', default='simple')
         # override the default 'help' so we can inject all the configs and show those
         parser.add_argument('-h', '--help', action='store_true', dest='help', help='show this help message and exit')
-        parser.add_argument('-s', '--store', dest='store', default=True, help='Store the created config in the config file', action=argparse.BooleanOptionalAction)
+        parser.add_argument('-s', '--store', dest='store', default=False, help='Store the created config in the config file', action=argparse.BooleanOptionalAction)
 
         self.basic_parser = parser
 
     def setup_complete_parser(self, basic_config: dict, yaml_config: dict, unused_args: list[str]) -> None:
-        parser = argparse.ArgumentParser(
+        parser = DefaultValidatingParser(
             add_help=False,
         )
         self.add_additional_args(parser)
@@ -149,6 +149,7 @@ class ArchivingOrchestrator:
                 # this module has no configs, don't show anything in the help
                 # (TODO: do we want to show something about this module though, like a description?)
                 continue
+
             group = parser.add_argument_group(module.display_name or module.name, f"{module.description[:100]}...")
 
             for name, kwargs in module.configs.items():
@@ -157,6 +158,10 @@ class ArchivingOrchestrator:
                 do_not_store = kwargs.pop('do_not_store', False)
                 if do_not_store:
                     self._do_not_store_keys.append((module.name, name))
+                
+                if not kwargs.get('metavar', None):
+                    # make a nicer metavar, metavar is what's used in the help, e.g. --cli_feeder.urls [METAVAR]
+                    kwargs['metavar'] = name.upper()
 
                 kwargs.pop('cli_set', None)
                 should_store = kwargs.pop('should_store', False)
@@ -248,8 +253,6 @@ class ArchivingOrchestrator:
         if basic_config.help:
             self.show_help()
 
-        logger.info(f"======== Welcome to the AUTO ARCHIVER ({__version__}) ==========")
-
         # load the config file
         yaml_config = {}
 
@@ -257,8 +260,11 @@ class ArchivingOrchestrator:
             logger.error(f"The configuration file {basic_config.config_file} was  not found. Make sure the file exists and try again, or run without the --config file to use the default settings.")
             exit()
 
+
         yaml_config = read_yaml(basic_config.config_file)
         self.setup_complete_parser(basic_config, yaml_config, unused_args)
+
+        logger.info(f"======== Welcome to the AUTO ARCHIVER ({__version__}) ==========")
         self.install_modules()
 
         # log out the modules that were loaded
