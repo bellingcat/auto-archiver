@@ -11,6 +11,7 @@
             "help": "URL(s) to archive, either a single URL or a list of urls, should not come from config.yaml",
             "nargs": "+",
             "required": True,
+            "do_not_store": True,
         },
     },
     "description": """

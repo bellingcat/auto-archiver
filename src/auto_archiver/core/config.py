@@ -11,7 +11,7 @@ from ruamel.yaml import YAML, CommentedMap, add_representer
 from copy import deepcopy
 from .module import MODULE_TYPES
 
-from typing import Any, List, Type
+from typing import Any, List, Type, Tuple
 
 yaml = YAML()
 
@@ -101,6 +101,15 @@ def read_yaml(yaml_filename: str) -> CommentedMap:
     
     return config
 
-def store_yaml(config: CommentedMap, yaml_filename: str):
+# TODO: make this tidier/find a way to notify of which keys should not be stored
+
+
+def store_yaml(config: CommentedMap, yaml_filename: str, do_not_store_keys: List[Tuple[str, str]] = []) -> None:
+    config_to_save = deepcopy(config)
+
+    for key1, key2 in do_not_store_keys:
+        if key1 in config_to_save and key2 in config_to_save[key1]:
+            del config_to_save[key1][key2]
+
     with open(yaml_filename, "w", encoding="utf-8") as outf:
-        yaml.dump(config, outf)
+        yaml.dump(config_to_save, outf)

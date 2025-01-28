@@ -39,20 +39,7 @@ class UniqueAppendAction(argparse.Action):
 
 class ArchivingOrchestrator:
 
-    # def __init__(self, config: Config) -> None:
-    #     self.feeder: Feeder = config.feeder
-    #     self.formatter: Formatter = config.formatter
-    #     self.enrichers: List[Enricher] = config.enrichers
-    #     self.archivers: List[Archiver] = config.archivers
-    #     self.databases: List[Database] = config.databases
-    #     self.storages: List[Storage] = config.storages
-    #     ArchivingContext.set("storages", self.storages, keep_on_reset=True)
-
-    #     try: 
-    #         for a in self.all_archivers_for_setup(): a.setup()
-    #     except (KeyboardInterrupt, Exception) as e:
-    #         logger.error(f"Error during setup of archivers: {e}\n{traceback.format_exc()}")
-    #         self.cleanup()
+    _do_not_store_keys = []
 
     def setup_basic_parser(self):
         parser = argparse.ArgumentParser(
@@ -125,10 +112,10 @@ class ArchivingOrchestrator:
 
         if unknown:
             logger.warning(f"Ignoring unknown/unused arguments: {unknown}\nPerhaps you don't have this module enabled?")
-
+        
         if (self.config != yaml_config and basic_config.store) or not os.path.isfile(basic_config.config_file):
             logger.info(f"Storing configuration file to {basic_config.config_file}")
-            store_yaml(self.config, basic_config.config_file)
+            store_yaml(self.config, basic_config.config_file, self._do_not_store_keys)
         
         return self.config
     
@@ -167,6 +154,10 @@ class ArchivingOrchestrator:
             for name, kwargs in module.configs.items():
                 # TODO: go through all the manifests and make sure we're not breaking anything with removing cli_set
                 # in most cases it'll mean replacing it with 'type': 'str' or 'type': 'int' or something
+                do_not_store = kwargs.pop('do_not_store', False)
+                if do_not_store:
+                    self._do_not_store_keys.append((module.name, name))
+
                 kwargs.pop('cli_set', None)
                 should_store = kwargs.pop('should_store', False)
                 kwargs['dest'] = f"{module.name}.{kwargs.pop('dest', name)}"
@@ -193,7 +184,7 @@ class ArchivingOrchestrator:
         logging_config = self.config['logging']
         logger.add(sys.stderr, level=logging_config['level'])
         if log_file := logging_config['file']:
-            logger.add(log_file, rotation=logging_config['logging.rotation'])
+            logger.add(log_file) if not logging_config['rotation'] else logger.add(log_file, rotation=logging_config['rotation'])
 
         
     def install_modules(self):
@@ -221,7 +212,14 @@ class ArchivingOrchestrator:
                 if module in invalid_modules:
                     continue
                 loaded_module: BaseModule = get_module(module).load()
-                loaded_module.setup(self.config)
+                try:
+                    loaded_module.setup(self.config)
+                except (KeyboardInterrupt, Exception) as e:
+                    logger.error(f"Error during setup of archivers: {e}\n{traceback.format_exc()}")
+                    if module_type == 'extractor':
+                        loaded_module.cleanup()
+                    exit()
+
                 if not loaded_module:
                     invalid_modules.append(module)
                     continue

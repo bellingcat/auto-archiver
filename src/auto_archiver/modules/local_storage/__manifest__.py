@@ -7,16 +7,16 @@
     },
     "configs": {
         "path_generator": {
-            "default": "url",
+            "default": "flat",
             "help": "how to store the file in terms of directory structure: 'flat' sets to root; 'url' creates a directory based on the provided URL; 'random' creates a random directory.",
             "choices": ["flat", "url", "random"],
         },
         "filename_generator": {
-            "default": "random",
+            "default": "static",
             "help": "how to name stored files: 'random' creates a random string; 'static' uses a replicable strategy such as a hash.",
             "choices": ["random", "static"],
         },
-        "save_to": {"default": "./archived", "help": "folder where to save archived content"},
+        "save_to": {"default": "./local_archive", "help": "folder where to save archived content"},
         "save_absolute": {"default": False, "help": "whether the path to the stored file is absolute or relative in the output result inc. formatters (WARN: leaks the file structure)"},
     },
     "description": """

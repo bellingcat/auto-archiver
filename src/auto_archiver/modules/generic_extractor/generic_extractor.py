@@ -121,6 +121,7 @@ class GenericExtractor(Extractor):
 
         ie_instance = info_extractor(downloader=ydl)
         dropin = self.dropin_for_name(info_extractor.ie_key())
+
         if not dropin:
             # TODO: add a proper link to 'how to create your own dropin'
             logger.debug(f"""Could not find valid dropin for {info_extractor.IE_NAME}.
@@ -171,6 +172,8 @@ class GenericExtractor(Extractor):
         return self.add_metadata(data, info_extractor, url, result)
     
     def dropin_for_name(self, dropin_name: str, additional_paths = [], package=__package__) -> Type[InfoExtractor]:
+
+        dropin_name = dropin_name.lower()
 
         if dropin_name == "generic":
             # no need for a dropin for the generic extractor (?)
