@@ -33,7 +33,19 @@ logging:
 # note: 'logging' is explicitly added above in order to better format the config file
 
 class DefaultValidatingParser(argparse.ArgumentParser):
+
+    def error(self, message):
+        """
+        Override of error to format a nicer looking error message using logger
+        """
+        logger.error("Problem with configuration file (tip: use --help to see the available options):")
+        logger.error(message)
+        self.exit(2)
+
     def parse_known_args(self, args=None, namespace=None):
+        """
+        Override of parse_known_args to also check the 'defaults' values - which are passed in from the config file
+        """
         for action in self._actions:
             if not namespace or action.dest not in namespace:
                 if action.default is not None:
