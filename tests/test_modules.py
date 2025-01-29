@@ -1,13 +1,24 @@
 import sys
 import pytest
 from auto_archiver.core.module import get_module_lazy, BaseModule, LazyBaseModule, _LAZY_LOADED_MODULES
-from auto_archiver.core.extractor import Extractor
 
 @pytest.fixture
 def example_module():
-    yield get_module_lazy("example_module", ["tests/data/"])
+    import auto_archiver
+
+    previous_path = auto_archiver.modules.__path__
+    auto_archiver.modules.__path__.append("tests/data/")
+
+    module = get_module_lazy("example_module")
+    yield module
     # cleanup
-    _LAZY_LOADED_MODULES.pop("example_module")
+    try:
+        del module._manifest
+    except AttributeError:
+        pass
+    del _LAZY_LOADED_MODULES["example_module"]
+    sys.modules.pop("auto_archiver.modules.example_module.example_module", None)
+    auto_archiver.modules.__path__ = previous_path
 
 def test_get_module_lazy(example_module):
     assert example_module.name == "example_module"
@@ -15,18 +26,34 @@ def test_get_module_lazy(example_module):
 
     assert example_module.manifest is not None
 
+def test_python_dependency_check(example_module):
+    # example_module requires loguru, which is not installed
+    # monkey patch the manifest to include a nonexistnet dependency
+    example_module.manifest["dependencies"]["python"] = ["does_not_exist"]
 
-def test_load_module_abc_check(example_module):
-
-    # example_module is an extractor but doesn't have the 'download' method, should raise an ABC error
-    with pytest.raises(TypeError) as load_error:
+    with pytest.raises(SystemExit) as load_error:
         example_module.load({})
-    assert "Can't instantiate abstract class ExampleModule with abstract method download" in str(load_error.value)
 
-    
-def test_load_module(example_module, monkeypatch):
-    # hack - remove the 'download' method from the required methods of Extractor
-    monkeypatch.setattr(Extractor, "__abstractmethods__", set())
+    assert load_error.value.code == 1
+
+def test_binary_dependency_check(example_module):
+    # example_module requires ffmpeg, which is not installed
+    # monkey patch the manifest to include a nonexistnet dependency
+    example_module.manifest["dependencies"]["binary"] = ["does_not_exist"]
+
+def test_module_dependency_check_loads_module(example_module):
+    # example_module requires cli_feeder, which is not installed
+    # monkey patch the manifest to include a nonexistnet dependency
+    example_module.manifest["dependencies"]["python"] = ["hash_enricher"]
+
+    loaded_module = example_module.load({})
+    assert loaded_module is not None
+
+    # check the dependency is loaded
+    assert _LAZY_LOADED_MODULES["hash_enricher"] is not None
+    assert _LAZY_LOADED_MODULES["hash_enricher"]._instance is not None
+
+def test_load_module(example_module):
 
     # setup the module, and check that config is set to the default values
     loaded_module = example_module.load({})

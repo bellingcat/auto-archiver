@@ -53,6 +53,7 @@ class HtmlFormatter(Formatter):
             outf.write(content)
         final_media = Media(filename=html_path, _mimetype="text/html")
 
+        # get the already instantiated hash_enricher module
         he = get_module('hash_enricher', self.config)
         if len(hd := he.calculate_hash(final_media.filename)):
             final_media.set("hash", f"{he.algorithm}:{hd}")

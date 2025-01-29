@@ -1,7 +1,7 @@
 {
     "name": "Instagram Telegram Bot Extractor",
     "type": ["extractor"],
-    "external_dependencies": {"python": ["loguru",
+    "dependencies": {"python": ["loguru",
                                          "telethon",],
                               },
     "requires_setup": True,

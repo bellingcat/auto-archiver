@@ -2,7 +2,7 @@
     "name": "Mute Formatter",
     "type": ["formatter"],
     "requires_setup": True,
-    "external_dependencies": {
+    "dependencies": {
     },
     "description": """ Default formatter.
     """,

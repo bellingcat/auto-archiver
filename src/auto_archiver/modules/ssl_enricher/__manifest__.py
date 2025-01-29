@@ -2,7 +2,7 @@
     "name": "SSL Certificate Enricher",
     "type": ["enricher"],
     "requires_setup": False,
-    "external_dependencies": {
+    "dependencies": {
         "python": ["loguru", "python-slugify"],
     },
     'entry_point': 'ssl_enricher::SSLEnricher',

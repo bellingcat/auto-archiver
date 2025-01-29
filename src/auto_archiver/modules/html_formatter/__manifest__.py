@@ -2,8 +2,8 @@
     "name": "HTML Formatter",
     "type": ["formatter"],
     "requires_setup": False,
-    "external_dependencies": {
-                          "python": ["loguru", "jinja2"],
+    "dependencies": {
+                          "python": ["hash_enricher", "loguru", "jinja2"],
                           "bin": [""]
     },
     "configs": {

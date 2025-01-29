@@ -3,7 +3,7 @@
     "type": ["extractor"],
     "requires_setup": True,
     "depends": ["core", "utils"],
-    "external_dependencies": {
+    "dependencies": {
         "python": ["loguru",
                    "vk_url_scraper"],
     },

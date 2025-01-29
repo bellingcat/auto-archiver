@@ -2,7 +2,7 @@
     "name": "Console Database",
     "type": ["database"],
     "requires_setup": False,
-    "external_dependencies": {
+    "dependencies": {
         "python": ["loguru"],
     },
     "description": """

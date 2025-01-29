@@ -2,7 +2,7 @@
     "name": "Screenshot Enricher",
     "type": ["enricher"],
     "requires_setup": True,
-    "external_dependencies": {
+    "dependencies": {
         "python": ["loguru", "selenium"],
         "bin": ["chromedriver"]
     },

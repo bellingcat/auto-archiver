@@ -2,7 +2,7 @@
     "name": "atlos_storage",
     "type": ["storage"],
     "requires_setup": True,
-    "external_dependencies": {"python": ["loguru", "requests"], "bin": [""]},
+    "dependencies": {"python": ["loguru", "requests"], "bin": [""]},
     "configs": {
         "path_generator": {
             "default": "url",

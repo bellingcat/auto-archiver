@@ -2,7 +2,7 @@
     "name": "Wayback Machine Enricher",
     "type": ["enricher", "archiver"],
     "requires_setup": True,
-    "external_dependencies": {
+    "dependencies": {
         "python": ["loguru", "requests"],
     },
     "entry_point": "wayback_enricher::WaybackExtractorEnricher",

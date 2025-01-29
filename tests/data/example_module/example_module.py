@@ -1,4 +1,4 @@
 from auto_archiver.core.extractor import Extractor
-
 class ExampleModule(Extractor):
-    pass
+    def download(self, item):
+        print("do something")

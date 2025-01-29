@@ -3,7 +3,7 @@
     "type": ["database"],
     "entry_point": "api_db:AAApiDb",
     "requires_setup": True,
-    "external_dependencies": {
+    "dependencies": {
         "python": ["requests",
                    "loguru"],
     },

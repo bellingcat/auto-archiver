@@ -2,7 +2,7 @@
     "name": "Whisper Enricher",
     "type": ["enricher"],
     "requires_setup": True,
-    "external_dependencies": {
+    "dependencies": {
         "python": ["loguru", "requests"],
     },
     "configs": {

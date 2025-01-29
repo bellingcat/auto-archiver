@@ -2,7 +2,7 @@
     "name": "Telegram Extractor",
     "type": ["extractor"],
     "requires_setup": False,
-    "external_dependencies": {
+    "dependencies": {
         "python": [
             "requests",
             "bs4",

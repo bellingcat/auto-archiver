@@ -2,7 +2,7 @@
     "name": "Google Drive Storage",
     "type": ["storage"],
     "requires_setup": True,
-    "external_dependencies": {
+    "dependencies": {
         "python": [
             "loguru",
             "google-api-python-client",

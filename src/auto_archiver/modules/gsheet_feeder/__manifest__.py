@@ -3,7 +3,7 @@
     "type": ["feeder"],
     "entry_point": "gsheet_feeder::GsheetsFeeder",
     "requires_setup": True,
-    "external_dependencies": {
+    "dependencies": {
         "python": ["loguru", "gspread", "python-slugify"],
     },
     "configs": {

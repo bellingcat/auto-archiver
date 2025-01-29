@@ -2,7 +2,7 @@
     "name": "WACZ Enricher",
     "type": ["enricher", "archiver"],
     "requires_setup": True,
-    "external_dependencies": {
+    "dependencies": {
         "python": [
             "loguru",
             "jsonlines",

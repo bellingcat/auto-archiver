@@ -1,7 +1,7 @@
 {
     "name": "Instagram Extractor",
     "type": ["extractor"],
-    "external_dependencies": {
+    "dependencies": {
         "python": [
             "instaloader",
             "loguru",

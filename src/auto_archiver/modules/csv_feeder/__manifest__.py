@@ -2,7 +2,7 @@
     "name": "CSV Feeder",
     "type": ["feeder"],
     "requires_setup": False,
-    "external_dependencies": {
+    "dependencies": {
         "python": ["loguru"],
         "bin": [""]
     },

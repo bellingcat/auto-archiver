@@ -3,7 +3,7 @@
     "type": ["database"],
     "entry_point": "gsheet_db::GsheetsDb",
     "requires_setup": True,
-    "external_dependencies": {
+    "dependencies": {
         "python": ["loguru", "gspread", "python-slugify"],
     },
     "configs": {

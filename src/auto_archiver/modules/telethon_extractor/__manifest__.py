@@ -2,7 +2,7 @@
     "name": "telethon_extractor",
     "type": ["extractor"],
     "requires_setup": True,
-    "external_dependencies": {
+    "dependencies": {
         "python": ["telethon",
                    "loguru",
                    "tqdm",

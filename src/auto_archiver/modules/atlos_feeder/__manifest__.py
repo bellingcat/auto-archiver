@@ -2,7 +2,7 @@
     "name": "Atlos Feeder",
     "type": ["feeder"],
     "requires_setup": True,
-    "external_dependencies": {
+    "dependencies": {
         "python": ["loguru", "requests"],
     },
     "configs": {

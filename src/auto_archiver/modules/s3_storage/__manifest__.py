@@ -2,7 +2,7 @@
     "name": "S3 Storage",
     "type": ["storage"],
     "requires_setup": True,
-    "external_dependencies": {
+    "dependencies": {
         "python": ["boto3", "loguru"],
     },
     "configs": {

@@ -143,6 +143,7 @@ def available_modules(with_manifest: bool=False, limit_to_modules: List[str]= []
             if _LAZY_LOADED_MODULES.get(possible_module):
                 continue
             lazy_module = LazyBaseModule(possible_module, possible_module_path)
+
             _LAZY_LOADED_MODULES[possible_module] = lazy_module
 
             all_modules.append(lazy_module)
@@ -229,6 +230,9 @@ class LazyBaseModule:
         # check external dependencies are installed
         def check_deps(deps, check):
             for dep in deps:
+                if not len(dep):
+                    # clear out any empty strings that a user may have erroneously added
+                    continue
                 if not check(dep):
                     logger.error(f"Module '{self.name}' requires external dependency '{dep}' which is not available/setup. Have you installed the required dependencies for the '{self.name}' module? See the README for more information.")
                     exit(1)

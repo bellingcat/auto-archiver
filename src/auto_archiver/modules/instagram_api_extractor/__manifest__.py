@@ -1,7 +1,7 @@
 {
     "name": "Instagram API Extractor",
     "type": ["extractor"],
-    "external_dependencies":
+    "dependencies":
         {"python": ["requests",
                     "loguru",
                     "retrying",
