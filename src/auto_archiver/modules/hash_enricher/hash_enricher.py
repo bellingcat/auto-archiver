@@ -19,16 +19,6 @@ class HashEnricher(Enricher):
     Calculates hashes for Media instances
     """
 
-    def __init__(self, config: dict = None):
-        """
-        Initialize the HashEnricher with a configuration dictionary.
-        """
-        super().__init__()
-        # TODO set these from the manifest?
-        # Set default values
-        self.algorithm = config.get("algorithm", "SHA-256") if config else "SHA-256"
-        self.chunksize = config.get("chunksize", int(1.6e7)) if config else int(1.6e7)
-
 
     def enrich(self, to_enrich: Metadata) -> None:
         url = to_enrich.get_url()

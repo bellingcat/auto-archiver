@@ -23,10 +23,7 @@ def setup_module(request):
             # if the class does not have a .name, use the name of the parent folder
             module_name = module_name.__module__.rsplit(".",2)[-2]
 
-        m = get_module(module_name).load()
-        m.name = module_name
-        m.setup({module_name : config})
-
+        m = get_module(module_name, {module_name: config})
 
         def cleanup():
             _LAZY_LOADED_MODULES.pop(module_name)

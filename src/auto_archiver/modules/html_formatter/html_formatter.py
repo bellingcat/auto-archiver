@@ -12,7 +12,7 @@ from auto_archiver.core import Metadata, Media, ArchivingContext
 from auto_archiver.core import Formatter
 from auto_archiver.modules.hash_enricher import HashEnricher
 from auto_archiver.utils.misc import random_str
-
+from auto_archiver.core.module import get_module
 
 @dataclass
 class HtmlFormatter(Formatter):
@@ -53,7 +53,7 @@ class HtmlFormatter(Formatter):
             outf.write(content)
         final_media = Media(filename=html_path, _mimetype="text/html")
 
-        he = HashEnricher({"hash_enricher": {"algorithm": ArchivingContext.get("hash_enricher.algorithm"), "chunksize": 1.6e7}})
+        he = get_module('hash_enricher', self.config)
         if len(hd := he.calculate_hash(final_media.filename)):
             final_media.set("hash", f"{he.algorithm}:{hd}")
 

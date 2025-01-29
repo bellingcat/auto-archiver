@@ -11,7 +11,7 @@ from ruamel.yaml import YAML, CommentedMap, add_representer
 from loguru import logger
 
 from copy import deepcopy
-from .module import MODULE_TYPES
+from .module import BaseModule
 
 from typing import Any, List, Type, Tuple
 
@@ -21,7 +21,7 @@ EMPTY_CONFIG = yaml.load("""
 # Auto Archiver Configuration
 # Steps are the modules that will be run in the order they are defined
 
-steps:""" + "".join([f"\n   {module}s: []" for module in MODULE_TYPES]) + \
+steps:""" + "".join([f"\n   {module}s: []" for module in BaseModule.MODULE_TYPES]) + \
 """
 
 # Global configuration

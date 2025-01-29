@@ -16,32 +16,52 @@ from importlib.util import find_spec
 import os
 from os.path import join, dirname
 from loguru import logger
+import auto_archiver
 
 _LAZY_LOADED_MODULES = {}
 
-MODULE_TYPES = [
-    'feeder',
-    'extractor',
-    'enricher',
-    'database',
-    'storage',
-    'formatter'
-]
-
 MANIFEST_FILE = "__manifest__.py"
-_DEFAULT_MANIFEST = {
-    'name': '',
-    'author': 'Bellingcat',
-    'type': [],
-    'requires_setup': True,
-    'description': '',
-    'dependencies': {},
-    'entry_point': '',
-    'version': '1.0',
-    'configs': {}
-}
 
 class BaseModule(ABC):
+
+    """
+    Base module class. All modules should inherit from this class.
+
+    The exact methods a class implements will depend on the type of module it is,
+    however all modules have a .setup(config: dict) method to run any setup code
+    (e.g. logging in to a site, spinning up a browser etc.)
+
+    See BaseModule.MODULE_TYPES for the types of modules you can create, noting that
+    a subclass can be of multiple types. For example, a module that extracts data from
+    a website and stores it in a database would be both an 'extractor' and a 'database' module.
+
+    Each module is a python package, and should have a __manifest__.py file in the
+    same directory as the module file. The __manifest__.py specifies the module information
+    like name, author, version, dependencies etc. See BaseModule._DEFAULT_MANIFEST for the
+    default manifest structure.
+
+    """
+
+    MODULE_TYPES = [
+        'feeder',
+        'extractor',
+        'enricher',
+        'database',
+        'storage',
+        'formatter'
+    ]
+
+    _DEFAULT_MANIFEST = {
+    'name': '', # the display name of the module
+    'author': 'Bellingcat', # creator of the module, leave this as Bellingcat or set your own name!
+    'type': [], # the type of the module, can be one or more of BaseModule.MODULE_TYPES
+    'requires_setup': True, # whether or not this module requires additional setup such as setting API Keys or installing additional softare
+    'description': '', # a description of the module
+    'dependencies': {}, # external dependencies, e.g. python packages or binaries, in dictionary format
+    'entry_point': '', # the entry point for the module, in the format 'module_name::ClassName'. This can be left blank to use the default entry point of module_name::ModuleName
+    'version': '1.0', # the version of the module
+    'configs': {} # any configuration options this module has, these will be exposed to the user in the config file or via the command line
+}
 
     config: dict
     name: str
@@ -51,15 +71,51 @@ class BaseModule(ABC):
         for key, val in config.get(self.name, {}).items():
             setattr(self, key, val)
 
-def get_module(module_name: str, additional_paths: List[str] = []) -> LazyBaseModule:
+    def repr(self):
+        return f"Module<'{self.display_name}' (config: {self.config[self.name]})>"
+
+
+def setup_paths(paths: list[str]) -> None:
+    """
+    Sets up the paths for the modules to be loaded from
+    
+    This is necessary for the modules to be imported correctly
+    
+    """
+    for path in paths:
+        # see odoo/module/module.py -> initialize_sys_path
+        if path not in auto_archiver.modules.__path__:
+                auto_archiver.modules.__path__.append(path)
+
+    # sort based on the length of the path, so that the longest path is last in the list
+    auto_archiver.modules.__path__ = sorted(auto_archiver.modules.__path__, key=len, reverse=True)
+
+
+def get_module(module_name: str, config: dict) -> BaseModule:
+    """
+    Gets and sets up a module using the provided config
+    
+    This will actually load and instantiate the module, and load all its dependencies (i.e. not lazy)
+    
+    """
+    return get_module_lazy(module_name).load(config)
+
+def get_module_lazy(module_name: str, suppress_warnings: bool = False) -> LazyBaseModule:
+    """
+    Lazily loads a module, returning a LazyBaseModule
+    
+    This has all the information about the module, but does not load the module itself or its dependencies
+    
+    To load an actual module, call .setup() on a laz module
+    
+    """
     if module_name in _LAZY_LOADED_MODULES:
         return _LAZY_LOADED_MODULES[module_name]
 
-    module = available_modules(additional_paths=additional_paths, limit_to_modules=[module_name])[0]
-    _LAZY_LOADED_MODULES[module_name] = module
+    module = available_modules(limit_to_modules=[module_name], suppress_warnings=suppress_warnings)[0]
     return module
 
-def available_modules(with_manifest: bool=False, limit_to_modules: List[str]= [], additional_paths: List[str] = [], suppress_warnings: bool = False) -> List[LazyBaseModule]:
+def available_modules(with_manifest: bool=False, limit_to_modules: List[str]= [], suppress_warnings: bool = False) -> List[LazyBaseModule]:
     # search through all valid 'modules' paths. Default is 'modules' in the current directory
 
     # see odoo/modules/module.py -> get_modules
@@ -67,10 +123,9 @@ def available_modules(with_manifest: bool=False, limit_to_modules: List[str]= []
         if os.path.isfile(join(module_path, MANIFEST_FILE)):
             return True
 
-    default_path = [join(dirname(dirname((__file__))), "modules")]
     all_modules = []
 
-    for module_folder in default_path + additional_paths:
+    for module_folder in auto_archiver.modules.__path__:
         # walk through each module in module_folder and check if it has a valid manifest
         try:
             possible_modules = os.listdir(module_folder)
@@ -85,8 +140,12 @@ def available_modules(with_manifest: bool=False, limit_to_modules: List[str]= []
             possible_module_path = join(module_folder, possible_module)
             if not is_really_module(possible_module_path):
                 continue
-                
-            all_modules.append(LazyBaseModule(possible_module, possible_module_path))
+            if _LAZY_LOADED_MODULES.get(possible_module):
+                continue
+            lazy_module = LazyBaseModule(possible_module, possible_module_path)
+            _LAZY_LOADED_MODULES[possible_module] = lazy_module
+
+            all_modules.append(lazy_module)
     
     if not suppress_warnings:
         for module in limit_to_modules:
@@ -97,8 +156,14 @@ def available_modules(with_manifest: bool=False, limit_to_modules: List[str]= []
 
 @dataclass
 class LazyBaseModule:
+
+    """
+    A lazy module class, which only loads the manifest and does not load the module itself.
+
+    This is useful for getting information about a module without actually loading it.
+
+    """
     name: str
-    display_name: str
     type: list
     description: str
     path: str
@@ -129,6 +194,10 @@ class LazyBaseModule:
     @property
     def requires_setup(self) -> bool:
         return self.manifest['requires_setup']
+    
+    @property
+    def display_name(self) -> str:
+        return self.manifest['name']
 
     @property
     def manifest(self) -> dict:
@@ -136,7 +205,7 @@ class LazyBaseModule:
             return self._manifest
         # print(f"Loading manifest for module {module_path}")
         # load the manifest file
-        manifest = copy.deepcopy(_DEFAULT_MANIFEST)
+        manifest = copy.deepcopy(BaseModule._DEFAULT_MANIFEST)
 
         with open(join(self.path, MANIFEST_FILE)) as f:
             try:
@@ -145,7 +214,6 @@ class LazyBaseModule:
                 logger.error(f"Error loading manifest from file {self.path}/{MANIFEST_FILE}: {e}")
             
         self._manifest = manifest
-        self.display_name = manifest['name']
         self.type = manifest['type']
         self._entry_point = manifest['entry_point']
         self.description = manifest['description']
@@ -153,7 +221,7 @@ class LazyBaseModule:
 
         return manifest
 
-    def load(self) -> BaseModule:
+    def load(self, config) -> BaseModule:
 
         if self._instance:
             return self._instance
@@ -162,10 +230,27 @@ class LazyBaseModule:
         def check_deps(deps, check):
             for dep in deps:
                 if not check(dep):
-                    logger.error(f"Module '{self.name}' requires external dependency '{dep}' which is not available. Have you installed the required dependencies for the '{self.name}' module? See the README for more information.")
+                    logger.error(f"Module '{self.name}' requires external dependency '{dep}' which is not available/setup. Have you installed the required dependencies for the '{self.name}' module? See the README for more information.")
                     exit(1)
 
-        check_deps(self.dependencies.get('python', []), lambda dep: find_spec(dep))
+        def check_python_dep(dep):
+            # first check if it's a module:
+            try:
+                m = get_module_lazy(dep, suppress_warnings=True)
+                try:
+                # we must now load this module and set it up with the config
+                    m.load(config)
+                    return True
+                except:
+                    logger.error(f"Unable to setup module '{dep}' for use in module '{self.name}'")
+                    return False
+            except IndexError:
+                # not a module, continue
+                pass
+
+            return find_spec(dep)
+
+        check_deps(self.dependencies.get('python', []), check_python_dep)
         check_deps(self.dependencies.get('bin', []), lambda dep: shutil.which(dep))
 
 
@@ -184,9 +269,8 @@ class LazyBaseModule:
         sub_qualname = f'{qualname}.{file_name}'
 
         __import__(f'{qualname}.{file_name}', fromlist=[self.entry_point])
-
         # finally, get the class instance
-        instance = getattr(sys.modules[sub_qualname], class_name)()
+        instance: BaseModule = getattr(sys.modules[sub_qualname], class_name)()
         if not getattr(instance, 'name', None):
             instance.name = self.name
 
@@ -194,6 +278,11 @@ class LazyBaseModule:
             instance.display_name = self.display_name
 
         self._instance = instance
+
+        # merge the default config with the user config
+        default_config = dict((k, v['default']) for k, v in self.configs.items() if v.get('default'))
+        config[self.name] = default_config  | config.get(self.name, {})
+        instance.setup(config)
         return instance
 
     def __repr__(self):

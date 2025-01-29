@@ -19,7 +19,7 @@ from .context import ArchivingContext
 from .metadata import Metadata
 from ..version import __version__
 from .config import read_yaml, store_yaml, to_dot_notation, merge_dicts, EMPTY_CONFIG, DefaultValidatingParser
-from .module import available_modules, LazyBaseModule, MODULE_TYPES, get_module
+from .module import available_modules, LazyBaseModule, get_module, setup_paths
 from . import validators
 from .module import BaseModule
 
@@ -57,6 +57,7 @@ class ArchivingOrchestrator:
         # override the default 'help' so we can inject all the configs and show those
         parser.add_argument('-h', '--help', action='store_true', dest='help', help='show this help message and exit')
         parser.add_argument('-s', '--store', dest='store', default=False, help='Store the created config in the config file', action=argparse.BooleanOptionalAction)
+        parser.add_argument('--module_paths', dest='module_paths', nargs='+', default=[], help='additional paths to search for modules', action=UniqueAppendAction)
 
         self.basic_parser = parser
 
@@ -72,19 +73,21 @@ class ArchivingOrchestrator:
         # if full, we'll load all modules
         # TODO: BUG** - basic_config won't have steps in it, since these args aren't added to 'basic_parser'
         # but should we add them? Or should we just add them to the 'complete' parser?
+
         if yaml_config != EMPTY_CONFIG:
             # only load the modules enabled in config
             # TODO: if some steps are empty (e.g. 'feeders' is empty), should we default to the 'simple' ones? Or only if they are ALL empty?
             enabled_modules = []
-            for module_type in MODULE_TYPES:
+            for module_type in BaseModule.MODULE_TYPES:
                 enabled_modules.extend(yaml_config['steps'].get(f"{module_type}s", []))
 
             # add in any extra modules that have been passed on the command line for 'feeders', 'enrichers', 'archivers', 'databases', 'storages', 'formatter'
-            for module_type in MODULE_TYPES:
+            for module_type in BaseModule.MODULE_TYPES:
                 if modules := getattr(basic_config, f"{module_type}s", []):
                     enabled_modules.extend(modules)
 
-            self.add_module_args(available_modules(with_manifest=True, limit_to_modules=set(enabled_modules), suppress_warnings=True), parser)
+            avail_modules = available_modules(with_manifest=True, limit_to_modules=list(dict.fromkeys(enabled_modules)), suppress_warnings=True)
+            self.add_module_args(avail_modules, parser)
         elif basic_config.mode == 'simple':
             simple_modules = [module for module in available_modules(with_manifest=True) if not module.requires_setup]
             self.add_module_args(simple_modules, parser)
@@ -135,10 +138,7 @@ class ArchivingOrchestrator:
         parser.add_argument('--logging.file', action='store', dest='logging.file', help='the logging file to write to', default=None)
         parser.add_argument('--logging.rotation', action='store', dest='logging.rotation', help='the logging rotation to use', default=None)
 
-        # additional modules
-        parser.add_argument('--additional-modules', dest='additional_modules', nargs='+', help='additional paths to search for modules', action=UniqueAppendAction)
-
-    def add_module_args(self, modules: list[LazyBaseModule] = None, parser: argparse.ArgumentParser = None):
+    def add_module_args(self, modules: list[LazyBaseModule] = None, parser: argparse.ArgumentParser = None) -> None:
 
         if not modules:
             modules = available_modules(with_manifest=True)
@@ -173,7 +173,7 @@ class ArchivingOrchestrator:
                 arg = group.add_argument(f"--{module.name}.{name}", **kwargs)
                 arg.should_store = should_store
 
-    def show_help(self):
+    def show_help(self, basic_config: dict):
         # for the help message, we want to load *all* possible modules and show the help
             # add configs as arg parser arguments
         
@@ -198,7 +198,7 @@ class ArchivingOrchestrator:
         """
         
         invalid_modules = []
-        for module_type in MODULE_TYPES:
+        for module_type in BaseModule.MODULE_TYPES:
             step_items = []
             modules_to_load = self.config['steps'][f"{module_type}s"]
 
@@ -216,9 +216,8 @@ class ArchivingOrchestrator:
             for module in modules_to_load:
                 if module in invalid_modules:
                     continue
-                loaded_module: BaseModule = get_module(module).load()
                 try:
-                    loaded_module.setup(self.config)
+                    loaded_module: BaseModule = get_module(module, self.config)
                 except (KeyboardInterrupt, Exception) as e:
                     logger.error(f"Error during setup of archivers: {e}\n{traceback.format_exc()}")
                     if module_type == 'extractor':
@@ -249,9 +248,11 @@ class ArchivingOrchestrator:
         # load the config file to get the list of enabled items
         basic_config, unused_args = self.basic_parser.parse_known_args()
 
+        setup_paths(basic_config.module_paths)
+
         # if help flag was called, then show the help
         if basic_config.help:
-            self.show_help()
+            self.show_help(basic_config)
 
         # load the config file
         yaml_config = {}
@@ -268,7 +269,7 @@ class ArchivingOrchestrator:
         self.install_modules()
 
         # log out the modules that were loaded
-        for module_type in MODULE_TYPES:
+        for module_type in BaseModule.MODULE_TYPES:
             logger.info(f"{module_type.upper()}S: " + ", ".join(m.display_name for m in self.config['steps'][f"{module_type}s"]))
 
         for item in self.feed():
