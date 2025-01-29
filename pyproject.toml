@@ -37,7 +37,6 @@ dependencies = [
     "pdqhash (>=0.0.0)",
     "pillow (>=0.0.0)",
     "python-slugify (>=0.0.0)",
-    "pyyaml (>=0.0.0)",
     "dateparser (>=0.0.0)",
     "python-twitter-v2 (>=0.0.0)",
     "instaloader (>=0.0.0)",
@@ -58,6 +57,7 @@ dependencies = [
     "tsp-client (>=0.0.0)",
     "certvalidator (>=0.0.0)",
     "rich-argparse (>=1.6.0,<2.0.0)",
+    "ruamel-yaml (>=0.18.10,<0.19.0)",
 ]
 
 [tool.poetry.group.dev.dependencies]
