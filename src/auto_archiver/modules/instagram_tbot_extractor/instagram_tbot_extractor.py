@@ -16,7 +16,7 @@ from loguru import logger
 from telethon.sync import TelegramClient
 
 from auto_archiver.core import Extractor
-from auto_archiver.core import Metadata, Media, ArchivingContext
+from auto_archiver.core import Metadata, Media
 from auto_archiver.utils import random_str
 
 
@@ -61,7 +61,7 @@ class InstagramTbotExtractor(Extractor):
         if not "instagram.com" in url: return False
 
         result = Metadata()
-        tmp_dir = ArchivingContext.get_tmp_dir()
+        tmp_dir = self.tmp_dir
         with self.client.start():
             chat = self.client.get_entity("instagram_load_bot")
             since_id = self.client.send_message(entity=chat, message=url).id

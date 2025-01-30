@@ -43,7 +43,6 @@ def setup_paths(paths: list[str]) -> None:
     # sort based on the length of the path, so that the longest path is last in the list
     auto_archiver.modules.__path__ = sorted(auto_archiver.modules.__path__, key=len, reverse=True)
 
-
 def get_module(module_name: str, config: dict) -> BaseModule:
     """
     Gets and sets up a module using the provided config
@@ -69,6 +68,7 @@ def get_module_lazy(module_name: str, suppress_warnings: bool = False) -> LazyBa
     return module
 
 def available_modules(with_manifest: bool=False, limit_to_modules: List[str]= [], suppress_warnings: bool = False) -> List[LazyBaseModule]:
+    
     # search through all valid 'modules' paths. Default is 'modules' in the current directory
 
     # see odoo/modules/module.py -> get_modules

@@ -2,7 +2,7 @@ from loguru import logger
 import csv
 
 from . import Feeder
-from ..core import Metadata, ArchivingContext
+from ..core import Metadata
 from ..utils import url_or_none
 
 class CSVFeeder(Feeder):
@@ -35,4 +35,3 @@ class CSVFeeder(Feeder):
                     url = row[0]
                     logger.debug(f"Processing {url}")
                     yield Metadata().set_url(url)
-            ArchivingContext.set("folder", "cli")

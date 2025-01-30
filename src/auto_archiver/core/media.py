@@ -11,8 +11,6 @@ from dataclasses import dataclass, field
 from dataclasses_json import dataclass_json, config
 import mimetypes
 
-from .context import ArchivingContext
-
 from loguru import logger
 
 
@@ -36,12 +34,11 @@ class Media:
     _mimetype: str = None  # eg: image/jpeg
     _stored: bool = field(default=False, repr=False, metadata=config(exclude=lambda _: True))  # always exclude
 
-    def store(self: Media, override_storages: List = None, url: str = "url-not-available", metadata: Any = None):
+    def store(self: Media, metadata: Any, url: str = "url-not-available", storages: List[Any] = None) -> None:
         # 'Any' typing for metadata to avoid circular imports. Stores the media
         # into the provided/available storages [Storage] repeats the process for
         # its properties, in case they have inner media themselves for now it
         # only goes down 1 level but it's easy to make it recursive if needed.
-        storages = override_storages or ArchivingContext.get("storages")
         if not len(storages):
             logger.warning(f"No storages found in local context or provided directly for {self.filename}.")
             return
@@ -66,8 +63,9 @@ class Media:
                         for inner_media in prop_media.all_inner_media(include_self=True):
                             yield inner_media
 
-    def is_stored(self) -> bool:
-        return len(self.urls) > 0 and len(self.urls) == len(ArchivingContext.get("storages"))
+    def is_stored(self, in_storage) -> bool:
+        # checks if the media is already stored in the given storage
+        return len(self.urls) > 0 and any([u for u in self.urls if in_storage.get_cdn_url() in u])
 
     def set(self, key: str, value: Any) -> Media:
         self.properties[key] = value

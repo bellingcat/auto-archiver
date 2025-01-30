@@ -11,7 +11,7 @@ import hashlib
 from loguru import logger
 
 from auto_archiver.core import Enricher
-from auto_archiver.core import Metadata, ArchivingContext
+from auto_archiver.core import Metadata
 
 
 class HashEnricher(Enricher):

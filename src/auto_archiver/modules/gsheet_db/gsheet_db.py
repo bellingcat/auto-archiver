@@ -6,7 +6,7 @@ from urllib.parse import quote
 from loguru import logger
 
 from auto_archiver.core import Database
-from auto_archiver.core import Metadata, Media, ArchivingContext
+from auto_archiver.core import Metadata, Media
 from auto_archiver.modules.gsheet_feeder import GWorksheet
 
 
@@ -93,8 +93,7 @@ class GsheetsDb(Database):
             logger.debug(f"Unable to update sheet: {e}")
 
     def _retrieve_gsheet(self, item: Metadata) -> Tuple[GWorksheet, int]:
-        # TODO: to make gsheet_db less coupled with gsheet_feeder's "gsheet" parameter, this method could 1st try to fetch "gsheet" from ArchivingContext and, if missing, manage its own singleton - not needed for now
-        if gsheet := ArchivingContext.get("gsheet"):
+        if gsheet := item.get_context("gsheet"):
             gw: GWorksheet = gsheet.get("worksheet")
             row: int = gsheet.get("row")
         elif self.sheet_id:

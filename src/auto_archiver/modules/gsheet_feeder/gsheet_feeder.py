@@ -15,7 +15,7 @@ from loguru import logger
 from slugify import slugify
 
 from auto_archiver.core import Feeder
-from auto_archiver.core import Metadata, ArchivingContext
+from auto_archiver.core import Metadata
 from . import GWorksheet
 
 
@@ -60,17 +60,15 @@ class GsheetsFeeder(Feeder):
 
                 # All checks done - archival process starts here
                 m = Metadata().set_url(url)
-                ArchivingContext.set("gsheet", {"row": row, "worksheet": gw}, keep_on_reset=True)
                 if gw.get_cell_or_default(row, 'folder', "") is None:
                     folder = ''
                 else:
                     folder = slugify(gw.get_cell_or_default(row, 'folder', "").strip())
-                if len(folder):
-                    if self.use_sheet_names_in_stored_paths:
-                        ArchivingContext.set("folder", os.path.join(folder, slugify(self.sheet), slugify(wks.title)), True)
-                    else:
-                        ArchivingContext.set("folder", folder, True)
+                if len(folder) and self.use_sheet_names_in_stored_paths:
+                    folder = os.path.join(folder, slugify(self.sheet), slugify(wks.title))
 
+                m.set_context('folder', folder)
+                m.set_context('worksheet', {"row": row, "worksheet": gw})
                 yield m
 
             logger.success(f'Finished worksheet {wks.title}')

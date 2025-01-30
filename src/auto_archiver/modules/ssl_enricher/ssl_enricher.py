@@ -4,7 +4,7 @@ from urllib.parse import urlparse
 from loguru import logger
 
 from auto_archiver.core import Enricher
-from auto_archiver.core import Metadata, ArchivingContext, Media
+from auto_archiver.core import Metadata, Media
 
 
 class SSLEnricher(Enricher):

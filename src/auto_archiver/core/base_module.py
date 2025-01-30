@@ -56,6 +56,10 @@ class BaseModule(ABC):
     # this is set by the orchestrator prior to archiving
     tmp_dir: TemporaryDirectory = None
 
+    @property
+    def storages(self) -> list:
+        return self.config.get('storages', [])
+
     def setup(self, config: dict):
 
         authentication = config.get('authentication', {})
@@ -75,9 +79,6 @@ class BaseModule(ABC):
         self.config = config
         for key, val in config.get(self.name, {}).items():
             setattr(self, key, val)
-
-    def repr(self):
-        return f"Module<'{self.display_name}' (config: {self.config[self.name]})>"
     
     def auth_for_site(self, site: str) -> dict:
         # TODO: think about if/how we can deal with sites that have multiple domains (main one is x.com/twitter.com)
@@ -98,3 +99,6 @@ class BaseModule(ABC):
                                 If so, edit your authentication settings to make sure it exactly matches.")
         
         return {}
+    
+    def repr(self):
+        return f"Module<'{self.display_name}' (config: {self.config[self.name]})>"

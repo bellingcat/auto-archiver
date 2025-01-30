@@ -17,9 +17,8 @@ import traceback
 
 from rich_argparse import RichHelpFormatter
 
-from .context import ArchivingContext
 
-from .metadata import Metadata
+from .metadata import Metadata, Media
 from ..version import __version__
 from .config import yaml, read_yaml, store_yaml, to_dot_notation, merge_dicts, EMPTY_CONFIG, DefaultValidatingParser
 from .module import available_modules, LazyBaseModule, get_module, setup_paths
@@ -268,7 +267,6 @@ class ArchivingOrchestrator:
                         for url in urls:
                             logger.debug(f"Processing URL: '{url}'")
                             yield Metadata().set_url(url)
-                            ArchivingContext.set("folder", "cli")
 
                     pseudo_module = type('CLIFeeder', (Feeder,), {
                         'name': 'cli_feeder',
@@ -297,9 +295,6 @@ class ArchivingOrchestrator:
                     continue
                 if loaded_module:
                     step_items.append(loaded_module)
-                    # TODO temp solution
-                    if module_type == "storage":
-                        ArchivingContext.set("storages", step_items, keep_on_reset=True)
 
             check_steps_ok()
             self.config['steps'][f"{module_type}s"] = step_items
@@ -449,11 +444,12 @@ class ArchivingOrchestrator:
                 logger.error(f"ERROR enricher {e.name}: {exc}: {traceback.format_exc()}")
 
         # 5 - store all downloaded/generated media
-        result.store()
+        result.store(storages=self.storages)
 
         # 6 - format and store formatted if needed
+        final_media: Media
         if final_media := self.formatters[0].format(result):
-            final_media.store(url=url, metadata=result)
+            final_media.store(url=url, metadata=result, storages=self.storages)
             result.set_final_media(final_media)
 
         if result.is_empty():

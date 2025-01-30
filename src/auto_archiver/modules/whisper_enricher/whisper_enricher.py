@@ -3,7 +3,7 @@ import requests, time
 from loguru import logger
 
 from auto_archiver.core import Enricher
-from auto_archiver.core import Metadata, Media, ArchivingContext
+from auto_archiver.core import Metadata, Media
 from auto_archiver.modules.s3_storage import S3Storage
 from auto_archiver.core.module import get_module
 
@@ -25,7 +25,7 @@ class WhisperEnricher(Enricher):
         job_results = {}
         for i, m in enumerate(to_enrich.media):
             if m.is_video() or m.is_audio():
-                m.store(url=url, metadata=to_enrich)
+                m.store(url=url, metadata=to_enrich, storages=self.storages)
                 try:
                     job_id = self.submit_job(m)
                     job_results[job_id] = False
@@ -110,7 +110,7 @@ class WhisperEnricher(Enricher):
 
     def _get_s3_storage(self) -> S3Storage:
         try:
-            return next(s for s in ArchivingContext.get("storages") if s.__class__ == S3Storage)
+            return next(s for s in self.storages if s.__class__ == S3Storage)
         except:
             logger.warning("No S3Storage instance found in storages")
             return
