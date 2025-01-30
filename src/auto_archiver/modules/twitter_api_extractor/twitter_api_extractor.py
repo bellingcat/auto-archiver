@@ -9,10 +9,11 @@ from pytwitter import Api
 from slugify import slugify
 
 from auto_archiver.core import Extractor
-from auto_archiver.core import Metadata,Media
+from auto_archiver.core import Metadata, Media
 
 class TwitterApiExtractor(Extractor):
-    valid_url = re.compile(r"(?:twitter|x).com\/(?:\#!\/)?(\w+)\/status(?:es)?\/(\d+)")
+
+    valid_url: re.Pattern = re.compile(r"(?:twitter|x).com\/(?:\#!\/)?(\w+)\/status(?:es)?\/(\d+)")
 
     def setup(self, config: dict) -> None:
         super().setup(config)

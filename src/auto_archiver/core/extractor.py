@@ -21,7 +21,6 @@ import re
 from ..core import Metadata, ArchivingContext, BaseModule
 
 
-@dataclass
 class Extractor(BaseModule):
     """
     Base class for implementing extractors in the media archiving framework.

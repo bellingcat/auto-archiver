@@ -1,7 +1,10 @@
+from typing import Type
+
 import pytest
 
 from auto_archiver.core.metadata import Metadata
 from auto_archiver.core.extractor import Extractor
+
 
 class TestExtractorBase(object):
 
@@ -13,7 +16,7 @@ class TestExtractorBase(object):
         assert self.extractor_module is not None, "self.extractor_module must be set on the subclass"
         assert self.config is not None, "self.config must be a dict set on the subclass"
 
-        self.extractor: Extractor = setup_module(self.extractor_module, self.config)
+        self.extractor: Type[Extractor] = setup_module(self.extractor_module, self.config)
     
     def assertValidResponseMetadata(self, test_response: Metadata, title: str, timestamp: str, status: str = ""):
         assert test_response is not False
