@@ -7,11 +7,9 @@
         "python": ["loguru", "vk_url_scraper"],
     },
     "configs": {
-        "username": {"default": None,
-                     "required": True,
+        "username": {"required": True,
                      "help": "valid VKontakte username"},
-        "password": {"default": None,
-                    "required": True,
+        "password": {"required": True,
                      "help": "valid VKontakte password"},
         "session_file": {
             "default": "secrets/vk_config.v2.json",

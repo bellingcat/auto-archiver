@@ -12,8 +12,7 @@
     "configs": {
         "access_token": {"default": None,
                          "help": "a valid instagrapi-api token"},
-        "api_endpoint": {"default": None,
-                        # "required": True,
+        "api_endpoint": {"required": True,
                          "help": "API endpoint to use"},
         "full_profile": {
             "default": False,

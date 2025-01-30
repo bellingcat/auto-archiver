@@ -8,7 +8,6 @@
     },
     "configs": {
         "api_endpoint": {
-            "default": None,
             "required": True,
             "help": "API endpoint where calls are made to",
         },

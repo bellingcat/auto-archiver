@@ -9,11 +9,9 @@
     },
     "requires_setup": True,
     "configs": {
-        "username": {"default": None,
-                     "required": True,
+        "username": {"required": True,
                      "help": "a valid Instagram username"},
         "password": {
-            "default": None,
             "required": True,
             "help": "the corresponding Instagram account password",
         },
