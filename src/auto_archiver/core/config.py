@@ -48,6 +48,10 @@ class DefaultValidatingParser(argparse.ArgumentParser):
         """
         for action in self._actions:
             if not namespace or action.dest not in namespace:
+                # for actions that are required and already have a default value, remove the 'required' check
+                if action.required and action.default is not None:
+                    action.required = False
+
                 if action.default is not None:
                     try:
                         self._check_value(action, action.default)

@@ -11,9 +11,12 @@ from abc import abstractmethod
 from dataclasses import dataclass
 import mimetypes
 import os
-import mimetypes, requests
+import mimetypes
+
+import requests
 from loguru import logger
 from retrying import retry
+import re
 
 from ..core import Metadata, ArchivingContext, BaseModule
 
@@ -25,6 +28,8 @@ class Extractor(BaseModule):
     Subclasses must implement the `download` method to define platform-specific behavior.
     """
 
+    valid_url: re.Pattern = None
+
     def cleanup(self) -> None:
         # called when extractors are done, or upon errors, cleanup any resources
         pass
@@ -32,13 +37,20 @@ class Extractor(BaseModule):
     def sanitize_url(self, url: str) -> str:
         # used to clean unnecessary URL parameters OR unfurl redirect links
         return url
+    
+    def match_link(self, url: str) -> re.Match:
+        return self.valid_url.match(url)
 
     def suitable(self, url: str) -> bool:
         """
         Returns True if this extractor can handle the given URL
 
         Should be overridden by subclasses
+
         """
+        if self.valid_url:
+            return self.match_link(url) is not None
+        
         return True
 
     def _guess_file_type(self, path: str) -> str:

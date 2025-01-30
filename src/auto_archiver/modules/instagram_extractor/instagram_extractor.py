@@ -16,10 +16,13 @@ class InstagramExtractor(Extractor):
     Uses Instaloader to download either a post (inc images, videos, text) or as much as possible from a profile (posts, stories, highlights, ...)
     """
     # NB: post regex should be tested before profile
+
+    valid_url = re.compile(r"(?:(?:http|https):\/\/)?(?:www.)?(?:instagram.com|instagr.am|instagr.com)\/")
+
     # https://regex101.com/r/MGPquX/1
-    post_pattern = re.compile(r"(?:(?:http|https):\/\/)?(?:www.)?(?:instagram.com|instagr.am|instagr.com)\/(?:p|reel)\/(\w+)")
+    post_pattern = re.compile(r"{valid_url}(?:p|reel)\/(\w+)".format(valid_url=valid_url))
     # https://regex101.com/r/6Wbsxa/1
-    profile_pattern = re.compile(r"(?:(?:http|https):\/\/)?(?:www.)?(?:instagram.com|instagr.am|instagr.com)\/(\w+)")
+    profile_pattern = re.compile(r"{valid_url}(\w+)".format(valid_url=valid_url))
     # TODO: links to stories
 
     def setup(self, config: dict) -> None:

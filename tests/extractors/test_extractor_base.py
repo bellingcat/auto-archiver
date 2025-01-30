@@ -9,7 +9,7 @@ class TestExtractorBase(object):
     config: dict = None
 
     @pytest.fixture(autouse=True)
-    def setup_archiver(self, setup_module):
+    def setup_extractor(self, setup_module):
         assert self.extractor_module is not None, "self.extractor_module must be set on the subclass"
         assert self.config is not None, "self.config must be a dict set on the subclass"
 

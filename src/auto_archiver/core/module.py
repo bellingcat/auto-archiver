@@ -83,6 +83,11 @@ def setup_paths(paths: list[str]) -> None:
     
     """
     for path in paths:
+        # check path exists, if it doesn't, log a warning
+        if not os.path.exists(path):
+            logger.warning(f"Path '{path}' does not exist. Skipping...")
+            continue
+
         # see odoo/module/module.py -> initialize_sys_path
         if path not in auto_archiver.modules.__path__:
                 auto_archiver.modules.__path__.append(path)

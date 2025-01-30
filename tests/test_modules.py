@@ -7,7 +7,7 @@ def example_module():
     import auto_archiver
 
     previous_path = auto_archiver.modules.__path__
-    auto_archiver.modules.__path__.append("tests/data/")
+    auto_archiver.modules.__path__.append("tests/data/test_modules/")
 
     module = get_module_lazy("example_module")
     yield module

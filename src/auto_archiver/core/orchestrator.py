@@ -43,6 +43,7 @@ class ArchivingOrchestrator:
 
     def setup_basic_parser(self):
         parser = argparse.ArgumentParser(
+                prog="auto-archiver",
                 add_help=False,
                 description="""
                 Auto Archiver is a CLI tool to archive media/metadata from online URLs;
@@ -51,15 +52,16 @@ class ArchivingOrchestrator:
                 epilog="Check the code at https://github.com/bellingcat/auto-archiver",
                 formatter_class=RichHelpFormatter,
         )
-        parser.add_argument('--config', action='store', dest="config_file", help='the filename of the YAML configuration file (defaults to \'config.yaml\')', default=DEFAULT_CONFIG_FILE)
+        parser.add_argument('--help', '-h', action='store_true', dest='help', help='show this help message and exit')
         parser.add_argument('--version', action='version', version=__version__)
+        parser.add_argument('--config', action='store', dest="config_file", help='the filename of the YAML configuration file (defaults to \'config.yaml\')', default=DEFAULT_CONFIG_FILE)
         parser.add_argument('--mode', action='store', dest='mode', type=str, choices=['simple', 'full'], help='the mode to run the archiver in', default='simple')
         # override the default 'help' so we can inject all the configs and show those
-        parser.add_argument('-h', '--help', action='store_true', dest='help', help='show this help message and exit')
         parser.add_argument('-s', '--store', dest='store', default=False, help='Store the created config in the config file', action=argparse.BooleanOptionalAction)
         parser.add_argument('--module_paths', dest='module_paths', nargs='+', default=[], help='additional paths to search for modules', action=UniqueAppendAction)
 
         self.basic_parser = parser
+        return parser
 
     def setup_complete_parser(self, basic_config: dict, yaml_config: dict, unused_args: list[str]) -> None:
         parser = DefaultValidatingParser(
@@ -78,15 +80,15 @@ class ArchivingOrchestrator:
             # only load the modules enabled in config
             # TODO: if some steps are empty (e.g. 'feeders' is empty), should we default to the 'simple' ones? Or only if they are ALL empty?
             enabled_modules = []
-            for module_type in BaseModule.MODULE_TYPES:
-                enabled_modules.extend(yaml_config['steps'].get(f"{module_type}s", []))
 
-            # add in any extra modules that have been passed on the command line for 'feeders', 'enrichers', 'archivers', 'databases', 'storages', 'formatter'
-            for module_type in BaseModule.MODULE_TYPES:
-                if modules := getattr(basic_config, f"{module_type}s", []):
-                    enabled_modules.extend(modules)
+            # first loads the modules from the config file, then from the command line
+            for config in [yaml_config['steps'], basic_config.__dict__]:
+                for module_type in BaseModule.MODULE_TYPES:
+                    enabled_modules.extend(config.get(f"{module_type}s", []))
 
-            avail_modules = available_modules(with_manifest=True, limit_to_modules=list(dict.fromkeys(enabled_modules)), suppress_warnings=True)
+            # clear out duplicates, but keep the order
+            enabled_modules = list(dict.fromkeys(enabled_modules))
+            avail_modules = available_modules(with_manifest=True, limit_to_modules=enabled_modules, suppress_warnings=True)
             self.add_module_args(avail_modules, parser)
         elif basic_config.mode == 'simple':
             simple_modules = [module for module in available_modules(with_manifest=True) if not module.requires_setup]
@@ -163,6 +165,10 @@ class ArchivingOrchestrator:
                     # make a nicer metavar, metavar is what's used in the help, e.g. --cli_feeder.urls [METAVAR]
                     kwargs['metavar'] = name.upper()
 
+                if kwargs.get('required', False):
+                    # required args shouldn't have a 'default' value, remove it
+                    kwargs.pop('default', None)
+
                 kwargs.pop('cli_set', None)
                 should_store = kwargs.pop('should_store', False)
                 kwargs['dest'] = f"{module.name}.{kwargs.pop('dest', name)}"
@@ -179,13 +185,12 @@ class ArchivingOrchestrator:
         
         self.add_additional_args(self.basic_parser)
         self.add_module_args(parser=self.basic_parser)
-
         self.basic_parser.print_help()
-        exit()
+        self.basic_parser.exit()
     
     def setup_logging(self):
         # setup loguru logging
-        logger.remove() # remove the default logger
+        logger.remove(0) # remove the default logger
         logging_config = self.config['logging']
         logger.add(sys.stderr, level=logging_config['level'])
         if log_file := logging_config['file']:
@@ -194,13 +199,17 @@ class ArchivingOrchestrator:
         
     def install_modules(self):
         """
-        Swaps out the previous 'strings' in the config with the actual modules
+        Swaps out the previous 'strings' in the config with the actual modules and loads them
         """
         
         invalid_modules = []
         for module_type in BaseModule.MODULE_TYPES:
+
             step_items = []
             modules_to_load = self.config['steps'][f"{module_type}s"]
+
+            assert modules_to_load, f"No {module_type}s were configured. Make sure to set at least one {module_type} \
+                                        in your configuration file or on the command line (using --{module_type}s)"
 
             def check_steps_ok():
                 if not len(step_items):
@@ -239,30 +248,29 @@ class ArchivingOrchestrator:
 
             assert len(step_items) > 0, f"No {module_type}s were loaded. Please check your configuration file and try again."
             self.config['steps'][f"{module_type}s"] = step_items
+    
+    def load_config(self, config_file: str) -> dict:
+        if not os.path.exists(config_file) and config_file != DEFAULT_CONFIG_FILE:
+            logger.error(f"The configuration file {config_file} was  not found. Make sure the file exists and try again, or run without the --config file to use the default settings.")
+            exit()
 
-    def run(self) -> None:
+        return read_yaml(config_file)
+
+    def run(self, args: list) -> None:
+        
         self.setup_basic_parser()
 
         # parse the known arguments for now (basically, we want the config file)
+        basic_config, unused_args = self.basic_parser.parse_known_args(args)
 
-        # load the config file to get the list of enabled items
-        basic_config, unused_args = self.basic_parser.parse_known_args()
-
+        # setup any custom module paths, so they'll show in the help and for arg parsing
         setup_paths(basic_config.module_paths)
 
         # if help flag was called, then show the help
         if basic_config.help:
             self.show_help(basic_config)
 
-        # load the config file
-        yaml_config = {}
-
-        if not os.path.exists(basic_config.config_file) and basic_config.config_file != DEFAULT_CONFIG_FILE:
-            logger.error(f"The configuration file {basic_config.config_file} was  not found. Make sure the file exists and try again, or run without the --config file to use the default settings.")
-            exit()
-
-
-        yaml_config = read_yaml(basic_config.config_file)
+        yaml_config = self.load_config(basic_config.config_file)
         self.setup_complete_parser(basic_config, yaml_config, unused_args)
 
         logger.info(f"======== Welcome to the AUTO ARCHIVER ({__version__}) ==========")

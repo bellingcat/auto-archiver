@@ -2,8 +2,11 @@ import re
 from urllib.parse import urlparse, urlunparse
 
 class UrlUtil:
-    telegram_private = re.compile(r"https:\/\/t\.me(\/c)\/(.+)\/(\d+)")
-    is_istagram = re.compile(r"https:\/\/www\.instagram\.com")
+
+    AUTHWALL_URLS = [
+        re.compile(r"https:\/\/t\.me(\/c)\/(.+)\/(\d+)"), # telegram private channels
+        re.compile(r"https:\/\/www\.instagram\.com"), # instagram
+    ]
 
     @staticmethod
     def clean(url: str) -> str: return url
@@ -13,8 +16,9 @@ class UrlUtil:
         """
         checks if URL is behind an authentication wall meaning steps like wayback, wacz, ... may not work
         """
-        if UrlUtil.telegram_private.match(url): return True
-        if UrlUtil.is_istagram.match(url): return True
+        for regex in UrlUtil.AUTHWALL_URLS:
+            if regex.match(url):
+                return True
 
         return False
 

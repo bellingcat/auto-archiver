@@ -14,7 +14,7 @@ from auto_archiver.utils import random_str
 
 
 class TelethonArchiver(Extractor):
-    link_pattern = re.compile(r"https:\/\/t\.me(\/c){0,1}\/(.+)\/(\d+)")
+    valid_url = re.compile(r"https:\/\/t\.me(\/c){0,1}\/(.+)\/(\d+)")
     invite_pattern = re.compile(r"t.me(\/joinchat){0,1}\/\+?(.+)")
 
 
@@ -92,7 +92,7 @@ class TelethonArchiver(Extractor):
         """
         url = item.get_url()
         # detect URLs that we definitely cannot handle
-        match = self.link_pattern.search(url)
+        match = self.valid_url.search(url)
         logger.debug(f"TELETHON: {match=}")
         if not match: return False
 

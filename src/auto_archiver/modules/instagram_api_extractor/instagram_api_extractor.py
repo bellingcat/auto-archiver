@@ -28,7 +28,7 @@ class InstagramAPIExtractor(Extractor):
     # TODO: improvement collect aggregates of locations[0].location and mentions for all posts
     """
 
-    global_pattern = re.compile(
+    valid_url = re.compile(
         r"(?:(?:http|https):\/\/)?(?:www.)?(?:instagram.com)\/(stories(?:\/highlights)?|p|reel)?\/?([^\/\?]*)\/?(\d+)?"
     )
 
@@ -44,7 +44,7 @@ class InstagramAPIExtractor(Extractor):
         url.replace("instagr.com", "instagram.com").replace(
             "instagr.am", "instagram.com"
         )
-        insta_matches = self.global_pattern.findall(url)
+        insta_matches = self.valid_url.findall(url)
         logger.info(f"{insta_matches=}")
         if not len(insta_matches) or len(insta_matches[0]) != 3:
             return
