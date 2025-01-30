@@ -2,6 +2,7 @@
 pytest conftest file, for shared fixtures and configuration
 """
 
+from tempfile import TemporaryDirectory
 from typing import Dict, Tuple
 import hashlib
 import pytest
@@ -25,8 +26,13 @@ def setup_module(request):
 
         m = get_module(module_name, {module_name: config})
 
+        # add the tmp_dir to the module
+        tmp_dir = TemporaryDirectory()
+        m.tmp_dir = tmp_dir
+
         def cleanup():
             _LAZY_LOADED_MODULES.pop(module_name)
+            tmp_dir.cleanup()
         request.addfinalizer(cleanup)
 
         return m

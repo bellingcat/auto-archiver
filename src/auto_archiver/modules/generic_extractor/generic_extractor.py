@@ -270,7 +270,11 @@ class GenericExtractor(Extractor):
             logger.debug('Using Facebook cookie')
             yt_dlp.utils.std_headers['cookie'] = self.facebook_cookie
 
-        ydl_options = {'outtmpl': os.path.join(ArchivingContext.get_tmp_dir(), f'%(id)s.%(ext)s'), 'quiet': False, 'noplaylist': not self.allow_playlist , 'writesubtitles': self.subtitles, 'writeautomaticsub': self.subtitles, "live_from_start": self.live_from_start, "proxy": self.proxy, "max_downloads": self.max_downloads, "playlistend": self.max_downloads}
+        ydl_options = {'outtmpl': os.path.join(self.tmp_dir, f'%(id)s.%(ext)s'), 
+                       'quiet': False, 'noplaylist': not self.allow_playlist ,
+                       'writesubtitles': self.subtitles,'writeautomaticsub': self.subtitles,
+                       "live_from_start": self.live_from_start, "proxy": self.proxy,
+                       "max_downloads": self.max_downloads, "playlistend": self.max_downloads}
 
         if item.netloc in ['youtube.com', 'www.youtube.com']:
             if self.cookies_from_browser:

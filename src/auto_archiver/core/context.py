@@ -54,11 +54,3 @@ class ArchivingContext:
         ac.configs = {k: v for k, v in ac.configs.items() if k in ac.keep_on_reset}
 
     # ---- custom getters/setters for widely used context values
-
-    @staticmethod
-    def set_tmp_dir(tmp_dir: str):
-        ArchivingContext.get_instance().configs["tmp_dir"] = tmp_dir
-
-    @staticmethod
-    def get_tmp_dir() -> str:
-        return ArchivingContext.get_instance().configs.get("tmp_dir")

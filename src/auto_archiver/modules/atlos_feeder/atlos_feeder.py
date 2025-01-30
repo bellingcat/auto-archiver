@@ -40,5 +40,3 @@ class AtlosFeeder(Feeder):
 
             if len(data["results"]) == 0 or cursor is None:
                 break
-
-        logger.success(f"Processed {count} URL(s)")

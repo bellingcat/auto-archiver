@@ -23,6 +23,6 @@ class SSLEnricher(Enricher):
         logger.debug(f"fetching SSL certificate for {domain=} in {url=}")
 
         cert = ssl.get_server_certificate((domain, 443))
-        cert_fn = os.path.join(ArchivingContext.get_tmp_dir(), f"{slugify(domain)}.pem")
+        cert_fn = os.path.join(self.tmp_dir, f"{slugify(domain)}.pem")
         with open(cert_fn, "w") as f: f.write(cert)
         to_enrich.add_media(Media(filename=cert_fn), id="ssl_certificate")

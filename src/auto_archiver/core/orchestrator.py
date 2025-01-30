@@ -5,12 +5,15 @@
 """
 
 from __future__ import annotations
-from typing import Generator, Union, List
+from typing import Generator, Union, List, Type
 from urllib.parse import urlparse
 from ipaddress import ip_address
 import argparse
 import os
 import sys
+import json
+from tempfile import TemporaryDirectory
+import traceback
 
 from rich_argparse import RichHelpFormatter
 
@@ -18,17 +21,46 @@ from .context import ArchivingContext
 
 from .metadata import Metadata
 from ..version import __version__
-from .config import read_yaml, store_yaml, to_dot_notation, merge_dicts, EMPTY_CONFIG, DefaultValidatingParser
+from .config import yaml, read_yaml, store_yaml, to_dot_notation, merge_dicts, EMPTY_CONFIG, DefaultValidatingParser
 from .module import available_modules, LazyBaseModule, get_module, setup_paths
-from . import validators
+from . import validators, Feeder, Extractor, Database, Storage, Formatter, Enricher
 from .module import BaseModule
 
-import tempfile, traceback
 from loguru import logger
 
 
 DEFAULT_CONFIG_FILE = "orchestration.yaml"
 
+class JsonParseAction(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        try:
+            setattr(namespace, self.dest, json.loads(values))
+        except json.JSONDecodeError as e:
+            raise argparse.ArgumentTypeError(f"Invalid JSON input for argument '{self.dest}': {e}")
+
+
+class AuthenticationJsonParseAction(JsonParseAction):
+    def __call__(self, parser, namespace, values, option_string=None):
+        super().__call__(parser, namespace, values, option_string)
+        auth_dict = getattr(namespace, self.dest)
+        if isinstance(auth_dict, str):
+            # if it's a string
+            try:
+                with open(auth_dict, 'r') as f:
+                    try:
+                        auth_dict = json.load(f)
+                    except json.JSONDecodeError:
+                        # maybe it's yaml, try that
+                        auth_dict = yaml.load(f)
+            except:
+                pass
+
+        if not isinstance(auth_dict, dict):
+            raise argparse.ArgumentTypeError("Authentication must be a dictionary of site names and their authentication methods")
+        for site, auth in auth_dict.items():
+            if not isinstance(site, str) or not isinstance(auth, dict):
+                raise argparse.ArgumentTypeError("Authentication must be a dictionary of site names and their authentication methods")
+        setattr(namespace, self.dest, auth_dict)
 class UniqueAppendAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
         if not hasattr(namespace, self.dest):
@@ -38,9 +70,7 @@ class UniqueAppendAction(argparse.Action):
                 getattr(namespace, self.dest).append(value)
 
 class ArchivingOrchestrator:
-
-    _do_not_store_keys = []
-
+    
     def setup_basic_parser(self):
         parser = argparse.ArgumentParser(
                 prog="auto-archiver",
@@ -52,7 +82,7 @@ class ArchivingOrchestrator:
                 epilog="Check the code at https://github.com/bellingcat/auto-archiver",
                 formatter_class=RichHelpFormatter,
         )
-        parser.add_argument('--help', '-h', action='store_true', dest='help', help='show this help message and exit')
+        parser.add_argument('--help', '-h', action='store_true', dest='help', help='show a full help message and exit')
         parser.add_argument('--version', action='version', version=__version__)
         parser.add_argument('--config', action='store', dest="config_file", help='the filename of the YAML configuration file (defaults to \'config.yaml\')', default=DEFAULT_CONFIG_FILE)
         parser.add_argument('--mode', action='store', dest='mode', type=str, choices=['simple', 'full'], help='the mode to run the archiver in', default='simple')
@@ -80,7 +110,6 @@ class ArchivingOrchestrator:
             # only load the modules enabled in config
             # TODO: if some steps are empty (e.g. 'feeders' is empty), should we default to the 'simple' ones? Or only if they are ALL empty?
             enabled_modules = []
-
             # first loads the modules from the config file, then from the command line
             for config in [yaml_config['steps'], basic_config.__dict__]:
                 for module_type in BaseModule.MODULE_TYPES:
@@ -120,7 +149,7 @@ class ArchivingOrchestrator:
         
         if (self.config != yaml_config and basic_config.store) or not os.path.isfile(basic_config.config_file):
             logger.info(f"Storing configuration file to {basic_config.config_file}")
-            store_yaml(self.config, basic_config.config_file, self._do_not_store_keys)
+            store_yaml(self.config, basic_config.config_file)
         
         return self.config
     
@@ -128,17 +157,28 @@ class ArchivingOrchestrator:
         if not parser:
             parser = self.parser
 
-        parser.add_argument('--feeders', dest='steps.feeders', nargs='+', help='the feeders to use', action=UniqueAppendAction)
+
+        # allow passing URLs directly on the command line
+        parser.add_argument('urls', nargs='*', default=[], help='URL(s) to archive, either a single URL or a list of urls, should not come from config.yaml')
+
+        parser.add_argument('--feeders', dest='steps.feeders', nargs='+', default=['cli_feeder'], help='the feeders to use', action=UniqueAppendAction)
         parser.add_argument('--enrichers', dest='steps.enrichers',  nargs='+', help='the enrichers to use', action=UniqueAppendAction)
         parser.add_argument('--extractors', dest='steps.extractors', nargs='+', help='the extractors to use', action=UniqueAppendAction)
         parser.add_argument('--databases', dest='steps.databases', nargs='+', help='the databases to use', action=UniqueAppendAction)
         parser.add_argument('--storages', dest='steps.storages', nargs='+', help='the storages to use', action=UniqueAppendAction)
         parser.add_argument('--formatters', dest='steps.formatters', nargs='+', help='the formatter to use', action=UniqueAppendAction)
 
+        parser.add_argument('--authentication', dest='authentication', help='A dictionary of sites and their authentication methods \
+                                                                            (token, username etc.) that extractors can use to log into \
+                                                                            a website. If passing this on the command line, use a JSON string. \
+                                                                            You may also pass a path to a valid JSON/YAML file which will be parsed.',\
+                                                                            default={},
+                                                                            action=AuthenticationJsonParseAction)
         # logging arguments
         parser.add_argument('--logging.level', action='store', dest='logging.level', choices=['INFO', 'DEBUG', 'ERROR', 'WARNING'], help='the logging level to use', default='INFO')
         parser.add_argument('--logging.file', action='store', dest='logging.file', help='the logging file to write to', default=None)
         parser.add_argument('--logging.rotation', action='store', dest='logging.rotation', help='the logging rotation to use', default=None)
+
 
     def add_module_args(self, modules: list[LazyBaseModule] = None, parser: argparse.ArgumentParser = None) -> None:
 
@@ -147,6 +187,7 @@ class ArchivingOrchestrator:
 
         module: LazyBaseModule
         for module in modules:
+
             if not module.configs:
                 # this module has no configs, don't show anything in the help
                 # (TODO: do we want to show something about this module though, like a description?)
@@ -155,12 +196,6 @@ class ArchivingOrchestrator:
             group = parser.add_argument_group(module.display_name or module.name, f"{module.description[:100]}...")
 
             for name, kwargs in module.configs.items():
-                # TODO: go through all the manifests and make sure we're not breaking anything with removing cli_set
-                # in most cases it'll mean replacing it with 'type': 'str' or 'type': 'int' or something
-                do_not_store = kwargs.pop('do_not_store', False)
-                if do_not_store:
-                    self._do_not_store_keys.append((module.name, name))
-                
                 if not kwargs.get('metavar', None):
                     # make a nicer metavar, metavar is what's used in the help, e.g. --cli_feeder.urls [METAVAR]
                     kwargs['metavar'] = name.upper()
@@ -208,8 +243,7 @@ class ArchivingOrchestrator:
             step_items = []
             modules_to_load = self.config['steps'][f"{module_type}s"]
 
-            assert modules_to_load, f"No {module_type}s were configured. Make sure to set at least one {module_type} \
-                                        in your configuration file or on the command line (using --{module_type}s)"
+            assert modules_to_load, f"No {module_type}s were configured. Make sure to set at least one {module_type} in your configuration file or on the command line (using --{module_type}s)"
 
             def check_steps_ok():
                 if not len(step_items):
@@ -223,12 +257,37 @@ class ArchivingOrchestrator:
                     exit()
 
             for module in modules_to_load:
+                if module == 'cli_feeder':
+                    urls = self.config['urls']
+                    if not urls:
+                        logger.error("No URLs provided. Please provide at least one URL to archive, or set up a feeder.")
+                        self.basic_parser.print_help()
+                        exit()
+                    # cli_feeder is a pseudo module, it just takes the command line args
+                    def feed(self) -> Generator[Metadata]:
+                        for url in urls:
+                            logger.debug(f"Processing URL: '{url}'")
+                            yield Metadata().set_url(url)
+                            ArchivingContext.set("folder", "cli")
+
+                    pseudo_module = type('CLIFeeder', (Feeder,), {
+                        'name': 'cli_feeder',
+                        'display_name': 'CLI Feeder',
+                        '__iter__': feed
+
+                    })()
+  
+
+                    pseudo_module.__iter__ = feed
+                    step_items.append(pseudo_module)
+                    continue
+
                 if module in invalid_modules:
                     continue
                 try:
                     loaded_module: BaseModule = get_module(module, self.config)
                 except (KeyboardInterrupt, Exception) as e:
-                    logger.error(f"Error during setup of archivers: {e}\n{traceback.format_exc()}")
+                    logger.error(f"Error during setup of modules: {e}\n{traceback.format_exc()}")
                     if module_type == 'extractor' and loaded_module.name == module:
                         loaded_module.cleanup()
                     exit()
@@ -285,13 +344,18 @@ class ArchivingOrchestrator:
 
     def cleanup(self)->None:
         logger.info("Cleaning up")
-        for e in self.config['steps']['extractors']:
+        for e in self.extractors:
             e.cleanup()
 
     def feed(self) -> Generator[Metadata]:
-        for feeder in self.config['steps']['feeders']:
+
+        url_count = 0
+        for feeder in self.feeders:
             for item in feeder:
                 yield self.feed_item(item)
+                url_count += 1
+
+        logger.success(f"Processed {url_count} URL(s)")
         self.cleanup()
 
     def feed_item(self, item: Metadata) -> Metadata:
@@ -300,22 +364,33 @@ class ArchivingOrchestrator:
             - catches keyboard interruptions to do a clean exit
             - catches any unexpected error, logs it, and does a clean exit
         """
+        tmp_dir: TemporaryDirectory = None
         try:
-            ArchivingContext.reset()
-            with tempfile.TemporaryDirectory(dir="./") as tmp_dir:
-                ArchivingContext.set_tmp_dir(tmp_dir)
-                return self.archive(item)
+            tmp_dir = TemporaryDirectory(dir="./")
+            # set tmp_dir on all modules
+            for m in self.all_modules:
+                m.tmp_dir = tmp_dir.name
+            return self.archive(item)
         except KeyboardInterrupt:
             # catches keyboard interruptions to do a clean exit
             logger.warning(f"caught interrupt on {item=}")
-            for d in self.config['steps']['databases']: d.aborted(item)
+            for d in self.databases:
+                d.aborted(item)
             self.cleanup()
             exit()
         except Exception as e:
             logger.error(f'Got unexpected error on item {item}: {e}\n{traceback.format_exc()}')
-            for d in self.config['steps']['databases']:
-                if type(e) == AssertionError: d.failed(item, str(e))
-                else: d.failed(item, reason="unexpected error")
+            for d in self.databases:
+                if type(e) == AssertionError:
+                    d.failed(item, str(e))
+                else:
+                    d.failed(item, reason="unexpected error")
+        finally:
+            if tmp_dir:
+                # remove the tmp_dir from all modules
+                for m in self.all_modules:
+                    m.tmp_dir = None
+                tmp_dir.cleanup()
 
 
     def archive(self, result: Metadata) -> Union[Metadata, None]:
@@ -328,31 +403,38 @@ class ArchivingOrchestrator:
             5. Store all downloaded/generated media
             6. Call selected Formatter and store formatted if needed
         """
+
         original_url = result.get_url().strip()
-        self.assert_valid_url(original_url)
+        try:
+            self.assert_valid_url(original_url)
+        except AssertionError as e:
+            logger.error(f"Error archiving URL {original_url}: {e}")
+            raise e
 
         # 1 - sanitize - each archiver is responsible for cleaning/expanding its own URLs
         url = original_url
-        for a in self.config["steps"]["extractors"]: url = a.sanitize_url(url)
+        for a in self.extractors:
+            url = a.sanitize_url(url)
+
         result.set_url(url)
         if original_url != url: result.set("original_url", original_url)
 
         # 2 - notify start to DBs, propagate already archived if feature enabled in DBs
         cached_result = None
-        for d in self.config["steps"]["databases"]:
+        for d in self.databases:
             d.started(result)
             if (local_result := d.fetch(result)):
                 cached_result = (cached_result or Metadata()).merge(local_result)
         if cached_result:
             logger.debug("Found previously archived entry")
-            for d in self.config["steps"]["databases"]:
+            for d in self.databases:
                 try: d.done(cached_result, cached=True)
                 except Exception as e:
                     logger.error(f"ERROR database {d.name}: {e}: {traceback.format_exc()}")
             return cached_result
 
         # 3 - call extractors until one succeeds
-        for a in self.config["steps"]["extractors"]:
+        for a in self.extractors:
             logger.info(f"Trying extractor {a.name} for {url}")
             try:
                 result.merge(a.download(result))
@@ -361,7 +443,7 @@ class ArchivingOrchestrator:
                 logger.error(f"ERROR archiver {a.name}: {e}: {traceback.format_exc()}")
 
         # 4 - call enrichers to work with archived content
-        for e in self.config["steps"]["enrichers"]:
+        for e in self.enrichers:
             try: e.enrich(result)
             except Exception as exc: 
                 logger.error(f"ERROR enricher {e.name}: {exc}: {traceback.format_exc()}")
@@ -370,7 +452,7 @@ class ArchivingOrchestrator:
         result.store()
 
         # 6 - format and store formatted if needed
-        if final_media := self.config["steps"]["formatters"][0].format(result):
+        if final_media := self.formatters[0].format(result):
             final_media.store(url=url, metadata=result)
             result.set_final_media(final_media)
 
@@ -378,7 +460,7 @@ class ArchivingOrchestrator:
             result.status = "nothing archived"
 
         # signal completion to databases and archivers
-        for d in self.config["steps"]["databases"]:
+        for d in self.databases:
             try: d.done(result)
             except Exception as e:
                 logger.error(f"ERROR database {d.name}: {e}: {traceback.format_exc()}")
@@ -404,3 +486,43 @@ class ArchivingOrchestrator:
             assert not ip.is_reserved, f"Invalid IP used"
             assert not ip.is_link_local, f"Invalid IP used"
             assert not ip.is_private, f"Invalid IP used"
+
+
+    # Helper Properties
+
+    @property
+    def feeders(self) -> List[Type[Feeder]]:
+        return self._get_property('feeders')
+    
+    @property
+    def extractors(self) -> List[Type[Extractor]]:
+        return self._get_property('extractors')
+    
+    @property
+    def enrichers(self) -> List[Type[Enricher]]:
+        return self._get_property('enrichers')
+    
+    @property
+    def databases(self) -> List[Type[Database]]:
+        return self._get_property('databases')
+    
+    @property
+    def storages(self) -> List[Type[Storage]]:
+        return self._get_property('storages')
+    
+    @property
+    def formatters(self) -> List[Type[Formatter]]:
+        return self._get_property('formatters')
+    
+    @property
+    def all_modules(self) -> List[Type[BaseModule]]:
+        return self.feeders + self.extractors + self.enrichers + self.databases + self.storages + self.formatters
+    
+    def _get_property(self, prop):
+        try:
+            f = self.config['steps'][prop]
+            if not (isinstance(f[0], BaseModule) or isinstance(f[0], LazyBaseModule)):
+                raise TypeError
+            return f
+        except:
+            exit("Property called prior to full initialisation")

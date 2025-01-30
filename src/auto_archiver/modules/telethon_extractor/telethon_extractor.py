@@ -9,7 +9,7 @@ from tqdm import tqdm
 import re, time, json, os
 
 from auto_archiver.core import Extractor
-from auto_archiver.core import Metadata, Media, ArchivingContext
+from auto_archiver.core import Metadata, Media
 from auto_archiver.utils import random_str
 
 
@@ -120,7 +120,7 @@ class TelethonArchiver(Extractor):
             media_posts = self._get_media_posts_in_group(chat, post)
             logger.debug(f'got {len(media_posts)=} for {url=}')
 
-            tmp_dir = ArchivingContext.get_tmp_dir()
+            tmp_dir = self.tmp_dir
 
             group_id = post.grouped_id if post.grouped_id is not None else post.id
             title = post.message

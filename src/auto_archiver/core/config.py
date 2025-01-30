@@ -15,8 +15,14 @@ from .module import BaseModule
 
 from typing import Any, List, Type, Tuple
 
-yaml = YAML()
+yaml: YAML = YAML()
 
+b = yaml.load("""
+          # This is a comment
+          site.com,site2.com:
+            key: value
+            key2: value2
+          """)
 EMPTY_CONFIG = yaml.load("""
 # Auto Archiver Configuration
 # Steps are the modules that will be run in the order they are defined
@@ -25,6 +31,24 @@ steps:""" + "".join([f"\n   {module}s: []" for module in BaseModule.MODULE_TYPES
 """
 
 # Global configuration
+
+# Authentication
+# a dictionary of authentication information that can be used by extractors to login to website. 
+# you can use a comma separated list for multiple domains on the same line (common usecase: x.com,twitter.com)
+# Common login 'types' are username/password, cookie, api key/token.
+# Some Examples:
+# facebook.com:
+#   username: "my_username"
+#   password: "my_password"
+# or for a site that uses an API key:
+# twitter.com,x.com:
+#   api_key
+#   api_secret
+# youtube.com:
+#   cookie: "login_cookie=value ; other_cookie=123" # multiple 'key=value' pairs should be separated by ;
+
+authentication: {}
+
 # These are the global configurations that are used by the modules
 
 logging:
@@ -136,12 +160,9 @@ def read_yaml(yaml_filename: str) -> CommentedMap:
 # TODO: make this tidier/find a way to notify of which keys should not be stored
 
 
-def store_yaml(config: CommentedMap, yaml_filename: str, do_not_store_keys: List[Tuple[str, str]] = []) -> None:
+def store_yaml(config: CommentedMap, yaml_filename: str) -> None:
     config_to_save = deepcopy(config)
 
-    for key1, key2 in do_not_store_keys:
-        if key1 in config_to_save and key2 in config_to_save[key1]:
-            del config_to_save[key1][key2]
-
+    config.pop('urls', None)
     with open(yaml_filename, "w", encoding="utf-8") as outf:
         yaml.dump(config_to_save, outf)

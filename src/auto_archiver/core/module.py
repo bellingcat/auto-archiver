@@ -7,7 +7,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import List
-from abc import ABC
 import shutil
 import ast
 import copy
@@ -17,62 +16,11 @@ import os
 from os.path import join, dirname
 from loguru import logger
 import auto_archiver
+from .base_module import BaseModule
 
 _LAZY_LOADED_MODULES = {}
 
 MANIFEST_FILE = "__manifest__.py"
-
-class BaseModule(ABC):
-
-    """
-    Base module class. All modules should inherit from this class.
-
-    The exact methods a class implements will depend on the type of module it is,
-    however all modules have a .setup(config: dict) method to run any setup code
-    (e.g. logging in to a site, spinning up a browser etc.)
-
-    See BaseModule.MODULE_TYPES for the types of modules you can create, noting that
-    a subclass can be of multiple types. For example, a module that extracts data from
-    a website and stores it in a database would be both an 'extractor' and a 'database' module.
-
-    Each module is a python package, and should have a __manifest__.py file in the
-    same directory as the module file. The __manifest__.py specifies the module information
-    like name, author, version, dependencies etc. See BaseModule._DEFAULT_MANIFEST for the
-    default manifest structure.
-
-    """
-
-    MODULE_TYPES = [
-        'feeder',
-        'extractor',
-        'enricher',
-        'database',
-        'storage',
-        'formatter'
-    ]
-
-    _DEFAULT_MANIFEST = {
-    'name': '', # the display name of the module
-    'author': 'Bellingcat', # creator of the module, leave this as Bellingcat or set your own name!
-    'type': [], # the type of the module, can be one or more of BaseModule.MODULE_TYPES
-    'requires_setup': True, # whether or not this module requires additional setup such as setting API Keys or installing additional softare
-    'description': '', # a description of the module
-    'dependencies': {}, # external dependencies, e.g. python packages or binaries, in dictionary format
-    'entry_point': '', # the entry point for the module, in the format 'module_name::ClassName'. This can be left blank to use the default entry point of module_name::ModuleName
-    'version': '1.0', # the version of the module
-    'configs': {} # any configuration options this module has, these will be exposed to the user in the config file or via the command line
-}
-
-    config: dict
-    name: str
-
-    def setup(self, config: dict):
-        self.config = config
-        for key, val in config.get(self.name, {}).items():
-            setattr(self, key, val)
-
-    def repr(self):
-        return f"Module<'{self.display_name}' (config: {self.config[self.name]})>"
 
 
 def setup_paths(paths: list[str]) -> None:

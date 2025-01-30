@@ -9,9 +9,7 @@ from asn1crypto import pem
 import certifi
 
 from auto_archiver.core import Enricher
-from auto_archiver.core import Metadata, ArchivingContext, Media
-from auto_archiver.core import Extractor
-
+from auto_archiver.core import Metadata, Media
 
 class TimestampingEnricher(Enricher):
     """
@@ -33,7 +31,7 @@ class TimestampingEnricher(Enricher):
             logger.warning(f"No hashes found in {url=}")
             return
         
-        tmp_dir = ArchivingContext.get_tmp_dir()
+        tmp_dir = self.tmp_dir
         hashes_fn = os.path.join(tmp_dir, "hashes.txt")
 
         data_to_sign = "\n".join(hashes)
@@ -93,7 +91,7 @@ class TimestampingEnricher(Enricher):
 
         cert_chain = []
         for cert in path:
-            cert_fn = os.path.join(ArchivingContext.get_tmp_dir(), f"{str(cert.serial_number)[:20]}.crt")
+            cert_fn = os.path.join(self.tmp_dir, f"{str(cert.serial_number)[:20]}.crt")
             with open(cert_fn, "wb") as f:
                 f.write(cert.dump())
             cert_chain.append(Media(filename=cert_fn).set("subject", cert.subject.native["common_name"]))

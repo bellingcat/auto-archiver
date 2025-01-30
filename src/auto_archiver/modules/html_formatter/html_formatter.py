@@ -7,7 +7,7 @@ import json
 import base64
 
 from auto_archiver.version import __version__
-from auto_archiver.core import Metadata, Media, ArchivingContext
+from auto_archiver.core import Metadata, Media
 from auto_archiver.core import Formatter
 from auto_archiver.modules.hash_enricher import HashEnricher
 from auto_archiver.utils.misc import random_str
@@ -46,7 +46,7 @@ class HtmlFormatter(Formatter):
             version=__version__
         )
 
-        html_path = os.path.join(ArchivingContext.get_tmp_dir(), f"formatted{random_str(24)}.html")
+        html_path = os.path.join(self.tmp_dir, f"formatted{random_str(24)}.html")
         with open(html_path, mode="w", encoding="utf-8") as outf:
             outf.write(content)
         final_media = Media(filename=html_path, _mimetype="text/html")

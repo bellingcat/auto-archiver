@@ -1,6 +1,6 @@
 import pytest
 import sys
-from argparse import ArgumentParser
+from argparse import ArgumentParser, ArgumentTypeError
 from auto_archiver.core.orchestrator import ArchivingOrchestrator
 from auto_archiver.version import __version__
 from auto_archiver.core.config import read_yaml, store_yaml
@@ -113,16 +113,23 @@ def test_get_required_values_from_config(orchestrator, test_args, tmp_path):
 
     # run the orchestrator
     orchestrator.run(["--config", tmp_file, "--module_paths", TEST_MODULES])
+    assert orchestrator.config is not None
 
-    # should run OK, since there are no missing required fields
+def test_load_authentication_string(orchestrator, test_args):
 
-    # basic_args = basic_parser.parse_known_args(test_args)
-    # test_yaml = read_yaml(TEST_ORCHESTRATION)
-    # test_yaml['example_module'] = {'required_field': 'some_value'}
+    orchestrator.run(test_args + ["--authentication", '{"facebook.com": {"username": "my_username", "password": "my_password"}}'])
+    assert orchestrator.config['authentication'] == {"facebook.com": {"username": "my_username", "password": "my_password"}}
 
-    # # monkey patch the example_module to have a 'configs' setting of 'my_var' with required=True
-    # # load the module first
-    # m = get_module_lazy("example_module")
+def test_load_authentication_string_concat_site(orchestrator, test_args):
+    
+    orchestrator.run(test_args + ["--authentication", '{"x.com,twitter.com": {"api_key": "my_key"}}'])
+    assert orchestrator.config['authentication'] == {"x.com": {"api_key": "my_key"},
+                                                     "twitter.com": {"api_key": "my_key"}}
 
-    # orchestrator.setup_complete_parser(basic_args, test_yaml, unused_args=[])
-    # assert orchestrator.config is not None
+def test_load_invalid_authentication_string(orchestrator, test_args):
+    with pytest.raises(ArgumentTypeError):
+        orchestrator.run(test_args + ["--authentication", "{\''invalid_json"])
+
+def test_load_authentication_invalid_dict(orchestrator, test_args):
+    with pytest.raises(ArgumentTypeError):
+        orchestrator.run(test_args + ["--authentication", "[true, false]"])

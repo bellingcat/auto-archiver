@@ -3,7 +3,7 @@ from vk_url_scraper import VkScraper
 
 from auto_archiver.utils.misc import dump_payload
 from auto_archiver.core import Extractor
-from auto_archiver.core import Metadata, Media, ArchivingContext
+from auto_archiver.core import Metadata, Media
 
 
 class VkExtractor(Extractor):
@@ -35,7 +35,7 @@ class VkExtractor(Extractor):
 
         result.set_content(dump_payload(vk_scrapes))
 
-        filenames = self.vks.download_media(vk_scrapes, ArchivingContext.get_tmp_dir())
+        filenames = self.vks.download_media(vk_scrapes, self.tmp_dir)
         for filename in filenames:
             result.add_media(Media(filename))
 

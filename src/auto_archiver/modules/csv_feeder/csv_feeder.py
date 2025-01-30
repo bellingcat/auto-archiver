@@ -21,5 +21,3 @@ class CSVFeeder(Feeder):
                     logger.debug(f"Processing {url}")
                     yield Metadata().set_url(url)
             ArchivingContext.set("folder", "cli")
-
-        logger.success(f"Processed {len(self.urls)} URL(s)")
