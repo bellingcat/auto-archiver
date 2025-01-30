@@ -1,5 +1,4 @@
 from __future__ import annotations
-from dataclasses import dataclass
 import mimetypes, os, pathlib
 from jinja2 import Environment, FileSystemLoader
 from urllib.parse import quote
@@ -14,7 +13,6 @@ from auto_archiver.modules.hash_enricher import HashEnricher
 from auto_archiver.utils.misc import random_str
 from auto_archiver.core.module import get_module
 
-@dataclass
 class HtmlFormatter(Formatter):
     environment: Environment = None
     template: any = None

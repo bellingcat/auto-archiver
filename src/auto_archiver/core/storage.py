@@ -1,18 +1,16 @@
 from __future__ import annotations
 from abc import abstractmethod
-from dataclasses import dataclass
 from typing import IO, Optional
 import os
+
+from loguru import logger
+from slugify import slugify
 
 from auto_archiver.utils.misc import random_str
 
 from auto_archiver.core import Media, BaseModule, ArchivingContext, Metadata
 from auto_archiver.modules.hash_enricher.hash_enricher import HashEnricher
-from loguru import logger
-from slugify import slugify
 
-
-@dataclass
 class Storage(BaseModule):
 
     def store(self, media: Media, url: str, metadata: Optional[Metadata]=None) -> None:
