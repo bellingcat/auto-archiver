@@ -3,7 +3,7 @@
     "type": ["enricher"],
     "requires_setup": False,
     "dependencies": {
-        "python": ["loguru", "python-slugify"],
+        "python": ["loguru", "slugify"],
     },
     'entry_point': 'ssl_enricher::SSLEnricher',
     "configs": {

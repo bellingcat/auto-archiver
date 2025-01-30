@@ -4,7 +4,7 @@
 
 """
 import re, os, shutil, traceback
-import instaloader  # https://instaloader.github.io/as-module.html
+import instaloader
 from loguru import logger
 
 from auto_archiver.core import Extractor
@@ -22,13 +22,9 @@ class InstagramExtractor(Extractor):
     profile_pattern = re.compile(r"(?:(?:http|https):\/\/)?(?:www.)?(?:instagram.com|instagr.am|instagr.com)\/(\w+)")
     # TODO: links to stories
 
-    def __init__(self, config: dict) -> None:
-        super().__init__(config)
-        # TODO: refactor how configuration validation is done
-        self.assert_valid_string("username")
-        self.assert_valid_string("password")
-        self.assert_valid_string("download_folder")
-        self.assert_valid_string("session_file")
+    def setup(self, config: dict) -> None:
+        super().setup(config)
+
         self.insta = instaloader.Instaloader(
             download_geotags=True, download_comments=True, compress_json=False, dirname_pattern=self.download_folder, filename_pattern="{date_utc}_UTC_{target}__{typename}"
         )

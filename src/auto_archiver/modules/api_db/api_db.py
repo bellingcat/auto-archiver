@@ -1,5 +1,7 @@
 from typing import Union
-import requests, os
+
+import os
+import requests
 from loguru import logger
 
 from auto_archiver.core import Database
@@ -7,17 +9,7 @@ from auto_archiver.core import Metadata
 
 
 class AAApiDb(Database):
-    """
-        Connects to auto-archiver-api instance
-    """
-
-    def __init__(self, config: dict) -> None:
-        # without this STEP.__init__ is not called
-        super().__init__(config)
-        self.allow_rearchive = bool(self.allow_rearchive)
-        self.store_results = bool(self.store_results)
-        self.assert_valid_string("api_endpoint")
-
+    """Connects to auto-archiver-api instance"""
 
     def fetch(self, item: Metadata) -> Union[Metadata, bool]:
         """ query the database for the existence of this item.

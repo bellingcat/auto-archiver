@@ -8,8 +8,9 @@
     "configs": {
         "api_token": {
             "default": None,
+            "type": "str",
+            "required": True,
             "help": "An Atlos API token. For more information, see https://docs.atlos.org/technical/api/",
-            "type": "str"
         },
         "atlos_url": {
             "default": "https://platform.atlos.org",

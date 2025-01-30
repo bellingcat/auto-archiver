@@ -1,12 +1,12 @@
-import os
-from typing import IO, List, Optional
-from loguru import logger
-import requests
 import hashlib
+import os
+from typing import IO, Optional
+
+import requests
+from loguru import logger
 
 from auto_archiver.core import Media, Metadata
 from auto_archiver.core import Storage
-from auto_archiver.utils import get_atlos_config_options
 
 
 class AtlosStorage(Storage):

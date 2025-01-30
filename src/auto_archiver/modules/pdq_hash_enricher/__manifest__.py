@@ -3,7 +3,7 @@
     "type": ["enricher"],
     "requires_setup": False,
     "dependencies": {
-        "python": ["loguru", "pdqhash", "numpy", "Pillow"],
+        "python": ["loguru", "pdqhash", "numpy", "PIL"],
     },
     "description": """
     PDQ Hash Enricher for generating perceptual hashes of media files.

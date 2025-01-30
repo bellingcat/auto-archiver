@@ -3,7 +3,7 @@
     "type": ["enricher"],
     "requires_setup": False,
     "dependencies": {
-        "python": ["loguru", "ffmpeg-python"],
+        "python": ["loguru", "ffmpeg"],
         "bin": ["ffmpeg"]
     },
     "configs": {

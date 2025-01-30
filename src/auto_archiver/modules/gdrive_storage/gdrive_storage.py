@@ -1,68 +1,69 @@
 
-import shutil, os, time, json
+import json
+import os
+import time
 from typing import IO
-from loguru import logger
 
-from googleapiclient.discovery import build
-from googleapiclient.http import MediaFileUpload
+from google.auth.transport.requests import Request
 from google.oauth2 import service_account
 from google.oauth2.credentials import Credentials
-from google.auth.transport.requests import Request
+from googleapiclient.discovery import build
+from googleapiclient.http import MediaFileUpload
+from loguru import logger
 
 from auto_archiver.core import Media
 from auto_archiver.core import Storage
 
 
+
+
 class GDriveStorage(Storage):
 
-    def __init__(self, config: dict) -> None:
-        super().__init__(config)
+    def setup(self, config: dict) -> None:
+        # Step 1: Call the BaseModule setup to dynamically assign configs
+        super().setup(config)
+        self.scopes = ['https://www.googleapis.com/auth/drive']
+        # Initialize Google Drive service
+        self._setup_google_drive_service()
 
-        SCOPES = ['https://www.googleapis.com/auth/drive']
-
-        if self.oauth_token is not None:
-            """
-            Tokens are refreshed after 1 hour 
-            however keep working for 7 days (tbc)
-            so as long as the job doesn't last for 7 days
-            then this method of refreshing only once per run will work
-            see this link for details on the token
-            https://davemateer.com/2022/04/28/google-drive-with-python#tokens
-            """
-            logger.debug(f'Using GD OAuth token {self.oauth_token}')
-            # workaround for missing 'refresh_token' in from_authorized_user_file
-            with open(self.oauth_token, 'r') as stream:
-                creds_json = json.load(stream)
-                creds_json['refresh_token'] = creds_json.get("refresh_token", "")
-            creds = Credentials.from_authorized_user_info(creds_json, SCOPES)
-            # creds = Credentials.from_authorized_user_file(self.oauth_token, SCOPES)
-
-            if not creds or not creds.valid:
-                if creds and creds.expired and creds.refresh_token:
-                    logger.debug('Requesting new GD OAuth token')
-                    creds.refresh(Request())
-                else:
-                    raise Exception("Problem with creds - create the token again")
-
-                # Save the credentials for the next run
-                with open(self.oauth_token, 'w') as token:
-                    logger.debug('Saving new GD OAuth token')
-                    token.write(creds.to_json())
-            else:
-                logger.debug('GD OAuth Token valid')
+    def _setup_google_drive_service(self):
+        """Initialize Google Drive service based on provided credentials."""
+        if self.oauth_token:
+            logger.debug(f"Using Google Drive OAuth token: {self.oauth_token}")
+            self.service = self._initialize_with_oauth_token()
+        elif self.service_account:
+            logger.debug(f"Using Google Drive service account: {self.service_account}")
+            self.service = self._initialize_with_service_account()
         else:
-            gd_service_account = self.service_account
-            logger.debug(f'Using GD Service Account {gd_service_account}')
-            creds = service_account.Credentials.from_service_account_file(gd_service_account, scopes=SCOPES)
+            raise ValueError("Missing credentials: either `oauth_token` or `service_account` must be provided.")
 
-        self.service = build('drive', 'v3', credentials=creds)
+    def _initialize_with_oauth_token(self):
+        """Initialize Google Drive service with OAuth token."""
+        with open(self.oauth_token, 'r') as stream:
+            creds_json = json.load(stream)
+            creds_json['refresh_token'] = creds_json.get("refresh_token", "")
+
+        creds = Credentials.from_authorized_user_info(creds_json, self.scopes)
+        if not creds.valid and creds.expired and creds.refresh_token:
+            creds.refresh(Request())
+            with open(self.oauth_token, 'w') as token_file:
+                logger.debug("Saving refreshed OAuth token.")
+                token_file.write(creds.to_json())
+        elif not creds.valid:
+            raise ValueError("Invalid OAuth token. Please regenerate the token.")
+
+        return build('drive', 'v3', credentials=creds)
+
+    def _initialize_with_service_account(self):
+        """Initialize Google Drive service with service account."""
+        creds = service_account.Credentials.from_service_account_file(self.service_account, scopes=self.scopes)
+        return build('drive', 'v3', credentials=creds)
 
     def get_cdn_url(self, media: Media) -> str:
         """
         only support files saved in a folder for GD
         S3 supports folder and all stored in the root
         """
-
         # full_name = os.path.join(self.folder, media.key)
         parent_id, folder_id = self.root_folder_id, None
         path_parts = media.key.split(os.path.sep)
@@ -77,7 +78,7 @@ class GDriveStorage(Storage):
         return f"https://drive.google.com/file/d/{file_id}/view?usp=sharing"
 
     def upload(self, media: Media, **kwargs) -> bool:
-        logger.debug(f'[{self.__class__.name}] storing file {media.filename} with key {media.key}')
+        logger.debug(f'[{self.__class__.__name__}] storing file {media.filename} with key {media.key}')
         """
         1. for each sub-folder in the path check if exists or create
         2. upload file to root_id/other_paths.../filename
@@ -168,8 +169,3 @@ class GDriveStorage(Storage):
         gd_folder = self.service.files().create(supportsAllDrives=True, body=file_metadata, fields='id').execute()
         return gd_folder.get('id')
 
-    # def exists(self, key):
-    #     try:
-    #         self.get_cdn_url(key)
-    #         return True
-    #     except: return False

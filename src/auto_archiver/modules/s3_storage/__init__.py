@@ -1,1 +1,1 @@
-from .s3 import S3Storage
+from .s3_storage import S3Storage

@@ -32,16 +32,11 @@ class InstagramAPIExtractor(Extractor):
         r"(?:(?:http|https):\/\/)?(?:www.)?(?:instagram.com)\/(stories(?:\/highlights)?|p|reel)?\/?([^\/\?]*)\/?(\d+)?"
     )
 
-    def __init__(self, config: dict) -> None:
-        super().__init__(config)
-        self.assert_valid_string("access_token")
-        self.assert_valid_string("api_endpoint")
-        self.full_profile_max_posts = int(self.full_profile_max_posts)
+    def setup(self, config: dict) -> None:
+        super().setup(config)
         if self.api_endpoint[-1] == "/":
             self.api_endpoint = self.api_endpoint[:-1]
 
-        self.full_profile = bool(self.full_profile)
-        self.minimize_json_output = bool(self.minimize_json_output)
 
     def download(self, item: Metadata) -> Metadata:
         url = item.get_url()

@@ -12,10 +12,8 @@ class VkExtractor(Extractor):
     Currently only works for /wall posts
     """
 
-    def __init__(self, config: dict) -> None:
-        super().__init__(config)
-        self.assert_valid_string("username")
-        self.assert_valid_string("password")
+    def setup(self, config: dict) -> None:
+        super().setup(config)
         self.vks = VkScraper(self.username, self.password, session_file=self.session_file)
 
     def download(self, item: Metadata) -> Metadata:

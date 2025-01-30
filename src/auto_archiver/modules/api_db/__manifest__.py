@@ -4,19 +4,41 @@
     "entry_point": "api_db:AAApiDb",
     "requires_setup": True,
     "dependencies": {
-        "python": ["requests",
-                   "loguru"],
+        "python": ["requests", "loguru"],
     },
     "configs": {
-            "api_endpoint": {"default": None, "help": "API endpoint where calls are made to"},
-            "api_token": {"default": None, "help": "API Bearer token."},
-            "public": {"default": False, "help": "whether the URL should be publicly available via the API"},
-            "author_id": {"default": None, "help": "which email to assign as author"},
-            "group_id": {"default": None, "help": "which group of users have access to the archive in case public=false as author"},
-            "allow_rearchive": {"default": True, "help": "if False then the API database will be queried prior to any archiving operations and stop if the link has already been archived", "type": "bool",},
-            "store_results": {"default": True, "help": "when set, will send the results to the API database.", "type": "bool",},
-            "tags": {"default": [], "help": "what tags to add to the archived URL",}
+        "api_endpoint": {
+            "default": None,
+            "required": True,
+            "help": "API endpoint where calls are made to",
         },
+        "api_token": {"default": None,
+                      "help": "API Bearer token."},
+        "public": {
+            "default": False,
+            "type": "bool",
+            "help": "whether the URL should be publicly available via the API",
+        },
+        "author_id": {"default": None, "help": "which email to assign as author"},
+        "group_id": {
+            "default": None,
+            "help": "which group of users have access to the archive in case public=false as author",
+        },
+        "allow_rearchive": {
+            "default": True,
+            "type": "bool",
+            "help": "if False then the API database will be queried prior to any archiving operations and stop if the link has already been archived",
+        },
+        "store_results": {
+            "default": True,
+            "type": "bool",
+            "help": "when set, will send the results to the API database.",
+        },
+        "tags": {
+            "default": [],
+            "help": "what tags to add to the archived URL",
+        },
+    },
     "description": """
      Provides integration with the Auto-Archiver API for querying and storing archival data.
 

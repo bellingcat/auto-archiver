@@ -3,7 +3,7 @@
     "type": ["enricher"],
     "requires_setup": True,
     "dependencies": {
-        "python": ["loguru", "requests"],
+        "python": ["s3_storage", "loguru", "requests"],
     },
     "configs": {
         "api_endpoint": {"default": None, "help": "WhisperApi api endpoint, eg: https://whisperbox-api.com/api/v1, a deployment of https://github.com/bellingcat/whisperbox-transcribe."},

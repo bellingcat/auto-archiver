@@ -220,7 +220,7 @@ class ArchivingOrchestrator:
                     loaded_module: BaseModule = get_module(module, self.config)
                 except (KeyboardInterrupt, Exception) as e:
                     logger.error(f"Error during setup of archivers: {e}\n{traceback.format_exc()}")
-                    if module_type == 'extractor':
+                    if module_type == 'extractor' and loaded_module.name == module:
                         loaded_module.cleanup()
                     exit()
 

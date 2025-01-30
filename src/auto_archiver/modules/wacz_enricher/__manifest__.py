@@ -1,6 +1,7 @@
 {
     "name": "WACZ Enricher",
     "type": ["enricher", "archiver"],
+    "entry_point": "wacz_enricher::WaczExtractorEnricher",
     "requires_setup": True,
     "dependencies": {
         "python": [
@@ -25,6 +26,7 @@
         },
     "description": """
     Creates .WACZ archives of web pages using the `browsertrix-crawler` tool, with options for media extraction and screenshot saving.
+    [Browsertrix-crawler](https://crawler.docs.browsertrix.com/user-guide/) is a headless browser-based crawler that archives web pages in WACZ format.
 
     ### Features
     - Archives web pages into .WACZ format using Docker or direct invocation of `browsertrix-crawler`.
@@ -33,7 +35,7 @@
     - Generates metadata from the archived page's content and structure (e.g., titles, text).
 
     ### Notes
-    - Requires Docker for running `browsertrix-crawler` unless explicitly disabled.
+    - Requires Docker for running `browsertrix-crawler` .
     - Configurable via parameters for timeout, media extraction, screenshots, and proxy settings.
     """
 }

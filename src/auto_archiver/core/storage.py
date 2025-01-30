@@ -30,7 +30,7 @@ class Storage(BaseModule):
     def uploadf(self, file: IO[bytes], key: str, **kwargs: dict) -> bool: pass
 
     def upload(self, media: Media, **kwargs) -> bool:
-        logger.debug(f'[{self.__class__.name}] storing file {media.filename} with key {media.key}')
+        logger.debug(f'[{self.__class__.__name__}] storing file {media.filename} with key {media.key}')
         with open(media.filename, 'rb') as f:
             return self.uploadf(f, media, **kwargs)
 

@@ -27,15 +27,19 @@ class InstagramTbotExtractor(Extractor):
     https://t.me/instagram_load_bot
     """
 
-    def setup(self) -> None:
+    def setup(self, configs) -> None:
         """
         1. makes a copy of session_file that is removed in cleanup
         2. checks if the session file is valid
         """
+        super().setup(configs)
         logger.info(f"SETUP {self.name} checking login...")
 
         # make a copy of the session that is used exclusively with this archiver instance
         new_session_file = os.path.join("secrets/", f"instabot-{time.strftime('%Y-%m-%d')}{random_str(8)}.session")
+        if not os.path.exists(f"{self.session_file}.session"):
+            raise FileNotFoundError(f"session file {self.session_file}.session not found, "
+                                    f"to set this up run the setup script in scripts/telegram_setup.py")
         shutil.copy(self.session_file + ".session", new_session_file)
         self.session_file = new_session_file.replace(".session", "")
 
@@ -43,7 +47,6 @@ class InstagramTbotExtractor(Extractor):
             self.client = TelegramClient(self.session_file, self.api_id, self.api_hash)
         except OperationalError as e:
             logger.error(f"Unable to access the {self.session_file} session, please make sure you don't use the same session file here and in telethon_extractor. if you do then disable at least one of the archivers for the 1st time you setup telethon session: {e}")
-
         with self.client.start():
             logger.success(f"SETUP {self.name} login works.")
 

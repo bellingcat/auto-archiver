@@ -5,7 +5,7 @@ from loguru import logger
 from auto_archiver.core import Enricher
 from auto_archiver.core import Metadata, Media, ArchivingContext
 from auto_archiver.modules.s3_storage import S3Storage
-
+from auto_archiver.core.module import get_module
 
 class WhisperEnricher(Enricher):
     """
@@ -53,7 +53,7 @@ class WhisperEnricher(Enricher):
                             to_enrich.set_content(f"\n[automatic video transcript]: {v}")
 
     def submit_job(self, media: Media):
-        s3 = self._get_s3_storage()
+        s3 = get_module("s3_storage", self.config)
         s3_url = s3.get_cdn_url(media)
         assert s3_url in media.urls, f"Could not find S3 url ({s3_url}) in list of stored media urls "
         payload = {

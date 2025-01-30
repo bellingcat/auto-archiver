@@ -1,18 +1,11 @@
-from loguru import logger
 import requests
+from loguru import logger
 
 from auto_archiver.core import Feeder
-from auto_archiver.core import Metadata, ArchivingContext
-from auto_archiver.utils import get_atlos_config_options
+from auto_archiver.core import Metadata
 
 
 class AtlosFeeder(Feeder):
-
-    def __init__(self, config: dict) -> None:
-        # without this STEP.__init__ is not called
-        super().__init__(config)
-        if type(self.api_token) != str:
-            raise Exception("Atlos Feeder did not receive an Atlos API token")
 
     def __iter__(self) -> Metadata:
         # Get all the urls from the Atlos API

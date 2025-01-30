@@ -4,7 +4,7 @@
     "entry_point": "gsheet_feeder::GsheetsFeeder",
     "requires_setup": True,
     "dependencies": {
-        "python": ["loguru", "gspread", "python-slugify"],
+        "python": ["loguru", "gspread", "slugify"],
     },
     "configs": {
         "sheet": {"default": None, "help": "name of the sheet to archive"},
