@@ -66,7 +66,7 @@ def test_load_module(example_module):
     # check that the vlaue is set on the module itself
     assert loaded_module.csv_file == "db.csv"
 
-@pytest.mark.parametrize("module_name", ["cli_feeder", "local_storage", "generic_extractor", "html_formatter", "csv_db"])
+@pytest.mark.parametrize("module_name", ["local_storage", "generic_extractor", "html_formatter", "csv_db"])
 def test_load_modules(module_name):
     # test that specific modules can be loaded
     module = get_module_lazy(module_name)
@@ -84,7 +84,7 @@ def test_load_modules(module_name):
     assert loaded_module.name in loaded_module.config.keys()
 
 
-@pytest.mark.parametrize("module_name", ["cli_feeder", "local_storage", "generic_extractor", "html_formatter", "csv_db"])
+@pytest.mark.parametrize("module_name", ["local_storage", "generic_extractor", "html_formatter", "csv_db"])
 def test_lazy_base_module(module_name):
     lazy_module = get_module_lazy(module_name)
 

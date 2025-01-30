@@ -28,7 +28,7 @@ def setup_module(request):
 
         # add the tmp_dir to the module
         tmp_dir = TemporaryDirectory()
-        m.tmp_dir = tmp_dir
+        m.tmp_dir = tmp_dir.name
 
         def cleanup():
             _LAZY_LOADED_MODULES.pop(module_name)
