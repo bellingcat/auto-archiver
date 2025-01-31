@@ -29,24 +29,34 @@ class InstagramTbotExtractor(Extractor):
 
     def setup(self, configs) -> None:
         """
-        1. makes a copy of session_file that is removed in cleanup
-        2. checks if the session file is valid
+        1. Makes a copy of the session file
+        2. Initializes the Telegram client
         """
         super().setup(configs)
-        logger.info(f"SETUP {self.name} checking login...")
+        self._prepare_session_file()
+        self._initialize_telegram_client()
 
-        # make a copy of the session that is used exclusively with this archiver instance
+    def _prepare_session_file(self):
+        """
+        Creates a copy of the session file for exclusive use with this archiver instance.
+        Ensures that a valid session file exists before proceeding.
+        """
         new_session_file = os.path.join("secrets/", f"instabot-{time.strftime('%Y-%m-%d')}{random_str(8)}.session")
         if not os.path.exists(f"{self.session_file}.session"):
-            raise FileNotFoundError(f"session file {self.session_file}.session not found, "
-                                    f"to set this up run the setup script in scripts/telegram_setup.py")
+            raise FileNotFoundError(f"Session file {self.session_file}.session not found.")
         shutil.copy(self.session_file + ".session", new_session_file)
         self.session_file = new_session_file.replace(".session", "")
 
+    def _initialize_telegram_client(self):
+        """Initializes the Telegram client."""
         try:
             self.client = TelegramClient(self.session_file, self.api_id, self.api_hash)
         except OperationalError as e:
-            logger.error(f"Unable to access the {self.session_file} session, please make sure you don't use the same session file here and in telethon_extractor. if you do then disable at least one of the archivers for the 1st time you setup telethon session: {e}")
+            logger.error(
+                f"Unable to access the {self.session_file} session. "
+                "Ensure that you don't use the same session file here and in telethon_extractor. "
+                "If you do, disable at least one of the archivers for the first-time setup of the telethon session: {e}"
+            )
         with self.client.start():
             logger.success(f"SETUP {self.name} login works.")
 
@@ -55,7 +65,7 @@ class InstagramTbotExtractor(Extractor):
         session_file_name = self.session_file + ".session"
         if os.path.exists(session_file_name):
             os.remove(session_file_name)
-        
+
     def download(self, item: Metadata) -> Metadata:
         url = item.get_url()
         if not "instagram.com" in url: return False
@@ -79,15 +89,22 @@ class InstagramTbotExtractor(Extractor):
                     if post.media and post.id not in seen_media:
                         filename_dest = os.path.join(tmp_dir, f'{chat.id}_{post.id}')
                         media = self.client.download_media(post.media, filename_dest)
-                        if media: 
+                        if media:
                             result.add_media(Media(media))
                             seen_media.append(post.id)
+                    if post.message == 'The bot receives information through https://hikerapi.com/p/hJqpppqi':
+                        continue
                     if post.message: message += post.message
 
-            if "You must enter a URL to a post" in message: 
+            if "You must enter a URL to a post" in message:
                 logger.debug(f"invalid link {url=} for {self.name}: {message}")
                 return False
-                
+
+            # # TODO is this the behavior we want? it currently returns not found as a success
+            # if "Media not found or unavailable" in message:
+            #     logger.debug(f"invalid link {url=} for {self.name}: {message}")
+            #     return False
+
             if message:
                 result.set_content(message).set_title(message[:128])
 
