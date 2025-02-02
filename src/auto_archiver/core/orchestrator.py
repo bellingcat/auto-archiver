@@ -227,6 +227,9 @@ class ArchivingOrchestrator:
                     continue
                 try:
                     loaded_module: BaseModule = get_module(module, self.config)
+                    # Initialisation of more complex setups, validating external auths, etc
+                    # Location TBC with copy changes which cant serialise these more complex configs
+                    loaded_module.initialise()
                 except (KeyboardInterrupt, Exception) as e:
                     logger.error(f"Error during setup of archivers: {e}\n{traceback.format_exc()}")
                     if module_type == 'extractor' and loaded_module.name == module:

@@ -71,6 +71,10 @@ class BaseModule(ABC):
         for key, val in config.get(self.name, {}).items():
             setattr(self, key, val)
 
+    def initialise(self):
+        # Some modules require  more complex setup which needs to be done after the config is set
+        pass
+
     def repr(self):
         return f"Module<'{self.display_name}' (config: {self.config[self.name]})>"
 

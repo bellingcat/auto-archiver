@@ -27,12 +27,11 @@ class InstagramTbotExtractor(Extractor):
     https://t.me/instagram_load_bot
     """
 
-    def setup(self, configs) -> None:
+    def initialise(self) -> None:
         """
         1. Makes a copy of the session file
         2. Initializes the Telegram client
         """
-        super().setup(configs)
         self._prepare_session_file()
         self._initialize_telegram_client()
 
