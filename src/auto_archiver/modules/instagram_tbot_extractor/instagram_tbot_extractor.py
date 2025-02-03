@@ -72,39 +72,49 @@ class InstagramTbotExtractor(Extractor):
         result = Metadata()
         tmp_dir = ArchivingContext.get_tmp_dir()
         with self.client.start():
-            chat = self.client.get_entity("instagram_load_bot")
-            since_id = self.client.send_message(entity=chat, message=url).id
 
-            attempts = 0
-            seen_media = []
-            message = ""
-            time.sleep(3)
-            # media is added before text by the bot so it can be used as a stop-logic mechanism
-            while attempts < (self.timeout - 3) and (not message or not len(seen_media)):
-                attempts += 1
-                time.sleep(1)
-                for post in self.client.iter_messages(chat, min_id=since_id):
-                    since_id = max(since_id, post.id)
-                    if post.media and post.id not in seen_media:
-                        filename_dest = os.path.join(tmp_dir, f'{chat.id}_{post.id}')
-                        media = self.client.download_media(post.media, filename_dest)
-                        if media:
-                            result.add_media(Media(media))
-                            seen_media.append(post.id)
-                    if post.message == 'The bot receives information through https://hikerapi.com/p/hJqpppqi':
-                        continue
-                    if post.message: message += post.message
+            chat, since_id = self._send_url_to_bot(url)
+            message = self._process_messages(chat, since_id, tmp_dir, result)
 
             if "You must enter a URL to a post" in message:
                 logger.debug(f"invalid link {url=} for {self.name}: {message}")
                 return False
-
-            # # TODO is this the behavior we want? it currently returns not found as a success
+            # # TODO: It currently returns this as a success - is that intentional?
             # if "Media not found or unavailable" in message:
             #     logger.debug(f"invalid link {url=} for {self.name}: {message}")
             #     return False
 
             if message:
                 result.set_content(message).set_title(message[:128])
-
             return result.success("insta-via-bot")
+
+    def _send_url_to_bot(self, url: str):
+        """
+        Sends the URL to the 'instagram_load_bot' and returns (chat, since_id).
+        """
+        chat = self.client.get_entity("instagram_load_bot")
+        since_message = self.client.send_message(entity=chat, message=url)
+        return chat, since_message.id
+
+    def _process_messages(self, chat, since_id, tmp_dir, result):
+        attempts = 0
+        seen_media = []
+        message = ""
+        time.sleep(3)
+        # media is added before text by the bot so it can be used as a stop-logic mechanism
+        while attempts < (self.timeout - 3) and (not message or not len(seen_media)):
+            attempts += 1
+            time.sleep(1)
+            for post in self.client.iter_messages(chat, min_id=since_id):
+                since_id = max(since_id, post.id)
+                # Skip known filler message:
+                if post.message == 'The bot receives information through https://hikerapi.com/p/hJqpppqi':
+                    continue
+                if post.media and post.id not in seen_media:
+                    filename_dest = os.path.join(tmp_dir, f'{chat.id}_{post.id}')
+                    media = self.client.download_media(post.media, filename_dest)
+                    if media:
+                        result.add_media(Media(media))
+                        seen_media.append(post.id)
+                if post.message: message += post.message
+        return message.strip()
