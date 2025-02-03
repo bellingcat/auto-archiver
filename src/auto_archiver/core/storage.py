@@ -35,7 +35,7 @@ class Storage(BaseModule):
     def set_key(self, media: Media, url, metadata: Metadata) -> None:
         """takes the media and optionally item info and generates a key"""
         if media.key is not None and len(media.key) > 0: return
-        folder = metadata.folder
+        folder = metadata.get_context('folder', '')
         filename, ext = os.path.splitext(media.filename)
 
         # Handle path_generator logic
