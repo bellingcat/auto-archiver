@@ -1,5 +1,4 @@
 
-
 from urllib.parse import urlparse
 from typing import  Mapping, Any
 from abc import ABC
@@ -80,25 +79,63 @@ class BaseModule(ABC):
         for key, val in config.get(self.name, {}).items():
             setattr(self, key, val)
     
-    def auth_for_site(self, site: str) -> dict:
+    def auth_for_site(self, site: str, extract_cookies=True) -> Mapping[str, Any]:
+        """
+        Returns the authentication information for a given site. This is used to authenticate
+        with a site before extracting data. The site should be the domain of the site, e.g. 'twitter.com'
+        
+        extract_cookies: bool - whether or not to extract cookies from the given browser and return the 
+        cookie jar (disabling can speed up) processing if you don't actually need the cookies jar
+
+        Currently, the dict can have keys of the following types:
+        - username: str - the username to use for login
+        - password: str - the password to use for login
+        - api_key: str - the API key to use for login
+        - api_secret: str - the API secret to use for login
+        - cookie: str - a cookie string to use for login (specific to this site)
+        - cookies_jar: YoutubeDLCookieJar | http.cookiejar.MozillaCookieJar - a cookie jar compatible with requests (e.g. `requests.get(cookies=cookie_jar)`)
+        """
         # TODO: think about if/how we can deal with sites that have multiple domains (main one is x.com/twitter.com)
-        # for now, just hard code those.
+        # for now the user must enter them both, like "x.com,twitter.com" in their config. Maybe we just hard-code?
 
         # SECURITY: parse the domain using urllib
         site = urlparse(site).netloc
         # add the 'www' version of the site to the list of sites to check
+        authdict = {}
+
+
         for to_try in [site, f"www.{site}"]:
             if to_try in self.authentication:
-                return self.authentication[to_try]
+                authdict.update(self.authentication[to_try])
+                break
 
         # do a fuzzy string match just to print a warning - don't use it since it's insecure
-        for key in self.authentication.keys():
-            if key in site or site in key:
-                logger.warning(f"Could not find exact authentication information for site '{site}'. \
-                                did find information for '{key}' which is close, is this what you meant? \
-                                If so, edit your authentication settings to make sure it exactly matches.")
+        if not authdict:
+            for key in self.authentication.keys():
+                if key in site or site in key:
+                    logger.debug(f"Could not find exact authentication information for site '{site}'. \
+                                    did find information for '{key}' which is close, is this what you meant? \
+                                    If so, edit your authentication settings to make sure it exactly matches.")
         
-        return {}
+
+        def get_ytdlp_cookiejar(args):
+            import yt_dlp
+            from yt_dlp import parse_options
+
+            # parse_options returns a named tuple as follows, we only need the ydl_options part
+            # collections.namedtuple('ParsedOptions', ('parser', 'options', 'urls', 'ydl_opts'))
+            ytdlp_opts = getattr(parse_options(args), 'ydl_opts')
+            return yt_dlp.YoutubeDL(ytdlp_opts).cookiejar
+
+        # get the cookies jar, prefer the browser cookies than the file
+        if 'cookies_from_browser' in self.authentication:
+            authdict['cookies_from_browser'] = self.authentication['cookies_from_browser']
+            authdict['cookies_jar'] = get_ytdlp_cookiejar(['--cookies-from-browser', self.authentication['cookies_from_browser']])
+        elif 'cookies_file' in self.authentication:
+            authdict['cookies_file'] = self.authentication['cookies_file']
+            authdict['cookies_jar'] = get_ytdlp_cookiejar(['--cookies', self.authentication['cookies_file']])
+        
+        return authdict
     
     def repr(self):
         return f"Module<'{self.display_name}' (config: {self.config[self.name]})>"

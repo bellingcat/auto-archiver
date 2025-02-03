@@ -259,8 +259,7 @@ class ArchivingOrchestrator:
                 if module == 'cli_feeder':
                     urls = self.config['urls']
                     if not urls:
-                        logger.error("No URLs provided. Please provide at least one URL to archive, or set up a feeder.")
-                        self.basic_parser.print_help()
+                        logger.error("No URLs provided. Please provide at least one URL to archive, or set up a feeder. Use --help for more information.")
                         exit()
                     # cli_feeder is a pseudo module, it just takes the command line args
                     def feed(self) -> Generator[Metadata]:
