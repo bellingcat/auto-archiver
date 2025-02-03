@@ -85,7 +85,7 @@ class Webdriver:
     def __enter__(self) -> webdriver:
 
         options = webdriver.FirefoxOptions()
-        # options.add_argument("--headless")
+        options.add_argument("--headless")
         options.add_argument(f'--proxy-server={self.http_proxy}')
         options.set_preference('network.protocol-handler.external.tg', False)
         # if facebook cookie popup is present, force the browser to English since then it's easier to click the 'Decline optional cookies' option
