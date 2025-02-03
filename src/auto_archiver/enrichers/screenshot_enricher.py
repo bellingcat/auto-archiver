@@ -4,7 +4,7 @@ from selenium.common.exceptions import TimeoutException
 
 
 from auto_archiver.core import Enricher
-from ..utils import Webdriver, UrlUtil, random_str  
+from ..utils import Webdriver, url as UrlUtil, random_str  
 from ..core import Media, Metadata
 
 class ScreenshotEnricher(Enricher):

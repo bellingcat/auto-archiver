@@ -7,7 +7,7 @@ from warcio.archiveiterator import ArchiveIterator
 
 from auto_archiver.core import Media, Metadata
 from auto_archiver.core import Extractor, Enricher
-from auto_archiver.utils import UrlUtil, random_str
+from auto_archiver.utils import url as UrlUtil, random_str
 
 
 class WaczExtractorEnricher(Enricher, Extractor):

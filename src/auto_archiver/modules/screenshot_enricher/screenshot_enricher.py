@@ -6,7 +6,7 @@ from selenium.common.exceptions import TimeoutException
 
 
 from auto_archiver.core import Enricher
-from auto_archiver.utils import Webdriver, UrlUtil, random_str
+from auto_archiver.utils import Webdriver, url as UrlUtil, random_str
 from auto_archiver.core import Media, Metadata
 
 class ScreenshotEnricher(Enricher):
@@ -19,7 +19,9 @@ class ScreenshotEnricher(Enricher):
             return
 
         logger.debug(f"Enriching screenshot for {url=}")
-        with Webdriver(self.width, self.height, self.timeout, 'facebook.com' in url, http_proxy=self.http_proxy, print_options=self.print_options) as driver:
+        auth = self.auth_for_site(url)
+        with Webdriver(self.width, self.height, self.timeout, facebook_accept_cookies='facebook.com' in url,
+                       http_proxy=self.http_proxy, print_options=self.print_options, auth=auth) as driver:
             try:
                 driver.get(url)
                 time.sleep(int(self.sleep_before_screenshot))

@@ -4,6 +4,7 @@ from typing import  Mapping, Any
 from abc import ABC
 from copy import deepcopy, copy
 from tempfile import TemporaryDirectory
+from auto_archiver.utils import url as UrlUtil
 
 from loguru import logger
 
@@ -78,7 +79,7 @@ class BaseModule(ABC):
         self.config = config
         for key, val in config.get(self.name, {}).items():
             setattr(self, key, val)
-    
+
     def auth_for_site(self, site: str, extract_cookies=True) -> Mapping[str, Any]:
         """
         Returns the authentication information for a given site. This is used to authenticate
@@ -98,8 +99,7 @@ class BaseModule(ABC):
         # TODO: think about if/how we can deal with sites that have multiple domains (main one is x.com/twitter.com)
         # for now the user must enter them both, like "x.com,twitter.com" in their config. Maybe we just hard-code?
 
-        # SECURITY: parse the domain using urllib
-        site = urlparse(site).netloc
+        site = UrlUtil.domain_for_url(site)
         # add the 'www' version of the site to the list of sites to check
         authdict = {}
 
@@ -116,12 +116,11 @@ class BaseModule(ABC):
                     logger.debug(f"Could not find exact authentication information for site '{site}'. \
                                     did find information for '{key}' which is close, is this what you meant? \
                                     If so, edit your authentication settings to make sure it exactly matches.")
-        
 
         def get_ytdlp_cookiejar(args):
             import yt_dlp
             from yt_dlp import parse_options
-
+            logger.debug(f"Extracting cookies from settings: {args[1]}")
             # parse_options returns a named tuple as follows, we only need the ydl_options part
             # collections.namedtuple('ParsedOptions', ('parser', 'options', 'urls', 'ydl_opts'))
             ytdlp_opts = getattr(parse_options(args), 'ydl_opts')
@@ -130,10 +129,12 @@ class BaseModule(ABC):
         # get the cookies jar, prefer the browser cookies than the file
         if 'cookies_from_browser' in self.authentication:
             authdict['cookies_from_browser'] = self.authentication['cookies_from_browser']
-            authdict['cookies_jar'] = get_ytdlp_cookiejar(['--cookies-from-browser', self.authentication['cookies_from_browser']])
+            if extract_cookies:
+                authdict['cookies_jar'] = get_ytdlp_cookiejar(['--cookies-from-browser', self.authentication['cookies_from_browser']])
         elif 'cookies_file' in self.authentication:
             authdict['cookies_file'] = self.authentication['cookies_file']
-            authdict['cookies_jar'] = get_ytdlp_cookiejar(['--cookies', self.authentication['cookies_file']])
+            if extract_cookies:
+                authdict['cookies_jar'] = get_ytdlp_cookiejar(['--cookies', self.authentication['cookies_file']])
         
         return authdict
     

@@ -3,7 +3,7 @@ from loguru import logger
 import time, requests
 
 from auto_archiver.core import Extractor, Enricher
-from auto_archiver.utils import UrlUtil
+from auto_archiver.utils import url as UrlUtil
 from auto_archiver.core import Metadata
 
 class WaybackExtractorEnricher(Enricher, Extractor):

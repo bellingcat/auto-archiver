@@ -274,7 +274,7 @@ class GenericExtractor(Extractor):
                        "max_downloads": self.max_downloads, "playlistend": self.max_downloads}
         
         # set up auth
-        auth = self.auth_for_site(url)
+        auth = self.auth_for_site(url, extract_cookies=False)
         # order of importance: username/pasword -> api_key -> cookie -> cookie_from_browser -> cookies_file
         if auth:
             if 'username' in auth and 'password' in auth:
