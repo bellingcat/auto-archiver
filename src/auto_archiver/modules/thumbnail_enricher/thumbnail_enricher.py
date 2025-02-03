@@ -10,7 +10,7 @@ import ffmpeg, os
 from loguru import logger
 
 from auto_archiver.core import Enricher
-from auto_archiver.core import Media, Metadata, ArchivingContext
+from auto_archiver.core import Media, Metadata
 from auto_archiver.utils.misc import random_str
 
 
