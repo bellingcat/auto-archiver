@@ -1,0 +1,16 @@
+steps:
+  feeders:
+  - example_module
+  extractors:
+  - example_module
+  formatters:
+  - example_module
+  storages:
+  - example_module
+  databases:
+  - example_module
+  enrichers:
+  - example_module
+
+
+# Global configuration

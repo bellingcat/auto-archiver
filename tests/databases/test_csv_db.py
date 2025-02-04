@@ -1,15 +1,13 @@
 
-from auto_archiver.databases.csv_db import CSVDb
+from auto_archiver.modules.csv_db import CSVDb
 from auto_archiver.core import Metadata
 
 
-def test_store_item(tmp_path):
+def test_store_item(tmp_path, setup_module):
     """Tests storing an item in the CSV database"""
 
     temp_db = tmp_path / "temp_db.csv"
-    db = CSVDb({
-        "csv_db": {"csv_file": temp_db.as_posix()}
-        })
+    db = setup_module(CSVDb, {"csv_file": temp_db.as_posix()})
 
     item = Metadata().set_url("http://example.com").set_title("Example").set_content("Example content").success("my-archiver")
 

@@ -218,7 +218,7 @@ configurations:
 ## Running on Google Sheets Feeder (gsheet_feeder)
 The `--gsheet_feeder.sheet` property is the name of the Google Sheet to check for URLs. 
 This sheet must have been shared with the Google Service account used by `gspread`. 
-This sheet must also have specific columns (case-insensitive) in the `header` as specified in [Gsheet.configs](src/auto_archiver/utils/gsheet.py). The default names of these columns and their purpose is:
+This sheet must also have specific columns (case-insensitive) in the `header` as specified in [gsheet_feeder.__manifest__.py](src/auto_archiver/modules/gsheet_feeder/__manifest__.py). The default names of these columns and their purpose is:
 
 Inputs:
 

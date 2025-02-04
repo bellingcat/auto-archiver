@@ -1,13 +1,9 @@
 """ Entry point for the auto_archiver package. """
-from . import Config
-from . import ArchivingOrchestrator
+from auto_archiver.core.orchestrator import ArchivingOrchestrator
+import sys
 
 def main():
-    config = Config()
-    config.parse()
-    orchestrator = ArchivingOrchestrator(config)
-    for r in orchestrator.feed(): pass
-
+    ArchivingOrchestrator().run(sys.argv[1:])
 
 if __name__ == "__main__":
     main()

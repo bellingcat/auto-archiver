@@ -1,0 +1,3 @@
+[MAIN]
+
+ignore-patterns=(.*tests.*.py, __manifest__.py)
