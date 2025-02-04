@@ -57,7 +57,8 @@ class GsheetsDb(Database):
         media: Media = item.get_final_media()
         if hasattr(media, "urls"):
             batch_if_valid('archive', "\n".join(media.urls))
-        batch_if_valid('date', True, datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=datetime.timezone.utc).isoformat())
+        batch_if_valid('date', True, self._get_current_datetime_iso())
+        # batch_if_valid('date', True, datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=datetime.timezone.utc).isoformat())
         batch_if_valid('title', item.get_title())
         batch_if_valid('text', item.get("content", ""))
         batch_if_valid('timestamp', item.get_timestamp())
@@ -84,6 +85,12 @@ class GsheetsDb(Database):
             batch_if_valid('replaywebpage', "\n".join([f'https://replayweb.page/?source={quote(wacz)}#view=pages&url={quote(item.get_url())}' for wacz in browsertrix.urls]))
 
         gw.batch_set_cell(cell_updates)
+
+    @staticmethod
+    def _get_current_datetime_iso() -> str:
+        """Helper method to generate the current datetime in ISO format."""
+        return datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=datetime.timezone.utc).isoformat()
+
 
     def _safe_status_update(self, item: Metadata, new_status: str) -> None:
         try:
