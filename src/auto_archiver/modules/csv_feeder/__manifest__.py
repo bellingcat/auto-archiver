@@ -13,6 +13,9 @@
                 "default": None,
                 "help": "Path to the input file(s) to read the URLs from, comma separated. \
                         Input files should be formatted with one URL per line",
+                "required": True,
+                "type": "valid_file",
+                "nargs": "+",
             },
             "column": {
                 "default": None,

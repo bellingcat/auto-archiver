@@ -207,9 +207,9 @@ class ArchivingOrchestrator:
                 should_store = kwargs.pop('should_store', False)
                 kwargs['dest'] = f"{module.name}.{kwargs.pop('dest', name)}"
                 try:
+                    kwargs['type'] = getattr(validators, kwargs.get('type', '__invalid__'))
+                except AttributeError:
                     kwargs['type'] = __builtins__.get(kwargs.get('type'), str)
-                except KeyError:
-                    kwargs['type'] = getattr(validators, kwargs['type'])
                 arg = group.add_argument(f"--{module.name}.{name}", **kwargs)
                 arg.should_store = should_store
 
