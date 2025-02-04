@@ -66,6 +66,13 @@ class CookieSettingDriver(webdriver.Firefox):
                 logger.warning(f'Failed on fb accept cookies.', e)
         # now get the actual URL
         super(CookieSettingDriver, self).get(url)
+        if self.facebook_accept_cookies:
+            # try and click the 'close' button on the 'login' window to close it
+            close_button = self.find_element(By.XPATH, "//div[@role='dialog']//div[@aria-label='Close']")
+            if close_button:
+                close_button.click()
+
+
     
 class Webdriver:
     def __init__(self, width: int, height: int, timeout_seconds: int,
