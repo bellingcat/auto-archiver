@@ -30,7 +30,8 @@
     - Allows specifying the column number or name to extract URLs from.
     - Skips header rows if the first value is not a valid URL.
 
-    ### Setu N
-    - Input files should be formatted with one URL per line.
+    ### Setup
+    - Input files should be formatted with one URL per line, with or without a header row.
+    - If you have a header row, you can specify the column number or name to read URLs from using the 'column' config option.
     """
 }
