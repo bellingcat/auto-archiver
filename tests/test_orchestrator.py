@@ -89,7 +89,6 @@ def test_add_custom_modules_path_invalid(orchestrator, caplog, test_args):
     orchestrator.run(test_args +  # we still need to load the real path to get the example_module 
                           ["--module_paths", "tests/data/invalid_test_modules/"])
 
-    # assert False
     assert caplog.records[0].message == "Path 'tests/data/invalid_test_modules/' does not exist. Skipping..."
 
 
