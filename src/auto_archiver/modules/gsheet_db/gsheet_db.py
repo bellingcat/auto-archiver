@@ -12,9 +12,10 @@ from auto_archiver.modules.gsheet_feeder import GWorksheet
 
 class GsheetsDb(Database):
     """
-        NB: only works if GsheetFeeder is used. 
-        could be updated in the future to support non-GsheetFeeder metadata 
+        NB: only works if GsheetFeeder is used.
+        could be updated in the future to support non-GsheetFeeder metadata
     """
+
 
     def started(self, item: Metadata) -> None:
         logger.warning(f"STARTED {item}")
@@ -57,7 +58,7 @@ class GsheetsDb(Database):
         media: Media = item.get_final_media()
         if hasattr(media, "urls"):
             batch_if_valid('archive', "\n".join(media.urls))
-        batch_if_valid('date', True, datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=datetime.timezone.utc).isoformat())
+        batch_if_valid('date', True, self._get_current_datetime_iso())
         batch_if_valid('title', item.get_title())
         batch_if_valid('text', item.get("content", ""))
         batch_if_valid('timestamp', item.get_timestamp())
@@ -85,6 +86,12 @@ class GsheetsDb(Database):
 
         gw.batch_set_cell(cell_updates)
 
+    @staticmethod
+    def _get_current_datetime_iso() -> str:
+        """Helper method to generate the current datetime in ISO format."""
+        return datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=datetime.timezone.utc).isoformat()
+
+
     def _safe_status_update(self, item: Metadata, new_status: str) -> None:
         try:
             gw, row = self._retrieve_gsheet(item)
@@ -93,9 +100,11 @@ class GsheetsDb(Database):
             logger.debug(f"Unable to update sheet: {e}")
 
     def _retrieve_gsheet(self, item: Metadata) -> Tuple[GWorksheet, int]:
+
         if gsheet := item.get_context("gsheet"):
             gw: GWorksheet = gsheet.get("worksheet")
             row: int = gsheet.get("row")
+        # todo doesn't exist, should be passed from
         elif self.sheet_id:
             print(self.sheet_id)
 

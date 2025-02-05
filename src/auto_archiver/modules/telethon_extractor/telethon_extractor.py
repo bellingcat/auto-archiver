@@ -13,7 +13,7 @@ from auto_archiver.core import Metadata, Media
 from auto_archiver.utils import random_str
 
 
-class TelethonArchiver(Extractor):
+class TelethonExtractor(Extractor):
     valid_url = re.compile(r"https:\/\/t\.me(\/c){0,1}\/(.+)\/(\d+)")
     invite_pattern = re.compile(r"t.me(\/joinchat){0,1}\/\+?(.+)")
 
