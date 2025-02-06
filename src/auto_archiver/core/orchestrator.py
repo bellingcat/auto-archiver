@@ -69,6 +69,13 @@ class UniqueAppendAction(argparse.Action):
                 getattr(namespace, self.dest).append(value)
 
 class ArchivingOrchestrator:
+
+    feeders: List[Type[Feeder]]
+    extractors: List[Type[Extractor]]
+    enrichers: List[Type[Enricher]]
+    databases: List[Type[Database]]
+    storages: List[Type[Storage]]
+    formatters: List[Type[Formatter]]
     
     def setup_basic_parser(self):
         parser = argparse.ArgumentParser(
@@ -296,11 +303,7 @@ class ArchivingOrchestrator:
                     step_items.append(loaded_module)
 
             check_steps_ok()
-            self.config['steps'][f"{module_type}s"] = step_items
-            
-
-            assert len(step_items) > 0, f"No {module_type}s were loaded. Please check your configuration file and try again."
-            self.config['steps'][f"{module_type}s"] = step_items
+            setattr(self, f"{module_type}s", step_items)
     
     def load_config(self, config_file: str) -> dict:
         if not os.path.exists(config_file) and config_file != DEFAULT_CONFIG_FILE:
@@ -331,9 +334,9 @@ class ArchivingOrchestrator:
 
         # log out the modules that were loaded
         for module_type in BaseModule.MODULE_TYPES:
-            logger.info(f"{module_type.upper()}S: " + ", ".join(m.display_name for m in self.config['steps'][f"{module_type}s"]))
+            logger.info(f"{module_type.upper()}S: " + ", ".join(m.display_name for m in getattr(self, f"{module_type}s")))
 
-        for item in self.feed():
+        for _ in self.feed():
             pass
 
     def cleanup(self)->None:
@@ -484,40 +487,7 @@ class ArchivingOrchestrator:
 
 
     # Helper Properties
-
-    @property
-    def feeders(self) -> List[Type[Feeder]]:
-        return self._get_property('feeders')
-    
-    @property
-    def extractors(self) -> List[Type[Extractor]]:
-        return self._get_property('extractors')
-    
-    @property
-    def enrichers(self) -> List[Type[Enricher]]:
-        return self._get_property('enrichers')
-    
-    @property
-    def databases(self) -> List[Type[Database]]:
-        return self._get_property('databases')
-    
-    @property
-    def storages(self) -> List[Type[Storage]]:
-        return self._get_property('storages')
-    
-    @property
-    def formatters(self) -> List[Type[Formatter]]:
-        return self._get_property('formatters')
     
     @property
     def all_modules(self) -> List[Type[BaseModule]]:
         return self.feeders + self.extractors + self.enrichers + self.databases + self.storages + self.formatters
-    
-    def _get_property(self, prop):
-        try:
-            f = self.config['steps'][prop]
-            if not (isinstance(f[0], BaseModule) or isinstance(f[0], LazyBaseModule)):
-                raise TypeError
-            return f
-        except:
-            exit("Property called prior to full initialisation")
