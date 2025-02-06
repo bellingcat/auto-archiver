@@ -95,5 +95,11 @@ class Extractor(BaseModule):
             logger.warning(f"Failed to fetch the Media URL: {e}")
 
     @abstractmethod
-    def download(self, item: Metadata) -> Metadata:
+    def download(self, item: Metadata) -> Metadata | False:
+        """
+        Downloads the media from the given URL and returns a Metadata object with the downloaded media.
+        
+        If the URL is not supported or the download fails, this method should return False.
+
+        """
         pass
