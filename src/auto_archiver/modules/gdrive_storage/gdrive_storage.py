@@ -74,7 +74,8 @@ class GDriveStorage(Storage):
             parent_id = folder_id
 
         # get id of file inside folder (or sub folder)
-        file_id = self._get_id_from_parent_and_name(folder_id, filename)
+        # TODO: supressing the error as being checked before first upload
+        file_id = self._get_id_from_parent_and_name(folder_id, filename, raise_on_missing=False)
         return f"https://drive.google.com/file/d/{file_id}/view?usp=sharing"
 
     def upload(self, media: Media, **kwargs) -> bool:
@@ -106,7 +107,13 @@ class GDriveStorage(Storage):
     # must be implemented even if unused
     def uploadf(self, file: IO[bytes], key: str, **kwargs: dict) -> bool: pass
 
-    def _get_id_from_parent_and_name(self, parent_id: str, name: str, retries: int = 1, sleep_seconds: int = 10, use_mime_type: bool = False, raise_on_missing: bool = True, use_cache=False):
+    def _get_id_from_parent_and_name(self, parent_id: str,
+                                     name: str,
+                                     retries: int = 1,
+                                     sleep_seconds: int = 10,
+                                     use_mime_type: bool = False,
+                                     raise_on_missing: bool = True,
+                                     use_cache=False):
         """
         Retrieves the id of a folder or file from its @name and the @parent_id folder
         Optionally does multiple @retries and sleeps @sleep_seconds between them
