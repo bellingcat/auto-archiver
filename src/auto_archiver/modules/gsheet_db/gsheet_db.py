@@ -104,7 +104,6 @@ class GsheetsDb(Database):
         if gsheet := item.get_context("gsheet"):
             gw: GWorksheet = gsheet.get("worksheet")
             row: int = gsheet.get("row")
-        # todo doesn't exist, should be passed from
         elif self.sheet_id:
             print(self.sheet_id)
 

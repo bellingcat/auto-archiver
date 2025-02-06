@@ -4,7 +4,7 @@ import gspread
 import pytest
 from unittest.mock import patch, MagicMock
 from auto_archiver.modules.gsheet_feeder import GsheetsFeeder
-from auto_archiver.core import Metadata, Feeder, ArchivingContext
+from auto_archiver.core import Metadata, Feeder
 
 
 def test_initialise_without_sheet_and_sheet_id(setup_module):
@@ -100,21 +100,21 @@ def test__process_rows(gsheet_feeder: GsheetsFeeder):
 
 def test__set_metadata(gsheet_feeder: GsheetsFeeder, worksheet):
     gsheet_feeder._set_context(worksheet, 1)
-    assert ArchivingContext.get("gsheet") == {"row": 1, "worksheet": worksheet}
+    assert Metadata.get_context("gsheet") == {"row": 1, "worksheet": worksheet}
 
 
 @pytest.mark.skip(reason="Not recognising folder column")
 def test__set_metadata_with_folder_pickled(gsheet_feeder: GsheetsFeeder, worksheet):
     gsheet_feeder._set_context(worksheet, 7)
-    assert ArchivingContext.get("gsheet") == {"row": 1, "worksheet": worksheet}
+    assert Metadata.get_context("gsheet") == {"row": 1, "worksheet": worksheet}
 
 
 def test__set_metadata_with_folder(gsheet_feeder: GsheetsFeeder):
     testworksheet = TestWorksheet()
     testworksheet.wks.title = "TestSheet"
     gsheet_feeder._set_context(testworksheet, 6)
-    assert ArchivingContext.get("gsheet") == {"row": 6, "worksheet": testworksheet}
-    assert ArchivingContext.get("folder") == "some-folder/test-auto-archiver/testsheet"
+    assert Metadata.get_context("gsheet") == {"row": 6, "worksheet": testworksheet}
+    assert Metadata.get_context("folder") == "some-folder/test-auto-archiver/testsheet"
 
 
 @pytest.mark.usefixtures("setup_module")
