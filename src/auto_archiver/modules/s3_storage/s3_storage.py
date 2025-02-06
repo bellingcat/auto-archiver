@@ -9,10 +9,11 @@ from auto_archiver.core import Media
 from auto_archiver.core import Storage
 from auto_archiver.modules.hash_enricher import HashEnricher
 from auto_archiver.utils.misc import random_str
+from auto_archiver.core.module import get_module
 
 NO_DUPLICATES_FOLDER = "no-dups/"
 
-class S3Storage(Storage, HashEnricher):
+class S3Storage(Storage):
 
     def setup(self, config: dict) -> None:
         super().setup(config)
@@ -49,7 +50,8 @@ class S3Storage(Storage, HashEnricher):
     def is_upload_needed(self, media: Media) -> bool:
         if self.random_no_duplicate:
             # checks if a folder with the hash already exists, if so it skips the upload
-            hd = self.calculate_hash(media.filename)
+            he = get_module('hash_enricher', self.config)
+            hd = he.calculate_hash(media.filename)
             path = os.path.join(NO_DUPLICATES_FOLDER, hd[:24])
 
             if existing_key:=self.file_in_folder(path):

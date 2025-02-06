@@ -2,7 +2,6 @@ from typing import Type
 
 import pytest
 
-from auto_archiver.core.context import ArchivingContext
 from auto_archiver.core.metadata import Metadata
 from auto_archiver.core.storage import Storage
 

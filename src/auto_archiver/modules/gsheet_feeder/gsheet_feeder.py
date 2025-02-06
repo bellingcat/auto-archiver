@@ -44,14 +44,14 @@ class GsheetsFeeder(Feeder):
             logger.info(f'Opening worksheet {ii=}: {worksheet.title=} header={self.header}')
             gw = GWorksheet(worksheet, header_row=self.header, columns=self.columns)
             if len(missing_cols := self.missing_required_columns(gw)):
-                logger.warning(f"SKIPPED worksheet '{wks.title}' due to missing required column(s) for {missing_cols}")
+                logger.warning(f"SKIPPED worksheet '{worksheet.title}' due to missing required column(s) for {missing_cols}")
                 continue
 
             # process and yield metadata here:
             yield from self._process_rows(gw)
             logger.success(f'Finished worksheet {worksheet.title}')
 
-    def _process_rows(self, gw: GWorksheet) -> Metadata:
+    def _process_rows(self, gw: GWorksheet):
         for row in range(1 + self.header, gw.count_rows() + 1):
             url = gw.get_cell(row, 'url').strip()
             if not len(url): continue
