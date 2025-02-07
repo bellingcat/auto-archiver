@@ -110,7 +110,7 @@ class WhisperEnricher(Enricher):
 
     def _get_s3_storage(self) -> S3Storage:
         try:
-            return next(s for s in self.storages if s.__class__ == S3Storage)
+            return next(s for s in self.config['steps']['storages'] if s == 's3_storage')
         except:
             logger.warning("No S3Storage instance found in storages")
             return
