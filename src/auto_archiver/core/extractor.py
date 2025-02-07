@@ -17,7 +17,7 @@ from loguru import logger
 from retrying import retry
 import re
 
-from ..core import Metadata, BaseModule
+from auto_archiver.core import Metadata, BaseModule
 
 
 class Extractor(BaseModule):

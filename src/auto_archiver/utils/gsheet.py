@@ -1,6 +1,6 @@
 import json, gspread
 
-from ..core import BaseModule
+from auto_archiver.core import BaseModule
 
 
 class Gsheets(BaseModule):

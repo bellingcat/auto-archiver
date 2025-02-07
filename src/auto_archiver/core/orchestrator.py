@@ -19,7 +19,7 @@ from rich_argparse import RichHelpFormatter
 
 
 from .metadata import Metadata, Media
-from ..version import __version__
+from auto_archiver.version import __version__
 from .config import yaml, read_yaml, store_yaml, to_dot_notation, merge_dicts, EMPTY_CONFIG, DefaultValidatingParser
 from .module import available_modules, LazyBaseModule, get_module, setup_paths
 from . import validators, Feeder, Extractor, Database, Storage, Formatter, Enricher
