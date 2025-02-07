@@ -15,17 +15,21 @@ class WhisperEnricher(Enricher):
     """
 
     def enrich(self, to_enrich: Metadata) -> None:
-        if not self._get_s3_storage():
+        storages = self.config['steps']['storages']
+        if not "s3_storage" in storages:
             logger.error("WhisperEnricher: To use the WhisperEnricher you need to use S3Storage so files are accessible publicly to the whisper service being called.")
             return
 
+        self.s3 = get_module("s3_storage", self.config)
         url = to_enrich.get_url()
         logger.debug(f"WHISPER[{self.action}]: iterating media items for {url=}.")
 
         job_results = {}
         for i, m in enumerate(to_enrich.media):
             if m.is_video() or m.is_audio():
-                m.store(url=url, metadata=to_enrich, storages=self.storages)
+                # TODO: this used to pass all storage items to store now
+                # Now only passing S3, the rest will get added later in the usual order (?)
+                m.store(url=url, metadata=to_enrich, storages=[self.s3])
                 try:
                     job_id = self.submit_job(m)
                     job_results[job_id] = False
@@ -53,8 +57,8 @@ class WhisperEnricher(Enricher):
                             to_enrich.set_content(f"\n[automatic video transcript]: {v}")
 
     def submit_job(self, media: Media):
-        s3 = get_module("s3_storage", self.config)
-        s3_url = s3.get_cdn_url(media)
+
+        s3_url = self.s3.get_cdn_url(media)
         assert s3_url in media.urls, f"Could not find S3 url ({s3_url}) in list of stored media urls "
         payload = {
             "url": s3_url,
@@ -107,10 +111,3 @@ class WhisperEnricher(Enricher):
             logger.debug(f"DELETE whisper {job_id=} result: {r_del.status_code}")
             return result
         return False
-
-    def _get_s3_storage(self) -> S3Storage:
-        try:
-            return next(s for s in self.config['steps']['storages'] if s == 's3_storage')
-        except:
-            logger.warning("No S3Storage instance found in storages")
-            return
