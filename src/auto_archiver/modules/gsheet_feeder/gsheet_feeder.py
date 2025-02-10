@@ -68,7 +68,7 @@ class GsheetsFeeder(Feeder):
                     folder = os.path.join(folder, slugify(self.sheet), slugify(wks.title))
 
                 m.set_context('folder', folder)
-                m.set_context('worksheet', {"row": row, "worksheet": gw})
+                m.set_context('gsheet', {"row": row, "worksheet": gw})
                 yield m
 
             logger.success(f'Finished worksheet {wks.title}')

@@ -1,6 +1,6 @@
 from __future__ import annotations
 from abc import abstractmethod
-from typing import IO, Optional
+from typing import IO
 import os
 
 from loguru import logger
