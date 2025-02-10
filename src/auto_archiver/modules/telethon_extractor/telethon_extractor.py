@@ -18,7 +18,7 @@ class TelethonExtractor(Extractor):
     invite_pattern = re.compile(r"t.me(\/joinchat){0,1}\/\+?(.+)")
 
 
-    def module_setup(self) -> None:
+    def setup(self) -> None:
 
         """
         1. makes a copy of session_file that is removed in cleanup

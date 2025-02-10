@@ -15,7 +15,7 @@ class TwitterApiExtractor(Extractor):
 
     valid_url: re.Pattern = re.compile(r"(?:twitter|x).com\/(?:\#!\/)?(\w+)\/status(?:es)?\/(\d+)")
 
-    def module_setup(self) -> None:
+    def setup(self) -> None:
         self.api_index = 0
         self.apis = []
         if len(self.bearer_tokens):

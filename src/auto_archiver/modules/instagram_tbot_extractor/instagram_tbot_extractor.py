@@ -27,7 +27,7 @@ class InstagramTbotExtractor(Extractor):
     https://t.me/instagram_load_bot
     """
 
-    def module_setup(self) -> None:
+    def setup(self) -> None:
         """
         1. makes a copy of session_file that is removed in cleanup
         2. checks if the session file is valid

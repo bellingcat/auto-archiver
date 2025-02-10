@@ -18,7 +18,7 @@ class WaczExtractorEnricher(Enricher, Extractor):
     When used as an archiver it will extract the media from the .WACZ archive so it can be enriched.
     """
 
-    def module_setup(self) -> None:
+    def setup(self) -> None:
 
         self.use_docker = os.environ.get('WACZ_ENABLE_DOCKER') or not os.environ.get('RUNNING_IN_DOCKER')
         self.docker_in_docker = os.environ.get('WACZ_ENABLE_DOCKER') and os.environ.get('RUNNING_IN_DOCKER')
