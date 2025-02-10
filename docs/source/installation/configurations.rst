@@ -2,6 +2,13 @@
 Configurations
 ==============
 
+
+```{toctree}
+:hidden:
+
+configurations
+```
+
 This section of the documentation provides guidelines for configuring the tool.
 
 File Reference

@@ -14,72 +14,15 @@ Read the [article about Auto Archiver on bellingcat.com](https://www.bellingcat.
 
 Python tool to automatically archive social media posts, videos, and images from a Google Sheets, the console, and more. Uses different archivers depending on the platform, and can save content to local storage, S3 bucket (Digital Ocean Spaces, AWS, ...), and Google Drive. If using Google Sheets as the source for links, it will be updated with information about the archived content. It can be run manually or on an automated basis.
 
-There are 3 ways to use the auto-archiver:
-1. (easiest installation) via docker
-2. (local python install) `pip install auto-archiver`
-3. (legacy/development) clone and manually install from repo (see legacy [tutorial video](https://youtu.be/VfAhcuV2tLQ))
 
-But **you always need a configuration/orchestration file**, which is where you'll configure where/what/how to archive. Make sure you read [orchestration](#orchestration).
+## Installation
 
+For full For instructions on how to install auto-archiver, view the [Installation Guide](docs/source/installation.md)
 
-## How to install and run the auto-archiver
+Quick run using docker:
 
-### Option 1 - docker
+`docker pull bellingcat/auto-archiver && docker run`
 
-[![dockeri.co](https://dockerico.blankenship.io/image/bellingcat/auto-archiver)](https://hub.docker.com/r/bellingcat/auto-archiver)
-
-Docker works like a virtual machine running inside your computer, it isolates everything and makes installation simple. Since it is an isolated environment when you need to pass it your orchestration file or get downloaded media out of docker you will need to connect folders on your machine with folders inside docker with the `-v` volume flag.
-
-
-1. install [docker](https://docs.docker.com/get-docker/)
-2. pull the auto-archiver docker [image](https://hub.docker.com/r/bellingcat/auto-archiver) with `docker pull bellingcat/auto-archiver`
-3. run the docker image locally in a container: `docker run --rm -v $PWD/secrets:/app/secrets -v $PWD/local_archive:/app/local_archive bellingcat/auto-archiver --config secrets/orchestration.yaml` breaking this command down:
-   1. `docker run` tells docker to start a new container (an instance of the image)
-   2. `--rm` makes sure this container is removed after execution (less garbage locally)
-   3. `-v $PWD/secrets:/app/secrets` - your secrets folder
-      1. `-v` is a volume flag which means a folder that you have on your computer will be connected to a folder inside the docker container
-      2. `$PWD/secrets` points to a `secrets/` folder in your current working directory (where your console points to), we use this folder as a best practice to hold all the secrets/tokens/passwords/... you use
-      3. `/app/secrets` points to the path the docker container where this image can be found
-   4.  `-v $PWD/local_archive:/app/local_archive` - (optional) if you use local_storage
-       1.  `-v` same as above, this is a volume instruction
-       2.  `$PWD/local_archive` is a folder `local_archive/` in case you want to archive locally and have the files accessible outside docker
-       3.  `/app/local_archive` is a folder inside docker that you can reference in your orchestration.yml file 
-
-### Option 2 - python package
-
-<details><summary><code>Python package instructions</code></summary>
-
-1. make sure you have python 3.10 or higher installed
-2. install the package with your preferred package manager: `pip/pipenv/conda install auto-archiver` or `poetry add auto-archiver`
-3. test it's installed with `auto-archiver --help`
-4. run it with your orchestration file and pass any flags you want in the command line `auto-archiver --config secrets/orchestration.yaml` if your orchestration file is inside a `secrets/`, which we advise
-   
-You will also need [ffmpeg](https://www.ffmpeg.org/), [firefox](https://www.mozilla.org/en-US/firefox/new/) and [geckodriver](https://github.com/mozilla/geckodriver/releases), and optionally [fonts-noto](https://fonts.google.com/noto). Similar to the local installation. 
-
-</details>
-
-
-### Option 3 - local installation
-This can also be used for development.
-
-<details><summary><code>Legacy instructions, only use if docker/package is not an option</code></summary>
-
-
-Install the following locally:
-1. [ffmpeg](https://www.ffmpeg.org/) must also be installed locally for this tool to work. 
-2. [firefox](https://www.mozilla.org/en-US/firefox/new/) and [geckodriver](https://github.com/mozilla/geckodriver/releases) on a path folder like `/usr/local/bin`. 
-3. [Poetry](https://python-poetry.org/docs/#installation) for dependency management and packaging.
-4. (optional) [fonts-noto](https://fonts.google.com/noto) to deal with multiple unicode characters during selenium/geckodriver's screenshots: `sudo apt install fonts-noto -y`.
-
-Clone and run:
-1. `git clone https://github.com/bellingcat/auto-archiver`
-2. `poetry install`
-3. `poetry run python -m src.auto_archiver --config secrets/orchestration.yaml`
-
-Note: Add the plugin [poetry-shell-plugin](https://github.com/python-poetry/poetry-plugin-shell) and run `poetry shell` to activate the virtual environment.
-This allows you to run the auto-archiver without the `poetry run` prefix.
-
-</details><br/>
 
 # Orchestration
 The archiver work is orchestrated by the following workflow (we call each a **step**): 
@@ -260,76 +203,3 @@ The "archive location" link contains the path of the archived file, in local sto
 ![The archive result for a link in the demo sheet.](docs/demo-archive.png)
 
 ---
-## Development
-Use `python -m src.auto_archiver --config secrets/orchestration.yaml` to run from the local development environment.
-
-### Testing
-
-Tests are split using `pytest.mark` into 'core' and 'download' tests. Download tests will hit the network and make API calls (e.g. Twitter, Bluesky etc.) and should be run regularly to make sure that APIs have not changed.
-
-Tests can be run as follows:
-```
-# run core tests
-pytest -ra -v -m "not download" # or poetry run pytest -ra -v -m "not download"
-# run download tests
-pytest -ra -v -m "download" # or poetry run pytest -ra -v -m "download"
-# run all tests
-pytest -ra -v # or poetry run pytest -ra -v
-```
-
-#### Docker development
-working with docker locally:
-  * `docker compose up` to build the first time and run a local image with the settings in `secrets/orchestration.yaml`
-  * To modify/pass additional command line args, use `docker compose run auto-archiver --config secrets/orchestration.yaml [OTHER ARGUMENTS]`
-  * To rebuild after code changes, just pass the `--build` flag, e.g. `docker compose up --build`
-
-
-manual release to docker hub
-  * `docker image tag auto-archiver bellingcat/auto-archiver:latest`
-  * `docker push bellingcat/auto-archiver`
-
-
-### Building the Docs
-
-The documentation is built using [Sphinx](https://www.sphinx-doc.org/en/master/) and [AutoAPI](https://sphinx-autoapi.readthedocs.io/en/latest/) and hosted on ReadTheDocs.
-To build the documentation locally, run the following commands:
-
-**Install required dependencies:**
-- Install the docs group of dependencies: 
-```shell
-# only the docs dependencies
-poetry install --only docs
-
-# or for all dependencies 
-poetry install
-```
-- Either use [poetry-plugin-shell](https://github.com/python-poetry/poetry-plugin-shell) to activate the virtual environment: `poetry shell`
-- Or prepend the following commands with `poetry run`
-
-**Create the documentation:**
-- Build the documentation: 
-```
-# Using makefile (Linux/macOS):
-make -C docs html
-
-# or using sphinx directly (Windows/Linux/macOS):
-sphinx-build -b html docs/source docs/_build/html
-```
-- If you make significant changes and want a fresh build run: `make -C docs clean` to remove the old build files.
-
-**Viewing the documentation:**
-```shell
-# to open the documentation in your browser.
-open docs/_build/html/index.html
-
-# or run autobuild to automatically update the documentation when you make changes
-sphinx-autobuild docs/source docs/_build/html
-```
-
-
-
-#### RELEASE
-* update version in [version.py](src/auto_archiver/version.py)
-* go to github releases > new release > use `vx.y.z` for matching version notation
-  * package is automatically updated in pypi
-  * docker image is automatically pushed to dockerhup
