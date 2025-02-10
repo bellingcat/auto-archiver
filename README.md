@@ -17,7 +17,7 @@ Python tool to automatically archive social media posts, videos, and images from
 
 ## Installation
 
-For full instructions on how to install auto-archiver, view the [Installation Guide](docs/source/installation.md)
+For full instructions on how to install auto-archiver, view the [Installation Guide](installation/installation.md)
 
 Quick run using docker:
 
