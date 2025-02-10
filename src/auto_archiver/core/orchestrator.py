@@ -20,7 +20,7 @@ from rich_argparse import RichHelpFormatter
 
 from .metadata import Metadata, Media
 from auto_archiver.version import __version__
-from .config import yaml, read_yaml, store_yaml, to_dot_notation, merge_dicts, EMPTY_CONFIG, DefaultValidatingParser
+from .config import _yaml, read_yaml, store_yaml, to_dot_notation, merge_dicts, EMPTY_CONFIG, DefaultValidatingParser
 from .module import available_modules, LazyBaseModule, get_module, setup_paths
 from . import validators, Feeder, Extractor, Database, Storage, Formatter, Enricher
 from .module import BaseModule
@@ -50,7 +50,7 @@ class AuthenticationJsonParseAction(JsonParseAction):
                         auth_dict = json.load(f)
                     except json.JSONDecodeError:
                         # maybe it's yaml, try that
-                        auth_dict = yaml.load(f)
+                        auth_dict = _yaml.load(f)
             except:
                 pass
 
