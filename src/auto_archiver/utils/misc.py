@@ -65,10 +65,11 @@ def json_loader(cli_val):
     return json.loads(cli_val)
 
 
-def calculate_file_hash(filename: str, hash_algo = hashlib.sha256(), chunksize: int = 16000000) -> str:
+def calculate_file_hash(filename: str, hash_algo = hashlib.sha256, chunksize: int = 16000000) -> str:
+    hash = hash_algo()
     with open(filename, "rb") as f:
         while True:
             buf = f.read(chunksize)
             if not buf: break
-            hash_algo.update(buf)
-    return hash_algo.hexdigest()
+            hash.update(buf)
+    return hash.hexdigest()
