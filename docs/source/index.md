@@ -8,7 +8,7 @@
 :caption: Contents:
 
 Overview <self>
-user_guidelines
+how_to
 installation/installation.rst
 core_modules.md
 development/developer_guidelines
