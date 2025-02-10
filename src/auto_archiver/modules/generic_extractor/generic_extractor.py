@@ -6,7 +6,7 @@ from yt_dlp.extractor.common import InfoExtractor
 from loguru import logger
 
 from auto_archiver.core.extractor import Extractor
-from ...core import Metadata, Media
+from auto_archiver.core import Metadata, Media
 
 class GenericExtractor(Extractor):
     _dropins = {}

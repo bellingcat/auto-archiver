@@ -12,6 +12,7 @@ from loguru import logger
 
 from auto_archiver.core import Enricher
 from auto_archiver.core import Metadata
+from auto_archiver.utils.misc import calculate_file_hash
 
 
 class HashEnricher(Enricher):
@@ -35,9 +36,4 @@ class HashEnricher(Enricher):
         elif self.algorithm == "SHA3-512":
             hash = hashlib.sha3_512()
         else: return ""
-        with open(filename, "rb") as f:
-            while True:
-                buf = f.read(self.chunksize)
-                if not buf: break
-                hash.update(buf)
-        return hash.hexdigest()
+        return calculate_file_hash(filename, hash, self.chunksize)

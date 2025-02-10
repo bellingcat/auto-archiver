@@ -13,7 +13,7 @@ import copy
 import sys
 from importlib.util import find_spec
 import os
-from os.path import join, dirname
+from os.path import join
 from loguru import logger
 import auto_archiver
 from .base_module import BaseModule
@@ -64,8 +64,10 @@ def get_module_lazy(module_name: str, suppress_warnings: bool = False) -> LazyBa
     if module_name in _LAZY_LOADED_MODULES:
         return _LAZY_LOADED_MODULES[module_name]
 
-    module = available_modules(limit_to_modules=[module_name], suppress_warnings=suppress_warnings)[0]
-    return module
+    available = available_modules(limit_to_modules=[module_name], suppress_warnings=suppress_warnings)
+    if not available:
+        raise IndexError(f"Module '{module_name}' not found. Are you sure it's installed/exists?")
+    return available[0]
 
 def available_modules(with_manifest: bool=False, limit_to_modules: List[str]= [], suppress_warnings: bool = False) -> List[LazyBaseModule]:
     

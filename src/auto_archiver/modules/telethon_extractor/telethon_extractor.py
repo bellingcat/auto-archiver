@@ -6,7 +6,7 @@ from telethon.tl.functions.messages import ImportChatInviteRequest
 from telethon.errors.rpcerrorlist import UserAlreadyParticipantError, FloodWaitError, InviteRequestSentError, InviteHashExpiredError
 from loguru import logger
 from tqdm import tqdm
-import re, time, json, os
+import re, time, os
 
 from auto_archiver.core import Extractor
 from auto_archiver.core import Metadata, Media

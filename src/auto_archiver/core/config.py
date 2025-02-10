@@ -36,6 +36,7 @@ steps:""" + "".join([f"\n   {module}s: []" for module in BaseModule.MODULE_TYPES
 # a dictionary of authentication information that can be used by extractors to login to website. 
 # you can use a comma separated list for multiple domains on the same line (common usecase: x.com,twitter.com)
 # Common login 'types' are username/password, cookie, api key/token.
+# There are two special keys for using cookies, they are: cookies_file and cookies_from_browser. 
 # Some Examples:
 # facebook.com:
 #   username: "my_username"
@@ -163,6 +164,6 @@ def read_yaml(yaml_filename: str) -> CommentedMap:
 def store_yaml(config: CommentedMap, yaml_filename: str) -> None:
     config_to_save = deepcopy(config)
 
-    config.pop('urls', None)
+    config_to_save.pop('urls', None)
     with open(yaml_filename, "w", encoding="utf-8") as outf:
         yaml.dump(config_to_save, outf)

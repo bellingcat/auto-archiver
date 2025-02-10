@@ -19,7 +19,7 @@ from rich_argparse import RichHelpFormatter
 
 
 from .metadata import Metadata, Media
-from ..version import __version__
+from auto_archiver.version import __version__
 from .config import yaml, read_yaml, store_yaml, to_dot_notation, merge_dicts, EMPTY_CONFIG, DefaultValidatingParser
 from .module import available_modules, LazyBaseModule, get_module, setup_paths
 from . import validators, Feeder, Extractor, Database, Storage, Formatter, Enricher
@@ -111,7 +111,6 @@ class ArchivingOrchestrator:
         # if full, we'll load all modules
         # TODO: BUG** - basic_config won't have steps in it, since these args aren't added to 'basic_parser'
         # but should we add them? Or should we just add them to the 'complete' parser?
-
         if yaml_config != EMPTY_CONFIG:
             # only load the modules enabled in config
             # TODO: if some steps are empty (e.g. 'feeders' is empty), should we default to the 'simple' ones? Or only if they are ALL empty?
@@ -128,6 +127,10 @@ class ArchivingOrchestrator:
         elif basic_config.mode == 'simple':
             simple_modules = [module for module in available_modules(with_manifest=True) if not module.requires_setup]
             self.add_module_args(simple_modules, parser)
+
+            # for simple mode, we use the cli_feeder and any modules that don't require setup
+            yaml_config['steps']['feeders'] = ['cli_feeder']
+            
             # add them to the config
             for module in simple_modules:
                 for module_type in module.type:
@@ -237,18 +240,18 @@ class ArchivingOrchestrator:
         if log_file := logging_config['file']:
             logger.add(log_file) if not logging_config['rotation'] else logger.add(log_file, rotation=logging_config['rotation'])
 
-        
-    def install_modules(self):
+    def install_modules(self, modules_by_type):
         """
-        Swaps out the previous 'strings' in the config with the actual modules and loads them
+        Traverses all modules in 'steps' and loads them into the orchestrator, storing them in the 
+        orchestrator's attributes (self.feeders, self.extractors etc.). If no modules of a certain type
+        are loaded, the program will exit with an error message.
         """
         
         invalid_modules = []
         for module_type in BaseModule.MODULE_TYPES:
 
             step_items = []
-            modules_to_load = self.config['steps'][f"{module_type}s"]
-
+            modules_to_load = modules_by_type[f"{module_type}s"]
             assert modules_to_load, f"No {module_type}s were configured. Make sure to set at least one {module_type} in your configuration file or on the command line (using --{module_type}s)"
 
             def check_steps_ok():
@@ -264,9 +267,10 @@ class ArchivingOrchestrator:
 
             for module in modules_to_load:
                 if module == 'cli_feeder':
+                    # pseudo module, don't load it
                     urls = self.config['urls']
                     if not urls:
-                        logger.error("No URLs provided. Please provide at least one URL to archive, or set up a feeder. Use --help for more information.")
+                        logger.error("No URLs provided. Please provide at least one URL via the command line, or set up an alternative feeder. Use --help for more information.")
                         exit()
                     # cli_feeder is a pseudo module, it just takes the command line args
                     def feed(self) -> Generator[Metadata]:
@@ -330,7 +334,7 @@ class ArchivingOrchestrator:
         self.setup_complete_parser(basic_config, yaml_config, unused_args)
 
         logger.info(f"======== Welcome to the AUTO ARCHIVER ({__version__}) ==========")
-        self.install_modules()
+        self.install_modules(self.config['steps'])
 
         # log out the modules that were loaded
         for module_type in BaseModule.MODULE_TYPES:

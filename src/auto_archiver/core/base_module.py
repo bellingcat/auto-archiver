@@ -63,7 +63,7 @@ class BaseModule(ABC):
     def setup(self, config: dict):
 
         authentication = config.get('authentication', {})
-        # extract out contatenated sites
+        # extract out concatenated sites
         for key, val in copy(authentication).items():
             if "," in key:
                 for site in key.split(","):
