@@ -13,8 +13,7 @@ class WhisperEnricher(Enricher):
     Only works if an S3 compatible storage is used
     """
 
-    def setup(self, config: dict) -> None:
-        super().setup(config)
+    def module_setup(self) -> None:
         self.stores = self.config['steps']['storages']
         self.s3 = get_module("s3_storage", self.config)
         if not "s3_storage" in self.stores:

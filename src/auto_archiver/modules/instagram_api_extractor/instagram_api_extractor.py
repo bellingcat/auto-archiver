@@ -32,8 +32,7 @@ class InstagramAPIExtractor(Extractor):
         r"(?:(?:http|https):\/\/)?(?:www.)?(?:instagram.com)\/(stories(?:\/highlights)?|p|reel)?\/?([^\/\?]*)\/?(\d+)?"
     )
 
-    def setup(self, config: dict) -> None:
-        super().setup(config)
+    def module_setup(self) -> None:
         if self.api_endpoint[-1] == "/":
             self.api_endpoint = self.api_endpoint[:-1]
 

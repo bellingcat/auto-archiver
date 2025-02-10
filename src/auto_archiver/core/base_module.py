@@ -80,6 +80,10 @@ class BaseModule(ABC):
         for key, val in config.get(self.name, {}).items():
             setattr(self, key, val)
 
+    def module_setup(self):
+        # For any additional setup required by modules, e.g. autehntication
+        pass
+
     def auth_for_site(self, site: str, extract_cookies=True) -> Mapping[str, Any]:
         """
         Returns the authentication information for a given site. This is used to authenticate

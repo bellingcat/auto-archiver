@@ -27,12 +27,11 @@ class InstagramTbotExtractor(Extractor):
     https://t.me/instagram_load_bot
     """
 
-    def setup(self, configs) -> None:
+    def module_setup(self) -> None:
         """
         1. makes a copy of session_file that is removed in cleanup
         2. checks if the session file is valid
         """
-        super().setup(configs)
         logger.info(f"SETUP {self.name} checking login...")
         self._prepare_session_file()
         self._initialize_telegram_client()

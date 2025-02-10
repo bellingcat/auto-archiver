@@ -21,8 +21,7 @@ from . import GWorksheet
 
 class GsheetsFeeder(Feeder):
 
-    def setup(self, config: dict):
-        super().setup(config)
+    def module_setup(self) -> None:
         self.gsheets_client = gspread.service_account(filename=self.service_account)
         # TODO mv to validators
         assert self.sheet or self.sheet_id, (

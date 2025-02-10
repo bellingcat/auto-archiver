@@ -242,6 +242,7 @@ class LazyBaseModule:
         default_config = dict((k, v['default']) for k, v in self.configs.items() if v.get('default'))
         config[self.name] = default_config  | config.get(self.name, {})
         instance.setup(config)
+        instance.module_setup()
         return instance
 
     def __repr__(self):

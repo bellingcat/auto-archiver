@@ -19,9 +19,7 @@ from auto_archiver.core import Storage
 
 class GDriveStorage(Storage):
 
-    def setup(self, config: dict) -> None:
-        # Step 1: Call the BaseModule setup to dynamically assign configs
-        super().setup(config)
+    def module_setup(self) -> None:
         self.scopes = ['https://www.googleapis.com/auth/drive']
         # Initialize Google Drive service
         self._setup_google_drive_service()

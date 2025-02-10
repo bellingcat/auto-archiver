@@ -17,9 +17,8 @@ class HtmlFormatter(Formatter):
     environment: Environment = None
     template: any = None
 
-    def setup(self, config: dict) -> None:
+    def module_setup(self) -> None:
         """Sets up the Jinja2 environment and loads the template."""
-        super().setup(config)  # Ensure the base class logic is executed
         template_dir = os.path.join(pathlib.Path(__file__).parent.resolve(), "templates/")
         self.environment = Environment(loader=FileSystemLoader(template_dir), autoescape=True)
 
