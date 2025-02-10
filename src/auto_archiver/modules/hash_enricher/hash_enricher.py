@@ -30,10 +30,10 @@ class HashEnricher(Enricher):
                 to_enrich.media[i].set("hash", f"{self.algorithm}:{hd}")
 
     def calculate_hash(self, filename) -> str:
-        hash = None
+        hash_algo = None
         if self.algorithm == "SHA-256":
-            hash = hashlib.sha256()
+            hash_algo = hashlib.sha256
         elif self.algorithm == "SHA3-512":
-            hash = hashlib.sha3_512()
+            hash_algo = hashlib.sha3_512
         else: return ""
-        return calculate_file_hash(filename, hash, self.chunksize)
+        return calculate_file_hash(filename, hash_algo, self.chunksize)
