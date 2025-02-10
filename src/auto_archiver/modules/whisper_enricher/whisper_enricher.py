@@ -4,7 +4,6 @@ from loguru import logger
 
 from auto_archiver.core import Enricher
 from auto_archiver.core import Metadata, Media
-from auto_archiver.modules.s3_storage import S3Storage
 from auto_archiver.core.module import get_module
 
 class WhisperEnricher(Enricher):
@@ -14,13 +13,17 @@ class WhisperEnricher(Enricher):
     Only works if an S3 compatible storage is used
     """
 
-    def enrich(self, to_enrich: Metadata) -> None:
-        storages = self.config['steps']['storages']
-        if not "s3_storage" in storages:
+    def setup(self, config: dict) -> None:
+        super().setup(config)
+        self.stores = self.config['steps']['storages']
+        self.s3 = get_module("s3_storage", self.config)
+        if not "s3_storage" in self.stores:
             logger.error("WhisperEnricher: To use the WhisperEnricher you need to use S3Storage so files are accessible publicly to the whisper service being called.")
             return
 
-        self.s3 = get_module("s3_storage", self.config)
+
+    def enrich(self, to_enrich: Metadata) -> None:
+
         url = to_enrich.get_url()
         logger.debug(f"WHISPER[{self.action}]: iterating media items for {url=}.")
 

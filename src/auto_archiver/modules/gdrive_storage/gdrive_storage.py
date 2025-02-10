@@ -70,12 +70,15 @@ class GDriveStorage(Storage):
         filename = path_parts[-1]
         logger.info(f"looking for folders for {path_parts[0:-1]} before getting url for {filename=}")
         for folder in path_parts[0:-1]:
-            folder_id = self._get_id_from_parent_and_name(parent_id, folder, use_mime_type=True, raise_on_missing=True)
+            folder_id = self._get_id_from_parent_and_name(parent_id, folder, use_mime_type=True, raise_on_missing=False)
             parent_id = folder_id
-
         # get id of file inside folder (or sub folder)
         # TODO: supressing the error as being checked before first upload
         file_id = self._get_id_from_parent_and_name(folder_id, filename, raise_on_missing=False)
+        if not file_id:
+            #
+            logger.info(f"file {filename} not found in folder {folder_id}")
+            return None
         return f"https://drive.google.com/file/d/{file_id}/view?usp=sharing"
 
     def upload(self, media: Media, **kwargs) -> bool:

@@ -159,3 +159,7 @@ def test_get_context():
     assert m.get_context("somekey") == "somevalue"
     assert m.get_context("anotherkey") == "anothervalue"
     assert len(m._context) == 2
+
+
+def test_choose_most_complete():
+    pass

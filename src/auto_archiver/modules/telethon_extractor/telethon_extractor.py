@@ -18,12 +18,14 @@ class TelethonExtractor(Extractor):
     invite_pattern = re.compile(r"t.me(\/joinchat){0,1}\/\+?(.+)")
 
 
-    def setup(self) -> None:
+    def setup(self, config: dict) -> None:
+
         """
         1. makes a copy of session_file that is removed in cleanup
         2. trigger login process for telegram or proceed if already saved in a session file
         3. joins channel_invites where needed
         """
+        super().setup(config)
         logger.info(f"SETUP {self.name} checking login...")
 
         # make a copy of the session that is used exclusively with this archiver instance

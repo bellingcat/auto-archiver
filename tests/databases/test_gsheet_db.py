@@ -103,19 +103,20 @@ def test_failed(gsheets_db, mock_metadata, mock_gworksheet):
     gsheets_db.failed(mock_metadata, reason)
     mock_gworksheet.set_cell.assert_called_once_with(1, 'status', f'Archive failed {reason}')
 
+
 def test_aborted(gsheets_db, mock_metadata, mock_gworksheet):
     gsheets_db.aborted(mock_metadata)
     mock_gworksheet.set_cell.assert_called_once_with(1, 'status', '')
 
 
 def test_done(gsheets_db, metadata, mock_gworksheet, expected_calls):
-    with patch.object(gsheets_db, '_get_current_datetime_iso', return_value='2025-02-01T00:00:00+00:00'):
+    with patch("auto_archiver.modules.gsheet_db.gsheet_db.get_current_timestamp", return_value='2025-02-01T00:00:00+00:00'):
         gsheets_db.done(metadata)
     mock_gworksheet.batch_set_cell.assert_called_once_with(expected_calls)
 
 
 def test_done_cached(gsheets_db, metadata, mock_gworksheet):
-    with patch.object(gsheets_db, '_get_current_datetime_iso', return_value='2025-02-01T00:00:00+00:00'):
+    with patch("auto_archiver.modules.gsheet_db.gsheet_db.get_current_timestamp", return_value='2025-02-01T00:00:00+00:00'):
         gsheets_db.done(metadata, cached=True)
 
     # Verify the status message includes "[cached]"
@@ -126,7 +127,8 @@ def test_done_cached(gsheets_db, metadata, mock_gworksheet):
 def test_done_missing_media(gsheets_db, metadata, mock_gworksheet):
     # clear media from metadata
     metadata.media = []
-    with patch.object(gsheets_db, '_get_current_datetime_iso', return_value='2025-02-01T00:00:00+00:00'):
+    with patch("auto_archiver.modules.gsheet_db.gsheet_db.get_current_timestamp",
+               return_value='2025-02-01T00:00:00+00:00'):
         gsheets_db.done(metadata)
     # Verify nothing media-related gets updated
     call_args = mock_gworksheet.batch_set_cell.call_args[0][0]

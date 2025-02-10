@@ -186,4 +186,3 @@ class TestInstagramAPIExtractor(TestExtractorBase):
 
             assert result.is_success()
             assert "Error downloading stories for test_user" in result.metadata["errors"]
-            # assert "Error downloading posts for test_user" in result.metadata["errors"]

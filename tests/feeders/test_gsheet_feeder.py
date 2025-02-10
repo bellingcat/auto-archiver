@@ -7,10 +7,8 @@ from auto_archiver.modules.gsheet_feeder import GsheetsFeeder
 from auto_archiver.core import Metadata, Feeder
 
 
-def test_initialise_without_sheet_and_sheet_id(setup_module):
-    """Ensure initialise() raises AssertionError if neither sheet nor sheet_id is set.
-    (shouldn't really be asserting in there)
-    """
+def test_setup_without_sheet_and_sheet_id(setup_module):
+    # Ensure setup() raises AssertionError if neither sheet nor sheet_id is set.
     with patch("gspread.service_account"):
         with pytest.raises(AssertionError):
             setup_module(
@@ -145,7 +143,6 @@ def test_open_sheet_with_name_or_id(
             "gsheet_feeder",
             {"service_account": "dummy.json", "sheet": sheet, "sheet_id": sheet_id},
         )
-        feeder.initialise()
         sheet_result = feeder.open_sheet()
         # Validate the correct method was called
         getattr(mock_client, expected_method).assert_called_once_with(
@@ -165,7 +162,6 @@ def test_open_sheet_with_sheet_id(setup_module):
             "gsheet_feeder",
             {"service_account": "dummy.json", "sheet": None, "sheet_id": "ABC123"},
         )
-        feeder.initialise()
         sheet = feeder.open_sheet()
         mock_client.open_by_key.assert_called_once_with("ABC123")
         assert sheet == "MockSheet"
@@ -263,7 +259,6 @@ class TestGSheetsFeederReal:
             ["https://example.com", "done"],
         ]
         worksheet.append_rows(test_rows)
-        self.feeder.initialise()
         metadata_list = list(self.feeder)
 
         # Validate that only the first row is processed

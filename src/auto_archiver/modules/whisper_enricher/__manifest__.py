@@ -1,4 +1,4 @@
-a={
+{
     "name": "Whisper Enricher",
     "type": ["enricher"],
     "requires_setup": True,
