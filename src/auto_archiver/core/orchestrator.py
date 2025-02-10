@@ -111,7 +111,6 @@ class ArchivingOrchestrator:
         # if full, we'll load all modules
         # TODO: BUG** - basic_config won't have steps in it, since these args aren't added to 'basic_parser'
         # but should we add them? Or should we just add them to the 'complete' parser?
-
         if yaml_config != EMPTY_CONFIG:
             # only load the modules enabled in config
             # TODO: if some steps are empty (e.g. 'feeders' is empty), should we default to the 'simple' ones? Or only if they are ALL empty?
@@ -269,7 +268,6 @@ class ArchivingOrchestrator:
             for module in modules_to_load:
                 if module == 'cli_feeder':
                     # pseudo module, don't load it
-                    breakpoint()
                     urls = self.config['urls']
                     if not urls:
                         logger.error("No URLs provided. Please provide at least one URL via the command line, or set up an alternative feeder. Use --help for more information.")
