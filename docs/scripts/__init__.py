@@ -1,0 +1,1 @@
+from scripts import generate_module_docs

@@ -1,20 +1,29 @@
 # Configuration file for the Sphinx documentation builder.
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
-
-# -- Project information -----------------------------------------------------
+import sys
+import os
 from importlib.metadata import metadata
 
+sys.path.insert(0, os.path.abspath('../scripts'))
+from scripts import generate_module_docs
+
+# -- Project Hooks -----------------------------------------------------------
+# convert the module __manifest__.py files into markdown files
+generate_module_docs()
+
+
+# -- Project information -----------------------------------------------------
 package_metadata = metadata("auto-archiver")
 project = package_metadata["name"]
 authors = package_metadata["authors"]
 release = package_metadata["version"]
-
+language = 'en'
 
 # -- General configuration ---------------------------------------------------
 extensions = [
     "autoapi.extension",            # Generate API documentation from docstrings
+    "sphinxcontrib.mermaid",        # Mermaid diagrams
     "myst_parser",                  # Markdown support
-    'sphinxcontrib.mermaid',        # Mermaid diagrams
     "sphinx.ext.viewcode",          # Source code links
     "sphinx.ext.napoleon",          # Google-style and NumPy-style docstrings
     "sphinx.ext.autosectionlabel",
@@ -54,8 +63,10 @@ myst_enable_extensions = [
     "smartquotes",          # Smart quotes
     "linkify",              # Auto-detect links
     "substitution",         # Text substitutions
+    "attrs_block",
 ]
 myst_heading_anchors = 2
+myst_fence_as_directive = ["mermaid"]
 
 source_suffix = {
     ".rst": "restructuredtext",
@@ -63,6 +74,6 @@ source_suffix = {
 }
 
 # -- Options for HTML output -------------------------------------------------
-html_theme = 'furo'
+html_theme = 'sphinx_book_theme'
 # html_static_path = ['_static']
 

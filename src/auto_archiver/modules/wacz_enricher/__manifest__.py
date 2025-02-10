@@ -1,6 +1,6 @@
 {
     "name": "WACZ Enricher",
-    "type": ["enricher", "archiver"],
+    "type": ["enricher", "extractor"],
     "entry_point": "wacz_enricher::WaczExtractorEnricher",
     "requires_setup": True,
     "dependencies": {

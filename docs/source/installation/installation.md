@@ -3,7 +3,7 @@
 
 There are 3  main ways to use the auto-archiver:
 1. Easiest: [via docker](#installing-with-docker)
-2. Local Install: [using pip](#local-installing-with-pip)
+2. Local Install: [using pip](#installing-locally-with-pip)
 3. Developer Install: [see the developer guidelines](../development/developer_guidelines)
 
 
@@ -17,9 +17,9 @@ But **you always need a configuration/orchestration file**, which is where you'l
 Docker works like a virtual machine running inside your computer, it isolates everything and makes installation simple. Since it is an isolated environment when you need to pass it your orchestration file or get downloaded media out of docker you will need to connect folders on your machine with folders inside docker with the `-v` volume flag.
 
 
-1. install [docker](https://docs.docker.com/get-docker/)
-2. pull the auto-archiver docker [image](https://hub.docker.com/r/bellingcat/auto-archiver) with `docker pull bellingcat/auto-archiver`
-3. run the docker image locally in a container: `docker run --rm -v $PWD/secrets:/app/secrets -v $PWD/local_archive:/app/local_archive bellingcat/auto-archiver --config secrets/orchestration.yaml` breaking this command down:
+1. Install [docker](https://docs.docker.com/get-docker/)
+2. Pull the auto-archiver docker [image](https://hub.docker.com/r/bellingcat/auto-archiver) with `docker pull bellingcat/auto-archiver`
+3. Run the docker image locally in a container: `docker run --rm -v $PWD/secrets:/app/secrets -v $PWD/local_archive:/app/local_archive bellingcat/auto-archiver --config secrets/orchestration.yaml` breaking this command down:
    1. `docker run` tells docker to start a new container (an instance of the image)
    2. `--rm` makes sure this container is removed after execution (less garbage locally)
    3. `-v $PWD/secrets:/app/secrets` - your secrets folder
@@ -31,12 +31,12 @@ Docker works like a virtual machine running inside your computer, it isolates ev
        2.  `$PWD/local_archive` is a folder `local_archive/` in case you want to archive locally and have the files accessible outside docker
        3.  `/app/local_archive` is a folder inside docker that you can reference in your orchestration.yml file 
 
-## Local installing with Pip
+## Installing Locally with Pip
 
-1. make sure you have python 3.10 or higher installed
-2. install the package with your preferred package manager: `pip/pipenv/conda install auto-archiver` or `poetry add auto-archiver`
-3. test it's installed with `auto-archiver --help`
-4. run it with your orchestration file and pass any flags you want in the command line `auto-archiver --config secrets/orchestration.yaml` if your orchestration file is inside a `secrets/`, which we advise
+1. Make sure you have python 3.10 or higher installed
+2. Install the package with your preferred package manager: `pip/pipenv/conda install auto-archiver` or `poetry add auto-archiver`
+3. Test it's installed with `auto-archiver --help`
+4. Run it with your orchestration file and pass any flags you want in the command line `auto-archiver --config secrets/orchestration.yaml` if your orchestration file is inside a `secrets/`, which we advise
 
 ### Installing Local Requirements
 
