@@ -65,7 +65,7 @@ class Media:
 
     def is_stored(self, in_storage) -> bool:
         # checks if the media is already stored in the given storage
-        return len(self.urls) > 0 and any([u for u in self.urls if in_storage.get_cdn_url(self) in u])
+        return len(self.urls) > 0 and len(self.urls) == len(in_storage.config["steps"]["storages"])
 
     def set(self, key: str, value: Any) -> Media:
         self.properties[key] = value
