@@ -25,8 +25,7 @@ class InstagramExtractor(Extractor):
     profile_pattern = re.compile(r"{valid_url}(\w+)".format(valid_url=valid_url))
     # TODO: links to stories
 
-    def setup(self, config: dict) -> None:
-        super().setup(config)
+    def setup(self) -> None:
 
         self.insta = instaloader.Instaloader(
             download_geotags=True, download_comments=True, compress_json=False, dirname_pattern=self.download_folder, filename_pattern="{date_utc}_UTC_{target}__{typename}"

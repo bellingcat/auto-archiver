@@ -13,8 +13,7 @@ NO_DUPLICATES_FOLDER = "no-dups/"
 
 class S3Storage(Storage):
 
-    def setup(self, config: dict) -> None:
-        super().setup(config)
+    def setup(self) -> None:
         self.s3 = boto3.client(
             's3',
             region_name=self.region,

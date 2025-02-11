@@ -1,9 +1,7 @@
-
-
 import os
 import json
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 import requests
 import hashlib
 from loguru import logger
@@ -73,3 +71,34 @@ def calculate_file_hash(filename: str, hash_algo = hashlib.sha256, chunksize: in
             if not buf: break
             hash.update(buf)
     return hash.hexdigest()
+
+def get_current_datetime_iso() -> str:
+    return datetime.now(timezone.utc).replace(tzinfo=timezone.utc).isoformat()
+
+
+def get_datetime_from_str(dt_str: str, fmt: str | None = None) -> datetime | None:
+    # parse a datetime string with option of passing a specific format
+    try:
+        return datetime.strptime(dt_str, fmt) if fmt else datetime.fromisoformat(dt_str)
+    except ValueError as e:
+        logger.error(f"Unable to parse datestring {dt_str}: {e}")
+        return None
+
+
+def get_timestamp(ts, utc=True, iso=True) -> str | datetime | None:
+    # Consistent parsing of timestamps
+    # If utc=True, the timezone is set to UTC,
+    # if iso=True, the output is an iso string
+    if not ts: return
+    try:
+        if isinstance(ts, str): ts = datetime.fromisoformat(ts)
+        if isinstance(ts, (int, float)): ts = datetime.fromtimestamp(ts)
+        if utc: ts = ts.replace(tzinfo=timezone.utc)
+        if iso: return ts.isoformat()
+        return ts
+    except Exception as e:
+        logger.error(f"Unable to parse timestamp {ts}: {e}")
+        return None
+
+def get_current_timestamp() -> str:
+    return get_timestamp(datetime.now())

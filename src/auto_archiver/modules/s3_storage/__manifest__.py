@@ -3,7 +3,7 @@
     "type": ["storage"],
     "requires_setup": True,
     "dependencies": {
-        "python": ["boto3", "loguru"],
+        "python": ["hash_enricher", "boto3", "loguru"],
     },
     "configs": {
         "path_generator": {
@@ -49,5 +49,6 @@
     - Requires S3 credentials (API key and secret) and a bucket name to function.
     - The `random_no_duplicate` option ensures no duplicate uploads by leveraging hash-based folder structures.
     - Uses `boto3` for interaction with the S3 API.
+    - Depends on the `HashEnricher` module for hash calculation.
     """
 }

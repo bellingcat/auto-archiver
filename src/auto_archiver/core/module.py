@@ -58,7 +58,7 @@ def get_module_lazy(module_name: str, suppress_warnings: bool = False) -> LazyBa
     
     This has all the information about the module, but does not load the module itself or its dependencies
     
-    To load an actual module, call .setup() on a laz module
+    To load an actual module, call .setup() on a lazy module
     
     """
     if module_name in _LAZY_LOADED_MODULES:
@@ -241,7 +241,8 @@ class LazyBaseModule:
         # merge the default config with the user config
         default_config = dict((k, v['default']) for k, v in self.configs.items() if v.get('default'))
         config[self.name] = default_config  | config.get(self.name, {})
-        instance.setup(config)
+        instance.config_setup(config)
+        instance.setup()
         return instance
 
     def __repr__(self):
