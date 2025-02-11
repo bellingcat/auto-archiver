@@ -1,7 +1,7 @@
 {
     "name": "Auto-Archiver API Database",
     "type": ["database"],
-    "entry_point": "api_db:AAApiDb",
+    "entry_point": "api_db::AAApiDb",
     "requires_setup": True,
     "dependencies": {
         "python": ["requests", "loguru"],
