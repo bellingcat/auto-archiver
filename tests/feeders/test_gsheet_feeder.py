@@ -185,7 +185,7 @@ def test_should_process_sheet(setup_module):
     assert gdb.should_process_sheet("AnotherSheet") == False
 
 
-# @pytest.mark.skip(reason="Requires a real connection")
+@pytest.mark.skip(reason="Requires a real connection")
 class TestGSheetsFeederReal:
     """Testing GSheetsFeeder class"""
 
