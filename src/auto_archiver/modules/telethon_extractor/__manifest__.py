@@ -40,5 +40,9 @@ To use the `TelethonExtractor`, you must configure the following:
 - **Bot Token**: Optional, allows access to additional content (e.g., large videos) but limits private channel archiving.
 - **Channel Invites**: Optional, specify a JSON string of invite links to join channels during setup.
 
+### First Time Login
+The first time you run, you will be prompted to do a authentication with the phone number associated, alternatively you can put your `anon.session` in the root.
+
+
 """
 }
