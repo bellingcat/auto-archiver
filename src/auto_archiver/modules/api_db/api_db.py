@@ -15,11 +15,11 @@ class AAApiDb(Database):
         """ query the database for the existence of this item.
             Helps avoid re-archiving the same URL multiple times.
         """
-        if not self.allow_rearchive: return
-        
+        if not self.use_api_cache: return
+
         params = {"url": item.get_url(), "limit": 15}
         headers = {"Authorization": f"Bearer {self.api_token}", "accept": "application/json"}
-        response = requests.get(os.path.join(self.api_endpoint, "tasks/search-url"), params=params, headers=headers)
+        response = requests.get(os.path.join(self.api_endpoint, "url/search"), params=params, headers=headers)
 
         if response.status_code == 200:
             if len(response.json()):
@@ -30,21 +30,26 @@ class AAApiDb(Database):
             logger.error(f"AA API FAIL ({response.status_code}): {response.json()}")
         return False
 
-
-    def done(self, item: Metadata, cached: bool=False) -> None:
+    def done(self, item: Metadata, cached: bool = False) -> None:
         """archival result ready - should be saved to DB"""
         if not self.store_results: return
-        if cached: 
+        if cached:
             logger.debug(f"skipping saving archive of {item.get_url()} to the AA API because it was cached")
             return
         logger.debug(f"saving archive of {item.get_url()} to the AA API.")
 
-        payload = {'result': item.to_json(), 'public': self.public, 'author_id': self.author_id, 'group_id': self.group_id, 'tags': list(self.tags)}
+        payload = {
+            'author_id': self.author_id,
+            'url': item.get_url(),
+            'public': self.public,
+            'group_id': self.group_id,
+            'tags': list(self.tags),
+            'result': item.to_json(),
+        }
         headers = {"Authorization": f"Bearer {self.api_token}"}
-        response = requests.post(os.path.join(self.api_endpoint, "submit-archive"), json=payload, headers=headers)
+        response = requests.post(os.path.join(self.api_endpoint, "interop/submit-archive"), json=payload, headers=headers)
 
-        if response.status_code == 200:
+        if response.status_code == 201:
             logger.success(f"AA API: {response.json()}")
         else:
             logger.error(f"AA API FAIL ({response.status_code}): {response.json()}")
-

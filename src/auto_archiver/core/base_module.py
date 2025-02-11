@@ -14,7 +14,7 @@ class BaseModule(ABC):
     Base module class. All modules should inherit from this class.
 
     The exact methods a class implements will depend on the type of module it is,
-    however all modules have a .setup(config: dict) method to run any setup code
+    however modules can have a .setup() method to run any setup code
     (e.g. logging in to a site, spinning up a browser etc.)
 
     See BaseModule.MODULE_TYPES for the types of modules you can create, noting that
@@ -60,7 +60,7 @@ class BaseModule(ABC):
     def storages(self) -> list:
         return self.config.get('storages', [])
 
-    def setup(self, config: dict):
+    def config_setup(self, config: dict):
 
         authentication = config.get('authentication', {})
         # extract out concatenated sites
@@ -79,6 +79,10 @@ class BaseModule(ABC):
         self.config = config
         for key, val in config.get(self.name, {}).items():
             setattr(self, key, val)
+
+    def setup(self):
+        # For any additional setup required by modules, e.g. autehntication
+        pass
 
     def auth_for_site(self, site: str, extract_cookies=True) -> Mapping[str, Any]:
         """

@@ -19,6 +19,7 @@ class TelethonExtractor(Extractor):
 
 
     def setup(self) -> None:
+
         """
         1. makes a copy of session_file that is removed in cleanup
         2. trigger login process for telegram or proceed if already saved in a session file

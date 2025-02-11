@@ -1,7 +1,8 @@
 """
 pytest conftest file, for shared fixtures and configuration
 """
-
+import os
+import pickle
 from tempfile import TemporaryDirectory
 from typing import Dict, Tuple
 import hashlib
@@ -114,3 +115,17 @@ def pytest_runtest_setup(item):
             # if name found, test has failed for the combination of class name & test name
             if test_name is not None:
                 pytest.xfail(f"previous test failed ({test_name})")
+
+
+
+@pytest.fixture()
+def unpickle():
+    """
+    Returns a helper function that unpickles a file
+    ** gets the file from the test_files directory: tests/data/test_files **
+    """
+    def _unpickle(path):
+        test_data_dir = os.path.join(os.path.dirname(__file__), "data", "test_files")
+        with open(os.path.join(test_data_dir, path), "rb") as f:
+            return pickle.load(f)
+    return _unpickle
