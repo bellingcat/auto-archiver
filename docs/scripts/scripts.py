@@ -76,11 +76,12 @@ def generate_module_docs():
         # add a link to the autodoc refs
         readme_str += f"\n[API Reference](../../../autoapi/{module.name}/index)\n"
         # create the module.type folder, use the first type just for where to store the file
-        type_folder = SAVE_FOLDER / module.type[0]
-        type_folder.mkdir(exist_ok=True)
-        with open(type_folder / f"{module.name}.md", "w") as f:
-            print("writing", SAVE_FOLDER)
-            f.write(readme_str)
+        for type in manifest['type']:
+            type_folder = SAVE_FOLDER / type
+            type_folder.mkdir(exist_ok=True)
+            with open(type_folder / f"{module.name}.md", "w") as f:
+                print("writing", SAVE_FOLDER)
+                f.write(readme_str)
         generate_index(modules_by_type)
 
     with open(SAVE_FOLDER / "configs_cheatsheet.md", "w") as f:
