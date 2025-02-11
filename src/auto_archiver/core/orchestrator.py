@@ -424,8 +424,8 @@ class ArchivingOrchestrator:
         cached_result = None
         for d in self.databases:
             d.started(result)
-            if (local_result := d.fetch(result)):
-                cached_result = (cached_result or Metadata()).merge(local_result)
+            if local_result := d.fetch(result):
+                cached_result = (cached_result or Metadata()).merge(local_result).merge(result)
         if cached_result:
             logger.debug("Found previously archived entry")
             for d in self.databases:
