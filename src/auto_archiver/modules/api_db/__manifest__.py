@@ -23,7 +23,7 @@
             "default": None,
             "help": "which group of users have access to the archive in case public=false as author",
         },
-        "allow_rearchive": {
+        "use_api_cache": {
             "default": True,
             "type": "bool",
             "help": "if False then the API database will be queried prior to any archiving operations and stop if the link has already been archived",
@@ -43,7 +43,7 @@
 
 ### Features
 - **API Integration**: Supports querying for existing archives and submitting results.
-- **Duplicate Prevention**: Avoids redundant archiving when `allow_rearchive` is disabled.
+- **Duplicate Prevention**: Avoids redundant archiving when `use_api_cache` is disabled.
 - **Configurable**: Supports settings like API endpoint, authentication token, tags, and permissions.
 - **Tagging and Metadata**: Adds tags and manages metadata for archives.
 - **Optional Storage**: Archives results conditionally based on configuration.

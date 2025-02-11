@@ -15,7 +15,7 @@ class AAApiDb(Database):
         """ query the database for the existence of this item.
             Helps avoid re-archiving the same URL multiple times.
         """
-        if not self.allow_rearchive: return
+        if not self.use_api_cache: return
 
         params = {"url": item.get_url(), "limit": 15}
         headers = {"Authorization": f"Bearer {self.api_token}", "accept": "application/json"}
