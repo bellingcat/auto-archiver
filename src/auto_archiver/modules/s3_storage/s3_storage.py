@@ -7,12 +7,11 @@ from loguru import logger
 
 from auto_archiver.core import Media
 from auto_archiver.core import Storage
-from auto_archiver.modules.hash_enricher import HashEnricher
-from auto_archiver.utils.misc import random_str
+from auto_archiver.utils.misc import calculate_file_hash, random_str
 
 NO_DUPLICATES_FOLDER = "no-dups/"
 
-class S3Storage(Storage, HashEnricher):
+class S3Storage(Storage):
 
     def setup(self, config: dict) -> None:
         super().setup(config)
@@ -42,14 +41,13 @@ class S3Storage(Storage, HashEnricher):
                     extra_args['ContentType'] = media.mimetype
             except Exception as e:
                 logger.warning(f"Unable to get mimetype for {media.key=}, error: {e}")
-
         self.s3.upload_fileobj(file, Bucket=self.bucket, Key=media.key, ExtraArgs=extra_args)
         return True
     
     def is_upload_needed(self, media: Media) -> bool:
         if self.random_no_duplicate:
             # checks if a folder with the hash already exists, if so it skips the upload
-            hd = self.calculate_hash(media.filename)
+            hd = calculate_file_hash(media.filename)
             path = os.path.join(NO_DUPLICATES_FOLDER, hd[:24])
 
             if existing_key:=self.file_in_folder(path):

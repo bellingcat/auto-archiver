@@ -5,6 +5,7 @@ import json
 import uuid
 from datetime import datetime
 import requests
+import hashlib
 from loguru import logger
 
 
@@ -54,9 +55,21 @@ def update_nested_dict(dictionary, update_dict):
         else:
             dictionary[key] = value
 
+
 def random_str(length: int = 32) -> str:
     assert length <= 32, "length must be less than 32 as UUID4 is used"
     return str(uuid.uuid4()).replace("-", "")[:length]
 
+
 def json_loader(cli_val):
     return json.loads(cli_val)
+
+
+def calculate_file_hash(filename: str, hash_algo = hashlib.sha256, chunksize: int = 16000000) -> str:
+    hash = hash_algo()
+    with open(filename, "rb") as f:
+        while True:
+            buf = f.read(chunksize)
+            if not buf: break
+            hash.update(buf)
+    return hash.hexdigest()

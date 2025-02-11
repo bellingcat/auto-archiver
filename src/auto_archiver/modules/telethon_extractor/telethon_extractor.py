@@ -6,14 +6,14 @@ from telethon.tl.functions.messages import ImportChatInviteRequest
 from telethon.errors.rpcerrorlist import UserAlreadyParticipantError, FloodWaitError, InviteRequestSentError, InviteHashExpiredError
 from loguru import logger
 from tqdm import tqdm
-import re, time, json, os
+import re, time, os
 
 from auto_archiver.core import Extractor
 from auto_archiver.core import Metadata, Media
 from auto_archiver.utils import random_str
 
 
-class TelethonArchiver(Extractor):
+class TelethonExtractor(Extractor):
     valid_url = re.compile(r"https:\/\/t\.me(\/c){0,1}\/(.+)\/(\d+)")
     invite_pattern = re.compile(r"t.me(\/joinchat){0,1}\/\+?(.+)")
 
