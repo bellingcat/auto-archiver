@@ -15,15 +15,9 @@ from .module import BaseModule
 
 from typing import Any, List, Type, Tuple
 
-yaml: YAML = YAML()
+_yaml: YAML = YAML()
 
-b = yaml.load("""
-          # This is a comment
-          site.com,site2.com:
-            key: value
-            key2: value2
-          """)
-EMPTY_CONFIG = yaml.load("""
+EMPTY_CONFIG = _yaml.load("""
 # Auto Archiver Configuration
 # Steps are the modules that will be run in the order they are defined
 
@@ -149,7 +143,7 @@ def read_yaml(yaml_filename: str) -> CommentedMap:
     config = None
     try:
         with open(yaml_filename, "r", encoding="utf-8") as inf:
-            config = yaml.load(inf)
+            config = _yaml.load(inf)
     except FileNotFoundError:
         pass
 
@@ -166,4 +160,4 @@ def store_yaml(config: CommentedMap, yaml_filename: str) -> None:
 
     config_to_save.pop('urls', None)
     with open(yaml_filename, "w", encoding="utf-8") as outf:
-        yaml.dump(config_to_save, outf)
+        _yaml.dump(config_to_save, outf)

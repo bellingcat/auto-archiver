@@ -109,6 +109,6 @@ class GsheetsDb(Database):
             gw: GWorksheet = gsheet.get("worksheet")
             row: int = gsheet.get("row")
         elif self.sheet_id:
-            print(self.sheet_id)
+            logger.error(f"Unable to retrieve Gsheet for {item.get_url()}, GsheetDB must be used alongside GsheetFeeder.")
 
         return gw, row
