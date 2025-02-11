@@ -41,7 +41,7 @@ def metadata():
     metadata.set_title("Example Title")
     metadata.set_content("Example Content")
     metadata.success("my-archiver")
-    metadata.set("timestamp", "2025-01-01T00:00:00Z")
+    metadata.set("timestamp", "2025-01-01T00:00:00")
     metadata.set("date", "2025-02-04T18:22:24.909112+00:00")
     return metadata
 
