@@ -27,13 +27,6 @@ Check out the [core modules](https://github.com/bellingcat/auto-archiver/tree/ma
 
 The manifest file is where you define the core information of your module. It is a python dict containing important information, here's an example file:
 
-```{code} python
-:filename: myfile.py
-
-def setup():
-   pass
-```
-
 ```{include} ../../../tests/data/test_modules/example_module/__manifest__.py
 :name: __manifest__.py
 :literal:

@@ -21,11 +21,11 @@ The recommended way to configure auto-archiver for long-term and deployed projec
 A default `orchestration.yaml` will be created for you the first time you run auto-archiver (without any arguments). Here's what it looks like:
 
 <details>
-<summary>View example.orchestration.yaml</summary>
+<summary>View example orchestration.yaml</summary>
 
 ```{literalinclude} ../example.orchestration.yaml
    :language: yaml
-   :caption: example.orchestration.yaml
+   :caption: orchestration.yaml
 ```
 
 </details>
