@@ -7,7 +7,7 @@ from auto_archiver.core.metadata import Metadata
 from tests.storages.test_storage_base import TestStorageBase
 
 
-class TestGDriveStorage(TestStorageBase):
+class TestGDriveStorage:
     """
     Test suite for GDriveStorage.
     """
@@ -21,6 +21,10 @@ class TestGDriveStorage(TestStorageBase):
             'service_account': 'fake_service_account.json'
                     }
 
+    @pytest.fixture(autouse=True)
+    def gdrive(self, setup_module):
+        with patch('google.oauth2.service_account.Credentials.from_service_account_file') as mock_creds:
+            self.storage = setup_module(self.module_name, self.config)
 
     def test_initialize_fails_with_non_existent_creds(self):
         """
@@ -28,12 +32,14 @@ class TestGDriveStorage(TestStorageBase):
         """
         # Act and Assert
         with pytest.raises(FileNotFoundError) as exc_info:
-            self.storage.setup(self.config)
+            self.storage.setup()
         assert "No such file or directory" in str(exc_info.value)
+
 
     def test_path_parts(self):
         media = Media(filename="test.jpg")
         media.key = "folder1/folder2/test.jpg"
+
 
 @pytest.mark.skip(reason="Requires real credentials")
 @pytest.mark.download
