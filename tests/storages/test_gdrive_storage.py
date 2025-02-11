@@ -35,7 +35,7 @@ class TestGDriveStorage(TestStorageBase):
         media = Media(filename="test.jpg")
         media.key = "folder1/folder2/test.jpg"
 
-# @pytest.mark.skip(reason="Requires real credentials")
+@pytest.mark.skip(reason="Requires real credentials")
 @pytest.mark.download
 class TestGDriveStorageConnected(TestStorageBase):
     """
