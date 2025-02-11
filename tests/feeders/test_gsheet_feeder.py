@@ -52,7 +52,7 @@ def gsheet_feeder(setup_module) -> GsheetsFeeder:
     return feeder
 
 
-class TestWorksheet:
+class MockWorksheet:
     """
     mimics the bits we need from gworksheet
     """
@@ -91,7 +91,7 @@ class TestWorksheet:
 
 
 def test__process_rows(gsheet_feeder: GsheetsFeeder):
-    testworksheet = TestWorksheet()
+    testworksheet = MockWorksheet()
     metadata_items = list(gsheet_feeder._process_rows(testworksheet))
     assert len(metadata_items) == 3
     assert isinstance(metadata_items[0], Metadata)
@@ -99,7 +99,7 @@ def test__process_rows(gsheet_feeder: GsheetsFeeder):
 
 
 def test__set_metadata(gsheet_feeder: GsheetsFeeder):
-    worksheet = TestWorksheet()
+    worksheet = MockWorksheet()
     metadata = Metadata()
     gsheet_feeder._set_context(metadata, worksheet, 1)
     assert metadata.get_context("gsheet") == {"row": 1, "worksheet": worksheet}
@@ -112,7 +112,7 @@ def test__set_metadata_with_folder_pickled(gsheet_feeder: GsheetsFeeder, workshe
 
 
 def test__set_metadata_with_folder(gsheet_feeder: GsheetsFeeder):
-    testworksheet = TestWorksheet()
+    testworksheet = MockWorksheet()
     metadata = Metadata()
     testworksheet.wks.title = "TestSheet"
     gsheet_feeder._set_context(metadata, testworksheet, 6)

@@ -24,7 +24,7 @@ def mock_metadata():
     metadata.status = "done"
     metadata.get_title.return_value = "Example Title"
     metadata.get.return_value = "Example Content"
-    metadata.get_timestamp.return_value = "2025-01-01T00:00:00Z"
+    metadata.get_timestamp.return_value = "2025-01-01T00:00:00"
     metadata.get_final_media.return_value = MagicMock(spec=Media)
     metadata.get_all_media.return_value = []
     metadata.get_media_by_id.return_value = None
