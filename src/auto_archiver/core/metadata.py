@@ -44,6 +44,7 @@ class Metadata:
         if overwrite_left:
             if right.status and len(right.status):
                 self.status = right.status
+            self._context.update(right._context)
             for k, v in right.metadata.items():
                 assert k not in self.metadata or type(v) == type(self.get(k))
                 if type(v) not in [dict, list, set] or k not in self.metadata:
