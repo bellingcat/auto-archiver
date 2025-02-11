@@ -8,9 +8,9 @@
 :caption: Contents:
 
 Overview <self>
-how_to
 installation/installation.rst
 core_modules.md
+how_to
 development/developer_guidelines
 autoapi/index.rst
 ```

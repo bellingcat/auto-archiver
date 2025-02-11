@@ -2,6 +2,7 @@
 
 ```{toctree}
 :depth: 1
+:hidden:
 
 configurations.md
 config_cheatsheet.md

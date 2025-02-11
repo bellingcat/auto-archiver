@@ -1,13 +1,6 @@
 
 # Configuration
 
-
-```{toctree}
-:hidden:
-
-configurations
-```
-
 This section of the documentation provides guidelines for configuring the tool.
 
 ## Configuring from the Command Line
