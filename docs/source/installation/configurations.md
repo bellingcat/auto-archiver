@@ -1,5 +1,5 @@
 
-# Configuring
+# Configuration
 
 
 ```{toctree}

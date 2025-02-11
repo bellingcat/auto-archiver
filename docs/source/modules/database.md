@@ -6,3 +6,9 @@ The default (enabled) databases are the CSV Database and the Console Database.
 
 ```{include} autogen/database.md
 ```
+
+```{toctree}
+:depth: 1
+:glob:
+autogen/database/*
+```

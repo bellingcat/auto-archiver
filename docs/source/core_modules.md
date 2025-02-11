@@ -18,6 +18,7 @@ These pages describe the core modules that come with `auto-archiver` and provide
 :caption: Core Modules
 :hidden:
 
+modules/config_cheatsheet
 modules/feeder
 modules/extractor
 modules/enricher

@@ -4,6 +4,7 @@
 :depth: 1
 
 configurations.md
+config_cheatsheet.md
 ```
 
 There are 3  main ways to use the auto-archiver:

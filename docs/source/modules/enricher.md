@@ -5,3 +5,9 @@ Enricher modules are used to add additional information to the items  that have 
 
 ```{include} autogen/enricher.md
 ```
+
+```{toctree}
+:depth: 1
+:glob:
+autogen/enricher/*
+```

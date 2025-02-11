@@ -9,3 +9,9 @@ Extractors that are able to extract content from a wide range of websites includ
 
 ```{include} autogen/extractor.md
 ```
+
+```{toctree}
+:depth: 1
+:glob:
+autogen/extractor/*
+```

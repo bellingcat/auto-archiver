@@ -15,12 +15,17 @@ type_color = {
     'formatter': "<span style='color: #00FFFF'>[formatter](/core_modules.md#formatter-modules)</a></span>",
 }
 
+TABLE_HEADER = ("Option", "Description", "Default", "Type")
 
 def generate_module_docs():
     SAVE_FOLDER.mkdir(exist_ok=True)
     modules_by_type = {}
 
-    for module in available_modules(with_manifest=True):
+    header_row = "| " + " | ".join(TABLE_HEADER) + "|\n" + "| --- " * len(TABLE_HEADER) + "|\n"
+    configs_cheatsheet = "\n## Configuration Options\n"
+    configs_cheatsheet += header_row
+
+    for module in sorted(available_modules(with_manifest=True), key=lambda x: (x.requires_setup, x.name)):
         # generate the markdown file from the __manifest__.py file.
 
         manifest = module.manifest
@@ -39,8 +44,7 @@ def generate_module_docs():
 """
         if manifest['configs']:
             readme_str += "\n## Configuration Options\n"
-            readme_str += "| Option | Description | Default | Type |\n"
-            readme_str += "| --- |  --- | --- | --- |\n"
+            readme_str += header_row
             for key, value in manifest['configs'].items():
                 type = value.get('type', 'string')
                 if type == 'auto_archiver.utils.json_loader':
@@ -51,16 +55,22 @@ def generate_module_docs():
                 help = "**Required**. " if value.get('required', False) else "Optional. "
                 help += value.get('help', '')
                 readme_str += f"| `{module.name}.{key}` | {help} | {value.get('default', '')} | {type} |\n"
+                configs_cheatsheet += f"| `{module.name}.{key}` | {help} | {value.get('default', '')} | {type} |\n"
         
 
         # make type folder if it doesn't exist
 
-
-        with open(SAVE_FOLDER / f"{module.name}.md", "w") as f:
+        # create the module.type folder, use the first type just for where to store the file
+        type_folder = SAVE_FOLDER / module.type[0]
+        type_folder.mkdir(exist_ok=True)
+        with open(type_folder / f"{module.name}.md", "w") as f:
             print("writing", SAVE_FOLDER)
             f.write(readme_str)
-
         generate_index(modules_by_type)
+
+    with open(SAVE_FOLDER / "configs_cheatsheet.md", "w") as f:
+        f.write(configs_cheatsheet)
+
 
 def generate_index(modules_by_type):
     readme_str = ""
@@ -68,7 +78,7 @@ def generate_index(modules_by_type):
         modules = modules_by_type.get(type, [])
         module_str = f"## {type.capitalize()} Modules\n"
         for module in modules:
-            module_str += f"\n[{module.manifest['name']}](/modules/autogen/{module.name}.md)\n"
+            module_str += f"\n[{module.manifest['name']}](/modules/autogen/{module.type[0]}/{module.name}.md)\n"
         with open(SAVE_FOLDER / f"{type}.md", "w") as f:
             print("writing", SAVE_FOLDER / f"{type}.md")
             f.write(module_str)

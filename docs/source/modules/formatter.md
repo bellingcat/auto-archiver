@@ -4,3 +4,9 @@ Formatter modules are used to format the data extracted from a URL into a specif
 
 ```{include} autogen/formatter.md
 ```
+
+```{toctree}
+:depth: 1
+:glob:
+autogen/formatter/*
+```
