@@ -1,6 +1,10 @@
 import pytest
 from auto_archiver.modules.timestamping_enricher.timestamping_enricher import TimestampingEnricher
-
+from rfc3161_client import (
+    TimestampRequestBuilder,
+    TimeStampResponse,
+    decode_timestamp_response,
+)
 
 @pytest.fixture
 def digicert():
@@ -9,11 +13,11 @@ def digicert():
 
 @pytest.mark.download
 def test_sign_data(setup_module):
-    tsa_url = "http://timestamp.digicert.com"
+    tsa_url = "http://timestamp.identrust.com"
     tsp: TimestampingEnricher = setup_module("timestamping_enricher")
     data = b"4b7b4e39f12b8c725e6e603e6d4422500316df94211070682ef10260ff5759ef"
-    result: bytes = tsp.sign_data(tsa_url, data)
-    assert isinstance(result, bytes)
+    result: TimeStampResponse = tsp.sign_data(tsa_url, data)
+    assert isinstance(result, TimeStampResponse)
 
     try:
         tsp.verify_signed(result, data)
