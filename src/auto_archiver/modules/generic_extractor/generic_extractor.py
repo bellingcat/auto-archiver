@@ -1,6 +1,6 @@
 import datetime, os, yt_dlp, pysubs2
 import importlib
-from typing import Type
+from typing import Generator, Type
 from yt_dlp.extractor.common import InfoExtractor
 
 from loguru import logger
@@ -11,7 +11,7 @@ from auto_archiver.core import Metadata, Media
 class GenericExtractor(Extractor):
     _dropins = {}
 
-    def suitable_extractors(self, url: str) -> list[str]:
+    def suitable_extractors(self, url: str) -> Generator[str, None, None]:
         """
         Returns a list of valid extractors for the given URL"""
         for info_extractor in yt_dlp.YoutubeDL()._ies.values():
@@ -116,7 +116,7 @@ class GenericExtractor(Extractor):
 
     def get_metadata_for_post(self, info_extractor: Type[InfoExtractor], url: str, ydl: yt_dlp.YoutubeDL) -> Metadata:
         """
-        Calls into the ytdlp InfoExtract subclass to use the prive _extract_post method to get the post metadata.
+        Calls into the ytdlp InfoExtract subclass to use the private _extract_post method to get the post metadata.
         """
 
         ie_instance = info_extractor(downloader=ydl)
