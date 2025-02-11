@@ -22,14 +22,12 @@ def test_sign_data(setup_module):
 
 def test_tsp_enricher_download_syndication(setup_module, digicert):
     tsp: TimestampingEnricher = setup_module("timestamping_enricher")
-    try:
-        cert_chain = tsp.download_and_verify_certificate(digicert)
-        assert len(cert_chain) == 3
-        assert cert_chain[0].filename == "/var/folders/h7/g67pz_kx67q7qxzzrrhvry5r0000gn/T/74515005589773707779.crt"
-        assert cert_chain[1].filename == "/var/folders/h7/g67pz_kx67q7qxzzrrhvry5r0000gn/T/95861100433808324400.crt"
-        assert cert_chain[2].filename == "/var/folders/h7/g67pz_kx67q7qxzzrrhvry5r0000gn/T/15527051335772373346.crt"
-    except Exception as e:
-        pytest.fail(f"Verification failed: {e}")
+
+    cert_chain = tsp.download_and_verify_certificate(digicert)
+    assert len(cert_chain) == 3
+    assert cert_chain[0].filename == f"{tsp.tmp_dir}/74515005589773707779.crt"
+    assert cert_chain[1].filename == f"{tsp.tmp_dir}/95861100433808324400.crt"
+    assert cert_chain[2].filename == f"{tsp.tmp_dir}/15527051335772373346.crt"
 
 
 def test_tst_cert_valid(setup_module, digicert):
