@@ -12,6 +12,7 @@ Extractors that are able to extract content from a wide range of websites includ
 
 ```{toctree}
 :depth: 1
+:hidden:
 :glob:
 autogen/extractor/*
 ```

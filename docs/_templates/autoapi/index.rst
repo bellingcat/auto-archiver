@@ -32,3 +32,15 @@ Util Functions
    {% endfor %}
 
 
+Core Modules
+------------
+
+.. toctree::
+   :titlesonly:
+
+   {% for page in pages|selectattr("is_top_level_object") %}
+   {% if page.name != 'core' and page.name != 'utils' %}
+   {{ page.include_path }}
+   {% endif %}
+   {% endfor %}
+

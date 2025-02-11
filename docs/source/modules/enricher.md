@@ -8,6 +8,7 @@ Enricher modules are used to add additional information to the items  that have 
 
 ```{toctree}
 :depth: 1
+:hidden:
 :glob:
 autogen/enricher/*
 ```

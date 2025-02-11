@@ -58,8 +58,8 @@ def generate_module_docs():
                 configs_cheatsheet += f"| `{module.name}.{key}` | {help} | {value.get('default', '')} | {type} |\n"
         
 
-        # make type folder if it doesn't exist
-
+        # add a link to the autodoc refs
+        readme_str += f"\n[API Reference](../../../autoapi/{module.name}/index)\n"
         # create the module.type folder, use the first type just for where to store the file
         type_folder = SAVE_FOLDER / module.type[0]
         type_folder.mkdir(exist_ok=True)

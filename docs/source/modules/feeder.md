@@ -10,5 +10,6 @@ The default feeder is the command line feeder, which allows you to input URLs di
 ```{toctree}
 :depth: 1
 :glob:
+:hidden:
 autogen/feeder/*
 ```

@@ -36,10 +36,12 @@ exclude_patterns = []
 
 # -- AutoAPI Configuration ---------------------------------------------------
 autoapi_type = 'python'
-autoapi_dirs = ["../../src/auto_archiver/core/", "../../src/auto_archiver/utils/", "../../src/auto_archiver/modules/"]
+autoapi_dirs = ["../../src/auto_archiver/core/", "../../src/auto_archiver/utils/"]
+# get all the modules and add them to the autoapi_dirs
+autoapi_dirs.extend([f"../../src/auto_archiver/modules/{m}" for m in os.listdir("../../src/auto_archiver/modules")])
 autodoc_typehints = "signature"     # Include type hints in the signature
 autoapi_ignore = ["*/version.py", ]                 # Ignore specific modules
-autoapi_keep_files = False          # Option to retain intermediate JSON files for debugging
+autoapi_keep_files = True          # Option to retain intermediate JSON files for debugging
 autoapi_add_toctree_entry = True    # Include API docs in the TOC
 autoapi_python_use_implicit_namespaces = True
 autoapi_template_dir = "../_templates/autoapi"
@@ -47,7 +49,6 @@ autoapi_options = [
     "members",
     "undoc-members",
     "show-inheritance",
-    "show-module-summary",
     "imported-members",
 ]
 
