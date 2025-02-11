@@ -8,7 +8,8 @@ class Facebook(GenericDropin):
             url.replace('://m.facebook.com/', '://www.facebook.com/'), video_id)
         webpage = ie_instance._download_webpage(url, ie_instance._match_valid_url(url).group('id'))
 
-        post_data = ie_instance._extract_from_url.extract_metadata(webpage)
+        # TODO: fix once https://github.com/yt-dlp/yt-dlp/pull/12275 is merged
+        post_data = ie_instance._extract_metadata(webpage)
         return post_data
     
     def create_metadata(self, post: dict, ie_instance, archiver, url):
