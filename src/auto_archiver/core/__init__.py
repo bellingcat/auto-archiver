@@ -3,9 +3,15 @@
 """
 from .metadata import Metadata
 from .media import Media
-from .step import Step
-from .context import ArchivingContext
+from .module import BaseModule
 
 # cannot import ArchivingOrchestrator/Config to avoid circular dep
 # from .orchestrator import ArchivingOrchestrator
 # from .config import Config
+
+from .database import Database
+from .enricher import Enricher
+from .feeder import Feeder
+from .storage import Storage
+from .extractor import Extractor
+from .formatter import Formatter

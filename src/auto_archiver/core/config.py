@@ -5,125 +5,159 @@ flexible setup in various environments.
 
 """
 
-import importlib
 import argparse
-import yaml
-from dataclasses import dataclass, field
-from typing import List
-from collections import defaultdict
+from ruamel.yaml import YAML, CommentedMap, add_representer
+
 from loguru import logger
 
-from ..archivers import Archiver
-from ..feeders import Feeder
-from ..databases import Database
-from ..formatters import Formatter
-from ..storages import Storage
-from ..enrichers import Enricher
-from . import Step
-from ..utils import update_nested_dict
+from copy import deepcopy
+from .module import BaseModule
 
+from typing import Any, List, Type, Tuple
 
-@dataclass
-class Config:
-    configurable_parents = [
-        Feeder,
-        Enricher,
-        Archiver,
-        Database,
-        Storage,
-        Formatter
-        # Util
-    ]
-    feeder: Feeder
-    formatter: Formatter
-    archivers: List[Archiver] = field(default_factory=[])
-    enrichers: List[Enricher] = field(default_factory=[])
-    storages: List[Storage] = field(default_factory=[])
-    databases: List[Database] = field(default_factory=[])
+_yaml: YAML = YAML()
 
-    def __init__(self) -> None:
-        self.defaults = {}
-        self.cli_ops = {}
-        self.config = {}
+EMPTY_CONFIG = _yaml.load("""
+# Auto Archiver Configuration
+# Steps are the modules that will be run in the order they are defined
 
-    def parse(self, use_cli=True, yaml_config_filename: str = None, overwrite_configs: str = {}):
+steps:""" + "".join([f"\n   {module}s: []" for module in BaseModule.MODULE_TYPES]) + \
+"""
+
+# Global configuration
+
+# Authentication
+# a dictionary of authentication information that can be used by extractors to login to website. 
+# you can use a comma separated list for multiple domains on the same line (common usecase: x.com,twitter.com)
+# Common login 'types' are username/password, cookie, api key/token.
+# There are two special keys for using cookies, they are: cookies_file and cookies_from_browser. 
+# Some Examples:
+# facebook.com:
+#   username: "my_username"
+#   password: "my_password"
+# or for a site that uses an API key:
+# twitter.com,x.com:
+#   api_key
+#   api_secret
+# youtube.com:
+#   cookie: "login_cookie=value ; other_cookie=123" # multiple 'key=value' pairs should be separated by ;
+
+authentication: {}
+
+# These are the global configurations that are used by the modules
+
+logging:
+  level: INFO
+""")
+# note: 'logging' is explicitly added above in order to better format the config file
+
+class DefaultValidatingParser(argparse.ArgumentParser):
+
+    def error(self, message):
         """
-        if yaml_config_filename is provided, the --config argument is ignored, 
-        useful for library usage when the config values are preloaded
-        overwrite_configs is a dict that overwrites the yaml file contents
+        Override of error to format a nicer looking error message using logger
         """
-        # 1. parse CLI values
-        if use_cli:
-            parser = argparse.ArgumentParser(
-                # prog = "auto-archiver",
-                description="Auto Archiver is a CLI tool to archive media/metadata from online URLs; it can read URLs from many sources (Google Sheets, Command Line, ...); and write results to many destinations too (CSV, Google Sheets, MongoDB, ...)!",
-                epilog="Check the code at https://github.com/bellingcat/auto-archiver"
-            )
+        logger.error("Problem with configuration file (tip: use --help to see the available options):")
+        logger.error(message)
+        self.exit(2)
 
-            parser.add_argument('--config', action='store', dest='config', help='the filename of the YAML configuration file (defaults to \'config.yaml\')', default='orchestration.yaml')
-            parser.add_argument('--version', action='version', version=importlib.metadata.version('auto_archiver'))
+    def parse_known_args(self, args=None, namespace=None):
+        """
+        Override of parse_known_args to also check the 'defaults' values - which are passed in from the config file
+        """
+        for action in self._actions:
+            if not namespace or action.dest not in namespace:
+                # for actions that are required and already have a default value, remove the 'required' check
+                if action.required and action.default is not None:
+                    action.required = False
 
-        # Iterate over all step subclasses to gather default configs and CLI arguments
-        for configurable in self.configurable_parents:
-            child: Step
-            for child in configurable.__subclasses__():
-                assert child.configs() is not None and type(child.configs()) == dict, f"class '{child.name}' should have a configs method returning a dict."
-                for config, details in child.configs().items():
-                    assert "." not in child.name, f"class prop name cannot contain dots('.'): {child.name}"
-                    assert "." not in config, f"config property cannot contain dots('.'): {config}"
-                    config_path = f"{child.name}.{config}"
+                if action.default is not None:
+                    try:
+                        self._check_value(action, action.default)
+                    except argparse.ArgumentError as e:
+                        logger.error(f"You have an invalid setting in your configuration file ({action.dest}):")
+                        logger.error(e)
+                        exit()
 
-                    if use_cli:
-                        try:
-                            parser.add_argument(f'--{config_path}', action='store', dest=config_path, help=f"{details['help']} (defaults to {details['default']})", choices=details.get("choices", None))
-                        except argparse.ArgumentError:
-                            # captures cases when a Step is used in 2 flows, eg: wayback enricher vs wayback archiver
-                            pass
+        return super().parse_known_args(args, namespace)
 
-                    self.defaults[config_path] = details["default"]
-                    if "cli_set" in details:
-                        self.cli_ops[config_path] = details["cli_set"]
 
-        if use_cli:
-            args = parser.parse_args()
-            yaml_config_filename = yaml_config_filename or getattr(args, "config")
-        else: args = {}
+def to_dot_notation(yaml_conf: CommentedMap | dict) -> dict:
+    dotdict = {}
 
-        # 2. read YAML config file (or use provided value)
-        self.yaml_config = self.read_yaml(yaml_config_filename)
-        update_nested_dict(self.yaml_config, overwrite_configs)
+    def process_subdict(subdict, prefix=""):
+        for key, value in subdict.items():
+            if is_dict_type(value):
+                process_subdict(value, f"{prefix}{key}.")
+            else:
+                dotdict[f"{prefix}{key}"] = value
 
-        # 3. CONFIGS: decide value with priority: CLI >> config.yaml >> default
-        self.config = defaultdict(dict)
-        for config_path, default in self.defaults.items():
-            child, config = tuple(config_path.split("."))
-            val = getattr(args, config_path, None)
-            if val is not None and config_path in self.cli_ops:
-                val = self.cli_ops[config_path](val, default)
-            if val is None:
-                val = self.yaml_config.get("configurations", {}).get(child, {}).get(config, default)
-            self.config[child][config] = val
-        self.config = dict(self.config)
+    process_subdict(yaml_conf)
+    return dotdict
 
-        # 4. STEPS: read steps and validate they exist
-        steps = self.yaml_config.get("steps", {})
-        assert "archivers" in steps, "your configuration steps are missing the archivers property"
-        assert "storages" in steps, "your configuration steps are missing the storages property"
+def from_dot_notation(dotdict: dict) -> dict:
+    normal_dict = {}
 
-        self.feeder = Feeder.init(steps.get("feeder", "cli_feeder"), self.config)
-        self.formatter = Formatter.init(steps.get("formatter", "mute_formatter"), self.config)
-        self.enrichers = [Enricher.init(e, self.config) for e in steps.get("enrichers", [])]
-        self.archivers = [Archiver.init(e, self.config) for e in (steps.get("archivers") or [])]
-        self.databases = [Database.init(e, self.config) for e in steps.get("databases", [])]
-        self.storages = [Storage.init(e, self.config) for e in steps.get("storages", [])]
+    def add_part(key, value, current_dict):
+        if "." in key:
+            key_parts = key.split(".")
+            current_dict.setdefault(key_parts[0], {})
+            add_part(".".join(key_parts[1:]), value, current_dict[key_parts[0]])
+        else:
+            current_dict[key] = value
 
-        logger.info(f"FEEDER: {self.feeder.name}")
-        logger.info(f"ENRICHERS: {[x.name for x in self.enrichers]}")
-        logger.info(f"ARCHIVERS: {[x.name for x in self.archivers]}")
-        logger.info(f"DATABASES: {[x.name for x in self.databases]}")
-        logger.info(f"STORAGES: {[x.name for x in self.storages]}")
-        logger.info(f"FORMATTER: {self.formatter.name}")
+    for key, value in dotdict.items():
+        add_part(key, value, normal_dict)
 
-    def read_yaml(self, yaml_filename: str) -> dict:
+    return normal_dict
+
+
+def is_list_type(value):
+    return isinstance(value, list) or isinstance(value, tuple) or isinstance(value, set)
+
+def is_dict_type(value):
+    return isinstance(value, dict) or isinstance(value, CommentedMap)
+
+def merge_dicts(dotdict: dict, yaml_dict: CommentedMap) -> CommentedMap:
+    yaml_dict: CommentedMap = deepcopy(yaml_dict)
+
+    # first deal with lists, since 'update' replaces lists from a in b, but we want to extend
+    def update_dict(subdict, yaml_subdict):
+        for key, value in subdict.items():
+            if not yaml_subdict.get(key):
+                yaml_subdict[key] = value
+                continue
+
+            if is_dict_type(value):
+                update_dict(value, yaml_subdict[key])
+            elif is_list_type(value):
+                yaml_subdict[key].extend(s for s in value if s not in yaml_subdict[key])
+            else:
+                yaml_subdict[key] = value
+
+    update_dict(from_dot_notation(dotdict), yaml_dict)
+
+    return yaml_dict
+
+def read_yaml(yaml_filename: str) -> CommentedMap:
+    config = None
+    try:
         with open(yaml_filename, "r", encoding="utf-8") as inf:
-            return yaml.safe_load(inf)
+            config = _yaml.load(inf)
+    except FileNotFoundError:
+        pass
+
+    if not config:
+        config = EMPTY_CONFIG
+    
+    return config
+
+# TODO: make this tidier/find a way to notify of which keys should not be stored
+
+
+def store_yaml(config: CommentedMap, yaml_filename: str) -> None:
+    config_to_save = deepcopy(config)
+
+    config_to_save.pop('urls', None)
+    with open(yaml_filename, "w", encoding="utf-8") as outf:
+        _yaml.dump(config_to_save, outf)

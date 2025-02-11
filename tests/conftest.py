@@ -1,11 +1,14 @@
 """
 pytest conftest file, for shared fixtures and configuration
 """
-
+import os
+import pickle
+from tempfile import TemporaryDirectory
 from typing import Dict, Tuple
-
+import hashlib
 import pytest
 from auto_archiver.core.metadata import Metadata
+from auto_archiver.core.module import get_module, _LAZY_LOADED_MODULES
 
 # Test names inserted into this list will be run last. This is useful for expensive/costly tests
 # that you only want to run if everything else succeeds (e.g. API calls). The order here is important
@@ -13,6 +16,38 @@ from auto_archiver.core.metadata import Metadata
 # format is the name of the module (python file) without the .py extension
 TESTS_TO_RUN_LAST = ['test_twitter_api_archiver']
 
+@pytest.fixture
+def setup_module(request):
+    def _setup_module(module_name, config={}):
+
+        if isinstance(module_name, type):
+            # get the module name:
+            # if the class does not have a .name, use the name of the parent folder
+            module_name = module_name.__module__.rsplit(".",2)[-2]
+
+        m = get_module(module_name, {module_name: config})
+
+        # add the tmp_dir to the module
+        tmp_dir = TemporaryDirectory()
+        m.tmp_dir = tmp_dir.name
+
+        def cleanup():
+            _LAZY_LOADED_MODULES.pop(module_name)
+            tmp_dir.cleanup()
+        request.addfinalizer(cleanup)
+
+        return m
+
+    return _setup_module
+
+@pytest.fixture
+def check_hash():
+    def _check_hash(filename: str, hash: str):
+        with open(filename, "rb") as f:
+            buf = f.read()
+            assert hash == hashlib.sha256(buf).hexdigest()
+
+    return _check_hash
 
 @pytest.fixture
 def make_item():
@@ -80,3 +115,17 @@ def pytest_runtest_setup(item):
             # if name found, test has failed for the combination of class name & test name
             if test_name is not None:
                 pytest.xfail(f"previous test failed ({test_name})")
+
+
+
+@pytest.fixture()
+def unpickle():
+    """
+    Returns a helper function that unpickles a file
+    ** gets the file from the test_files directory: tests/data/test_files **
+    """
+    def _unpickle(path):
+        test_data_dir = os.path.join(os.path.dirname(__file__), "data", "test_files")
+        with open(os.path.join(test_data_dir, path), "rb") as f:
+            return pickle.load(f)
+    return _unpickle
