@@ -266,6 +266,11 @@ class GenericExtractor(Extractor):
     def download(self, item: Metadata) -> Metadata:
         url = item.get_url()
 
+        #TODO: this is a temporary hack until this issue is closed: https://github.com/yt-dlp/yt-dlp/issues/11025
+        if url.startswith("https://ya.ru"):
+            url = url.replace("https://ya.ru", "https://yandex.ru")
+            item.set("replaced_url", url)
+
 
         ydl_options = {'outtmpl': os.path.join(self.tmp_dir, f'%(id)s.%(ext)s'), 
                        'quiet': False, 'noplaylist': not self.allow_playlist ,
