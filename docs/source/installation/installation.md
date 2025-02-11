@@ -1,5 +1,10 @@
 # Installing Auto Archiver
 
+```{toctree}
+:depth: 1
+
+configurations.md
+```
 
 There are 3  main ways to use the auto-archiver:
 1. Easiest: [via docker](#installing-with-docker)

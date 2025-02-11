@@ -21,13 +21,12 @@ language = 'en'
 
 # -- General configuration ---------------------------------------------------
 extensions = [
+    "myst_parser",                  # Markdown support
     "autoapi.extension",            # Generate API documentation from docstrings
     "sphinxcontrib.mermaid",        # Mermaid diagrams
-    "myst_parser",                  # Markdown support
     "sphinx.ext.viewcode",          # Source code links
     "sphinx.ext.napoleon",          # Google-style and NumPy-style docstrings
     "sphinx.ext.autosectionlabel",
-    # "sphinx.ext.autodoc",           # Include custom docstrings
     # 'sphinx.ext.autosummary',       # Summarize module/class/function docs
 ]
 
@@ -55,7 +54,6 @@ autoapi_options = [
 
 # -- Markdown Support --------------------------------------------------------
 myst_enable_extensions = [
-    "colon_fence",          # ::: fences
     "deflist",              # Definition lists
     "html_admonition",      # HTML-style admonitions
     "html_image",           # Inline HTML images
@@ -63,7 +61,6 @@ myst_enable_extensions = [
     "smartquotes",          # Smart quotes
     "linkify",              # Auto-detect links
     "substitution",         # Text substitutions
-    "attrs_block",
 ]
 myst_heading_anchors = 2
 myst_fence_as_directive = ["mermaid"]

@@ -26,7 +26,7 @@ Install development packages (used for unit tests etc.) using:
 
 ```{toctree}
 :hidden:
-
+creating_modules
 docker_development
 testing
 docs
