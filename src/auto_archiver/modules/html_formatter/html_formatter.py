@@ -1,5 +1,4 @@
 from __future__ import annotations
-from dataclasses import dataclass
 import mimetypes, os, pathlib
 from jinja2 import Environment, FileSystemLoader
 from urllib.parse import quote
@@ -8,20 +7,18 @@ import json
 import base64
 
 from auto_archiver.version import __version__
-from auto_archiver.core import Metadata, Media, ArchivingContext
+from auto_archiver.core import Metadata, Media
 from auto_archiver.core import Formatter
 from auto_archiver.modules.hash_enricher import HashEnricher
 from auto_archiver.utils.misc import random_str
+from auto_archiver.core.module import get_module
 
-
-@dataclass
 class HtmlFormatter(Formatter):
     environment: Environment = None
     template: any = None
 
-    def setup(self, config: dict) -> None:
+    def setup(self) -> None:
         """Sets up the Jinja2 environment and loads the template."""
-        super().setup(config)  # Ensure the base class logic is executed
         template_dir = os.path.join(pathlib.Path(__file__).parent.resolve(), "templates/")
         self.environment = Environment(loader=FileSystemLoader(template_dir), autoescape=True)
 
@@ -48,12 +45,13 @@ class HtmlFormatter(Formatter):
             version=__version__
         )
 
-        html_path = os.path.join(ArchivingContext.get_tmp_dir(), f"formatted{random_str(24)}.html")
+        html_path = os.path.join(self.tmp_dir, f"formatted{random_str(24)}.html")
         with open(html_path, mode="w", encoding="utf-8") as outf:
             outf.write(content)
         final_media = Media(filename=html_path, _mimetype="text/html")
 
-        he = HashEnricher({"hash_enricher": {"algorithm": ArchivingContext.get("hash_enricher.algorithm"), "chunksize": 1.6e7}})
+        # get the already instantiated hash_enricher module
+        he = get_module('hash_enricher', self.config)
         if len(hd := he.calculate_hash(final_media.filename)):
             final_media.set("hash", f"{he.algorithm}:{hd}")
 

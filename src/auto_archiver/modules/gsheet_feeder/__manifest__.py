@@ -3,8 +3,8 @@
     "type": ["feeder"],
     "entry_point": "gsheet_feeder::GsheetsFeeder",
     "requires_setup": True,
-    "external_dependencies": {
-        "python": ["loguru", "gspread", "python-slugify"],
+    "dependencies": {
+        "python": ["loguru", "gspread", "slugify"],
     },
     "configs": {
         "sheet": {"default": None, "help": "name of the sheet to archive"},

@@ -1,12 +1,9 @@
 from __future__ import annotations
-from dataclasses import dataclass
-from abc import abstractmethod, ABC
+from abc import abstractmethod
 from typing import Union
 
 from auto_archiver.core import Metadata, BaseModule
 
-
-@dataclass
 class Database(BaseModule):
 
     def started(self, item: Metadata) -> None:

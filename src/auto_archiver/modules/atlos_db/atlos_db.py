@@ -1,14 +1,10 @@
-import os
-
 from typing import Union
-from loguru import logger
-from csv import DictWriter
-from dataclasses import asdict
+
 import requests
+from loguru import logger
 
 from auto_archiver.core import Database
 from auto_archiver.core import Metadata
-from auto_archiver.utils import get_atlos_config_options
 
 
 class AtlosDb(Database):

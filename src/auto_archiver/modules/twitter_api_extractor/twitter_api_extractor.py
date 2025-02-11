@@ -9,14 +9,13 @@ from pytwitter import Api
 from slugify import slugify
 
 from auto_archiver.core import Extractor
-from auto_archiver.core import Metadata,Media
+from auto_archiver.core import Metadata, Media
 
 class TwitterApiExtractor(Extractor):
-    link_pattern = re.compile(r"(?:twitter|x).com\/(?:\#!\/)?(\w+)\/status(?:es)?\/(\d+)")
 
-    def setup(self, config: dict) -> None:
-        super().setup(config)
+    valid_url: re.Pattern = re.compile(r"(?:twitter|x).com\/(?:\#!\/)?(\w+)\/status(?:es)?\/(\d+)")
 
+    def setup(self) -> None:
         self.api_index = 0
         self.apis = []
         if len(self.bearer_tokens):
@@ -54,7 +53,7 @@ class TwitterApiExtractor(Extractor):
 
     def get_username_tweet_id(self, url):
         # detect URLs that we definitely cannot handle
-        matches = self.link_pattern.findall(url)
+        matches = self.valid_url.findall(url)
         if not len(matches): return False, False
 
         username, tweet_id = matches[0]  # only one URL supported

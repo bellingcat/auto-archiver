@@ -23,19 +23,8 @@ class Bluesky(GenericDropin):
 
     def extract_post(self, url: str, ie_instance: InfoExtractor) -> dict:
         # TODO: If/when this PR (https://github.com/yt-dlp/yt-dlp/pull/12098) is merged on ytdlp, remove the comments and delete the code below
-        # handle, video_id = ie_instance._match_valid_url(url).group('handle', 'id')
-        # return ie_instance._extract_post(handle=handle, post_id=video_id)
-
         handle, video_id = ie_instance._match_valid_url(url).group('handle', 'id')
-        return ie_instance._download_json(
-            'https://public.api.bsky.app/xrpc/app.bsky.feed.getPostThread',
-            video_id, query={
-                'uri': f'at://{handle}/app.bsky.feed.post/{video_id}',
-                'depth': 0,
-                'parentHeight': 0,
-            })['thread']['post']
-
-
+        return ie_instance._extract_post(handle=handle, post_id=video_id)
 
     def _download_bsky_embeds(self, post: dict, archiver: Extractor) -> list[Media]:
         """

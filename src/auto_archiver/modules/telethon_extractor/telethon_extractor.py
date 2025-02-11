@@ -6,19 +6,20 @@ from telethon.tl.functions.messages import ImportChatInviteRequest
 from telethon.errors.rpcerrorlist import UserAlreadyParticipantError, FloodWaitError, InviteRequestSentError, InviteHashExpiredError
 from loguru import logger
 from tqdm import tqdm
-import re, time, json, os
+import re, time, os
 
 from auto_archiver.core import Extractor
-from auto_archiver.core import Metadata, Media, ArchivingContext
+from auto_archiver.core import Metadata, Media
 from auto_archiver.utils import random_str
 
 
-class TelethonArchiver(Extractor):
-    link_pattern = re.compile(r"https:\/\/t\.me(\/c){0,1}\/(.+)\/(\d+)")
+class TelethonExtractor(Extractor):
+    valid_url = re.compile(r"https:\/\/t\.me(\/c){0,1}\/(.+)\/(\d+)")
     invite_pattern = re.compile(r"t.me(\/joinchat){0,1}\/\+?(.+)")
 
 
     def setup(self) -> None:
+
         """
         1. makes a copy of session_file that is removed in cleanup
         2. trigger login process for telegram or proceed if already saved in a session file
@@ -92,7 +93,7 @@ class TelethonArchiver(Extractor):
         """
         url = item.get_url()
         # detect URLs that we definitely cannot handle
-        match = self.link_pattern.search(url)
+        match = self.valid_url.search(url)
         logger.debug(f"TELETHON: {match=}")
         if not match: return False
 
@@ -120,7 +121,7 @@ class TelethonArchiver(Extractor):
             media_posts = self._get_media_posts_in_group(chat, post)
             logger.debug(f'got {len(media_posts)=} for {url=}')
 
-            tmp_dir = ArchivingContext.get_tmp_dir()
+            tmp_dir = self.tmp_dir
 
             group_id = post.grouped_id if post.grouped_id is not None else post.id
             title = post.message

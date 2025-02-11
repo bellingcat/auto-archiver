@@ -37,7 +37,6 @@ dependencies = [
     "pdqhash (>=0.0.0)",
     "pillow (>=0.0.0)",
     "python-slugify (>=0.0.0)",
-    "pyyaml (>=0.0.0)",
     "dateparser (>=0.0.0)",
     "python-twitter-v2 (>=0.0.0)",
     "instaloader (>=0.0.0)",
@@ -47,7 +46,7 @@ dependencies = [
     "cryptography (>=41.0.0,<42.0.0)",
     "boto3 (>=1.28.0,<2.0.0)",
     "dataclasses-json (>=0.0.0)",
-    "yt-dlp (==2025.1.12)",
+    "yt-dlp (>=2025.1.26,<2026.0.0)",
     "numpy (==2.1.3)",
     "vk-url-scraper (>=0.0.0)",
     "requests[socks] (>=0.0.0)",
@@ -58,11 +57,13 @@ dependencies = [
     "tsp-client (>=0.0.0)",
     "certvalidator (>=0.0.0)",
     "rich-argparse (>=1.6.0,<2.0.0)",
+    "ruamel-yaml (>=0.18.10,<0.19.0)",
 ]
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.4"
 autopep8 = "^2.3.1"
+pytest-loguru = "^0.4.0"
 
 [tool.poetry.group.docs.dependencies]
 sphinx = "^8.1.3"

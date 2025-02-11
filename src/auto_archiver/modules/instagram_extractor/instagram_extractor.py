@@ -4,7 +4,7 @@
 
 """
 import re, os, shutil, traceback
-import instaloader  # https://instaloader.github.io/as-module.html
+import instaloader
 from loguru import logger
 
 from auto_archiver.core import Extractor
@@ -16,19 +16,17 @@ class InstagramExtractor(Extractor):
     Uses Instaloader to download either a post (inc images, videos, text) or as much as possible from a profile (posts, stories, highlights, ...)
     """
     # NB: post regex should be tested before profile
+
+    valid_url = re.compile(r"(?:(?:http|https):\/\/)?(?:www.)?(?:instagram.com|instagr.am|instagr.com)\/")
+
     # https://regex101.com/r/MGPquX/1
-    post_pattern = re.compile(r"(?:(?:http|https):\/\/)?(?:www.)?(?:instagram.com|instagr.am|instagr.com)\/(?:p|reel)\/(\w+)")
+    post_pattern = re.compile(r"{valid_url}(?:p|reel)\/(\w+)".format(valid_url=valid_url))
     # https://regex101.com/r/6Wbsxa/1
-    profile_pattern = re.compile(r"(?:(?:http|https):\/\/)?(?:www.)?(?:instagram.com|instagr.am|instagr.com)\/(\w+)")
+    profile_pattern = re.compile(r"{valid_url}(\w+)".format(valid_url=valid_url))
     # TODO: links to stories
 
-    def __init__(self, config: dict) -> None:
-        super().__init__(config)
-        # TODO: refactor how configuration validation is done
-        self.assert_valid_string("username")
-        self.assert_valid_string("password")
-        self.assert_valid_string("download_folder")
-        self.assert_valid_string("session_file")
+    def setup(self) -> None:
+
         self.insta = instaloader.Instaloader(
             download_geotags=True, download_comments=True, compress_json=False, dirname_pattern=self.download_folder, filename_pattern="{date_utc}_UTC_{target}__{typename}"
         )

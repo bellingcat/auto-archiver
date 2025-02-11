@@ -20,8 +20,6 @@ from dateutil.parser import parse as parse_dt
 from loguru import logger
 
 from .media import Media
-from .context import ArchivingContext
-
 
 @dataclass_json  # annotation order matters
 @dataclass
@@ -32,6 +30,7 @@ class Metadata:
 
     def __post_init__(self):
         self.set("_processed_at", datetime.datetime.now(datetime.timezone.utc))
+        self._context = {}
 
     def merge(self: Metadata, right: Metadata, overwrite_left=True) -> Metadata:
         """
@@ -45,6 +44,7 @@ class Metadata:
         if overwrite_left:
             if right.status and len(right.status):
                 self.status = right.status
+            self._context.update(right._context)
             for k, v in right.metadata.items():
                 assert k not in self.metadata or type(v) == type(self.get(k))
                 if type(v) not in [dict, list, set] or k not in self.metadata:
@@ -57,12 +57,11 @@ class Metadata:
             return right.merge(self)
         return self
 
-    def store(self: Metadata, override_storages: List = None):
+    def store(self, storages=[]):
         # calls .store for all contained media. storages [Storage]
         self.remove_duplicate_media_by_hash()
-        storages = override_storages or ArchivingContext.get("storages")
         for media in self.media:
-            media.store(override_storages=storages, url=self.get_url(), metadata=self)
+            media.store(url=self.get_url(), metadata=self, storages=storages)
 
     def set(self, key: str, val: Any) -> Metadata:
         self.metadata[key] = val
@@ -206,3 +205,10 @@ class Metadata:
             if len(r.media) > len(most_complete.media): most_complete = r
             elif len(r.media) == len(most_complete.media) and len(r.metadata) > len(most_complete.metadata): most_complete = r
         return most_complete
+
+    def set_context(self, key: str, val: Any) -> Metadata:
+        self._context[key] = val
+        return self
+    
+    def get_context(self, key: str, default: Any = None) -> Any:
+        return self._context.get(key, default)

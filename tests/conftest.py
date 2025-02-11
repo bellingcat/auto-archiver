@@ -1,7 +1,9 @@
 """
 pytest conftest file, for shared fixtures and configuration
 """
-
+import os
+import pickle
+from tempfile import TemporaryDirectory
 from typing import Dict, Tuple
 import hashlib
 import pytest
@@ -23,13 +25,15 @@ def setup_module(request):
             # if the class does not have a .name, use the name of the parent folder
             module_name = module_name.__module__.rsplit(".",2)[-2]
 
-        m = get_module(module_name).load()
-        m.name = module_name
-        m.setup({module_name : config})
+        m = get_module(module_name, {module_name: config})
 
+        # add the tmp_dir to the module
+        tmp_dir = TemporaryDirectory()
+        m.tmp_dir = tmp_dir.name
 
         def cleanup():
             _LAZY_LOADED_MODULES.pop(module_name)
+            tmp_dir.cleanup()
         request.addfinalizer(cleanup)
 
         return m
@@ -111,3 +115,17 @@ def pytest_runtest_setup(item):
             # if name found, test has failed for the combination of class name & test name
             if test_name is not None:
                 pytest.xfail(f"previous test failed ({test_name})")
+
+
+
+@pytest.fixture()
+def unpickle():
+    """
+    Returns a helper function that unpickles a file
+    ** gets the file from the test_files directory: tests/data/test_files **
+    """
+    def _unpickle(path):
+        test_data_dir = os.path.join(os.path.dirname(__file__), "data", "test_files")
+        with open(os.path.join(test_data_dir, path), "rb") as f:
+            return pickle.load(f)
+    return _unpickle

@@ -2,7 +2,7 @@
     "name": "Timestamping Enricher",
     "type": ["enricher"],
     "requires_setup": True,
-    "external_dependencies": {
+    "dependencies": {
         "python": [
             "loguru",
             "slugify",

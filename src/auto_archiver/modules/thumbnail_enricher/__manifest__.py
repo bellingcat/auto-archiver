@@ -2,8 +2,8 @@
     "name": "Thumbnail Enricher",
     "type": ["enricher"],
     "requires_setup": False,
-    "external_dependencies": {
-        "python": ["loguru", "ffmpeg-python"],
+    "dependencies": {
+        "python": ["loguru", "ffmpeg"],
         "bin": ["ffmpeg"]
     },
     "configs": {

@@ -2,7 +2,7 @@
     "name": "CSV Database",
     "type": ["database"],
     "requires_setup": False,
-    "external_dependencies": {"python": ["loguru"]
+    "dependencies": {"python": ["loguru"]
                               },
     'entry_point': 'csv_db::CSVDb',
     "configs": {

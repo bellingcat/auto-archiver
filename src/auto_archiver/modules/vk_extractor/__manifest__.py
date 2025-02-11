@@ -3,15 +3,19 @@
     "type": ["extractor"],
     "requires_setup": True,
     "depends": ["core", "utils"],
-    "external_dependencies": {
-        "python": ["loguru",
-                   "vk_url_scraper"],
+    "dependencies": {
+        "python": ["loguru", "vk_url_scraper"],
     },
     "configs": {
-            "username": {"default": None, "help": "valid VKontakte username"},
-            "password": {"default": None, "help": "valid VKontakte password"},
-            "session_file": {"default": "secrets/vk_config.v2.json", "help": "valid VKontakte password"},
+        "username": {"required": True,
+                     "help": "valid VKontakte username"},
+        "password": {"required": True,
+                     "help": "valid VKontakte password"},
+        "session_file": {
+            "default": "secrets/vk_config.v2.json",
+            "help": "valid VKontakte password",
         },
+    },
     "description": """
 The `VkExtractor` fetches posts, text, and images from VK (VKontakte) social media pages. 
 This archiver is specialized for `/wall` posts and uses the `VkScraper` library to extract 
@@ -31,6 +35,5 @@ To use the `VkArchiver`, you must provide valid VKontakte login credentials and 
 
 Credentials can be set in the configuration file or directly via environment variables. Ensure you 
 have access to the VKontakte API by creating an account at [VKontakte](https://vk.com/).
-"""
-,
+""",
 }

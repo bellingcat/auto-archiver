@@ -1,9 +1,9 @@
 {
     "name": "Atlos Database",
     "type": ["database"],
-    "entry_point": "atlos_db:AtlosDb",
+    "entry_point": "atlos_db::AtlosDb",
     "requires_setup": True,
-    "external_dependencies":
+    "dependencies":
         {"python": ["loguru",
                     ""],
          "bin": [""]},

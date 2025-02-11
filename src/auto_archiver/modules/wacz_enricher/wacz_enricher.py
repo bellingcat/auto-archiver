@@ -5,9 +5,9 @@ from zipfile import ZipFile
 from loguru import logger
 from warcio.archiveiterator import ArchiveIterator
 
-from auto_archiver.core import Media, Metadata, ArchivingContext
+from auto_archiver.core import Media, Metadata
 from auto_archiver.core import Extractor, Enricher
-from auto_archiver.utils import UrlUtil, random_str
+from auto_archiver.utils import url as UrlUtil, random_str
 
 
 class WaczExtractorEnricher(Enricher, Extractor):
@@ -19,6 +19,7 @@ class WaczExtractorEnricher(Enricher, Extractor):
     """
 
     def setup(self) -> None:
+
         self.use_docker = os.environ.get('WACZ_ENABLE_DOCKER') or not os.environ.get('RUNNING_IN_DOCKER')
         self.docker_in_docker = os.environ.get('WACZ_ENABLE_DOCKER') and os.environ.get('RUNNING_IN_DOCKER')
 
@@ -49,7 +50,7 @@ class WaczExtractorEnricher(Enricher, Extractor):
         url = to_enrich.get_url()
 
         collection = random_str(8)
-        browsertrix_home_host = self.browsertrix_home_host or os.path.abspath(ArchivingContext.get_tmp_dir())
+        browsertrix_home_host = self.browsertrix_home_host or os.path.abspath(self.tmp_dir)
         browsertrix_home_container = self.browsertrix_home_container or browsertrix_home_host
 
         cmd = [
@@ -152,7 +153,7 @@ class WaczExtractorEnricher(Enricher, Extractor):
         logger.info(f"WACZ extract_media or extract_screenshot flag is set, extracting media from {wacz_filename=}")
 
         # unzipping the .wacz
-        tmp_dir = ArchivingContext.get_tmp_dir()
+        tmp_dir = self.tmp_dir
         unzipped_dir = os.path.join(tmp_dir, "unzipped")
         with ZipFile(wacz_filename, 'r') as z_obj:
             z_obj.extractall(path=unzipped_dir)

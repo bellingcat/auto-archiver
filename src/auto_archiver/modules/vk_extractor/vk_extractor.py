@@ -3,7 +3,7 @@ from vk_url_scraper import VkScraper
 
 from auto_archiver.utils.misc import dump_payload
 from auto_archiver.core import Extractor
-from auto_archiver.core import Metadata, Media, ArchivingContext
+from auto_archiver.core import Metadata, Media
 
 
 class VkExtractor(Extractor):
@@ -12,10 +12,7 @@ class VkExtractor(Extractor):
     Currently only works for /wall posts
     """
 
-    def __init__(self, config: dict) -> None:
-        super().__init__(config)
-        self.assert_valid_string("username")
-        self.assert_valid_string("password")
+    def setup(self) -> None:
         self.vks = VkScraper(self.username, self.password, session_file=self.session_file)
 
     def download(self, item: Metadata) -> Metadata:
@@ -37,7 +34,7 @@ class VkExtractor(Extractor):
 
         result.set_content(dump_payload(vk_scrapes))
 
-        filenames = self.vks.download_media(vk_scrapes, ArchivingContext.get_tmp_dir())
+        filenames = self.vks.download_media(vk_scrapes, self.tmp_dir)
         for filename in filenames:
             result.add_media(Media(filename))
 

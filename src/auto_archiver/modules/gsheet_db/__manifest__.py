@@ -3,8 +3,8 @@
     "type": ["database"],
     "entry_point": "gsheet_db::GsheetsDb",
     "requires_setup": True,
-    "external_dependencies": {
-        "python": ["loguru", "gspread", "python-slugify"],
+    "dependencies": {
+        "python": ["loguru", "gspread", "slugify"],
     },
     "configs": {
         "allow_worksheets": {
@@ -17,6 +17,7 @@
         },
         "use_sheet_names_in_stored_paths": {
             "default": True,
+            "type": "bool",
             "help": "if True the stored files path will include 'workbook_name/worksheet_name/...'",
         }
     },

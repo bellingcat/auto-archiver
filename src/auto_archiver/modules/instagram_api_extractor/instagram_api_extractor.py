@@ -28,20 +28,14 @@ class InstagramAPIExtractor(Extractor):
     # TODO: improvement collect aggregates of locations[0].location and mentions for all posts
     """
 
-    global_pattern = re.compile(
+    valid_url = re.compile(
         r"(?:(?:http|https):\/\/)?(?:www.)?(?:instagram.com)\/(stories(?:\/highlights)?|p|reel)?\/?([^\/\?]*)\/?(\d+)?"
     )
 
-    def __init__(self, config: dict) -> None:
-        super().__init__(config)
-        self.assert_valid_string("access_token")
-        self.assert_valid_string("api_endpoint")
-        self.full_profile_max_posts = int(self.full_profile_max_posts)
+    def setup(self) -> None:
         if self.api_endpoint[-1] == "/":
             self.api_endpoint = self.api_endpoint[:-1]
 
-        self.full_profile = bool(self.full_profile)
-        self.minimize_json_output = bool(self.minimize_json_output)
 
     def download(self, item: Metadata) -> Metadata:
         url = item.get_url()
@@ -49,7 +43,7 @@ class InstagramAPIExtractor(Extractor):
         url.replace("instagr.com", "instagram.com").replace(
             "instagr.am", "instagram.com"
         )
-        insta_matches = self.global_pattern.findall(url)
+        insta_matches = self.valid_url.findall(url)
         logger.info(f"{insta_matches=}")
         if not len(insta_matches) or len(insta_matches[0]) != 3:
             return

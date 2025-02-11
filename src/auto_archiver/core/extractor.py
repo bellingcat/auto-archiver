@@ -11,19 +11,22 @@ from abc import abstractmethod
 from dataclasses import dataclass
 import mimetypes
 import os
-import mimetypes, requests
+import mimetypes
+import requests
 from loguru import logger
 from retrying import retry
+import re
 
-from ..core import Metadata, ArchivingContext, BaseModule
+from auto_archiver.core import Metadata, BaseModule
 
 
-@dataclass
 class Extractor(BaseModule):
     """
     Base class for implementing extractors in the media archiving framework.
     Subclasses must implement the `download` method to define platform-specific behavior.
     """
+
+    valid_url: re.Pattern = None
 
     def cleanup(self) -> None:
         # called when extractors are done, or upon errors, cleanup any resources
@@ -32,13 +35,20 @@ class Extractor(BaseModule):
     def sanitize_url(self, url: str) -> str:
         # used to clean unnecessary URL parameters OR unfurl redirect links
         return url
+    
+    def match_link(self, url: str) -> re.Match:
+        return self.valid_url.match(url)
 
     def suitable(self, url: str) -> bool:
         """
         Returns True if this extractor can handle the given URL
 
         Should be overridden by subclasses
+
         """
+        if self.valid_url:
+            return self.match_link(url) is not None
+        
         return True
 
     def _guess_file_type(self, path: str) -> str:
@@ -60,7 +70,7 @@ class Extractor(BaseModule):
             to_filename = url.split('/')[-1].split('?')[0]
             if len(to_filename) > 64:
                 to_filename = to_filename[-64:]
-        to_filename = os.path.join(ArchivingContext.get_tmp_dir(), to_filename)
+        to_filename = os.path.join(self.tmp_dir, to_filename)
         if verbose: logger.debug(f"downloading {url[0:50]=} {to_filename=}")
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36'
@@ -85,5 +95,11 @@ class Extractor(BaseModule):
             logger.warning(f"Failed to fetch the Media URL: {e}")
 
     @abstractmethod
-    def download(self, item: Metadata) -> Metadata:
+    def download(self, item: Metadata) -> Metadata | False:
+        """
+        Downloads the media from the given URL and returns a Metadata object with the downloaded media.
+        
+        If the URL is not supported or the download fails, this method should return False.
+
+        """
         pass

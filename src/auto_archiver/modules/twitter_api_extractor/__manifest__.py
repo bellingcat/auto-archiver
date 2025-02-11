@@ -2,7 +2,7 @@
     "name": "Twitter API Extractor",
     "type": ["extractor"],
     "requires_setup": True,
-    "external_dependencies": {
+    "dependencies": {
         "python": ["requests",
                    "loguru",
                    "pytwitter",

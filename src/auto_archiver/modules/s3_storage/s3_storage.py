@@ -1,19 +1,19 @@
 
 from typing import IO
-import boto3, os
 
-from auto_archiver.utils.misc import random_str
-from auto_archiver.core import Media
-from auto_archiver.core import Storage
-
-from auto_archiver.modules.hash_enricher import HashEnricher
+import boto3
+import os
 from loguru import logger
 
+from auto_archiver.core import Media
+from auto_archiver.core import Storage
+from auto_archiver.utils.misc import calculate_file_hash, random_str
+
 NO_DUPLICATES_FOLDER = "no-dups/"
+
 class S3Storage(Storage):
 
-    def __init__(self, config: dict) -> None:
-        super().__init__(config)
+    def setup(self) -> None:
         self.s3 = boto3.client(
             's3',
             region_name=self.region,
@@ -21,7 +21,6 @@ class S3Storage(Storage):
             aws_access_key_id=self.key,
             aws_secret_access_key=self.secret
         )
-        self.random_no_duplicate = bool(self.random_no_duplicate)
         if self.random_no_duplicate:
             logger.warning("random_no_duplicate is set to True, this will override `path_generator`, `filename_generator` and `folder`.")
 
@@ -41,15 +40,13 @@ class S3Storage(Storage):
                     extra_args['ContentType'] = media.mimetype
             except Exception as e:
                 logger.warning(f"Unable to get mimetype for {media.key=}, error: {e}")
-
         self.s3.upload_fileobj(file, Bucket=self.bucket, Key=media.key, ExtraArgs=extra_args)
         return True
     
     def is_upload_needed(self, media: Media) -> bool:
         if self.random_no_duplicate:
             # checks if a folder with the hash already exists, if so it skips the upload
-            he = HashEnricher({"hash_enricher": {"algorithm": "SHA-256", "chunksize": 1.6e7}})
-            hd = he.calculate_hash(media.filename)
+            hd = calculate_file_hash(media.filename)
             path = os.path.join(NO_DUPLICATES_FOLDER, hd[:24])
 
             if existing_key:=self.file_in_folder(path):
@@ -61,8 +58,7 @@ class S3Storage(Storage):
             _, ext = os.path.splitext(media.key)
             media.key = os.path.join(path, f"{random_str(24)}{ext}")
         return True
-    
-    
+
     def file_in_folder(self, path:str) -> str:
         # checks if path exists and is not an empty folder
         if not path.endswith('/'):

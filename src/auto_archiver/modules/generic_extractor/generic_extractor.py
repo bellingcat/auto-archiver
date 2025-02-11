@@ -6,7 +6,7 @@ from yt_dlp.extractor.common import InfoExtractor
 from loguru import logger
 
 from auto_archiver.core.extractor import Extractor
-from ...core import Metadata, Media, ArchivingContext
+from auto_archiver.core import Metadata, Media
 
 class GenericExtractor(Extractor):
     _dropins = {}
@@ -266,19 +266,30 @@ class GenericExtractor(Extractor):
     def download(self, item: Metadata) -> Metadata:
         url = item.get_url()
 
-        if item.netloc in ['facebook.com', 'www.facebook.com'] and self.facebook_cookie:
-            logger.debug('Using Facebook cookie')
-            yt_dlp.utils.std_headers['cookie'] = self.facebook_cookie
 
-        ydl_options = {'outtmpl': os.path.join(ArchivingContext.get_tmp_dir(), f'%(id)s.%(ext)s'), 'quiet': False, 'noplaylist': not self.allow_playlist , 'writesubtitles': self.subtitles, 'writeautomaticsub': self.subtitles, "live_from_start": self.live_from_start, "proxy": self.proxy, "max_downloads": self.max_downloads, "playlistend": self.max_downloads}
-
-        if item.netloc in ['youtube.com', 'www.youtube.com']:
-            if self.cookies_from_browser:
-                logger.debug(f'Extracting cookies from browser {self.cookies_from_browser} for Youtube')
-                ydl_options['cookiesfrombrowser'] = (self.cookies_from_browser,)
-            elif self.cookie_file:
-                logger.debug(f'Using cookies from file {self.cookie_file}')
-                ydl_options['cookiefile'] = self.cookie_file
+        ydl_options = {'outtmpl': os.path.join(self.tmp_dir, f'%(id)s.%(ext)s'), 
+                       'quiet': False, 'noplaylist': not self.allow_playlist ,
+                       'writesubtitles': self.subtitles,'writeautomaticsub': self.subtitles,
+                       "live_from_start": self.live_from_start, "proxy": self.proxy,
+                       "max_downloads": self.max_downloads, "playlistend": self.max_downloads}
+        
+        # set up auth
+        auth = self.auth_for_site(url, extract_cookies=False)
+        # order of importance: username/pasword -> api_key -> cookie -> cookie_from_browser -> cookies_file
+        if auth:
+            if 'username' in auth and 'password' in auth:
+                logger.debug(f'Using provided auth username and password for {url}')
+                ydl_options['username'] = auth['username']
+                ydl_options['password'] = auth['password']
+            elif 'cookie' in auth:
+                logger.debug(f'Using provided auth cookie for {url}')
+                yt_dlp.utils.std_headers['cookie'] = auth['cookie']
+            elif 'cookie_from_browser' in auth:
+                logger.debug(f'Using extracted cookies from browser {self.cookies_from_browser} for {url}')
+                ydl_options['cookiesfrombrowser'] = auth['cookies_from_browser']
+            elif 'cookies_file' in auth:
+                logger.debug(f'Using cookies from file {self.cookie_file} for {url}')
+                ydl_options['cookiesfile'] = auth['cookies_file']
 
         ydl = yt_dlp.YoutubeDL(ydl_options) # allsubtitles and subtitleslangs not working as expected, so default lang is always "en"
 

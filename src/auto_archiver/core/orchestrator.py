@@ -5,30 +5,61 @@
 """
 
 from __future__ import annotations
-from typing import Generator, Union, List
+from typing import Generator, Union, List, Type
 from urllib.parse import urlparse
 from ipaddress import ip_address
 import argparse
 import os
 import sys
+import json
+from tempfile import TemporaryDirectory
+import traceback
 
 from rich_argparse import RichHelpFormatter
 
-from .context import ArchivingContext
 
-from .metadata import Metadata
-from ..version import __version__
-from .config import read_yaml, store_yaml, to_dot_notation, merge_dicts, EMPTY_CONFIG, DefaultValidatingParser
-from .module import available_modules, LazyBaseModule, MODULE_TYPES, get_module
-from . import validators
+from .metadata import Metadata, Media
+from auto_archiver.version import __version__
+from .config import _yaml, read_yaml, store_yaml, to_dot_notation, merge_dicts, EMPTY_CONFIG, DefaultValidatingParser
+from .module import available_modules, LazyBaseModule, get_module, setup_paths
+from . import validators, Feeder, Extractor, Database, Storage, Formatter, Enricher
 from .module import BaseModule
 
-import tempfile, traceback
 from loguru import logger
 
 
 DEFAULT_CONFIG_FILE = "orchestration.yaml"
 
+class JsonParseAction(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        try:
+            setattr(namespace, self.dest, json.loads(values))
+        except json.JSONDecodeError as e:
+            raise argparse.ArgumentTypeError(f"Invalid JSON input for argument '{self.dest}': {e}")
+
+
+class AuthenticationJsonParseAction(JsonParseAction):
+    def __call__(self, parser, namespace, values, option_string=None):
+        super().__call__(parser, namespace, values, option_string)
+        auth_dict = getattr(namespace, self.dest)
+        if isinstance(auth_dict, str):
+            # if it's a string
+            try:
+                with open(auth_dict, 'r') as f:
+                    try:
+                        auth_dict = json.load(f)
+                    except json.JSONDecodeError:
+                        # maybe it's yaml, try that
+                        auth_dict = _yaml.load(f)
+            except:
+                pass
+
+        if not isinstance(auth_dict, dict):
+            raise argparse.ArgumentTypeError("Authentication must be a dictionary of site names and their authentication methods")
+        for site, auth in auth_dict.items():
+            if not isinstance(site, str) or not isinstance(auth, dict):
+                raise argparse.ArgumentTypeError("Authentication must be a dictionary of site names and their authentication methods")
+        setattr(namespace, self.dest, auth_dict)
 class UniqueAppendAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
         if not hasattr(namespace, self.dest):
@@ -39,10 +70,16 @@ class UniqueAppendAction(argparse.Action):
 
 class ArchivingOrchestrator:
 
-    _do_not_store_keys = []
-
+    feeders: List[Type[Feeder]]
+    extractors: List[Type[Extractor]]
+    enrichers: List[Type[Enricher]]
+    databases: List[Type[Database]]
+    storages: List[Type[Storage]]
+    formatters: List[Type[Formatter]]
+    
     def setup_basic_parser(self):
         parser = argparse.ArgumentParser(
+                prog="auto-archiver",
                 add_help=False,
                 description="""
                 Auto Archiver is a CLI tool to archive media/metadata from online URLs;
@@ -51,14 +88,16 @@ class ArchivingOrchestrator:
                 epilog="Check the code at https://github.com/bellingcat/auto-archiver",
                 formatter_class=RichHelpFormatter,
         )
-        parser.add_argument('--config', action='store', dest="config_file", help='the filename of the YAML configuration file (defaults to \'config.yaml\')', default=DEFAULT_CONFIG_FILE)
+        parser.add_argument('--help', '-h', action='store_true', dest='help', help='show a full help message and exit')
         parser.add_argument('--version', action='version', version=__version__)
+        parser.add_argument('--config', action='store', dest="config_file", help='the filename of the YAML configuration file (defaults to \'config.yaml\')', default=DEFAULT_CONFIG_FILE)
         parser.add_argument('--mode', action='store', dest='mode', type=str, choices=['simple', 'full'], help='the mode to run the archiver in', default='simple')
         # override the default 'help' so we can inject all the configs and show those
-        parser.add_argument('-h', '--help', action='store_true', dest='help', help='show this help message and exit')
         parser.add_argument('-s', '--store', dest='store', default=False, help='Store the created config in the config file', action=argparse.BooleanOptionalAction)
+        parser.add_argument('--module_paths', dest='module_paths', nargs='+', default=[], help='additional paths to search for modules', action=UniqueAppendAction)
 
         self.basic_parser = parser
+        return parser
 
     def setup_complete_parser(self, basic_config: dict, yaml_config: dict, unused_args: list[str]) -> None:
         parser = DefaultValidatingParser(
@@ -76,18 +115,22 @@ class ArchivingOrchestrator:
             # only load the modules enabled in config
             # TODO: if some steps are empty (e.g. 'feeders' is empty), should we default to the 'simple' ones? Or only if they are ALL empty?
             enabled_modules = []
-            for module_type in MODULE_TYPES:
-                enabled_modules.extend(yaml_config['steps'].get(f"{module_type}s", []))
+            # first loads the modules from the config file, then from the command line
+            for config in [yaml_config['steps'], basic_config.__dict__]:
+                for module_type in BaseModule.MODULE_TYPES:
+                    enabled_modules.extend(config.get(f"{module_type}s", []))
 
-            # add in any extra modules that have been passed on the command line for 'feeders', 'enrichers', 'archivers', 'databases', 'storages', 'formatter'
-            for module_type in MODULE_TYPES:
-                if modules := getattr(basic_config, f"{module_type}s", []):
-                    enabled_modules.extend(modules)
-
-            self.add_module_args(available_modules(with_manifest=True, limit_to_modules=set(enabled_modules), suppress_warnings=True), parser)
+            # clear out duplicates, but keep the order
+            enabled_modules = list(dict.fromkeys(enabled_modules))
+            avail_modules = available_modules(with_manifest=True, limit_to_modules=enabled_modules, suppress_warnings=True)
+            self.add_module_args(avail_modules, parser)
         elif basic_config.mode == 'simple':
             simple_modules = [module for module in available_modules(with_manifest=True) if not module.requires_setup]
             self.add_module_args(simple_modules, parser)
+
+            # for simple mode, we use the cli_feeder and any modules that don't require setup
+            yaml_config['steps']['feeders'] = ['cli_feeder']
+            
             # add them to the config
             for module in simple_modules:
                 for module_type in module.type:
@@ -115,7 +158,7 @@ class ArchivingOrchestrator:
         
         if (self.config != yaml_config and basic_config.store) or not os.path.isfile(basic_config.config_file):
             logger.info(f"Storing configuration file to {basic_config.config_file}")
-            store_yaml(self.config, basic_config.config_file, self._do_not_store_keys)
+            store_yaml(self.config, basic_config.config_file)
         
         return self.config
     
@@ -123,28 +166,37 @@ class ArchivingOrchestrator:
         if not parser:
             parser = self.parser
 
-        parser.add_argument('--feeders', dest='steps.feeders', nargs='+', help='the feeders to use', action=UniqueAppendAction)
+
+        # allow passing URLs directly on the command line
+        parser.add_argument('urls', nargs='*', default=[], help='URL(s) to archive, either a single URL or a list of urls, should not come from config.yaml')
+
+        parser.add_argument('--feeders', dest='steps.feeders', nargs='+', default=['cli_feeder'], help='the feeders to use', action=UniqueAppendAction)
         parser.add_argument('--enrichers', dest='steps.enrichers',  nargs='+', help='the enrichers to use', action=UniqueAppendAction)
         parser.add_argument('--extractors', dest='steps.extractors', nargs='+', help='the extractors to use', action=UniqueAppendAction)
         parser.add_argument('--databases', dest='steps.databases', nargs='+', help='the databases to use', action=UniqueAppendAction)
         parser.add_argument('--storages', dest='steps.storages', nargs='+', help='the storages to use', action=UniqueAppendAction)
         parser.add_argument('--formatters', dest='steps.formatters', nargs='+', help='the formatter to use', action=UniqueAppendAction)
 
+        parser.add_argument('--authentication', dest='authentication', help='A dictionary of sites and their authentication methods \
+                                                                            (token, username etc.) that extractors can use to log into \
+                                                                            a website. If passing this on the command line, use a JSON string. \
+                                                                            You may also pass a path to a valid JSON/YAML file which will be parsed.',\
+                                                                            default={},
+                                                                            action=AuthenticationJsonParseAction)
         # logging arguments
-        parser.add_argument('--logging.level', action='store', dest='logging.level', choices=['INFO', 'DEBUG', 'ERROR', 'WARNING'], help='the logging level to use', default='INFO')
+        parser.add_argument('--logging.level', action='store', dest='logging.level', choices=['INFO', 'DEBUG', 'ERROR', 'WARNING'], help='the logging level to use', default='INFO', type=str.upper)
         parser.add_argument('--logging.file', action='store', dest='logging.file', help='the logging file to write to', default=None)
         parser.add_argument('--logging.rotation', action='store', dest='logging.rotation', help='the logging rotation to use', default=None)
 
-        # additional modules
-        parser.add_argument('--additional-modules', dest='additional_modules', nargs='+', help='additional paths to search for modules', action=UniqueAppendAction)
 
-    def add_module_args(self, modules: list[LazyBaseModule] = None, parser: argparse.ArgumentParser = None):
+    def add_module_args(self, modules: list[LazyBaseModule] = None, parser: argparse.ArgumentParser = None) -> None:
 
         if not modules:
             modules = available_modules(with_manifest=True)
 
         module: LazyBaseModule
         for module in modules:
+
             if not module.configs:
                 # this module has no configs, don't show anything in the help
                 # (TODO: do we want to show something about this module though, like a description?)
@@ -153,54 +205,54 @@ class ArchivingOrchestrator:
             group = parser.add_argument_group(module.display_name or module.name, f"{module.description[:100]}...")
 
             for name, kwargs in module.configs.items():
-                # TODO: go through all the manifests and make sure we're not breaking anything with removing cli_set
-                # in most cases it'll mean replacing it with 'type': 'str' or 'type': 'int' or something
-                do_not_store = kwargs.pop('do_not_store', False)
-                if do_not_store:
-                    self._do_not_store_keys.append((module.name, name))
-                
                 if not kwargs.get('metavar', None):
                     # make a nicer metavar, metavar is what's used in the help, e.g. --cli_feeder.urls [METAVAR]
                     kwargs['metavar'] = name.upper()
+
+                if kwargs.get('required', False):
+                    # required args shouldn't have a 'default' value, remove it
+                    kwargs.pop('default', None)
 
                 kwargs.pop('cli_set', None)
                 should_store = kwargs.pop('should_store', False)
                 kwargs['dest'] = f"{module.name}.{kwargs.pop('dest', name)}"
                 try:
+                    kwargs['type'] = getattr(validators, kwargs.get('type', '__invalid__'))
+                except AttributeError:
                     kwargs['type'] = __builtins__.get(kwargs.get('type'), str)
-                except KeyError:
-                    kwargs['type'] = getattr(validators, kwargs['type'])
                 arg = group.add_argument(f"--{module.name}.{name}", **kwargs)
                 arg.should_store = should_store
 
-    def show_help(self):
+    def show_help(self, basic_config: dict):
         # for the help message, we want to load *all* possible modules and show the help
             # add configs as arg parser arguments
         
         self.add_additional_args(self.basic_parser)
         self.add_module_args(parser=self.basic_parser)
-
         self.basic_parser.print_help()
-        exit()
+        self.basic_parser.exit()
     
     def setup_logging(self):
         # setup loguru logging
-        logger.remove() # remove the default logger
+        logger.remove(0) # remove the default logger
         logging_config = self.config['logging']
         logger.add(sys.stderr, level=logging_config['level'])
         if log_file := logging_config['file']:
             logger.add(log_file) if not logging_config['rotation'] else logger.add(log_file, rotation=logging_config['rotation'])
 
-        
-    def install_modules(self):
+    def install_modules(self, modules_by_type):
         """
-        Swaps out the previous 'strings' in the config with the actual modules
+        Traverses all modules in 'steps' and loads them into the orchestrator, storing them in the 
+        orchestrator's attributes (self.feeders, self.extractors etc.). If no modules of a certain type
+        are loaded, the program will exit with an error message.
         """
         
         invalid_modules = []
-        for module_type in MODULE_TYPES:
+        for module_type in BaseModule.MODULE_TYPES:
+
             step_items = []
-            modules_to_load = self.config['steps'][f"{module_type}s"]
+            modules_to_load = modules_by_type[f"{module_type}s"]
+            assert modules_to_load, f"No {module_type}s were configured. Make sure to set at least one {module_type} in your configuration file or on the command line (using --{module_type}s)"
 
             def check_steps_ok():
                 if not len(step_items):
@@ -214,14 +266,37 @@ class ArchivingOrchestrator:
                     exit()
 
             for module in modules_to_load:
+                if module == 'cli_feeder':
+                    # pseudo module, don't load it
+                    urls = self.config['urls']
+                    if not urls:
+                        logger.error("No URLs provided. Please provide at least one URL via the command line, or set up an alternative feeder. Use --help for more information.")
+                        exit()
+                    # cli_feeder is a pseudo module, it just takes the command line args
+                    def feed(self) -> Generator[Metadata]:
+                        for url in urls:
+                            logger.debug(f"Processing URL: '{url}'")
+                            yield Metadata().set_url(url)
+
+                    pseudo_module = type('CLIFeeder', (Feeder,), {
+                        'name': 'cli_feeder',
+                        'display_name': 'CLI Feeder',
+                        '__iter__': feed
+
+                    })()
+  
+
+                    pseudo_module.__iter__ = feed
+                    step_items.append(pseudo_module)
+                    continue
+
                 if module in invalid_modules:
                     continue
-                loaded_module: BaseModule = get_module(module).load()
                 try:
-                    loaded_module.setup(self.config)
+                    loaded_module: BaseModule = get_module(module, self.config)
                 except (KeyboardInterrupt, Exception) as e:
-                    logger.error(f"Error during setup of archivers: {e}\n{traceback.format_exc()}")
-                    if module_type == 'extractor':
+                    logger.error(f"Error during setup of modules: {e}\n{traceback.format_exc()}")
+                    if module_type == 'extractor' and loaded_module.name == module:
                         loaded_module.cleanup()
                     exit()
 
@@ -230,59 +305,58 @@ class ArchivingOrchestrator:
                     continue
                 if loaded_module:
                     step_items.append(loaded_module)
-                    # TODO temp solution
-                    if module_type == "storage":
-                        ArchivingContext.set("storages", step_items, keep_on_reset=True)
 
             check_steps_ok()
-            self.config['steps'][f"{module_type}s"] = step_items
-            
+            setattr(self, f"{module_type}s", step_items)
+    
+    def load_config(self, config_file: str) -> dict:
+        if not os.path.exists(config_file) and config_file != DEFAULT_CONFIG_FILE:
+            logger.error(f"The configuration file {config_file} was  not found. Make sure the file exists and try again, or run without the --config file to use the default settings.")
+            exit()
 
-            assert len(step_items) > 0, f"No {module_type}s were loaded. Please check your configuration file and try again."
-            self.config['steps'][f"{module_type}s"] = step_items
+        return read_yaml(config_file)
 
-    def run(self) -> None:
+    def run(self, args: list) -> None:
+        
         self.setup_basic_parser()
 
         # parse the known arguments for now (basically, we want the config file)
+        basic_config, unused_args = self.basic_parser.parse_known_args(args)
 
-        # load the config file to get the list of enabled items
-        basic_config, unused_args = self.basic_parser.parse_known_args()
+        # setup any custom module paths, so they'll show in the help and for arg parsing
+        setup_paths(basic_config.module_paths)
 
         # if help flag was called, then show the help
         if basic_config.help:
-            self.show_help()
+            self.show_help(basic_config)
 
-        # load the config file
-        yaml_config = {}
-
-        if not os.path.exists(basic_config.config_file) and basic_config.config_file != DEFAULT_CONFIG_FILE:
-            logger.error(f"The configuration file {basic_config.config_file} was  not found. Make sure the file exists and try again, or run without the --config file to use the default settings.")
-            exit()
-
-
-        yaml_config = read_yaml(basic_config.config_file)
+        yaml_config = self.load_config(basic_config.config_file)
         self.setup_complete_parser(basic_config, yaml_config, unused_args)
 
         logger.info(f"======== Welcome to the AUTO ARCHIVER ({__version__}) ==========")
-        self.install_modules()
+        self.install_modules(self.config['steps'])
 
         # log out the modules that were loaded
-        for module_type in MODULE_TYPES:
-            logger.info(f"{module_type.upper()}S: " + ", ".join(m.display_name for m in self.config['steps'][f"{module_type}s"]))
+        for module_type in BaseModule.MODULE_TYPES:
+            logger.info(f"{module_type.upper()}S: " + ", ".join(m.display_name for m in getattr(self, f"{module_type}s")))
 
-        for item in self.feed():
+        for _ in self.feed():
             pass
 
     def cleanup(self)->None:
         logger.info("Cleaning up")
-        for e in self.config['steps']['extractors']:
+        for e in self.extractors:
             e.cleanup()
 
     def feed(self) -> Generator[Metadata]:
-        for feeder in self.config['steps']['feeders']:
+
+        url_count = 0
+        for feeder in self.feeders:
             for item in feeder:
                 yield self.feed_item(item)
+                url_count += 1
+
+        logger.success(f"Processed {url_count} URL(s)")
         self.cleanup()
 
     def feed_item(self, item: Metadata) -> Metadata:
@@ -291,22 +365,33 @@ class ArchivingOrchestrator:
             - catches keyboard interruptions to do a clean exit
             - catches any unexpected error, logs it, and does a clean exit
         """
+        tmp_dir: TemporaryDirectory = None
         try:
-            ArchivingContext.reset()
-            with tempfile.TemporaryDirectory(dir="./") as tmp_dir:
-                ArchivingContext.set_tmp_dir(tmp_dir)
-                return self.archive(item)
+            tmp_dir = TemporaryDirectory(dir="./")
+            # set tmp_dir on all modules
+            for m in self.all_modules:
+                m.tmp_dir = tmp_dir.name
+            return self.archive(item)
         except KeyboardInterrupt:
             # catches keyboard interruptions to do a clean exit
             logger.warning(f"caught interrupt on {item=}")
-            for d in self.config['steps']['databases']: d.aborted(item)
+            for d in self.databases:
+                d.aborted(item)
             self.cleanup()
             exit()
         except Exception as e:
             logger.error(f'Got unexpected error on item {item}: {e}\n{traceback.format_exc()}')
-            for d in self.config['steps']['databases']:
-                if type(e) == AssertionError: d.failed(item, str(e))
-                else: d.failed(item, reason="unexpected error")
+            for d in self.databases:
+                if type(e) == AssertionError:
+                    d.failed(item, str(e))
+                else:
+                    d.failed(item, reason="unexpected error")
+        finally:
+            if tmp_dir:
+                # remove the tmp_dir from all modules
+                for m in self.all_modules:
+                    m.tmp_dir = None
+                tmp_dir.cleanup()
 
 
     def archive(self, result: Metadata) -> Union[Metadata, None]:
@@ -319,31 +404,38 @@ class ArchivingOrchestrator:
             5. Store all downloaded/generated media
             6. Call selected Formatter and store formatted if needed
         """
+
         original_url = result.get_url().strip()
-        self.assert_valid_url(original_url)
+        try:
+            self.assert_valid_url(original_url)
+        except AssertionError as e:
+            logger.error(f"Error archiving URL {original_url}: {e}")
+            raise e
 
         # 1 - sanitize - each archiver is responsible for cleaning/expanding its own URLs
         url = original_url
-        for a in self.config["steps"]["extractors"]: url = a.sanitize_url(url)
+        for a in self.extractors:
+            url = a.sanitize_url(url)
+
         result.set_url(url)
         if original_url != url: result.set("original_url", original_url)
 
         # 2 - notify start to DBs, propagate already archived if feature enabled in DBs
         cached_result = None
-        for d in self.config["steps"]["databases"]:
+        for d in self.databases:
             d.started(result)
-            if (local_result := d.fetch(result)):
-                cached_result = (cached_result or Metadata()).merge(local_result)
+            if local_result := d.fetch(result):
+                cached_result = (cached_result or Metadata()).merge(local_result).merge(result)
         if cached_result:
             logger.debug("Found previously archived entry")
-            for d in self.config["steps"]["databases"]:
+            for d in self.databases:
                 try: d.done(cached_result, cached=True)
                 except Exception as e:
                     logger.error(f"ERROR database {d.name}: {e}: {traceback.format_exc()}")
             return cached_result
 
         # 3 - call extractors until one succeeds
-        for a in self.config["steps"]["extractors"]:
+        for a in self.extractors:
             logger.info(f"Trying extractor {a.name} for {url}")
             try:
                 result.merge(a.download(result))
@@ -352,24 +444,25 @@ class ArchivingOrchestrator:
                 logger.error(f"ERROR archiver {a.name}: {e}: {traceback.format_exc()}")
 
         # 4 - call enrichers to work with archived content
-        for e in self.config["steps"]["enrichers"]:
+        for e in self.enrichers:
             try: e.enrich(result)
             except Exception as exc: 
                 logger.error(f"ERROR enricher {e.name}: {exc}: {traceback.format_exc()}")
 
         # 5 - store all downloaded/generated media
-        result.store()
+        result.store(storages=self.storages)
 
         # 6 - format and store formatted if needed
-        if final_media := self.config["steps"]["formatters"][0].format(result):
-            final_media.store(url=url, metadata=result)
+        final_media: Media
+        if final_media := self.formatters[0].format(result):
+            final_media.store(url=url, metadata=result, storages=self.storages)
             result.set_final_media(final_media)
 
         if result.is_empty():
             result.status = "nothing archived"
 
         # signal completion to databases and archivers
-        for d in self.config["steps"]["databases"]:
+        for d in self.databases:
             try: d.done(result)
             except Exception as e:
                 logger.error(f"ERROR database {d.name}: {e}: {traceback.format_exc()}")
@@ -395,3 +488,10 @@ class ArchivingOrchestrator:
             assert not ip.is_reserved, f"Invalid IP used"
             assert not ip.is_link_local, f"Invalid IP used"
             assert not ip.is_private, f"Invalid IP used"
+
+
+    # Helper Properties
+    
+    @property
+    def all_modules(self) -> List[Type[BaseModule]]:
+        return self.feeders + self.extractors + self.enrichers + self.databases + self.storages + self.formatters

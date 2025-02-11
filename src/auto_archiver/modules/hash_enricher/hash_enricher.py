@@ -11,23 +11,14 @@ import hashlib
 from loguru import logger
 
 from auto_archiver.core import Enricher
-from auto_archiver.core import Metadata, ArchivingContext
+from auto_archiver.core import Metadata
+from auto_archiver.utils.misc import calculate_file_hash
 
 
 class HashEnricher(Enricher):
     """
     Calculates hashes for Media instances
     """
-
-    def __init__(self, config: dict = None):
-        """
-        Initialize the HashEnricher with a configuration dictionary.
-        """
-        super().__init__()
-        # TODO set these from the manifest?
-        # Set default values
-        self.algorithm = config.get("algorithm", "SHA-256") if config else "SHA-256"
-        self.chunksize = config.get("chunksize", int(1.6e7)) if config else int(1.6e7)
 
 
     def enrich(self, to_enrich: Metadata) -> None:
@@ -39,15 +30,10 @@ class HashEnricher(Enricher):
                 to_enrich.media[i].set("hash", f"{self.algorithm}:{hd}")
 
     def calculate_hash(self, filename) -> str:
-        hash = None
+        hash_algo = None
         if self.algorithm == "SHA-256":
-            hash = hashlib.sha256()
+            hash_algo = hashlib.sha256
         elif self.algorithm == "SHA3-512":
-            hash = hashlib.sha3_512()
+            hash_algo = hashlib.sha3_512
         else: return ""
-        with open(filename, "rb") as f:
-            while True:
-                buf = f.read(self.chunksize)
-                if not buf: break
-                hash.update(buf)
-        return hash.hexdigest()
+        return calculate_file_hash(filename, hash_algo, self.chunksize)

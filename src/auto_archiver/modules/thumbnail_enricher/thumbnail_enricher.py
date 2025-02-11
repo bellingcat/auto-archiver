@@ -10,7 +10,7 @@ import ffmpeg, os
 from loguru import logger
 
 from auto_archiver.core import Enricher
-from auto_archiver.core import Media, Metadata, ArchivingContext
+from auto_archiver.core import Media, Metadata
 from auto_archiver.utils.misc import random_str
 
 
@@ -28,7 +28,7 @@ class ThumbnailEnricher(Enricher):
         logger.debug(f"generating thumbnails for {to_enrich.get_url()}")
         for m_id, m in enumerate(to_enrich.media[::]):
             if m.is_video():
-                folder = os.path.join(ArchivingContext.get_tmp_dir(), random_str(24))
+                folder = os.path.join(self.tmp_dir, random_str(24))
                 os.makedirs(folder, exist_ok=True)
                 logger.debug(f"generating thumbnails for {m.filename}")
                 duration = m.get("duration")

@@ -2,7 +2,6 @@
 # we need to explicitly expose the available imports here
 from .misc import *
 from .webdriver import Webdriver
-from .url import UrlUtil
 from .atlos import get_atlos_config_options
 
 # handy utils from ytdlp
