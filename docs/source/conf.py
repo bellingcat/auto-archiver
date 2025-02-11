@@ -4,7 +4,7 @@ import sys
 import os
 from importlib.metadata import metadata
 
-sys.path.insert(0, os.path.abspath('../scripts'))
+sys.path.append(os.path.abspath('../scripts'))
 from scripts import generate_module_docs
 
 # -- Project Hooks -----------------------------------------------------------
