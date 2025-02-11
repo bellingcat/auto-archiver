@@ -25,6 +25,7 @@ extensions = [
     "autoapi.extension",            # Generate API documentation from docstrings
     "sphinxcontrib.mermaid",        # Mermaid diagrams
     "sphinx.ext.viewcode",          # Source code links
+    "sphinx_copybutton",
     "sphinx.ext.napoleon",          # Google-style and NumPy-style docstrings
     "sphinx.ext.autosectionlabel",
     # 'sphinx.ext.autosummary',       # Summarize module/class/function docs

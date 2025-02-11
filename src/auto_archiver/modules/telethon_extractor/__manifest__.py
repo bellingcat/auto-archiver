@@ -1,5 +1,5 @@
 {
-    "name": "telethon_extractor",
+    "name": "Telethon Extractor",
     "type": ["extractor"],
     "requires_setup": True,
     "dependencies": {

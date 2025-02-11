@@ -2,6 +2,8 @@
 from pathlib import Path
 from auto_archiver.core.module import available_modules
 from auto_archiver.core.base_module import BaseModule
+from ruamel.yaml import YAML
+import io
 
 MODULES_FOLDER = Path(__file__).parent.parent.parent.parent / "src" / "auto_archiver" / "modules"
 SAVE_FOLDER = Path(__file__).parent.parent / "source" / "modules" / "autogen"
@@ -18,6 +20,7 @@ type_color = {
 TABLE_HEADER = ("Option", "Description", "Default", "Type")
 
 def generate_module_docs():
+    yaml = YAML()
     SAVE_FOLDER.mkdir(exist_ok=True)
     modules_by_type = {}
 
@@ -41,22 +44,34 @@ def generate_module_docs():
 {types}
 ```
 {description}
-"""
-        if manifest['configs']:
-            readme_str += "\n## Configuration Options\n"
-            readme_str += header_row
+"""     
+        if not manifest['configs']:
+            readme_str += "\n*This module has no configuration options.*\n"
+        else:
+            config_yaml = {}
+            config_table = header_row
             for key, value in manifest['configs'].items():
                 type = value.get('type', 'string')
                 if type == 'auto_archiver.utils.json_loader':
                     value['type'] = 'json'
                 elif type == 'str':
                     type = "string"
-
+                
+                default = value.get('default', '')
+                config_yaml[key] = default
                 help = "**Required**. " if value.get('required', False) else "Optional. "
                 help += value.get('help', '')
-                readme_str += f"| `{module.name}.{key}` | {help} | {value.get('default', '')} | {type} |\n"
-                configs_cheatsheet += f"| `{module.name}.{key}` | {help} | {value.get('default', '')} | {type} |\n"
-        
+                config_table += f"| `{module.name}.{key}` | {help} | {value.get('default', '')} | {type} |\n"
+                configs_cheatsheet += f"| `{module.name}.{key}` | {help} | {default} | {type} |\n"
+            readme_str += "\n## Configuration Options\n"
+            readme_str += "\n### YAML\n"
+            yaml_string = io.BytesIO()
+            yaml.dump({module.name: config_yaml}, yaml_string)
+            
+            readme_str += f"```{{code}} yaml\n{yaml_string.getvalue().decode('utf-8')}\n```\n"
+
+            readme_str += "\n### Command Line:\n"
+            readme_str += config_table
 
         # add a link to the autodoc refs
         readme_str += f"\n[API Reference](../../../autoapi/{module.name}/index)\n"
