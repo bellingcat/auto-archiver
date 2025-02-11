@@ -2,7 +2,7 @@ from typing import Type
 import pytest
 from unittest.mock import MagicMock, patch
 from auto_archiver.core import Media
-from auto_archiver.modules.s3_storage import s3_storage
+from auto_archiver.modules.s3_storage import S3Storage
 
 
 class TestS3Storage:
@@ -10,7 +10,7 @@ class TestS3Storage:
     Test suite for S3Storage.
     """
     module_name: str = "s3_storage"
-    storage: Type[s3_storage]
+    storage: Type[S3Storage]
     s3: MagicMock
     config: dict = {
         "path_generator": "flat",
@@ -78,7 +78,7 @@ class TestS3Storage:
             )
 
 
-    @patch.object(s3_storage.S3Storage, 'file_in_folder')
+    @patch.object(S3Storage, 'file_in_folder')
     def test_skips_upload_when_duplicate_exists(self, mock_file_in_folder):
         """Test that upload skips when file_in_folder finds existing object"""
         self.storage.random_no_duplicate = True
@@ -97,7 +97,7 @@ class TestS3Storage:
                 mock_upload.assert_not_called()
                 assert result is True
 
-    @patch.object(s3_storage.S3Storage, 'is_upload_needed')
+    @patch.object(S3Storage, 'is_upload_needed')
     def test_uploads_with_correct_parameters(self, mock_upload_needed):
         media = Media("test.txt")
         media.key = "original_key.txt"
