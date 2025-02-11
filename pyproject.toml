@@ -73,6 +73,7 @@ sphinx-autobuild = "^2024.10.3"
 sphinx-copybutton = "^0.5.2"
 myst-parser = "^4.0.0"
 sphinx-book-theme = "^1.1.3"
+linkify-it-py = "^2.0.3"
 
 
 [project.scripts]
