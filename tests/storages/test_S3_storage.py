@@ -2,13 +2,12 @@ from typing import Type
 import pytest
 from unittest.mock import MagicMock, patch
 from auto_archiver.core import Media
-from auto_archiver.modules.hash_enricher import HashEnricher
 from auto_archiver.modules.s3_storage import s3_storage
 
 
-class TestGDriveStorage:
+class TestS3Storage:
     """
-    Test suite for GDriveStorage.
+    Test suite for S3Storage.
     """
     module_name: str = "s3_storage"
     storage: Type[s3_storage]
@@ -66,7 +65,7 @@ class TestGDriveStorage:
         # Set duplicate checking config to true:
 
         self.storage.random_no_duplicate = True
-        with patch('auto_archiver.modules.hash_enricher.HashEnricher.calculate_hash') as mock_calc_hash, \
+        with patch('auto_archiver.modules.s3_storage.s3_storage.calculate_file_hash') as mock_calc_hash, \
                 patch.object(self.storage, 'file_in_folder') as mock_file_in_folder:
             mock_calc_hash.return_value = 'beepboop123beepboop123beepboop123'
             mock_file_in_folder.return_value = 'existing_key.txt'
@@ -87,8 +86,7 @@ class TestGDriveStorage:
         # Create test media with calculated hash
         media = Media("test.txt")
         media.key = "original_path.txt"
-
-        with patch('auto_archiver.modules.hash_enricher.HashEnricher.calculate_hash') as mock_calculate_hash:
+        with patch('auto_archiver.modules.s3_storage.s3_storage.calculate_file_hash') as mock_calculate_hash:
             mock_calculate_hash.return_value = "beepboop123beepboop123beepboop123"
             # Verify upload
             assert self.storage.is_upload_needed(media) is False
