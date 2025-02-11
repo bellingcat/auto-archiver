@@ -80,8 +80,8 @@ class Extractor(BaseModule):
             d.raise_for_status()
 
             # get mimetype from the response headers
-            if not Path(to_filename).suffix:
-                content_type = d.headers.get('Content-Type')
+            if not mimetypes.guess_type(to_filename)[0]:
+                content_type = d.headers.get('Content-Type') or self._guess_file_type(url)
                 extension = mimetypes.guess_extension(content_type)
                 if extension:
                     to_filename += extension
