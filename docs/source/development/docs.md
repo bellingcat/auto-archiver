@@ -18,7 +18,7 @@ poetry install
 
 **Create the documentation:**
 - Build the documentation: 
-```
+```shell
 # Using makefile (Linux/macOS):
 make -C docs html
 
