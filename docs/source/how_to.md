@@ -3,7 +3,7 @@
 ## How to use Google Sheets to load and store archive information
 The `--gsheet_feeder.sheet` property is the name of the Google Sheet to check for URLs. 
 This sheet must have been shared with the Google Service account used by `gspread`. 
-This sheet must also have specific columns (case-insensitive) in the `header` as specified in [gsheet_feeder.__manifest__.py](src/auto_archiver/modules/gsheet_feeder/__manifest__.py). The default names of these columns and their purpose is:
+This sheet must also have specific columns (case-insensitive) in the `header` - see the [Gsheet Feeder Docs](modules/autogen/feeder/gsheet_feeder.md) for more info. The default names of these columns and their purpose is:
 
 Inputs:
 
