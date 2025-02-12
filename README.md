@@ -33,5 +33,5 @@ Or pip:
 
 ## Contributing
 
-We welcome contributions to the Auto Archiver project! See the [Contributing Guide](https://auto-archiver.readthedocs.io/en/contributing.html) for how to get involved!
+We welcome contributions to the Auto Archiver project! See the [Contributing Guide](https://auto-archiver.readthedocs.io/en/latest/contributing.html) for how to get involved!
 

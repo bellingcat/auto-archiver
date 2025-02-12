@@ -25,7 +25,7 @@ If you’d like to fix a bug or improve existing code:
 
 If you want to add a new module to Auto Archiver:
 
-1. Ensure your module follows the existing [coding style and project structure](https://auto-archiver.readthedocs.io/en/development/creating_modules.html).
+1. Ensure your module follows the existing [coding style and project structure](https://auto-archiver.readthedocs.io/en/latest/development/creating_modules.html).
 2. Write clear documentation explaining what your module does and how to use it.
 3. Ideally, include unit tests for your module!
 4. Follow the steps in Section 2 to submit a pull request.
@@ -42,7 +42,7 @@ If you have any questions about how the source code works or need help using Aut
 
 We welcome contributions to the documentation!
 
-📖 Please read [Contributing to the Auto Archiver Documentation](https://auto-archiver.readthedocs.io/en/development/docs.html) to learn how you can help improve the project's documentation.
+📖 Please read [Contributing to the Auto Archiver Documentation](https://auto-archiver.readthedocs.io/en/latest/development/docs.html) to learn how you can help improve the project's documentation.
 
 ------------------
 
