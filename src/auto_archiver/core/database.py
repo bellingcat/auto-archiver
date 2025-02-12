@@ -1,3 +1,8 @@
+"""
+Database module for the auto-archiver that defines the interface for implementing database modules
+in the media archiving framework. 
+"""
+
 from __future__ import annotations
 from abc import abstractmethod
 from typing import Union
@@ -5,6 +10,11 @@ from typing import Union
 from auto_archiver.core import Metadata, BaseModule
 
 class Database(BaseModule):
+    """
+    Base class for implementing database modules in the media archiving framework.
+
+    Subclasses must implement the `fetch` and `done` methods to define platform-specific behavior.
+    """
 
     def started(self, item: Metadata) -> None:
         """signals the DB that the given item archival has started"""
