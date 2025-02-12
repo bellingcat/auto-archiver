@@ -6,6 +6,8 @@ import pickle
 from tempfile import TemporaryDirectory
 from typing import Dict, Tuple
 import hashlib
+from unittest.mock import patch
+
 import pytest
 from auto_archiver.core.metadata import Metadata
 from auto_archiver.core.module import get_module, _LAZY_LOADED_MODULES
@@ -129,3 +131,19 @@ def unpickle():
         with open(os.path.join(test_data_dir, path), "rb") as f:
             return pickle.load(f)
     return _unpickle
+
+
+@pytest.fixture
+def mock_python_dependencies():
+    with patch("auto_archiver.core.module") as mock_check_python_dep:
+        # Mock all Python dependencies as available
+        mock_check_python_dep.return_value = True
+        yield mock_check_python_dep
+
+
+@pytest.fixture
+def mock_binary_dependencies():
+    with patch("shutil.which") as mock_shutil_which:
+        # Mock all binary dependencies as available
+        mock_shutil_which.return_value = "/usr/bin/fake_binary"
+        yield mock_shutil_which
