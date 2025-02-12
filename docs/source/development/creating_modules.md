@@ -1,6 +1,6 @@
 # Creating Your Own Modules
 
-Modules are what's used to extend `auto-archiver` to process different websites or media, and/or transform the data in a way that suits your needs. In most cases, the [](../core_modules.md) should be sufficient for every day use, but the most common use-cases for making your own Modules include:
+Modules are what's used to extend `auto-archiver` to process different websites or media, and/or transform the data in a way that suits your needs. In most cases, the [Core Modules](../core_modules.md) should be sufficient for every day use, but the most common use-cases for making your own Modules include:
 
 1. Extracting data from a website which doesn't work with the current core extractors.
 2. Enriching or altering the data before saving with additional information that the core enrichers do not offer.
