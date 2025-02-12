@@ -3,6 +3,24 @@
 
 This section of the documentation provides guidelines for configuring the tool.
 
+## Configuring using a file
+
+The recommended way to configure auto-archiver for long-term and deployed projects is a configuration file, typically called `orchestration.yaml`. This is a YAML file containing all the settings for your entire workflow.
+
+The structure of orchestration file is split into 2 parts: `steps` (what [steps](../flow_overview.md) to use) and `configurations` (settings for different modules), here's a simplification:
+
+A default `orchestration.yaml` will be created for you the first time you run auto-archiver (without any arguments). Here's what it looks like:
+
+<details>
+<summary>View exampleorchestration.yaml</summary>
+
+```{literalinclude} ../example.orchestration.yaml
+   :language: yaml
+   :caption: orchestration.yaml
+```
+
+</details>
+
 ## Configuring from the Command Line
 
 You can run auto-archiver directy from the command line, without the need for a configuration file, command line arguments are parsed using the format `module_name.config_value`. For example, a config value of `api_key` in the `instagram_extractor` module would be passed on the command line with the flag `--instagram_extractor.api_key=API_KEY`.
@@ -14,23 +32,10 @@ auto-archiver --instagram_extractor.api_key=123 --other_module.setting --store
 # will store the new settings into the configuration file (default: orchestration.yaml)
 ```
 
-## Configuring using a file
-
-The recommended way to configure auto-archiver for long-term and deployed projects is a configuration file, typically called `orchestration.yaml`. This is a YAML file containing all the settings for your entire workflow.
-
-A default `orchestration.yaml` will be created for you the first time you run auto-archiver (without any arguments). Here's what it looks like:
-
-<details>
-<summary>View example orchestration.yaml</summary>
-
-```{literalinclude} ../example.orchestration.yaml
-   :language: yaml
-   :caption: orchestration.yaml
+```{note} Arguments passed on the command line override those saved in your settings file. Save them to your config file using the -s or --store flag
 ```
 
-</details>
-
-## Core Module Configuration
+## Seeing all Configuration Options
 
 View the configurable settings for the core modules on the individual doc pages for each [](../core_modules.md).
 You can also view all settings available for the modules you have on your system using the `--help` flag in auto-archiver.

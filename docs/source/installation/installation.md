@@ -38,21 +38,52 @@ Docker works like a virtual machine running inside your computer, it isolates ev
        2.  `$PWD/local_archive` is a folder `local_archive/` in case you want to archive locally and have the files accessible outside docker
        3.  `/app/local_archive` is a folder inside docker that you can reference in your orchestration.yml file 
 
+### Example invocations
+
+The invocations below will run the auto-archiver Docker image using a configuration file that you have specified
+
+```bash
+# all the configurations come from ./secrets/orchestration.yaml
+docker run --rm -v $PWD/secrets:/app/secrets -v $PWD/local_archive:/app/local_archive bellingcat/auto-archiver --config secrets/orchestration.yaml
+# uses the same configurations but for another google docs sheet 
+# with a header on row 2 and with some different column names
+# notice that columns is a dictionary so you need to pass it as JSON and it will override only the values provided
+docker run --rm -v $PWD/secrets:/app/secrets -v $PWD/local_archive:/app/local_archive bellingcat/auto-archiver --config secrets/orchestration.yaml --gsheet_feeder.sheet="use it on another sheets doc" --gsheet_feeder.header=2 --gsheet_feeder.columns='{"url": "link"}'
+# all the configurations come from orchestration.yaml and specifies that s3 files should be private
+docker run --rm -v $PWD/secrets:/app/secrets -v $PWD/local_archive:/app/local_archive bellingcat/auto-archiver --config secrets/orchestration.yaml --s3_storage.private=1
+```
+
 ## Installing Locally with Pip
 
 1. Make sure you have python 3.10 or higher installed
 2. Install the package with your preferred package manager: `pip/pipenv/conda install auto-archiver` or `poetry add auto-archiver`
 3. Test it's installed with `auto-archiver --help`
-4. Run it with your orchestration file and pass any flags you want in the command line `auto-archiver --config secrets/orchestration.yaml` if your orchestration file is inside a `secrets/`, which we advise
+4. Install other local dependency requirements (for )
+5. Run it with your orchestration file and pass any flags you want in the command line `auto-archiver --config secrets/orchestration.yaml` if your orchestration file is inside a `secrets/`, which we advise
+
+### Example invocations
+
+Once all your [local requirements](#installing-local-requirements) are correctly installed, the
+
+```bash
+# all the configurations come from ./secrets/orchestration.yaml
+auto-archiver --config secrets/orchestration.yaml
+# uses the same configurations but for another google docs sheet 
+# with a header on row 2 and with some different column names
+# notice that columns is a dictionary so you need to pass it as JSON and it will override only the values provided
+auto-archiver --config secrets/orchestration.yaml --gsheet_feeder.sheet="use it on another sheets doc" --gsheet_feeder.header=2 --gsheet_feeder.columns='{"url": "link"}'
+# all the configurations come from orchestration.yaml and specifies that s3 files should be private
+auto-archiver --config secrets/orchestration.yaml --s3_storage.private=1
+```
 
 ### Installing Local Requirements
 
 If using the local installation method, you will also need to install the following dependencies locally:
 
-1. [ffmpeg](https://www.ffmpeg.org/) must also be installed locally for this tool to work. 
-2. [firefox](https://www.mozilla.org/en-US/firefox/new/) and [geckodriver](https://github.com/mozilla/geckodriver/releases) on a path folder like `/usr/local/bin`. 
+1.[ffmpeg](https://www.ffmpeg.org/) - for handling of downloaded videos
+2. [firefox](https://www.mozilla.org/en-US/firefox/new/) and [geckodriver](https://github.com/mozilla/geckodriver/releases) on a path folder like `/usr/local/bin` - for taking webpage screenshots with the screenshot enricher
 3. (optional) [fonts-noto](https://fonts.google.com/noto) to deal with multiple unicode characters during selenium/geckodriver's screenshots: `sudo apt install fonts-noto -y`.
-
+4. [Browsertrix Crawler docker image](https://hub.docker.com/r/webrecorder/browsertrix-crawler) for the WACZ enricher/archiver
 
 
 

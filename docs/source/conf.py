@@ -15,7 +15,7 @@ generate_module_docs()
 # -- Project information -----------------------------------------------------
 package_metadata = metadata("auto-archiver")
 project = package_metadata["name"]
-authors = package_metadata["authors"]
+authors = "Bellingcat"
 release = package_metadata["version"]
 language = 'en'
 
@@ -74,5 +74,6 @@ source_suffix = {
 
 # -- Options for HTML output -------------------------------------------------
 html_theme = 'sphinx_book_theme'
-# html_static_path = ['_static']
+html_static_path = ["../_static"]
+html_css_files = ["custom.css"]
 

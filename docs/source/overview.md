@@ -8,7 +8,6 @@
 :caption: Contents:
 
 Overview <self>
-contributing
 installation/installation.rst
 core_modules.md
 how_to
