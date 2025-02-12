@@ -6,7 +6,7 @@ The default feeder is the command line feeder (`cli_feeder`), which allows you t
 
 Command line feeder usage:
 ```{code} bash
-auto-archiver [options] URL1 URL2 ...
+auto-archiver [options] -- URL1 URL2 ...
 ```
 
 ```{include} autogen/feeder.md
