@@ -1,5 +1,5 @@
 {
-    "name": "telethon_extractor",
+    "name": "Telethon Extractor",
     "type": ["extractor"],
     "requires_setup": True,
     "dependencies": {
@@ -39,6 +39,10 @@ To use the `TelethonExtractor`, you must configure the following:
 - **Session File**: Optional, but records login sessions for future use (default: `secrets/anon.session`).
 - **Bot Token**: Optional, allows access to additional content (e.g., large videos) but limits private channel archiving.
 - **Channel Invites**: Optional, specify a JSON string of invite links to join channels during setup.
+
+### First Time Login
+The first time you run, you will be prompted to do a authentication with the phone number associated, alternatively you can put your `anon.session` in the root.
+
 
 """
 }

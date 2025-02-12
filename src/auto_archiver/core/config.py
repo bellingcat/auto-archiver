@@ -48,6 +48,7 @@ authentication: {}
 
 logging:
   level: INFO
+
 """)
 # note: 'logging' is explicitly added above in order to better format the config file
 

@@ -32,7 +32,6 @@
     
     GDriveStorage: A storage module for saving archived content to Google Drive.
 
-    Author: Dave Mateer, (And maintained by: )
     Source Documentation: https://davemateer.com/2022/04/28/google-drive-with-python
 
     ### Features
