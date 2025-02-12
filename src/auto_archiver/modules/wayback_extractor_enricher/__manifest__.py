@@ -1,6 +1,6 @@
 {
     "name": "Wayback Machine Enricher",
-    "type": ["enricher", "archiver"],
+    "type": ["enricher", "extractor"],
     "entry_point": "wayback_extractor_enricher::WaybackExtractorEnricher",
     "requires_setup": True,
     "dependencies": {

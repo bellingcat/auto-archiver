@@ -11,6 +11,8 @@
         "api_token": {
             "default": None,
             "help": "An Atlos API token. For more information, see https://docs.atlos.org/technical/api/",
+            "required": True,
+            "type": "str",
         },
         "atlos_url": {
             "default": "https://platform.atlos.org",

@@ -20,5 +20,6 @@
 - Processes HTML content of messages to retrieve embedded media.
 - Sets structured metadata, including timestamps, content, and media details.
 - Does not require user authentication for Telegram.
+
     """,
 }
