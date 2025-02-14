@@ -124,11 +124,10 @@ def pytest_runtest_setup(item):
 def unpickle():
     """
     Returns a helper function that unpickles a file
-    ** gets the file from the test_files directory: tests/data/test_files **
+    ** gets the file from the test_files directory: tests/data/ **
     """
     def _unpickle(path):
-        test_data_dir = os.path.join(os.path.dirname(__file__), "data", "test_files")
-        with open(os.path.join(test_data_dir, path), "rb") as f:
+        with open(os.path.join("tests/data", path), "rb") as f:
             return pickle.load(f)
     return _unpickle
 

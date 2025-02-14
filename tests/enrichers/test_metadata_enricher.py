@@ -79,8 +79,8 @@ def test_get_metadata_error_handling(mock_run, mock_logger_error, enricher):
 @pytest.mark.skip(reason="Requires ExifTool to be installed. TODO mock")
 def test_metadata_pickle(enricher, unpickle):
     # Uses a pickle of a YouTube short
-    metadata = unpickle("tests/data/metadata/metadata_enricher_ytshort_input.pickle")
-    expected = unpickle("tests/data/metadata/metadata_enricher_ytshort_expected.pickle")
+    metadata = unpickle("metadata_enricher_ytshort_input.pickle")
+    expected = unpickle("metadata_enricher_ytshort_expected.pickle")
     enricher.enrich(metadata)
     expected_media = expected.media
     actual_media = metadata.media
