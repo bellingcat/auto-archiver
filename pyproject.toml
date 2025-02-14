@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [project]
 name = "auto-archiver"
-version = "0.13.0"
+version = "0.13.1"
 description = "Automatically archive links to videos, images, and social media content from Google Sheets (and more)."
 
 requires-python = ">=3.10,<3.13"
@@ -22,7 +22,6 @@ classifiers = [
 ]
 
 dependencies = [
-    "oscrypto @ git+https://github.com/wbond/oscrypto.git@d5f3437ed24257895ae1edd9e503cfb352e635a8",
     "gspread (>=0.0.0)",
     "beautifulsoup4 (>=0.0.0)",
     "bs4 (>=0.0.0)",
