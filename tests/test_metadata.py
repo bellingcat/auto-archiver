@@ -179,8 +179,8 @@ def test_choose_most_complete():
 def test_choose_most_complete_from_pickles(unpickle):
     # test most complete from pickles before and after an enricher has run
     # Only compares length of media, not the actual media
-    m_before_enriching = unpickle("/Users/erinclark/PycharmProjects/auto-archiver/tests/data/metadata/metadata_enricher_ytshort_input.pickle")
-    m_after_enriching = unpickle("/Users/erinclark/PycharmProjects/auto-archiver/tests/data/metadata/metadata_enricher_ytshort_expected.pickle")
+    m_before_enriching = unpickle("tests/data/metadata/metadata_enricher_ytshort_input.pickle")
+    m_after_enriching = unpickle("tests/data/metadata/metadata_enricher_ytshort_expected.pickle")
     # Iterates `for r in results[1:]:`
     res = Metadata.choose_most_complete([Metadata(), m_after_enriching, m_before_enriching])
     assert res.media == m_after_enriching.media
