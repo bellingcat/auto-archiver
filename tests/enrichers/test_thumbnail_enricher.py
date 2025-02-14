@@ -5,12 +5,12 @@ from auto_archiver.modules.thumbnail_enricher import ThumbnailEnricher
 
 
 @pytest.fixture
-def thumbnail_enricher(setup_module) -> ThumbnailEnricher:
-    configs: dict = {
+def thumbnail_enricher(setup_module, mock_binary_dependencies) -> ThumbnailEnricher:
+    config: dict = {
         "thumbnails_per_minute": 60,
         "max_thumbnails": 4,
     }
-    return setup_module("thumbnail_enricher", configs)
+    return setup_module("thumbnail_enricher", config)
 
 
 @pytest.fixture

@@ -134,14 +134,6 @@ def unpickle():
 
 
 @pytest.fixture
-def mock_python_dependencies():
-    with patch("auto_archiver.core.module") as mock_check_python_dep:
-        # Mock all Python dependencies as available
-        mock_check_python_dep.return_value = True
-        yield mock_check_python_dep
-
-
-@pytest.fixture
 def mock_binary_dependencies():
     with patch("shutil.which") as mock_shutil_which:
         # Mock all binary dependencies as available
