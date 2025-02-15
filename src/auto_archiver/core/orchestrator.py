@@ -317,9 +317,11 @@ class ArchivingOrchestrator:
             exit()
 
         return read_yaml(config_file)
-
-    def run(self, args: list) -> Generator[Metadata]:
-
+    
+    def setup(self, args: list):
+        """
+        Main entry point for the orchestrator, sets up the basic parser, loads the config file, and sets up the complete parser
+        """
         self.setup_basic_parser()
 
         # parse the known arguments for now (basically, we want the config file)
@@ -342,8 +344,10 @@ class ArchivingOrchestrator:
         for module_type in BaseModule.MODULE_TYPES:
             logger.info(f"{module_type.upper()}S: " + ", ".join(m.display_name for m in getattr(self, f"{module_type}s")))
 
-        for result in self.feed():
-            yield result
+    def run(self, args: list) -> Generator[Metadata]:
+
+        self.setup(args)
+        return self.feed()
 
     def cleanup(self) -> None:
         logger.info("Cleaning up")
@@ -351,7 +355,7 @@ class ArchivingOrchestrator:
             e.cleanup()
 
     def feed(self) -> Generator[Metadata]:
-
+        
         url_count = 0
         for feeder in self.feeders:
             for item in feeder:
