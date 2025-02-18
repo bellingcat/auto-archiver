@@ -1,5 +1,3 @@
-from unittest.mock import patch
-
 import pytest
 from PIL import UnidentifiedImageError
 
@@ -21,11 +19,11 @@ def metadata_with_images():
     return m
 
 
-def test_successful_enrich(metadata_with_images):
+def test_successful_enrich(metadata_with_images, mocker):
     with (
-        patch("pdqhash.compute", return_value=([1, 0, 1, 0] * 64, 100)),
-        patch("PIL.Image.open"),
-        patch.object(Media, "is_image", return_value=True) as mock_is_image,
+        mocker.patch("pdqhash.compute", return_value=([1, 0, 1, 0] * 64, 100)),
+        mocker.patch("PIL.Image.open"),
+        mocker.patch.object(Media, "is_image", return_value=True) as mock_is_image,
     ):
         enricher = PdqHashEnricher()
         enricher.enrich(metadata_with_images)
@@ -35,27 +33,24 @@ def test_successful_enrich(metadata_with_images):
             assert media.get("pdq_hash") is not None
 
 
-def test_enrich_skip_non_image(metadata_with_images):
-    with (
-        patch.object(Media, "is_image", return_value=False),
-        patch("pdqhash.compute") as mock_pdq,
-    ):
-        enricher = PdqHashEnricher()
-        enricher.enrich(metadata_with_images)
-        mock_pdq.assert_not_called()
+def test_enrich_skip_non_image(metadata_with_images, mocker):
+    mocker.patch.object(Media, "is_image", return_value=False)
+    mock_pdq = mocker.patch("pdqhash.compute")
+
+    enricher = PdqHashEnricher()
+    enricher.enrich(metadata_with_images)
+    mock_pdq.assert_not_called()
 
 
-def test_enrich_handles_corrupted_image(metadata_with_images):
-    with (
-        patch("PIL.Image.open", side_effect=UnidentifiedImageError("Corrupted image")),
-        patch("pdqhash.compute") as mock_pdq,
-        patch("loguru.logger.error") as mock_logger,
-    ):
-        enricher = PdqHashEnricher()
-        enricher.enrich(metadata_with_images)
+def test_enrich_handles_corrupted_image(metadata_with_images, mocker):
+    mocker.patch("PIL.Image.open", side_effect=UnidentifiedImageError("Corrupted image"))
+    mock_pdq = mocker.patch("pdqhash.compute")
+    mock_logger = mocker.patch("loguru.logger.error")
+    enricher = PdqHashEnricher()
+    enricher.enrich(metadata_with_images)
 
-        assert mock_logger.call_count == len(metadata_with_images.media)
-        mock_pdq.assert_not_called()
+    assert mock_logger.call_count == len(metadata_with_images.media)
+    mock_pdq.assert_not_called()
 
 
 @pytest.mark.parametrize(
@@ -66,19 +61,18 @@ def test_enrich_handles_corrupted_image(metadata_with_images):
         ("regular-image", True),
     ]
 )
-def test_enrich_excludes_by_filetype(media_id, should_have_hash):
+def test_enrich_excludes_by_filetype(media_id, should_have_hash, mocker):
     metadata = Metadata()
     metadata.set_url("https://example.com")
     metadata.add_media(Media(filename="image.jpg").set("id", media_id))
 
-    with (
-        patch("pdqhash.compute", return_value=([1, 0, 1, 0] * 64, 100)),
-        patch("PIL.Image.open"),
-        patch.object(Media, "is_image", return_value=True),
-    ):
-        enricher = PdqHashEnricher()
-        enricher.enrich(metadata)
+    mocker.patch("pdqhash.compute", return_value=([1, 0, 1, 0] * 64, 100))
+    mocker.patch("PIL.Image.open")
+    mocker.patch.object(Media, "is_image", return_value=True)
 
-        media_item = metadata.media[0]
-        assert (media_item.get("pdq_hash") is not None) == should_have_hash
+    enricher = PdqHashEnricher()
+    enricher.enrich(metadata)
+
+    media_item = metadata.media[0]
+    assert (media_item.get("pdq_hash") is not None) == should_have_hash
 

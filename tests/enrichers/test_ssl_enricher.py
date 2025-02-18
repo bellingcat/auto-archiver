@@ -1,6 +1,4 @@
 import ssl
-from unittest.mock import patch, mock_open
-
 import pytest
 
 from auto_archiver.core import Metadata, Media
@@ -35,22 +33,22 @@ def test_empty_metadata(metadata, enricher):
     assert enricher.enrich(metadata) is None
 
 
-def test_ssl_enrich(metadata, enricher):
-    with patch("ssl.get_server_certificate", return_value="TEST_CERT"), \
-         patch("builtins.open", mock_open()) as mock_file:
-        media_len_before = len(metadata.media)
+def test_ssl_enrich(metadata, enricher, mocker):
+    mocker.patch("ssl.get_server_certificate", return_value="TEST_CERT")
+    mock_file = mocker.patch("builtins.open", mocker.mock_open())
+    media_len_before = len(metadata.media)
+    enricher.enrich(metadata)
+
+    ssl.get_server_certificate.assert_called_once_with(("example.com", 443))
+    mock_file.assert_called_once_with(f"{enricher.tmp_dir}/example-com.pem", "w")
+    mock_file().write.assert_called_once_with("TEST_CERT")
+    assert len(metadata.media) == media_len_before + 1
+    # Ensure the certificate is added to metadata
+    assert any(media.filename.endswith("example-com.pem") for media in metadata.media)
+
+
+def test_ssl_error_handling(enricher, metadata, mocker):
+    mocker.patch("ssl.get_server_certificate", side_effect=ssl.SSLError("SSL error"))
+    with pytest.raises(ssl.SSLError, match="SSL error"):
         enricher.enrich(metadata)
-
-        ssl.get_server_certificate.assert_called_once_with(("example.com", 443))
-        mock_file.assert_called_once_with(f"{enricher.tmp_dir}/example-com.pem", "w")
-        mock_file().write.assert_called_once_with("TEST_CERT")
-        assert len(metadata.media) == media_len_before + 1
-        # Ensure the certificate is added to metadata
-        assert any(media.filename.endswith("example-com.pem") for media in metadata.media)
-
-
-def test_ssl_error_handling(enricher, metadata):
-    with patch("ssl.get_server_certificate", side_effect=ssl.SSLError("SSL error")):
-        with pytest.raises(ssl.SSLError, match="SSL error"):
-            enricher.enrich(metadata)
 

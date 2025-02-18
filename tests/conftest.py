@@ -7,7 +7,6 @@ from datetime import datetime, timezone
 from tempfile import TemporaryDirectory
 from typing import Dict, Tuple
 import hashlib
-from unittest.mock import patch
 
 import pytest
 from auto_archiver.core.metadata import Metadata
@@ -134,14 +133,29 @@ def unpickle():
 
 
 @pytest.fixture
-def mock_binary_dependencies():
-    with patch("shutil.which") as mock_shutil_which:
-        # Mock all binary dependencies as available
-        mock_shutil_which.return_value = "/usr/bin/fake_binary"
-        yield mock_shutil_which
+def mock_binary_dependencies(mocker):
+    mock_shutil_which = mocker.patch("shutil.which")
+    # Mock all binary dependencies as available
+    mock_shutil_which.return_value = "/usr/bin/fake_binary"
+    return mock_shutil_which
 
 
 @pytest.fixture
 def sample_datetime():
     return datetime(2023, 1, 1, 12, 0, tzinfo=timezone.utc)
 
+
+@pytest.fixture(autouse=True)
+def mock_sleep(mocker):
+    """Globally mock time.sleep to avoid delays."""
+    return mocker.patch("time.sleep")
+
+
+@pytest.fixture
+def metadata():
+    metadata = Metadata()
+    metadata.set("_processed_at", "2021-01-01T00:00:00")
+    metadata.set_title("Example Title")
+    metadata.set_content("Example Content")
+    metadata.set_url("https://example.com")
+    return metadata

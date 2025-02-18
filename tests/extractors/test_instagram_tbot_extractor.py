@@ -1,5 +1,4 @@
 import os
-from unittest.mock import patch, MagicMock
 
 import pytest
 
@@ -11,16 +10,10 @@ TESTFILES = os.path.join(os.path.dirname(__file__), "testfiles")
 
 
 @pytest.fixture
-def patch_extractor_methods(request, setup_module):
-    with patch.object(InstagramTbotExtractor, '_prepare_session_file', return_value=None), \
-            patch.object(InstagramTbotExtractor, '_initialize_telegram_client', return_value=None):
-        yield
-
-@pytest.fixture(autouse=True)
-def mock_sleep():
-    """Globally mock time.sleep to avoid delays."""
-    with patch("time.sleep") as mock_sleep:
-        yield mock_sleep
+def patch_extractor_methods(request, setup_module, mocker):
+    mocker.patch.object(InstagramTbotExtractor, '_prepare_session_file', return_value=None)
+    mocker.patch.object(InstagramTbotExtractor, '_initialize_telegram_client', return_value=None)
+    yield
 
 
 @pytest.fixture
@@ -33,16 +26,16 @@ def metadata_sample():
 
 
 @pytest.fixture
-def mock_telegram_client():
+def mock_telegram_client(mocker):
     """Fixture to mock TelegramClient interactions."""
-    with patch("auto_archiver.modules.instagram_tbot_extractor.client") as mock_client:
-        instance = MagicMock()
-        mock_client.return_value = instance
-        yield instance
+    mock_client = mocker.patch("auto_archiver.modules.instagram_tbot_extractor.client")
+    instance = mocker.MagicMock()
+    mock_client.return_value = instance
+    return instance
 
 
 @pytest.fixture
-def extractor(setup_module, patch_extractor_methods):
+def extractor(setup_module, patch_extractor_methods, mocker):
     extractor_module = "instagram_tbot_extractor"
     config = {
         "api_id": 12345,
@@ -51,7 +44,7 @@ def extractor(setup_module, patch_extractor_methods):
         "timeout": 4
     }
     extractor = setup_module(extractor_module, config)
-    extractor.client = MagicMock()
+    extractor.client = mocker.MagicMock()
     extractor.session_file = "test_session"
     return extractor
 
@@ -60,20 +53,20 @@ def test_non_instagram_url(extractor, metadata_sample):
     metadata_sample.set_url("https://www.youtube.com")
     assert extractor.download(metadata_sample) is False
 
-def test_download_success(extractor, metadata_sample):
-    with patch.object(extractor, "_send_url_to_bot", return_value=(MagicMock(), 101)), \
-            patch.object(extractor, "_process_messages", return_value="Sample Instagram post caption"):
-        result = extractor.download(metadata_sample)
+
+def test_download_success(extractor, metadata_sample, mocker):
+    mocker.patch.object(extractor, "_send_url_to_bot", return_value=(mocker.MagicMock(), 101))
+    mocker.patch.object(extractor, "_process_messages", return_value="Sample Instagram post caption")
+    result = extractor.download(metadata_sample)
     assert result.is_success()
     assert result.status == "insta-via-bot: success"
     assert result.metadata.get("title") == "Sample Instagram post caption"
 
 
-def test_download_invalid(extractor, metadata_sample):
-    with patch.object(extractor, "_send_url_to_bot", return_value=(MagicMock(), 101)), \
-            patch.object(extractor, "_process_messages", return_value="You must enter a URL to a post"):
-        assert extractor.download(metadata_sample) is False
-
+def test_download_invalid(extractor, metadata_sample, mocker):
+    mocker.patch.object(extractor, "_send_url_to_bot", return_value=(mocker.MagicMock(), 101))
+    mocker.patch.object(extractor, "_process_messages", return_value="You must enter a URL to a post")
+    assert extractor.download(metadata_sample) is False
 
 
 @pytest.mark.skip(reason="Requires authentication.")
@@ -89,8 +82,12 @@ class TestInstagramTbotExtractorReal(TestExtractorBase):
     }
 
     @pytest.mark.parametrize("url, expected_status, message, len_media", [
-        ("https://www.instagram.com/p/C4QgLbrIKXG", "insta-via-bot: success", "Are you new to Bellingcat? - The way we share our investigations is different. 💭\nWe want you to read our story but also learn ou", 6),
-        ("https://www.instagram.com/reel/DEVLK8qoIbg/", "insta-via-bot: success", "Our volunteer community is at the centre of many incredible Bellingcat investigations and tools. Stephanie Ladel is one such vol", 3),
+        ("https://www.instagram.com/p/C4QgLbrIKXG", "insta-via-bot: success",
+         "Are you new to Bellingcat? - The way we share our investigations is different. 💭\nWe want you to read our story but also learn ou",
+         6),
+        ("https://www.instagram.com/reel/DEVLK8qoIbg/", "insta-via-bot: success",
+         "Our volunteer community is at the centre of many incredible Bellingcat investigations and tools. Stephanie Ladel is one such vol",
+         3),
         # instagram tbot not working (potentially intermittently?) for stories - replace with a live story to retest
         # ("https://www.instagram.com/stories/bellingcatofficial/3556336382743057476/", False, "Media not found or unavailable"),
         # Seems to be working intermittently for highlights

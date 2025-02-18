@@ -1,6 +1,5 @@
 import datetime
 from datetime import datetime, timedelta, timezone
-from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -9,18 +8,18 @@ from auto_archiver.modules.meta_enricher import MetaEnricher
 
 
 @pytest.fixture
-def mock_metadata():
+def mock_metadata(mocker):
     """Creates a mock Metadata object."""
-    mock: Metadata = MagicMock(spec=Metadata)
+    mock: Metadata = mocker.MagicMock(spec=Metadata)
     mock.get_url.return_value = "https://example.com"
     mock.is_empty.return_value = False  # Default to not empty
     mock.get_all_media.return_value = []
     return mock
 
 @pytest.fixture
-def mock_media():
+def mock_media(mocker):
     """Creates a mock Media object."""
-    mock: Media = MagicMock(spec=Media)
+    mock: Media = mocker.MagicMock(spec=Media)
     mock.filename = "mock_file.txt"
     return mock
 
@@ -90,14 +89,14 @@ def test_enrich_file_sizes_no_media(meta_enricher, metadata):
     assert metadata.get("total_size") == "0.0 bytes"
 
 
-def test_enrich_archive_duration(meta_enricher, metadata):
+def test_enrich_archive_duration(meta_enricher, metadata, mocker):
     # Set fixed "processed at" time in the past
     processed_at = datetime.now(timezone.utc) - timedelta(minutes=10, seconds=30)
     metadata.set("_processed_at", processed_at)
     # patch datetime
-    with patch("datetime.datetime") as mock_datetime:
-        mock_now = datetime.now(timezone.utc)
-        mock_datetime.now.return_value = mock_now
-        meta_enricher.enrich_archive_duration(metadata)
+    mock_datetime = mocker.patch("datetime.datetime")
+    mock_now = datetime.now(timezone.utc)
+    mock_datetime.now.return_value = mock_now
+    meta_enricher.enrich_archive_duration(metadata)
 
     assert metadata.get("archive_duration_seconds") == 630

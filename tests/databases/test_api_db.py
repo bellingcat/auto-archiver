@@ -1,5 +1,3 @@
-from unittest.mock import patch
-
 import pytest
 
 from auto_archiver.core import Metadata
@@ -35,35 +33,35 @@ def test_fetch_no_cache(api_db, metadata):
     assert api_db.fetch(metadata) is None
 
 
-def test_fetch_fail_status(api_db, metadata):
+def test_fetch_fail_status(api_db, metadata, mocker):
     # Test response fail in fetch method
-    with patch("auto_archiver.modules.api_db.api_db.requests.get") as mock_get:
-        mock_get.return_value.status_code = 400
-        mock_get.return_value.json.return_value = {}
-        with patch("loguru.logger.error") as mock_error:
-            assert api_db.fetch(metadata) is False
-            mock_error.assert_called_once_with("AA API FAIL (400): {}")
+    mock_get = mocker.patch("auto_archiver.modules.api_db.api_db.requests.get")
+    mock_get.return_value.status_code = 400
+    mock_get.return_value.json.return_value = {}
+    mock_error = mocker.patch("loguru.logger.error")
+    assert api_db.fetch(metadata) is False
+    mock_error.assert_called_once_with("AA API FAIL (400): {}")
 
 
-def test_fetch(api_db, metadata):
+def test_fetch(api_db, metadata, mocker):
     # Test successful fetch method
-    with patch("auto_archiver.modules.api_db.api_db.requests.get") as mock_get,\
-        patch("auto_archiver.core.metadata.datetime.datetime") as mock_datetime:
-        mock_datetime.now.return_value = "2021-01-01T00:00:00"
-        mock_get.return_value.status_code = 200
-        mock_get.return_value.json.return_value = [{"result": {}}, {"result":
-            {'media': [], 'metadata': {'_processed_at': '2021-01-01T00:00:00', 'url': 'https://example.com'},
-             'status': 'no archiver'}}]
-        assert api_db.fetch(metadata) == metadata
+    mock_get = mocker.patch("auto_archiver.modules.api_db.api_db.requests.get")
+    mock_datetime = mocker.patch("auto_archiver.core.metadata.datetime.datetime")
+    mock_datetime.now.return_value = "2021-01-01T00:00:00"
+    mock_get.return_value.status_code = 200
+    mock_get.return_value.json.return_value = [{"result": {}}, {"result":
+        {'media': [], 'metadata': {'_processed_at': '2021-01-01T00:00:00', 'url': 'https://example.com'},
+         'status': 'no archiver'}}]
+    assert api_db.fetch(metadata) == metadata
 
 
-def test_done_success(api_db, metadata):
-    with patch("auto_archiver.modules.api_db.api_db.requests.post") as mock_post:
-        mock_post.return_value.status_code = 201
-        api_db.done(metadata)
-        mock_post.assert_called_once()
-        mock_post.assert_called_once_with("https://api.example.com/interop/submit-archive",
-                                          json={'author_id': 'Someone', 'url': 'https://example.com',
-                                                'public': False, 'group_id': '123', 'tags': ['[', ']'], 'result': '{"status": "no archiver", "metadata": {"_processed_at": "2021-01-01T00:00:00", "url": "https://example.com"}, "media": []}'},
-                                          headers={'Authorization': 'Bearer test-token'})
+def test_done_success(api_db, metadata, mocker):
+    mock_post = mocker.patch("auto_archiver.modules.api_db.api_db.requests.post")
+    mock_post.return_value.status_code = 201
+    api_db.done(metadata)
+    mock_post.assert_called_once()
+    mock_post.assert_called_once_with("https://api.example.com/interop/submit-archive",
+                                      json={'author_id': 'Someone', 'url': 'https://example.com',
+                                            'public': False, 'group_id': '123', 'tags': ['[', ']'], 'result': '{"status": "no archiver", "metadata": {"_processed_at": "2021-01-01T00:00:00", "url": "https://example.com"}, "media": []}'},
+                                      headers={'Authorization': 'Bearer test-token'})
 
