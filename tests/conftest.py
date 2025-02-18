@@ -3,6 +3,7 @@ pytest conftest file, for shared fixtures and configuration
 """
 import os
 import pickle
+from datetime import datetime, timezone
 from tempfile import TemporaryDirectory
 from typing import Dict, Tuple
 import hashlib
@@ -138,3 +139,9 @@ def mock_binary_dependencies():
         # Mock all binary dependencies as available
         mock_shutil_which.return_value = "/usr/bin/fake_binary"
         yield mock_shutil_which
+
+
+@pytest.fixture
+def sample_datetime():
+    return datetime(2023, 1, 1, 12, 0, tzinfo=timezone.utc)
+

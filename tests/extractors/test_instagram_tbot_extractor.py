@@ -1,11 +1,9 @@
 import os
-from typing import Type
 from unittest.mock import patch, MagicMock
 
 import pytest
 
 from auto_archiver.core import Metadata
-from auto_archiver.core.extractor import Extractor
 from auto_archiver.modules.instagram_tbot_extractor import InstagramTbotExtractor
 from tests.extractors.test_extractor_base import TestExtractorBase
 
@@ -13,82 +11,103 @@ TESTFILES = os.path.join(os.path.dirname(__file__), "testfiles")
 
 
 @pytest.fixture
-def session_file(tmpdir):
-    """Fixture to create a test session file."""
-    session_file = os.path.join(tmpdir, "test_session.session")
-    with open(session_file, "w") as f:
-        f.write("mock_session_data")
-    return session_file.replace(".session", "")
-
-
-@pytest.fixture(autouse=True)
 def patch_extractor_methods(request, setup_module):
     with patch.object(InstagramTbotExtractor, '_prepare_session_file', return_value=None), \
             patch.object(InstagramTbotExtractor, '_initialize_telegram_client', return_value=None):
-        if hasattr(request, 'cls') and hasattr(request.cls, 'config'):
-            request.cls.extractor = setup_module("instagram_tbot_extractor", request.cls.config)
-
         yield
+
+@pytest.fixture(autouse=True)
+def mock_sleep():
+    """Globally mock time.sleep to avoid delays."""
+    with patch("time.sleep") as mock_sleep:
+        yield mock_sleep
+
 
 @pytest.fixture
 def metadata_sample():
     m = Metadata()
     m.set_title("Test Title")
-    m.set_timestamp("2021-01-01T00:00:00Z")
+    m.set_timestamp("2021-01-01T00:00:00")
     m.set_url("https://www.instagram.com/p/1234567890")
     return m
 
 
-class TestInstagramTbotExtractor:
+@pytest.fixture
+def mock_telegram_client():
+    """Fixture to mock TelegramClient interactions."""
+    with patch("auto_archiver.modules.instagram_tbot_extractor.client") as mock_client:
+        instance = MagicMock()
+        mock_client.return_value = instance
+        yield instance
 
+
+@pytest.fixture
+def extractor(setup_module, patch_extractor_methods):
     extractor_module = "instagram_tbot_extractor"
-    extractor: InstagramTbotExtractor
     config = {
         "api_id": 12345,
         "api_hash": "test_api_hash",
         "session_file": "test_session",
+        "timeout": 4
+    }
+    extractor = setup_module(extractor_module, config)
+    extractor.client = MagicMock()
+    extractor.session_file = "test_session"
+    return extractor
+
+
+def test_non_instagram_url(extractor, metadata_sample):
+    metadata_sample.set_url("https://www.youtube.com")
+    assert extractor.download(metadata_sample) is False
+
+def test_download_success(extractor, metadata_sample):
+    with patch.object(extractor, "_send_url_to_bot", return_value=(MagicMock(), 101)), \
+            patch.object(extractor, "_process_messages", return_value="Sample Instagram post caption"):
+        result = extractor.download(metadata_sample)
+    assert result.is_success()
+    assert result.status == "insta-via-bot: success"
+    assert result.metadata.get("title") == "Sample Instagram post caption"
+
+
+def test_download_invalid(extractor, metadata_sample):
+    with patch.object(extractor, "_send_url_to_bot", return_value=(MagicMock(), 101)), \
+            patch.object(extractor, "_process_messages", return_value="You must enter a URL to a post"):
+        assert extractor.download(metadata_sample) is False
+
+
+
+@pytest.mark.skip(reason="Requires authentication.")
+class TestInstagramTbotExtractorReal(TestExtractorBase):
+    # To run these tests set the TELEGRAM_API_ID and TELEGRAM_API_HASH environment variables, and ensure the session file exists.
+    # Note these are true at this point in time, but changes to source media could be reason for failure.
+    extractor_module = "instagram_tbot_extractor"
+    extractor: InstagramTbotExtractor
+    config = {
+        "api_id": os.environ.get("TELEGRAM_API_ID"),
+        "api_hash": os.environ.get("TELEGRAM_API_HASH"),
+        "session_file": "secrets/anon-insta",
     }
 
-    @pytest.fixture
-    def mock_telegram_client(self):
-        """Fixture to mock TelegramClient interactions."""
-        with patch("auto_archiver.modules.instagram_tbot_extractor._initialize_telegram_client") as mock_client:
-            instance = MagicMock()
-            mock_client.return_value = instance
-            yield instance
-
-    def test_extractor_is_initialized(self):
-        assert self.extractor is not None
-
-
-    @patch("time.sleep")
-    @pytest.mark.parametrize("url, expected_status, bot_responses", [
-        ("https://www.instagram.com/p/C4QgLbrIKXG", "insta-via-bot: success", [MagicMock(id=101, media=None, message="Are you new to Bellingcat? - The way we share our investigations is different. 💭\nWe want you to read our story but also learn ou")]),
-        ("https://www.instagram.com/reel/DEVLK8qoIbg/", "insta-via-bot: success", [MagicMock(id=101, media=None, message="Our volunteer community is at the centre of many incredible Bellingcat investigations and tools. Stephanie Ladel is one such vol")]),
-        # todo tbot not working for stories :(
-        ("https://www.instagram.com/stories/bellingcatofficial/3556336382743057476/", False, [MagicMock(id=101, media=None, message="Media not found or unavailable")]),
-        ("https://www.youtube.com/watch?v=ymCMy8OffHM", False, []),
-        ("https://www.instagram.com/p/INVALID", False, [MagicMock(id=101, media=None, message="You must enter a URL to a post")]),
+    @pytest.mark.parametrize("url, expected_status, message, len_media", [
+        ("https://www.instagram.com/p/C4QgLbrIKXG", "insta-via-bot: success", "Are you new to Bellingcat? - The way we share our investigations is different. 💭\nWe want you to read our story but also learn ou", 6),
+        ("https://www.instagram.com/reel/DEVLK8qoIbg/", "insta-via-bot: success", "Our volunteer community is at the centre of many incredible Bellingcat investigations and tools. Stephanie Ladel is one such vol", 3),
+        # instagram tbot not working (potentially intermittently?) for stories - replace with a live story to retest
+        # ("https://www.instagram.com/stories/bellingcatofficial/3556336382743057476/", False, "Media not found or unavailable"),
+        # Seems to be working intermittently for highlights
+        # ("https://www.instagram.com/stories/highlights/17868810693068139/", "insta-via-bot: success", None, 50),
+        # Marking invalid url as success
+        ("https://www.instagram.com/p/INVALID", "insta-via-bot: success", "Media not found or unavailable", 0),
+        ("https://www.youtube.com/watch?v=ymCMy8OffHM", False, None, 0),
     ])
-    def test_download(self, mock_sleep, url, expected_status, bot_responses, metadata_sample):
+    def test_download(self, url, expected_status, message, len_media, metadata_sample):
         """Test the `download()` method with various Instagram URLs."""
         metadata_sample.set_url(url)
-        self.extractor.client = MagicMock()
+
         result = self.extractor.download(metadata_sample)
-        pass
-        # TODO fully mock or use as authenticated test
-        # if expected_status:
-        #     assert result.is_success()
-        #     assert result.status == expected_status
-        #     assert result.metadata.get("title") in [msg.message[:128] for msg in bot_responses if msg.message]
-        # else:
-        #     assert result is False
-
-
-
-
-        # Test story
-# Test expired story
-# Test requires login/ access (?)
-# Test post
-# Test multiple images?
+        if expected_status:
+            assert result.is_success()
+            assert result.status == expected_status
+            assert result.metadata.get("title") == message
+            assert len(result.media) == len_media
+        else:
+            assert result is False

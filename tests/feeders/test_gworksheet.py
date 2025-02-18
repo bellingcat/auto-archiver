@@ -1,3 +1,4 @@
+# Note this isn't a feeder, but contained as utility of the gsheet feeder module
 import pytest
 from unittest.mock import MagicMock
 
