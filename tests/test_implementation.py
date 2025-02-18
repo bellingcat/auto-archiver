@@ -60,3 +60,15 @@ def test_run_auto_archiver_empty_file(caplog, autoarchiver, orchestration_file):
 
     # should treat an empty file as if there is no file at all
     assert " No URLs provided. Please provide at least one URL via the com" in caplog.text
+
+def test_call_autoarchiver_main(caplog, monkeypatch, tmp_path):
+    from auto_archiver.__main__ import main
+
+    # monkey patch to change the current working directory, so that we don't use the user's real config file
+    monkeypatch.chdir(tmp_path)
+    main()
+
+    # this is a bit of a hack, but calling 'main' directly actually sets this file name as the 3rd arg
+    # and auto-archiver thinks that's the 'URL', so it will fail because it's not a real URL
+    # print(urls) => ['tests/test_implementation.py::test_call_autoarchiver_main']
+    assert "AssertionError: Invalid URL scheme" in caplog.text
