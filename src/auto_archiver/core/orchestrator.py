@@ -404,7 +404,7 @@ class ArchivingOrchestrator:
         To test configurations, without loading any modules you can also first call 'setup_configs'
         """
         self.setup(args)
-        return list(self.feed())
+        return self.feed()
 
     def cleanup(self) -> None:
         logger.info("Cleaning up")
