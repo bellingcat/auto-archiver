@@ -8,6 +8,7 @@ from __future__ import annotations
 from typing import Generator, Union, List, Type
 from urllib.parse import urlparse
 from ipaddress import ip_address
+from copy import copy
 import argparse
 import os
 import sys
@@ -43,30 +44,50 @@ class AuthenticationJsonParseAction(JsonParseAction):
     def __call__(self, parser, namespace, values, option_string=None):
         super().__call__(parser, namespace, values, option_string)
         auth_dict = getattr(namespace, self.dest)
-        if isinstance(auth_dict, str):
-            # if it's a string
+
+        def load_from_file(path):
             try:
-                with open(auth_dict, 'r') as f:
+                with open(path, 'r') as f:
                     try:
                         auth_dict = json.load(f)
                     except json.JSONDecodeError:
+                        f.seek(0)
                         # maybe it's yaml, try that
                         auth_dict = _yaml.load(f)
+                    if auth_dict.get('authentication'):
+                        auth_dict = auth_dict['authentication']
+                    auth_dict['load_from_file']  = path
+                    return auth_dict
             except:
-                pass
+                return None
 
+        if isinstance(auth_dict, dict) and auth_dict.get('from_file'):
+            auth_dict = load_from_file(auth_dict['from_file'])
+        elif isinstance(auth_dict, str):
+            # if it's a string
+            auth_dict = load_from_file(auth_dict)
+        
         if not isinstance(auth_dict, dict):
             raise argparse.ArgumentTypeError("Authentication must be a dictionary of site names and their authentication methods")
-        for site, auth in auth_dict.items():
-            if not isinstance(site, str) or not isinstance(auth, dict):
-                raise argparse.ArgumentTypeError("Authentication must be a dictionary of site names and their authentication methods")
+        global_options = ['cookies_from_browser', 'cookies_file', 'load_from_file']
+        for key, auth in auth_dict.items():
+            if key in global_options:
+                continue
+            if not isinstance(key, str) or not isinstance(auth, dict):
+                raise argparse.ArgumentTypeError(f"Authentication must be a dictionary of site names and their authentication methods. Valid global configs are {global_options}")
+        
+        # extract out concatenated sites
+        for key, val in copy(auth_dict).items():
+            if "," in key:
+                for site in key.split(","):
+                    auth_dict[site] = val
+                del auth_dict[key]
+
         setattr(namespace, self.dest, auth_dict)
 
 
 class UniqueAppendAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
-        if not hasattr(namespace, self.dest):
-            setattr(namespace, self.dest, [])
         for value in values:
             if value not in getattr(namespace, self.dest):
                 getattr(namespace, self.dest).append(value)
@@ -104,10 +125,23 @@ class ArchivingOrchestrator:
         return parser
 
     def setup_complete_parser(self, basic_config: dict, yaml_config: dict, unused_args: list[str]) -> None:
+
+
+        # modules parser to get the overridden 'steps' values
+        modules_parser = argparse.ArgumentParser(
+            add_help=False,
+        )
+        self.add_modules_args(modules_parser)
+        cli_modules, unused_args = modules_parser.parse_known_args(unused_args)
+        for module_type in BaseModule.MODULE_TYPES:
+            yaml_config['steps'][f"{module_type}s"] = getattr(cli_modules, f"{module_type}s", []) or yaml_config['steps'].get(f"{module_type}s", [])
+
         parser = DefaultValidatingParser(
             add_help=False,
         )
         self.add_additional_args(parser)
+
+        # merge command line module args (--feeders, --enrichers etc.) and add them to the config
 
         # check what mode we're in
         # if we have a config file, use that to decide which modules to load
@@ -115,25 +149,26 @@ class ArchivingOrchestrator:
         # if full, we'll load all modules
         # TODO: BUG** - basic_config won't have steps in it, since these args aren't added to 'basic_parser'
         # but should we add them? Or should we just add them to the 'complete' parser?
+
         if yaml_config != EMPTY_CONFIG:
             # only load the modules enabled in config
             # TODO: if some steps are empty (e.g. 'feeders' is empty), should we default to the 'simple' ones? Or only if they are ALL empty?
             enabled_modules = []
             # first loads the modules from the config file, then from the command line
-            for config in [yaml_config['steps'], basic_config.__dict__]:
-                for module_type in BaseModule.MODULE_TYPES:
-                    enabled_modules.extend(config.get(f"{module_type}s", []))
+            for module_type in BaseModule.MODULE_TYPES:
+                enabled_modules.extend(yaml_config['steps'].get(f"{module_type}s", []))
 
             # clear out duplicates, but keep the order
             enabled_modules = list(dict.fromkeys(enabled_modules))
             avail_modules = available_modules(with_manifest=True, limit_to_modules=enabled_modules, suppress_warnings=True)
-            self.add_module_args(avail_modules, parser)
+            self.add_individual_module_args(avail_modules, parser)
         elif basic_config.mode == 'simple':
             simple_modules = [module for module in available_modules(with_manifest=True) if not module.requires_setup]
-            self.add_module_args(simple_modules, parser)
+            self.add_individual_module_args(simple_modules, parser)
 
             # for simple mode, we use the cli_feeder and any modules that don't require setup
-            yaml_config['steps']['feeders'] = ['cli_feeder']
+            if not yaml_config['steps']['feeders']:
+                yaml_config['steps']['feeders'] = ['cli_feeder']
 
             # add them to the config
             for module in simple_modules:
@@ -141,30 +176,38 @@ class ArchivingOrchestrator:
                     yaml_config['steps'].setdefault(f"{module_type}s", []).append(module.name)
         else:
             # load all modules, they're not using the 'simple' mode
-            self.add_module_args(available_modules(with_manifest=True), parser)
-
+            self.add_individual_module_args(available_modules(with_manifest=True), parser)
+        
         parser.set_defaults(**to_dot_notation(yaml_config))
 
         # reload the parser with the new arguments, now that we have them
         parsed, unknown = parser.parse_known_args(unused_args)
-
         # merge the new config with the old one
-        self.config = merge_dicts(vars(parsed), yaml_config)
+        config = merge_dicts(vars(parsed), yaml_config)
+
         # clean out args from the base_parser that we don't want in the config
         for key in vars(basic_config):
-            self.config.pop(key, None)
+            config.pop(key, None)
 
         # setup the logging
-        self.setup_logging()
+        self.setup_logging(config)
 
         if unknown:
             logger.warning(f"Ignoring unknown/unused arguments: {unknown}\nPerhaps you don't have this module enabled?")
 
-        if (self.config != yaml_config and basic_config.store) or not os.path.isfile(basic_config.config_file):
+        if (config != yaml_config and basic_config.store) or not os.path.isfile(basic_config.config_file):
             logger.info(f"Storing configuration file to {basic_config.config_file}")
-            store_yaml(self.config, basic_config.config_file)
+            store_yaml(config, basic_config.config_file)
 
-        return self.config
+        return config
+    
+    def add_modules_args(self, parser: argparse.ArgumentParser = None):
+        if not parser:
+            parser = self.parser
+
+        # Module loading from the command line
+        for module_type in BaseModule.MODULE_TYPES:
+            parser.add_argument(f'--{module_type}s', dest=f'{module_type}s', nargs='+', help=f'the {module_type}s to use', default=[], action=UniqueAppendAction)
 
     def add_additional_args(self, parser: argparse.ArgumentParser = None):
         if not parser:
@@ -173,30 +216,24 @@ class ArchivingOrchestrator:
         # allow passing URLs directly on the command line
         parser.add_argument('urls', nargs='*', default=[], help='URL(s) to archive, either a single URL or a list of urls, should not come from config.yaml')
 
-        parser.add_argument('--feeders', dest='steps.feeders', nargs='+', default=['cli_feeder'], help='the feeders to use', action=UniqueAppendAction)
-        parser.add_argument('--enrichers', dest='steps.enrichers', nargs='+', help='the enrichers to use', action=UniqueAppendAction)
-        parser.add_argument('--extractors', dest='steps.extractors', nargs='+', help='the extractors to use', action=UniqueAppendAction)
-        parser.add_argument('--databases', dest='steps.databases', nargs='+', help='the databases to use', action=UniqueAppendAction)
-        parser.add_argument('--storages', dest='steps.storages', nargs='+', help='the storages to use', action=UniqueAppendAction)
-        parser.add_argument('--formatters', dest='steps.formatters', nargs='+', help='the formatter to use', action=UniqueAppendAction)
-
         parser.add_argument('--authentication', dest='authentication', help='A dictionary of sites and their authentication methods \
                                                                             (token, username etc.) that extractors can use to log into \
                                                                             a website. If passing this on the command line, use a JSON string. \
                                                                             You may also pass a path to a valid JSON/YAML file which will be parsed.',
                                                                             default={},
+                                                                            nargs="?",
                                                                             action=AuthenticationJsonParseAction)
+
         # logging arguments
         parser.add_argument('--logging.level', action='store', dest='logging.level', choices=['INFO', 'DEBUG', 'ERROR', 'WARNING'], help='the logging level to use', default='INFO', type=str.upper)
         parser.add_argument('--logging.file', action='store', dest='logging.file', help='the logging file to write to', default=None)
         parser.add_argument('--logging.rotation', action='store', dest='logging.rotation', help='the logging rotation to use', default=None)
 
-    def add_module_args(self, modules: list[LazyBaseModule] = None, parser: argparse.ArgumentParser = None) -> None:
+    def add_individual_module_args(self, modules: list[LazyBaseModule] = None, parser: argparse.ArgumentParser = None) -> None:
 
         if not modules:
             modules = available_modules(with_manifest=True)
-
-        module: LazyBaseModule
+        
         for module in modules:
 
             if not module.configs:
@@ -226,18 +263,19 @@ class ArchivingOrchestrator:
                 arg.should_store = should_store
 
     def show_help(self, basic_config: dict):
-        # for the help message, we want to load *all* possible modules and show the help
+        # for the help message, we want to load manifests from *all* possible modules and show their help/settings
         # add configs as arg parser arguments
 
+        self.add_modules_args(self.basic_parser)
         self.add_additional_args(self.basic_parser)
-        self.add_module_args(parser=self.basic_parser)
+        self.add_individual_module_args(parser=self.basic_parser)
         self.basic_parser.print_help()
         self.basic_parser.exit()
 
-    def setup_logging(self):
+    def setup_logging(self, config):
         # setup loguru logging
         logger.remove(0)  # remove the default logger
-        logging_config = self.config['logging']
+        logging_config = config['logging']
         logger.add(sys.stderr, level=logging_config['level'])
         if log_file := logging_config['file']:
             logger.add(log_file) if not logging_config['rotation'] else logger.add(log_file, rotation=logging_config['rotation'])
@@ -318,9 +356,9 @@ class ArchivingOrchestrator:
 
         return read_yaml(config_file)
     
-    def setup(self, args: list):
+    def setup_config(self, args: list) -> dict:
         """
-        Main entry point for the orchestrator, sets up the basic parser, loads the config file, and sets up the complete parser
+        Sets up the configuration file, merging the default config with the user's config
         """
         self.setup_basic_parser()
 
@@ -333,9 +371,16 @@ class ArchivingOrchestrator:
         # if help flag was called, then show the help
         if basic_config.help:
             self.show_help(basic_config)
-
+        # merge command line --feeder etc. args with what's in the yaml config
         yaml_config = self.load_config(basic_config.config_file)
-        self.setup_complete_parser(basic_config, yaml_config, unused_args)
+
+        return self.setup_complete_parser(basic_config, yaml_config, unused_args)
+
+    def setup(self, args: list):
+        """
+        Main entry point for the orchestrator, sets up the basic parser, loads the config file, and sets up the complete parser
+        """
+        self.config = self.setup_config(args)
 
         logger.info(f"======== Welcome to the AUTO ARCHIVER ({__version__}) ==========")
         self.install_modules(self.config['steps'])
@@ -344,8 +389,18 @@ class ArchivingOrchestrator:
         for module_type in BaseModule.MODULE_TYPES:
             logger.info(f"{module_type.upper()}S: " + ", ".join(m.display_name for m in getattr(self, f"{module_type}s")))
 
-    def run(self, args: list) -> Generator[Metadata]:
+    def _command_line_run(self, args: list) -> Generator[Metadata]:
+        """
+        This is the main entry point for the orchestrator, when run from the command line.
 
+        :param args: list of arguments to pass to the orchestrator - these are the command line args
+        
+        You should not call this method from code implementations.
+          
+        This method sets up the configuration, loads the modules, and runs the feed.
+        If you wish to make code invocations yourself, you should use the 'setup' and 'feed' methods separately.
+        To test configurations, without loading any modules you can also first call 'setup_configs'
+        """
         self.setup(args)
         return self.feed()
 

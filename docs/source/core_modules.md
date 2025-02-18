@@ -24,4 +24,5 @@ modules/extractor
 modules/enricher
 modules/storage
 modules/database
+modules/formatter
 ```

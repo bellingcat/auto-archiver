@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [project]
 name = "auto-archiver"
-version = "0.13.2"
+version = "0.13.3"
 description = "Automatically archive links to videos, images, and social media content from Google Sheets (and more)."
 
 requires-python = ">=3.10,<3.13"

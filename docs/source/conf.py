@@ -77,3 +77,6 @@ html_theme = 'sphinx_book_theme'
 html_static_path = ["../_static"]
 html_css_files = ["custom.css"]
 
+copybutton_prompt_text = r">>> |\.\.\."
+copybutton_prompt_is_regexp = True
+copybutton_only_copy_prompt_lines = False
