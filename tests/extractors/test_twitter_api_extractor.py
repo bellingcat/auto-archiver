@@ -34,7 +34,7 @@ class TestTwitterApiExtractor(TestExtractorBase):
 
     @pytest.mark.download
     def test_sanitize_url_download(self):
-        assert "https://t.co/yl3oOJatFp" == self.extractor.sanitize_url("https://www.bellingcat.com/category/resources/")
+        assert "https://www.bellingcat.com/category/resources/" == self.extractor.sanitize_url("https://t.co/yl3oOJatFp")
 
     @pytest.mark.parametrize("url, exptected_username, exptected_tweetid", [
         ("https://twitter.com/bellingcat/status/1874097816571961839", "bellingcat", "1874097816571961839"),

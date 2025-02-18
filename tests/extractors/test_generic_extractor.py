@@ -9,6 +9,7 @@ import pytest
 from auto_archiver.modules.generic_extractor.generic_extractor import GenericExtractor
 from .test_extractor_base import TestExtractorBase
 
+CI=os.getenv("GITHUB_ACTIONS", '') == 'true'
 class TestGenericExtractor(TestExtractorBase):
     """Tests Generic Extractor
     """
@@ -77,10 +78,11 @@ class TestGenericExtractor(TestExtractorBase):
         result = self.extractor.download(item)
         assert not result
 
-
+    @pytest.mark.skipif(CI, reason="Currently no way to authenticate when on CI. Youtube (yt-dlp) doesn't support logging in with username/password.")
     @pytest.mark.download
     def test_youtube_download(self, make_item):
         # url https://www.youtube.com/watch?v=5qap5aO4i9A
+
         item = make_item("https://www.youtube.com/watch?v=J---aiyznGQ")
         result = self.extractor.download(item)
         assert result.get_url() == "https://www.youtube.com/watch?v=J---aiyznGQ"
@@ -114,6 +116,7 @@ class TestGenericExtractor(TestExtractorBase):
         result = self.extractor.download(item)
         assert result is not False
     
+    @pytest.mark.skipif(CI, reason="Truth social blocks GH actions.")
     @pytest.mark.download
     def test_truthsocial_download_video(self, make_item):
         item = make_item("https://truthsocial.com/@DaynaTrueman/posts/110602446619561579")
@@ -121,18 +124,21 @@ class TestGenericExtractor(TestExtractorBase):
         assert len(result.media) == 1
         assert result is not False
 
+    @pytest.mark.skipif(CI, reason="Truth social blocks GH actions.")
     @pytest.mark.download
     def test_truthsocial_download_no_media(self, make_item):
         item = make_item("https://truthsocial.com/@bbcnewa/posts/109598702184774628")
         result = self.extractor.download(item)
         assert result is not False
     
+    @pytest.mark.skipif(CI, reason="Truth social blocks GH actions.")
     @pytest.mark.download
     def test_truthsocial_download_poll(self, make_item):
         item = make_item("https://truthsocial.com/@CNN_US/posts/113724326568555098")
         result = self.extractor.download(item)
         assert result is not False
     
+    @pytest.mark.skipif(CI, reason="Truth social blocks GH actions.")
     @pytest.mark.download
     def test_truthsocial_download_single_image(self, make_item):
         item = make_item("https://truthsocial.com/@mariabartiromo/posts/113861116433335006")
@@ -140,6 +146,7 @@ class TestGenericExtractor(TestExtractorBase):
         assert len(result.media) == 1
         assert result is not False
 
+    @pytest.mark.skipif(CI, reason="Truth social blocks GH actions.")
     @pytest.mark.download
     def test_truthsocial_download_multiple_images(self, make_item):
         item = make_item("https://truthsocial.com/@trrth/posts/113861302149349135")

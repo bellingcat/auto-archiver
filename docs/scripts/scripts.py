@@ -19,6 +19,19 @@ type_color = {
 
 TABLE_HEADER = ("Option", "Description", "Default", "Type")
 
+EXAMPLE_YAML = """
+# steps configuration
+steps:
+...
+{steps_str}
+...
+
+# module configuration
+...
+
+{config_string}
+"""
+
 def generate_module_docs():
     yaml = YAML()
     SAVE_FOLDER.mkdir(exist_ok=True)
@@ -45,11 +58,14 @@ def generate_module_docs():
 ```
 {description}
 """     
+        steps_str = "\n".join(f"  {t}s:\n  - {module.name}" for t in manifest['type'])
+
         if not manifest['configs']:
-            readme_str += "\n*This module has no configuration options.*\n"
+            config_string = f"# No configuration options for {module.name}.*\n"
         else:
-            config_yaml = {}
+
             config_table = header_row
+            config_yaml = {}
             for key, value in manifest['configs'].items():
                 type = value.get('type', 'string')
                 if type == 'auto_archiver.utils.json_loader':
@@ -65,11 +81,14 @@ def generate_module_docs():
                 configs_cheatsheet += f"| `{module.name}.{key}` | {help} | {default} | {type} |\n"
             readme_str += "\n## Configuration Options\n"
             readme_str += "\n### YAML\n"
-            yaml_string = io.BytesIO()
-            yaml.dump({module.name: config_yaml}, yaml_string)
-            
-            readme_str += f"```{{code}} yaml\n{yaml_string.getvalue().decode('utf-8')}\n```\n"
 
+            config_string = io.BytesIO()
+            yaml.dump({module.name: config_yaml}, config_string)
+            config_string = config_string.getvalue().decode('utf-8')
+        yaml_string = EXAMPLE_YAML.format(steps_str=steps_str, config_string=config_string)
+        readme_str += f"```{{code}} yaml\n{yaml_string}\n```\n"
+
+        if manifest['configs']:
             readme_str += "\n### Command Line:\n"
             readme_str += config_table
 
@@ -103,3 +122,7 @@ def generate_index(modules_by_type):
     with open(SAVE_FOLDER / "module_list.md", "w") as f:
         print("writing", SAVE_FOLDER / "module_list.md")
         f.write(readme_str)
+
+
+if __name__ == "__main__":
+    generate_module_docs()
