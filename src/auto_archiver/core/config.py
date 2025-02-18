@@ -129,6 +129,11 @@ def merge_dicts(dotdict: dict, yaml_dict: CommentedMap) -> CommentedMap:
                 yaml_subdict[key] = value
                 continue
 
+            if key == 'steps':
+                for module_type, modules in value.items():
+                    # overwrite the 'steps' from the config file with the ones from the CLI
+                    yaml_subdict[key][module_type] = modules
+
             if is_dict_type(value):
                 update_dict(value, yaml_subdict[key])
             elif is_list_type(value):
@@ -137,7 +142,6 @@ def merge_dicts(dotdict: dict, yaml_dict: CommentedMap) -> CommentedMap:
                 yaml_subdict[key] = value
 
     update_dict(from_dot_notation(dotdict), yaml_dict)
-
     return yaml_dict
 
 def read_yaml(yaml_filename: str) -> CommentedMap:

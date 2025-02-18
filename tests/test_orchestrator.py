@@ -75,7 +75,25 @@ def test_help(orchestrator, basic_parser, capsys):
         orchestrator.show_help(args)
 
     assert exit_error.value.code == 0
-    assert "Usage: auto-archiver [--help] [--version] [--config CONFIG_FILE]" in capsys.readouterr().out
+
+    logs = capsys.readouterr().out
+    assert "Usage: auto-archiver [--help] [--version] [--config CONFIG_FILE]" in logs
+
+    # basic config options
+    assert "--version" in logs
+
+    # setting modules options
+    assert "--feeders" in logs
+    assert "--extractors" in logs
+
+    # authentication options
+    assert "--authentication" in logs
+
+    # logging options
+    assert "--logging.level" in logs
+
+    # individual module configs
+    assert "--gsheet_feeder.sheet_id" in logs
 
 
 def test_add_custom_modules_path(orchestrator, test_args):
@@ -132,3 +150,29 @@ def test_load_invalid_authentication_string(orchestrator, test_args):
 def test_load_authentication_invalid_dict(orchestrator, test_args):
     with pytest.raises(ArgumentTypeError):
         orchestrator.run(test_args + ["--authentication", "[true, false]"])
+
+def test_load_modules_from_commandline(orchestrator, test_args):
+    args = test_args + ["--feeders", "example_module", "--extractors", "example_module", "--databases", "example_module", "--enrichers", "example_module", "--formatters", "example_module"]
+
+    orchestrator.setup(args)
+
+    assert len(orchestrator.feeders) == 1
+    assert len(orchestrator.extractors) == 1
+    assert len(orchestrator.databases) == 1
+    assert len(orchestrator.enrichers) == 1
+    assert len(orchestrator.formatters) == 1
+
+    assert orchestrator.feeders[0].name == "example_module"
+    assert orchestrator.extractors[0].name == "example_module"
+    assert orchestrator.databases[0].name == "example_module"
+    assert orchestrator.enrichers[0].name == "example_module"
+    assert orchestrator.formatters[0].name == "example_module"
+
+def test_load_settings_for_module_from_commandline(orchestrator, test_args):
+    args = test_args + ["--feeders", "gsheet_feeder", "--gsheet_feeder.sheet_id", "123"]
+
+    orchestrator.setup(args)
+
+    assert len(orchestrator.feeders) == 1
+    assert orchestrator.feeders[0].name == "gsheet_feeder"
+    assert orchestrator.config['gsheet_feeder']['sheet_id'] == "123"
