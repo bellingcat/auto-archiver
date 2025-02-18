@@ -97,14 +97,14 @@ def test_help(orchestrator, basic_parser, capsys):
 
 
 def test_add_custom_modules_path(orchestrator, test_args):
-    orchestrator.run(test_args)
+    orchestrator.setup_config(test_args)
     
     import auto_archiver
     assert "tests/data/test_modules/" in auto_archiver.modules.__path__
 
 def test_add_custom_modules_path_invalid(orchestrator, caplog, test_args):
 
-    orchestrator.run(test_args +  # we still need to load the real path to get the example_module 
+    orchestrator.setup_config(test_args +  # we still need to load the real path to get the example_module 
                           ["--module_paths", "tests/data/invalid_test_modules/"])
 
     assert caplog.records[0].message == "Path 'tests/data/invalid_test_modules/' does not exist. Skipping..."
@@ -115,7 +115,7 @@ def test_check_required_values(orchestrator, caplog, test_args):
     test_args = test_args[:-2]
 
     with pytest.raises(SystemExit) as exit_error:
-        orchestrator.run(test_args)
+        config = orchestrator.setup_config(test_args)
 
     assert caplog.records[1].message == "the following arguments are required: --example_module.required_field"
 
@@ -129,27 +129,27 @@ def test_get_required_values_from_config(orchestrator, test_args, tmp_path):
     store_yaml(test_yaml, tmp_file)
 
     # run the orchestrator
-    orchestrator.run(["--config", tmp_file, "--module_paths", TEST_MODULES])
-    assert orchestrator.config is not None
+    config = orchestrator.setup_config(["--config", tmp_file, "--module_paths", TEST_MODULES])
+    assert config is not None
 
 def test_load_authentication_string(orchestrator, test_args):
 
-    orchestrator.run(test_args + ["--authentication", '{"facebook.com": {"username": "my_username", "password": "my_password"}}'])
-    assert orchestrator.config['authentication'] == {"facebook.com": {"username": "my_username", "password": "my_password"}}
+    config = orchestrator.setup_config(test_args + ["--authentication", '{"facebook.com": {"username": "my_username", "password": "my_password"}}'])
+    assert config['authentication'] == {"facebook.com": {"username": "my_username", "password": "my_password"}}
 
 def test_load_authentication_string_concat_site(orchestrator, test_args):
     
-    orchestrator.run(test_args + ["--authentication", '{"x.com,twitter.com": {"api_key": "my_key"}}'])
-    assert orchestrator.config['authentication'] == {"x.com": {"api_key": "my_key"},
+    config = orchestrator.setup_config(test_args + ["--authentication", '{"x.com,twitter.com": {"api_key": "my_key"}}'])
+    assert config['authentication'] == {"x.com": {"api_key": "my_key"},
                                                      "twitter.com": {"api_key": "my_key"}}
 
 def test_load_invalid_authentication_string(orchestrator, test_args):
     with pytest.raises(ArgumentTypeError):
-        orchestrator.run(test_args + ["--authentication", "{\''invalid_json"])
+        orchestrator.setup_config(test_args + ["--authentication", "{\''invalid_json"])
 
 def test_load_authentication_invalid_dict(orchestrator, test_args):
     with pytest.raises(ArgumentTypeError):
-        orchestrator.run(test_args + ["--authentication", "[true, false]"])
+        orchestrator.setup_config(test_args + ["--authentication", "[true, false]"])
 
 def test_load_modules_from_commandline(orchestrator, test_args):
     args = test_args + ["--feeders", "example_module", "--extractors", "example_module", "--databases", "example_module", "--enrichers", "example_module", "--formatters", "example_module"]

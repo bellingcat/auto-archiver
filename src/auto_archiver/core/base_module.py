@@ -63,12 +63,6 @@ class BaseModule(ABC):
     def config_setup(self, config: dict):
 
         authentication = config.get('authentication', {})
-        # extract out concatenated sites
-        for key, val in copy(authentication).items():
-            if "," in key:
-                for site in key.split(","):
-                    authentication[site] = val
-                del authentication[key]
 
         # this is important. Each instance is given its own deepcopied config, so modules cannot
         # change values to affect other modules
