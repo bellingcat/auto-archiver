@@ -383,10 +383,20 @@ class ArchivingOrchestrator:
         for module_type in BaseModule.MODULE_TYPES:
             logger.info(f"{module_type.upper()}S: " + ", ".join(m.display_name for m in getattr(self, f"{module_type}s")))
 
-    def run(self, args: list) -> Generator[Metadata]:
+    def _command_line_run(self, args: list) -> Generator[Metadata]:
+        """
+        This is the main entry point for the orchestrator, when run from the command line.
 
+        :param args: list of arguments to pass to the orchestrator - these are the command line args
+        
+        You should not call this method from code implementations.
+          
+        This method sets up the configuration, loads the modules, and runs the feed.
+        If you wish to make code invocations yourself, you should use the 'setup' and 'feed' methods separately.
+        To test configurations, without loading any modules you can also first call 'setup_configs'
+        """
         self.setup(args)
-        return self.feed()
+        return list(self.feed())
 
     def cleanup(self) -> None:
         logger.info("Cleaning up")
