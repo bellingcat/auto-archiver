@@ -39,27 +39,42 @@ class JsonParseAction(argparse.Action):
             raise argparse.ArgumentTypeError(f"Invalid JSON input for argument '{self.dest}': {e}")
 
 
-class AuthenticationJsonParseAction(JsonParseAction):
+class AuthenticationJsonParseAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
-        super().__call__(parser, namespace, values, option_string)
-        auth_dict = getattr(namespace, self.dest)
-        if isinstance(auth_dict, str):
-            # if it's a string
+        auth_dict = values
+
+        def load_from_file(path):
             try:
-                with open(auth_dict, 'r') as f:
+                with open(path, 'r') as f:
                     try:
                         auth_dict = json.load(f)
                     except json.JSONDecodeError:
+                        f.seek(0)
                         # maybe it's yaml, try that
                         auth_dict = _yaml.load(f)
+                    if auth_dict.get('authentication'):
+                        auth_dict = auth_dict['authentication']
+                    auth_dict['load_from_file']  = path
+                    return auth_dict
             except:
-                pass
+                return None
+        
+        if isinstance(auth_dict, dict) and auth_dict.get('from_file'):
+            auth_dict = load_from_file(auth_dict['from_file'])
+        elif isinstance(auth_dict, str):
+            # if it's a string
+            auth_dict = load_from_file(auth_dict)
 
+        breakpoint()
         if not isinstance(auth_dict, dict):
             raise argparse.ArgumentTypeError("Authentication must be a dictionary of site names and their authentication methods")
-        for site, auth in auth_dict.items():
-            if not isinstance(site, str) or not isinstance(auth, dict):
-                raise argparse.ArgumentTypeError("Authentication must be a dictionary of site names and their authentication methods")
+        global_configs = ['cookies_from_browser', 'cookies_file', 'load_from_file']
+        for key, auth in auth_dict.items():
+            if key in global_configs:
+                continue
+            if not isinstance(key, str) or not isinstance(auth, dict):
+                raise argparse.ArgumentTypeError(f"Authentication must be a dictionary of site names and their authentication methods. Valid global configs are {global_configs}")
+
         setattr(namespace, self.dest, auth_dict)
 
 
@@ -185,6 +200,7 @@ class ArchivingOrchestrator:
                                                                             a website. If passing this on the command line, use a JSON string. \
                                                                             You may also pass a path to a valid JSON/YAML file which will be parsed.',
                                                                             default={},
+                                                                            nargs="?",
                                                                             action=AuthenticationJsonParseAction)
         # logging arguments
         parser.add_argument('--logging.level', action='store', dest='logging.level', choices=['INFO', 'DEBUG', 'ERROR', 'WARNING'], help='the logging level to use', default='INFO', type=str.upper)

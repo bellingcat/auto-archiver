@@ -89,16 +89,21 @@ class BaseModule(ABC):
         Returns the authentication information for a given site. This is used to authenticate
         with a site before extracting data. The site should be the domain of the site, e.g. 'twitter.com'
         
-        extract_cookies: bool - whether or not to extract cookies from the given browser and return the 
-        cookie jar (disabling can speed up) processing if you don't actually need the cookies jar
+        :param site: the domain of the site to get authentication information for
+        :param extract_cookies: whether or not to extract cookies from the given browser/file and return the cookie jar (disabling can speed up processing if you don't actually need the cookies jar).
 
-        Currently, the dict can have keys of the following types:
-        - username: str - the username to use for login
-        - password: str - the password to use for login
-        - api_key: str - the API key to use for login
-        - api_secret: str - the API secret to use for login
-        - cookie: str - a cookie string to use for login (specific to this site)
-        - cookies_jar: YoutubeDLCookieJar | http.cookiejar.MozillaCookieJar - a cookie jar compatible with requests (e.g. `requests.get(cookies=cookie_jar)`)
+        :returns: authdict dict of login information for the given site
+
+        **Global options:**\n
+        * cookies_from_browser: str - the name of the browser to extract cookies from (e.g. 'chrome', 'firefox' - uses ytdlp under the hood to extract\n
+        * cookies_file: str - the path to a cookies file to use for login\n
+
+        **Currently, the sites dict can have keys of the following types:**\n
+        * username: str - the username to use for login\n
+        * password: str - the password to use for login\n
+        * api_key: str - the API key to use for login\n
+        * api_secret: str - the API secret to use for login\n
+        * cookie: str - a cookie string to use for login (specific to this site)\n
         """
         # TODO: think about if/how we can deal with sites that have multiple domains (main one is x.com/twitter.com)
         # for now the user must enter them both, like "x.com,twitter.com" in their config. Maybe we just hard-code?

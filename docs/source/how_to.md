@@ -45,3 +45,10 @@ The "archive location" link contains the path of the archived file, in local sto
 ![The archive result for a link in the demo sheet.](../demo-archive.png)
 
 ---
+
+```{toctree}
+:maxdepth: 1
+:glob:
+
+how_to/*
+```

@@ -159,6 +159,11 @@ def read_yaml(yaml_filename: str) -> CommentedMap:
 def store_yaml(config: CommentedMap, yaml_filename: str) -> None:
     config_to_save = deepcopy(config)
 
+    auth_dict = config_to_save.get("authentication", {})
+    if auth_dict and auth_dict.get('load_from_file'):
+        # remove all other values from the config, don't want to store it in the config file
+        auth_dict = {"load_from_file": auth_dict["load_from_file"]}
+
     config_to_save.pop('urls', None)
     with open(yaml_filename, "w", encoding="utf-8") as outf:
         _yaml.dump(config_to_save, outf)
