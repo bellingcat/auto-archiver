@@ -175,23 +175,23 @@ class ArchivingOrchestrator:
         # reload the parser with the new arguments, now that we have them
         parsed, unknown = parser.parse_known_args(unused_args)
         # merge the new config with the old one
-        self.config = merge_dicts(vars(parsed), yaml_config)
+        config = merge_dicts(vars(parsed), yaml_config)
 
         # clean out args from the base_parser that we don't want in the config
         for key in vars(basic_config):
-            self.config.pop(key, None)
+            config.pop(key, None)
 
         # setup the logging
-        self.setup_logging()
+        self.setup_logging(config)
 
         if unknown:
             logger.warning(f"Ignoring unknown/unused arguments: {unknown}\nPerhaps you don't have this module enabled?")
 
-        if (self.config != yaml_config and basic_config.store) or not os.path.isfile(basic_config.config_file):
+        if (config != yaml_config and basic_config.store) or not os.path.isfile(basic_config.config_file):
             logger.info(f"Storing configuration file to {basic_config.config_file}")
-            store_yaml(self.config, basic_config.config_file)
+            store_yaml(config, basic_config.config_file)
 
-        return self.config
+        return config
     
     def add_modules_args(self, parser: argparse.ArgumentParser = None):
         if not parser:
@@ -266,10 +266,10 @@ class ArchivingOrchestrator:
         self.basic_parser.print_help()
         self.basic_parser.exit()
 
-    def setup_logging(self):
+    def setup_logging(self, config):
         # setup loguru logging
         logger.remove(0)  # remove the default logger
-        logging_config = self.config['logging']
+        logging_config = config['logging']
         logger.add(sys.stderr, level=logging_config['level'])
         if log_file := logging_config['file']:
             logger.add(log_file) if not logging_config['rotation'] else logger.add(log_file, rotation=logging_config['rotation'])
@@ -350,9 +350,9 @@ class ArchivingOrchestrator:
 
         return read_yaml(config_file)
     
-    def setup(self, args: list):
+    def setup_config(self, args: list) -> dict:
         """
-        Main entry point for the orchestrator, sets up the basic parser, loads the config file, and sets up the complete parser
+        Sets up the configuration file, merging the default config with the user's config
         """
         self.setup_basic_parser()
 
@@ -368,7 +368,13 @@ class ArchivingOrchestrator:
         # merge command line --feeder etc. args with what's in the yaml config
         yaml_config = self.load_config(basic_config.config_file)
 
-        self.setup_complete_parser(basic_config, yaml_config, unused_args)
+        return self.setup_complete_parser(basic_config, yaml_config, unused_args)
+
+    def setup(self, args: list):
+        """
+        Main entry point for the orchestrator, sets up the basic parser, loads the config file, and sets up the complete parser
+        """
+        self.config = self.setup_config(args)
 
         logger.info(f"======== Welcome to the AUTO ARCHIVER ({__version__}) ==========")
         self.install_modules(self.config['steps'])

@@ -169,7 +169,7 @@ def test_load_modules_from_commandline(orchestrator, test_args):
     assert orchestrator.formatters[0].name == "example_module"
 
 def test_load_settings_for_module_from_commandline(orchestrator, test_args):
-    args = test_args + ["--feeders", "gsheet_feeder", "--gsheet_feeder.sheet_id", "123"]
+    args = test_args + ["--feeders", "gsheet_feeder", "--gsheet_feeder.sheet_id", "123", "--gsheet_feeder.service_account", "tests/data/test_service_account.json"]
 
     orchestrator.setup(args)
 
