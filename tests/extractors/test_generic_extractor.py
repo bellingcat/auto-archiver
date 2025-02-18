@@ -77,7 +77,7 @@ class TestGenericExtractor(TestExtractorBase):
         result = self.extractor.download(item)
         assert not result
 
-    @pytest.mark.skipif(os.getenv("GITHUB_ACTIONS"), reason="Currently no way to authenticate when on CI. Youtube (yt-dlp) doesn't support logging in with username/password.")
+    @pytest.mark.skipif(os.getenv("GITHUB_ACTIONS", '') == 'true', reason="Currently no way to authenticate when on CI. Youtube (yt-dlp) doesn't support logging in with username/password.")
     @pytest.mark.download
     def test_youtube_download(self, make_item):
         # url https://www.youtube.com/watch?v=5qap5aO4i9A
