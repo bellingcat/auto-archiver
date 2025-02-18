@@ -66,9 +66,9 @@ def test_call_autoarchiver_main(caplog, monkeypatch, tmp_path):
 
     # monkey patch to change the current working directory, so that we don't use the user's real config file
     monkeypatch.chdir(tmp_path)
-    main()
+    with monkeypatch.context() as m:
+        m.setattr(sys, "argv", ["auto-archiver"])
+        with pytest.raises(SystemExit):
+            main()
 
-    # this is a bit of a hack, but calling 'main' directly actually sets this file name as the 3rd arg
-    # and auto-archiver thinks that's the 'URL', so it will fail because it's not a real URL
-    # print(urls) => ['tests/test_implementation.py::test_call_autoarchiver_main']
-    assert "AssertionError: Invalid URL scheme" in caplog.text
+    assert "No URLs provided. Please provide at least one" in caplog.text
