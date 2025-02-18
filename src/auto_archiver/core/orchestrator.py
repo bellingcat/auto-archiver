@@ -243,8 +243,6 @@ class ArchivingOrchestrator:
 
             group = parser.add_argument_group(module.display_name or module.name, f"{module.description[:100]}...")
 
-            if module == "gsheets_feeder":
-                breakpoint()
             for name, kwargs in module.configs.items():
                 if not kwargs.get('metavar', None):
                     # make a nicer metavar, metavar is what's used in the help, e.g. --cli_feeder.urls [METAVAR]
