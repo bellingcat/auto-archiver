@@ -23,7 +23,7 @@ Read the [article about Auto Archiver on bellingcat.com](https://www.bellingcat.
 
 ## Installation
 
-View the [Installation Guide](installation/installation.md) for full instructions
+View the [Installation Guide](https://auto-archiver.readthedocs.io/en/latest/installation/installation.html) for full instructions
 
 To get started quickly using Docker:
 
