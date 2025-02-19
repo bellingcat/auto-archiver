@@ -10,7 +10,7 @@ from ruamel.yaml import YAML, CommentedMap, add_representer
 
 from loguru import logger
 
-from copy import deepcopy
+from copy import deepcopy, copy
 from .module import BaseModule
 
 from typing import Any, List, Type, Tuple
@@ -154,7 +154,7 @@ def read_yaml(yaml_filename: str) -> CommentedMap:
 
     if not config:
         config = EMPTY_CONFIG
-    
+
     return config
 
 # TODO: make this tidier/find a way to notify of which keys should not be stored

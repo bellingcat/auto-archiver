@@ -5,6 +5,7 @@
 :hidden:
 
 configurations.md
+authentication.md
 config_cheatsheet.md
 ```
 

@@ -8,7 +8,6 @@ from __future__ import annotations
 from typing import Generator, Union, List, Type
 from urllib.parse import urlparse
 from ipaddress import ip_address
-from copy import copy
 import argparse
 import os
 import sys
@@ -75,13 +74,6 @@ class AuthenticationJsonParseAction(JsonParseAction):
                 continue
             if not isinstance(key, str) or not isinstance(auth, dict):
                 raise argparse.ArgumentTypeError(f"Authentication must be a dictionary of site names and their authentication methods. Valid global configs are {global_options}")
-        
-        # extract out concatenated sites
-        for key, val in copy(auth_dict).items():
-            if "," in key:
-                for site in key.split(","):
-                    auth_dict[site] = val
-                del auth_dict[key]
 
         setattr(namespace, self.dest, auth_dict)
 

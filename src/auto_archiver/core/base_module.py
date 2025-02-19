@@ -63,11 +63,17 @@ class BaseModule(ABC):
     def config_setup(self, config: dict):
 
         authentication = config.get('authentication', {})
-
         # this is important. Each instance is given its own deepcopied config, so modules cannot
         # change values to affect other modules
         config = deepcopy(config)
         authentication = deepcopy(config.pop('authentication', {}))
+
+        # extract out concatenated sites
+        for key, val in copy(authentication).items():
+            if "," in key:
+                for site in key.split(","):
+                    authentication[site] = val
+                del authentication[key]
 
         self.authentication = authentication
         self.config = config
@@ -102,7 +108,7 @@ class BaseModule(ABC):
         # TODO: think about if/how we can deal with sites that have multiple domains (main one is x.com/twitter.com)
         # for now the user must enter them both, like "x.com,twitter.com" in their config. Maybe we just hard-code?
 
-        site = UrlUtil.domain_for_url(site)
+        site = UrlUtil.domain_for_url(site).lstrip("www.")
         # add the 'www' version of the site to the list of sites to check
         authdict = {}
 
@@ -128,17 +134,30 @@ class BaseModule(ABC):
             # collections.namedtuple('ParsedOptions', ('parser', 'options', 'urls', 'ydl_opts'))
             ytdlp_opts = getattr(parse_options(args), 'ydl_opts')
             return yt_dlp.YoutubeDL(ytdlp_opts).cookiejar
+        
+        get_cookiejar_options = None
 
-        # get the cookies jar, prefer the browser cookies than the file
-        if 'cookies_from_browser' in self.authentication:
+        # order of priority:
+        # 1. cookies_from_browser setting in site config
+        # 2. cookies_file setting in site config
+        # 3. cookies_from_browser setting in global config
+        # 4. cookies_file setting in global config
+
+        if 'cookies_from_browser' in authdict:
+            get_cookiejar_options = ['--cookies-from-browser', authdict['cookies_from_browser']]
+        elif 'cookies_file' in authdict:
+            get_cookiejar_options = ['--cookies', authdict['cookies_file']]
+        elif 'cookies_from_browser' in self.authentication:
             authdict['cookies_from_browser'] = self.authentication['cookies_from_browser']
-            if extract_cookies:
-                authdict['cookies_jar'] = get_ytdlp_cookiejar(['--cookies-from-browser', self.authentication['cookies_from_browser']])
+            get_cookiejar_options = ['--cookies-from-browser', self.authentication['cookies_from_browser']]
         elif 'cookies_file' in self.authentication:
             authdict['cookies_file'] = self.authentication['cookies_file']
-            if extract_cookies:
-                authdict['cookies_jar'] = get_ytdlp_cookiejar(['--cookies', self.authentication['cookies_file']])
+            get_cookiejar_options = ['--cookies', self.authentication['cookies_file']]
+
         
+        if get_cookiejar_options:
+            authdict['cookies_jar'] = get_ytdlp_cookiejar(get_cookiejar_options)
+
         return authdict
     
     def repr(self):
