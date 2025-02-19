@@ -19,14 +19,6 @@ def api_db(setup_module):
     return setup_module(AAApiDb, configs)
 
 
-@pytest.fixture
-def metadata():
-    metadata = Metadata()
-    metadata.set("_processed_at", "2021-01-01T00:00:00")
-    metadata.set_url("https://example.com")
-    return metadata
-
-
 def test_fetch_no_cache(api_db, metadata):
     # Test fetch
     api_db.use_api_cache = False

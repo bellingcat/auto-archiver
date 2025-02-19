@@ -155,7 +155,5 @@ def mock_sleep(mocker):
 def metadata():
     metadata = Metadata()
     metadata.set("_processed_at", "2021-01-01T00:00:00")
-    metadata.set_title("Example Title")
-    metadata.set_content("Example Content")
     metadata.set_url("https://example.com")
     return metadata

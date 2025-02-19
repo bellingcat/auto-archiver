@@ -1,1 +1,1 @@
-from atlos_db import AtlosDb
+from .atlos_db import AtlosDb

@@ -23,14 +23,6 @@ def mock_media(mocker):
     mock.filename = "mock_file.txt"
     return mock
 
-@pytest.fixture
-def metadata():
-    m = Metadata()
-    m.set_url("https://example.com")
-    m.set_title("Test Title")
-    m.set_content("Test Content")
-    return m
-
 
 @pytest.fixture(autouse=True)
 def meta_enricher(setup_module):
