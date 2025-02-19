@@ -6,8 +6,6 @@ from auto_archiver.core import Metadata
 from auto_archiver.modules.instagram_tbot_extractor import InstagramTbotExtractor
 from tests.extractors.test_extractor_base import TestExtractorBase
 
-TESTFILES = os.path.join(os.path.dirname(__file__), "testfiles")
-
 
 @pytest.fixture
 def patch_extractor_methods(request, setup_module, mocker):
