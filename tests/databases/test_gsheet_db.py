@@ -1,6 +1,4 @@
 from datetime import datetime, timezone
-from unittest.mock import MagicMock, patch
-
 import pytest
 
 from auto_archiver.core import Metadata, Media
@@ -9,8 +7,8 @@ from auto_archiver.modules.gsheet_feeder import GWorksheet
 
 
 @pytest.fixture
-def mock_gworksheet():
-    mock_gworksheet = MagicMock(spec=GWorksheet)
+def mock_gworksheet(mocker):
+    mock_gworksheet = mocker.MagicMock(spec=GWorksheet)
     mock_gworksheet.col_exists.return_value = True
     mock_gworksheet.get_cell.return_value = ""
     mock_gworksheet.get_row.return_value = {}
@@ -18,14 +16,14 @@ def mock_gworksheet():
 
 
 @pytest.fixture
-def mock_metadata():
-    metadata: Metadata = MagicMock(spec=Metadata)
+def mock_metadata(mocker):
+    metadata: Metadata = mocker.MagicMock(spec=Metadata)
     metadata.get_url.return_value = "http://example.com"
     metadata.status = "done"
     metadata.get_title.return_value = "Example Title"
     metadata.get.return_value = "Example Content"
     metadata.get_timestamp.return_value = "2025-01-01T00:00:00"
-    metadata.get_final_media.return_value = MagicMock(spec=Media)
+    metadata.get_final_media.return_value = mocker.MagicMock(spec=Media)
     metadata.get_all_media.return_value = []
     metadata.get_media_by_id.return_value = None
     metadata.get_first_image.return_value = None
@@ -47,21 +45,21 @@ def metadata():
 
 
 @pytest.fixture
-def mock_media():
+def mock_media(mocker):
     """Fixture for a mock Media object."""
-    mock_media = MagicMock(spec=Media)
+    mock_media = mocker.MagicMock(spec=Media)
     mock_media.urls = ["http://example.com/media"]
     mock_media.get.return_value = "not-calculated"
     return mock_media
 
 @pytest.fixture
-def gsheets_db(mock_gworksheet, setup_module):
+def gsheets_db(mock_gworksheet, setup_module, mocker):
     db = setup_module("gsheet_db", {
         "allow_worksheets": "set()",
         "block_worksheets": "set()",
         "use_sheet_names_in_stored_paths": "True",
     })
-    db._retrieve_gsheet = MagicMock(return_value=(mock_gworksheet, 1))
+    db._retrieve_gsheet = mocker.MagicMock(return_value=(mock_gworksheet, 1))
     return db
 
 
@@ -109,27 +107,26 @@ def test_aborted(gsheets_db, mock_metadata, mock_gworksheet):
     mock_gworksheet.set_cell.assert_called_once_with(1, 'status', '')
 
 
-def test_done(gsheets_db, metadata, mock_gworksheet, expected_calls):
-    with patch("auto_archiver.modules.gsheet_db.gsheet_db.get_current_timestamp", return_value='2025-02-01T00:00:00+00:00'):
-        gsheets_db.done(metadata)
+def test_done(gsheets_db, metadata, mock_gworksheet, expected_calls, mocker):
+    mocker.patch("auto_archiver.modules.gsheet_db.gsheet_db.get_current_timestamp", return_value='2025-02-01T00:00:00+00:00')
+    gsheets_db.done(metadata)
     mock_gworksheet.batch_set_cell.assert_called_once_with(expected_calls)
 
 
-def test_done_cached(gsheets_db, metadata, mock_gworksheet):
-    with patch("auto_archiver.modules.gsheet_db.gsheet_db.get_current_timestamp", return_value='2025-02-01T00:00:00+00:00'):
-        gsheets_db.done(metadata, cached=True)
+def test_done_cached(gsheets_db, metadata, mock_gworksheet, mocker):
+    mocker.patch("auto_archiver.modules.gsheet_db.gsheet_db.get_current_timestamp", return_value='2025-02-01T00:00:00+00:00')
+    gsheets_db.done(metadata, cached=True)
 
     # Verify the status message includes "[cached]"
     call_args = mock_gworksheet.batch_set_cell.call_args[0][0]
     assert any(call[2].startswith("[cached]") for call in call_args)
 
 
-def test_done_missing_media(gsheets_db, metadata, mock_gworksheet):
+def test_done_missing_media(gsheets_db, metadata, mock_gworksheet, mocker):
     # clear media from metadata
     metadata.media = []
-    with patch("auto_archiver.modules.gsheet_db.gsheet_db.get_current_timestamp",
-               return_value='2025-02-01T00:00:00+00:00'):
-        gsheets_db.done(metadata)
+    mocker.patch("auto_archiver.modules.gsheet_db.gsheet_db.get_current_timestamp", return_value='2025-02-01T00:00:00+00:00')
+    gsheets_db.done(metadata)
     # Verify nothing media-related gets updated
     call_args = mock_gworksheet.batch_set_cell.call_args[0][0]
     media_fields = {'archive', 'screenshot', 'thumbnail', 'wacz', 'replaywebpage'}

@@ -162,4 +162,25 @@ def test_get_context():
 
 
 def test_choose_most_complete():
-    pass
+    m_more = Metadata()
+    m_more.set_title("Title 1")
+    m_more.set_content("Content 1")
+    m_more.set_url("https://example.com")
+
+    m_less = Metadata()
+    m_less.set_title("Title 2")
+    m_less.set_content("Content 2")
+    m_less.set_url("https://example.com")
+    m_less.set_context("key", "value")
+
+    res = Metadata.choose_most_complete([m_more, m_less])
+    assert res.metadata.get("title") == "Title 1"
+
+def test_choose_most_complete_from_pickles(unpickle):
+    # test most complete from pickles before and after an enricher has run
+    # Only compares length of media, not the actual media
+    m_before_enriching = unpickle("metadata_enricher_ytshort_input.pickle")
+    m_after_enriching = unpickle("metadata_enricher_ytshort_expected.pickle")
+    # Iterates `for r in results[1:]:`
+    res = Metadata.choose_most_complete([Metadata(), m_after_enriching, m_before_enriching])
+    assert res.media == m_after_enriching.media

@@ -29,8 +29,7 @@ class WhisperEnricher(Enricher):
         job_results = {}
         for i, m in enumerate(to_enrich.media):
             if m.is_video() or m.is_audio():
-                # TODO: this used to pass all storage items to store now
-                # Now only passing S3, the rest will get added later in the usual order (?)
+                # Only storing S3, the rest will get added later in the usual order (?)
                 m.store(url=url, metadata=to_enrich, storages=[self.s3])
                 try:
                     job_id = self.submit_job(m)

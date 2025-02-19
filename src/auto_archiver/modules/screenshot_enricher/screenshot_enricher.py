@@ -11,6 +11,10 @@ from auto_archiver.core import Media, Metadata
 
 class ScreenshotEnricher(Enricher):
 
+    def __init__(self, webdriver_factory=None):
+        super().__init__()
+        self.webdriver_factory = webdriver_factory or Webdriver
+
     def enrich(self, to_enrich: Metadata) -> None:
         url = to_enrich.get_url()
 
@@ -20,7 +24,8 @@ class ScreenshotEnricher(Enricher):
 
         logger.debug(f"Enriching screenshot for {url=}")
         auth = self.auth_for_site(url)
-        with Webdriver(self.width, self.height, self.timeout, facebook_accept_cookies='facebook.com' in url,
+        with self.webdriver_factory(
+                self.width, self.height, self.timeout, facebook_accept_cookies='facebook.com' in url,
                        http_proxy=self.http_proxy, print_options=self.print_options, auth=auth) as driver:
             try:
                 driver.get(url)
@@ -38,3 +43,4 @@ class ScreenshotEnricher(Enricher):
                 logger.info("TimeoutException loading page for screenshot")
             except Exception as e:
                 logger.error(f"Got error while loading webdriver for screenshot enricher: {e}")
+

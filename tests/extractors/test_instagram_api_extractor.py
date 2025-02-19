@@ -1,13 +1,10 @@
 from datetime import datetime
-from typing import Type
 
 import pytest
-from unittest.mock import patch, MagicMock
 
 from auto_archiver.core import Metadata
 from auto_archiver.modules.instagram_api_extractor.instagram_api_extractor import InstagramAPIExtractor
 from .test_extractor_base import TestExtractorBase
-
 
 
 @pytest.fixture
@@ -115,74 +112,74 @@ class TestInstagramAPIExtractor(TestExtractorBase):
         # test gets text (metadata title)
         pass
 
-    def test_download_profile_basic(self, metadata, mock_user_response):
+    def test_download_profile_basic(self, metadata, mock_user_response, mocker):
         """Test basic profile download without full_profile"""
-        with patch.object(self.extractor, 'call_api') as mock_call, \
-                patch.object(self.extractor, 'download_from_url') as mock_download:
-            # Mock API responses
-            mock_call.return_value = mock_user_response
-            mock_download.return_value = "profile.jpg"
+        mock_call = mocker.patch.object(self.extractor, 'call_api')
+        mock_download = mocker.patch.object(self.extractor, 'download_from_url')
+        # Mock API responses
+        mock_call.return_value = mock_user_response
+        mock_download.return_value = "profile.jpg"
 
-            result = self.extractor.download_profile(metadata, "test_user")
-            assert result.status == "insta profile: success"
-            assert result.get_title() == "Test User"
-            assert result.get("data") == self.extractor.cleanup_dict(mock_user_response["user"])
-            # Verify profile picture download
-            mock_call.assert_called_once_with("v2/user/by/username", {"username": "test_user"})
-            mock_download.assert_called_once_with("http://example.com/profile.jpg")
-            assert len(result.media) == 1
-            assert result.media[0].filename == "profile.jpg"
+        result = self.extractor.download_profile(metadata, "test_user")
+        assert result.status == "insta profile: success"
+        assert result.get_title() == "Test User"
+        assert result.get("data") == self.extractor.cleanup_dict(mock_user_response["user"])
+        # Verify profile picture download
+        mock_call.assert_called_once_with("v2/user/by/username", {"username": "test_user"})
+        mock_download.assert_called_once_with("http://example.com/profile.jpg")
+        assert len(result.media) == 1
+        assert result.media[0].filename == "profile.jpg"
 
-    def test_download_profile_full(self, metadata, mock_user_response, mock_story_response):
+    def test_download_profile_full(self, metadata, mock_user_response, mock_story_response, mocker):
         """Test full profile download with stories/posts"""
-        with patch.object(self.extractor, 'call_api') as mock_call, \
-             patch.object(self.extractor, 'download_all_posts') as mock_posts, \
-             patch.object(self.extractor, 'download_all_highlights') as mock_highlights, \
-             patch.object(self.extractor, 'download_all_tagged') as mock_tagged, \
-             patch.object(self.extractor, '_download_stories_reusable') as mock_stories:
+        mock_call = mocker.patch.object(self.extractor, 'call_api')
+        mock_posts = mocker.patch.object(self.extractor, 'download_all_posts')
+        mock_highlights = mocker.patch.object(self.extractor, 'download_all_highlights')
+        mock_tagged = mocker.patch.object(self.extractor, 'download_all_tagged')
+        mock_stories = mocker.patch.object(self.extractor, '_download_stories_reusable')
 
-            self.extractor.full_profile = True
-            mock_call.side_effect = [
-                mock_user_response,
-                mock_story_response
-            ]
-            mock_highlights.return_value = None
-            mock_stories.return_value = mock_story_response
-            mock_posts.return_value = None
-            mock_tagged.return_value = None
+        self.extractor.full_profile = True
+        mock_call.side_effect = [
+            mock_user_response,
+            mock_story_response
+        ]
+        mock_highlights.return_value = None
+        mock_stories.return_value = mock_story_response
+        mock_posts.return_value = None
+        mock_tagged.return_value = None
 
-            result = self.extractor.download_profile(metadata, "test_user")
-            assert result.get("#stories") == len(mock_story_response)
-            mock_posts.assert_called_once_with(result, "123")
-            assert "errors" not in result.metadata
+        result = self.extractor.download_profile(metadata, "test_user")
+        assert result.get("#stories") == len(mock_story_response)
+        mock_posts.assert_called_once_with(result, "123")
+        assert "errors" not in result.metadata
 
-    def test_download_profile_not_found(self, metadata):
+    def test_download_profile_not_found(self, metadata, mocker):
         """Test profile not found error"""
-        with patch.object(self.extractor, 'call_api') as mock_call:
-            mock_call.return_value = {"user": None}
-            with pytest.raises(AssertionError) as exc_info:
-                self.extractor.download_profile(metadata, "invalid_user")
-            assert "User invalid_user not found" in str(exc_info.value)
+        mock_call = mocker.patch.object(self.extractor, 'call_api')
+        mock_call.return_value = {"user": None}
+        with pytest.raises(AssertionError) as exc_info:
+            self.extractor.download_profile(metadata, "invalid_user")
+        assert "User invalid_user not found" in str(exc_info.value)
 
-    def test_download_profile_error_handling(self, metadata, mock_user_response):
+    def test_download_profile_error_handling(self, metadata, mock_user_response, mocker):
         """Test error handling in full profile mode"""
-        with (patch.object(self.extractor, 'call_api') as mock_call, \
-                patch.object(self.extractor, 'download_all_highlights') as mock_highlights, \
-                patch.object(self.extractor, 'download_all_tagged') as mock_tagged, \
-                patch.object(self.extractor, '_download_stories_reusable') as stories_tagged, \
-                patch.object(self.extractor, 'download_all_posts') as mock_posts
-              ):
-            self.extractor.full_profile = True
-            mock_call.side_effect = [
-                mock_user_response,
-                Exception("Stories API failed"),
-                Exception("Posts API failed")
-            ]
-            mock_highlights.return_value = None
-            mock_tagged.return_value = None
-            stories_tagged.return_value = None
-            mock_posts.return_value = None
-            result = self.extractor.download_profile(metadata, "test_user")
+        mock_call = mocker.patch.object(self.extractor, 'call_api')
+        mock_highlights = mocker.patch.object(self.extractor, 'download_all_highlights')
+        mock_tagged = mocker.patch.object(self.extractor, 'download_all_tagged')
+        stories_tagged = mocker.patch.object(self.extractor, '_download_stories_reusable')
+        mock_posts = mocker.patch.object(self.extractor, 'download_all_posts')
 
-            assert result.is_success()
-            assert "Error downloading stories for test_user" in result.metadata["errors"]
+        self.extractor.full_profile = True
+        mock_call.side_effect = [
+            mock_user_response,
+            Exception("Stories API failed"),
+            Exception("Posts API failed")
+        ]
+        mock_highlights.return_value = None
+        mock_tagged.return_value = None
+        stories_tagged.return_value = None
+        mock_posts.return_value = None
+        result = self.extractor.download_profile(metadata, "test_user")
+
+        assert result.is_success()
+        assert "Error downloading stories for test_user" in result.metadata["errors"]

@@ -3,9 +3,11 @@ pytest conftest file, for shared fixtures and configuration
 """
 import os
 import pickle
+from datetime import datetime, timezone
 from tempfile import TemporaryDirectory
 from typing import Dict, Tuple
 import hashlib
+
 import pytest
 from auto_archiver.core.metadata import Metadata
 from auto_archiver.core.module import get_module, _LAZY_LOADED_MODULES
@@ -122,10 +124,36 @@ def pytest_runtest_setup(item):
 def unpickle():
     """
     Returns a helper function that unpickles a file
-    ** gets the file from the test_files directory: tests/data/test_files **
+    ** gets the file from the test_files directory: tests/data/ **
     """
     def _unpickle(path):
-        test_data_dir = os.path.join(os.path.dirname(__file__), "data", "test_files")
-        with open(os.path.join(test_data_dir, path), "rb") as f:
+        with open(os.path.join("tests/data", path), "rb") as f:
             return pickle.load(f)
     return _unpickle
+
+
+@pytest.fixture
+def mock_binary_dependencies(mocker):
+    mock_shutil_which = mocker.patch("shutil.which")
+    # Mock all binary dependencies as available
+    mock_shutil_which.return_value = "/usr/bin/fake_binary"
+    return mock_shutil_which
+
+
+@pytest.fixture
+def sample_datetime():
+    return datetime(2023, 1, 1, 12, 0, tzinfo=timezone.utc)
+
+
+@pytest.fixture(autouse=True)
+def mock_sleep(mocker):
+    """Globally mock time.sleep to avoid delays."""
+    return mocker.patch("time.sleep")
+
+
+@pytest.fixture
+def metadata():
+    metadata = Metadata()
+    metadata.set("_processed_at", "2021-01-01T00:00:00")
+    metadata.set_url("https://example.com")
+    return metadata
