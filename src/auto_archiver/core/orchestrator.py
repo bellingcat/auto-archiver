@@ -5,7 +5,7 @@
 """
 
 from __future__ import annotations
-from typing import Generator, Union, List, Type
+from typing import Generator, Union, List, Type, TYPE_CHECKING
 from urllib.parse import urlparse
 from ipaddress import ip_address
 from copy import copy
@@ -22,12 +22,14 @@ from rich_argparse import RichHelpFormatter
 from .metadata import Metadata, Media
 from auto_archiver.version import __version__
 from .config import _yaml, read_yaml, store_yaml, to_dot_notation, merge_dicts, EMPTY_CONFIG, DefaultValidatingParser
-from .module import available_modules, LazyBaseModule, get_module, setup_paths
+from .module import ModuleFactory, LazyBaseModule
 from . import validators, Feeder, Extractor, Database, Storage, Formatter, Enricher
-from .module import BaseModule
-
+from .consts import MODULE_TYPES
 from loguru import logger
 
+if TYPE_CHECKING:
+    from .base_module import BaseModule
+    from .module import LazyBaseModule
 
 DEFAULT_CONFIG_FILE = "orchestration.yaml"
 
@@ -95,12 +97,23 @@ class UniqueAppendAction(argparse.Action):
 
 class ArchivingOrchestrator:
 
+    # instance variables
+    module_factory: ModuleFactory
+    setup_finished: bool
+    logger_id: int
+
+    # instance variables, used for convenience to access modules by step
     feeders: List[Type[Feeder]]
     extractors: List[Type[Extractor]]
     enrichers: List[Type[Enricher]]
     databases: List[Type[Database]]
     storages: List[Type[Storage]]
     formatters: List[Type[Formatter]]
+
+    def __init__(self):
+        self.module_factory = ModuleFactory()
+        self.setup_finished = False
+        self.logger_id = None
 
     def setup_basic_parser(self):
         parser = argparse.ArgumentParser(
@@ -133,7 +146,7 @@ class ArchivingOrchestrator:
         )
         self.add_modules_args(modules_parser)
         cli_modules, unused_args = modules_parser.parse_known_args(unused_args)
-        for module_type in BaseModule.MODULE_TYPES:
+        for module_type in MODULE_TYPES:
             yaml_config['steps'][f"{module_type}s"] = getattr(cli_modules, f"{module_type}s", []) or yaml_config['steps'].get(f"{module_type}s", [])
 
         parser = DefaultValidatingParser(
@@ -155,15 +168,15 @@ class ArchivingOrchestrator:
             # TODO: if some steps are empty (e.g. 'feeders' is empty), should we default to the 'simple' ones? Or only if they are ALL empty?
             enabled_modules = []
             # first loads the modules from the config file, then from the command line
-            for module_type in BaseModule.MODULE_TYPES:
+            for module_type in MODULE_TYPES:
                 enabled_modules.extend(yaml_config['steps'].get(f"{module_type}s", []))
 
             # clear out duplicates, but keep the order
             enabled_modules = list(dict.fromkeys(enabled_modules))
-            avail_modules = available_modules(with_manifest=True, limit_to_modules=enabled_modules, suppress_warnings=True)
+            avail_modules = self.module_factory.available_modules(limit_to_modules=enabled_modules, suppress_warnings=True)
             self.add_individual_module_args(avail_modules, parser)
         elif basic_config.mode == 'simple':
-            simple_modules = [module for module in available_modules(with_manifest=True) if not module.requires_setup]
+            simple_modules = [module for module in self.module_factory.available_modules() if not module.requires_setup]
             self.add_individual_module_args(simple_modules, parser)
 
             # for simple mode, we use the cli_feeder and any modules that don't require setup
@@ -176,7 +189,7 @@ class ArchivingOrchestrator:
                     yaml_config['steps'].setdefault(f"{module_type}s", []).append(module.name)
         else:
             # load all modules, they're not using the 'simple' mode
-            self.add_individual_module_args(available_modules(with_manifest=True), parser)
+            self.add_individual_module_args(self.module_factory.available_modules(), parser)
         
         parser.set_defaults(**to_dot_notation(yaml_config))
 
@@ -206,7 +219,7 @@ class ArchivingOrchestrator:
             parser = self.parser
 
         # Module loading from the command line
-        for module_type in BaseModule.MODULE_TYPES:
+        for module_type in MODULE_TYPES:
             parser.add_argument(f'--{module_type}s', dest=f'{module_type}s', nargs='+', help=f'the {module_type}s to use', default=[], action=UniqueAppendAction)
 
     def add_additional_args(self, parser: argparse.ArgumentParser = None):
@@ -232,7 +245,7 @@ class ArchivingOrchestrator:
     def add_individual_module_args(self, modules: list[LazyBaseModule] = None, parser: argparse.ArgumentParser = None) -> None:
 
         if not modules:
-            modules = available_modules(with_manifest=True)
+            modules = self.module_factory.available_modules()
         
         for module in modules:
 
@@ -274,11 +287,18 @@ class ArchivingOrchestrator:
 
     def setup_logging(self, config):
         # setup loguru logging
-        logger.remove(0)  # remove the default logger
+        try:
+            logger.remove(0)  # remove the default logger
+        except ValueError:
+            pass
+
         logging_config = config['logging']
-        logger.add(sys.stderr, level=logging_config['level'])
-        if log_file := logging_config['file']:
-            logger.add(log_file) if not logging_config['rotation'] else logger.add(log_file, rotation=logging_config['rotation'])
+
+        # add other logging info
+        if self.logger_id is None: # note - need direct comparison to None since need to consider falsy value 0
+            self.logger_id = logger.add(sys.stderr, level=logging_config['level'])
+            if log_file := logging_config['file']:
+                logger.add(log_file) if not logging_config['rotation'] else logger.add(log_file, rotation=logging_config['rotation'])
 
     def install_modules(self, modules_by_type):
         """
@@ -288,7 +308,7 @@ class ArchivingOrchestrator:
         """
 
         invalid_modules = []
-        for module_type in BaseModule.MODULE_TYPES:
+        for module_type in MODULE_TYPES:
 
             step_items = []
             modules_to_load = modules_by_type[f"{module_type}s"]
@@ -333,7 +353,7 @@ class ArchivingOrchestrator:
                 if module in invalid_modules:
                     continue
                 try:
-                    loaded_module: BaseModule = get_module(module, self.config)
+                    loaded_module: BaseModule = self.module_factory.get_module(module, self.config)
                 except (KeyboardInterrupt, Exception) as e:
                     logger.error(f"Error during setup of modules: {e}\n{traceback.format_exc()}")
                     if module_type == 'extractor' and loaded_module.name == module:
@@ -359,14 +379,17 @@ class ArchivingOrchestrator:
     def setup_config(self, args: list) -> dict:
         """
         Sets up the configuration file, merging the default config with the user's config
+
+        This function should only ever be run once.
         """
+
         self.setup_basic_parser()
 
         # parse the known arguments for now (basically, we want the config file)
         basic_config, unused_args = self.basic_parser.parse_known_args(args)
 
         # setup any custom module paths, so they'll show in the help and for arg parsing
-        setup_paths(basic_config.module_paths)
+        self.module_factory.setup_paths(basic_config.module_paths)
 
         # if help flag was called, then show the help
         if basic_config.help:
@@ -378,16 +401,29 @@ class ArchivingOrchestrator:
 
     def setup(self, args: list):
         """
-        Main entry point for the orchestrator, sets up the basic parser, loads the config file, and sets up the complete parser
+        Function to configure all setup of the orchestrator: setup configs and load modules.
+        
+        This method should only ever be called once
         """
+
+        if self.setup_finished:
+            logger.warning("The `setup_config()` function should only ever be run once. \
+                           If you need to re-run the setup, please re-instantiate a new instance of the orchestrator. \
+                           For code implementatations, you should call .setup_config() once then you may call .feed() \
+                           multiple times to archive multiple URLs.")
+            return
+
+        self.setup_basic_parser()
         self.config = self.setup_config(args)
 
         logger.info(f"======== Welcome to the AUTO ARCHIVER ({__version__}) ==========")
         self.install_modules(self.config['steps'])
 
         # log out the modules that were loaded
-        for module_type in BaseModule.MODULE_TYPES:
+        for module_type in MODULE_TYPES:
             logger.info(f"{module_type.upper()}S: " + ", ".join(m.display_name for m in getattr(self, f"{module_type}s")))
+        
+        self.setup_finished = True
 
     def _command_line_run(self, args: list) -> Generator[Metadata]:
         """
