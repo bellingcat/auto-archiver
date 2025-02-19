@@ -4,7 +4,7 @@ from argparse import ArgumentParser, ArgumentTypeError
 from auto_archiver.core.orchestrator import ArchivingOrchestrator
 from auto_archiver.version import __version__
 from auto_archiver.core.config import read_yaml, store_yaml
-from auto_archiver.core.module import _LAZY_LOADED_MODULES
+
 
 TEST_ORCHESTRATION = "tests/data/test_orchestration.yaml"
 TEST_MODULES = "tests/data/test_modules/"
@@ -17,22 +17,7 @@ def test_args():
 
 @pytest.fixture
 def orchestrator():
-    yield ArchivingOrchestrator()
-    # hack - the loguru logger starts with one logger, but if orchestrator has run before
-    # it'll remove the default logger, add it back in:
-
-    from loguru import logger
-
-    if not logger._core.handlers.get(0):
-        logger._core.handlers_count = 0
-        logger.add(sys.stderr)
-    # and remove the custom logger
-    if logger._core.handlers.get(1):
-        logger.remove(1)
-
-    # delete out any loaded modules
-    _LAZY_LOADED_MODULES.clear()
-
+    return ArchivingOrchestrator()
 
 @pytest.fixture
 def basic_parser(orchestrator) -> ArgumentParser:

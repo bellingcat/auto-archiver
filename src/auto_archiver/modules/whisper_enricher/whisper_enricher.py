@@ -4,7 +4,6 @@ from loguru import logger
 
 from auto_archiver.core import Enricher
 from auto_archiver.core import Metadata, Media
-from auto_archiver.core.module import get_module
 
 class WhisperEnricher(Enricher):
     """
@@ -15,7 +14,7 @@ class WhisperEnricher(Enricher):
 
     def setup(self) -> None:
         self.stores = self.config['steps']['storages']
-        self.s3 = get_module("s3_storage", self.config)
+        self.s3 = self.module_factory.get_module("s3_storage", self.config)
         if not "s3_storage" in self.stores:
             logger.error("WhisperEnricher: To use the WhisperEnricher you need to use S3Storage so files are accessible publicly to the whisper service being called.")
             return

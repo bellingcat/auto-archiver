@@ -10,7 +10,6 @@ from auto_archiver.version import __version__
 from auto_archiver.core import Metadata, Media
 from auto_archiver.core import Formatter
 from auto_archiver.utils.misc import random_str
-from auto_archiver.core.module import get_module
 
 class HtmlFormatter(Formatter):
     environment: Environment = None
@@ -50,7 +49,7 @@ class HtmlFormatter(Formatter):
         final_media = Media(filename=html_path, _mimetype="text/html")
 
         # get the already instantiated hash_enricher module
-        he = get_module('hash_enricher', self.config)
+        he = self.module_factory.get_module('hash_enricher', self.config)
         if len(hd := he.calculate_hash(final_media.filename)):
             final_media.set("hash", f"{he.algorithm}:{hd}")
 
