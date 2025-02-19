@@ -95,6 +95,8 @@ class UniqueAppendAction(argparse.Action):
 
 class ArchivingOrchestrator:
 
+    setup_finished: bool = False
+    logger_id: int = None
     feeders: List[Type[Feeder]]
     extractors: List[Type[Extractor]]
     enrichers: List[Type[Enricher]]
@@ -274,11 +276,18 @@ class ArchivingOrchestrator:
 
     def setup_logging(self, config):
         # setup loguru logging
-        logger.remove(0)  # remove the default logger
+        try:
+            logger.remove(0)  # remove the default logger
+        except ValueError:
+            pass
+
         logging_config = config['logging']
-        logger.add(sys.stderr, level=logging_config['level'])
-        if log_file := logging_config['file']:
-            logger.add(log_file) if not logging_config['rotation'] else logger.add(log_file, rotation=logging_config['rotation'])
+
+        # add other logging info
+        if self.logger_id is None: # note - need direct comparison to None since need to consider falsy value 0
+            self.logger_id = logger.add(sys.stderr, level=logging_config['level'])
+            if log_file := logging_config['file']:
+                logger.add(log_file) if not logging_config['rotation'] else logger.add(log_file, rotation=logging_config['rotation'])
 
     def install_modules(self, modules_by_type):
         """
@@ -359,7 +368,10 @@ class ArchivingOrchestrator:
     def setup_config(self, args: list) -> dict:
         """
         Sets up the configuration file, merging the default config with the user's config
+
+        This function should only ever be run once.
         """
+
         self.setup_basic_parser()
 
         # parse the known arguments for now (basically, we want the config file)
@@ -378,8 +390,19 @@ class ArchivingOrchestrator:
 
     def setup(self, args: list):
         """
-        Main entry point for the orchestrator, sets up the basic parser, loads the config file, and sets up the complete parser
+        Function to configure all setup of the orchestrator: setup configs and load modules.
+        
+        This method should only ever be called once
         """
+
+        if self.setup_finished:
+            logger.warning("The `setup_config()` function should only ever be run once. \
+                           If you need to re-run the setup, please re-instantiate a new instance of the orchestrator. \
+                           For code implementatations, you should call .setup_config() once then you may call .feed() \
+                           multiple times to archive multiple URLs.")
+            return
+
+        self.setup_basic_parser()
         self.config = self.setup_config(args)
 
         logger.info(f"======== Welcome to the AUTO ARCHIVER ({__version__}) ==========")
@@ -388,6 +411,8 @@ class ArchivingOrchestrator:
         # log out the modules that were loaded
         for module_type in BaseModule.MODULE_TYPES:
             logger.info(f"{module_type.upper()}S: " + ", ".join(m.display_name for m in getattr(self, f"{module_type}s")))
+        
+        self.setup_finished = True
 
     def _command_line_run(self, args: list) -> Generator[Metadata]:
         """
