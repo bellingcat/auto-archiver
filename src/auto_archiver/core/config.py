@@ -22,8 +22,8 @@ DEFAULT_CONFIG_FILE = "orchestration.yaml"
 
 EMPTY_CONFIG = _yaml.load("""
 # Auto Archiver Configuration
-# Steps are the modules that will be run in the order they are defined
 
+# Steps are the modules that will be run in the order they are defined
 steps:""" + "".join([f"\n   {module}s: []" for module in MODULE_TYPES]) + \
 """
 

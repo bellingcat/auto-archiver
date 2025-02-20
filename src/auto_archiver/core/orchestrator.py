@@ -125,7 +125,13 @@ class ArchivingOrchestrator:
                     yaml_config['steps'].setdefault(f"{module_type}s", []).append(module.name)
         else:
             # load all modules, they're not using the 'simple' mode
-            self.add_individual_module_args(self.module_factory.available_modules(), parser)
+            all_modules = self.module_factory.available_modules()
+            # add all the modules to the steps
+            for module in all_modules:
+                for module_type in module.type:
+                    yaml_config['steps'].setdefault(f"{module_type}s", []).append(module.name)
+
+            self.add_individual_module_args(all_modules, parser)
         
         parser.set_defaults(**to_dot_notation(yaml_config))
 
@@ -379,7 +385,7 @@ class ArchivingOrchestrator:
             self.setup(args)
             return self.feed()
         except Exception as e:
-            logger.exception(e)
+            logger.error(e)
             exit(1)
 
     def cleanup(self) -> None:
