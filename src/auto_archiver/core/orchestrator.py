@@ -231,13 +231,19 @@ class ArchivingOrchestrator:
         self.basic_parser.exit()
 
     def setup_logging(self, config):
+
+        logging_config = config['logging']
+
+        if logging_config.get('enabled', True) is False:
+            # disabled logging settings, they're set on a higher level
+            logger.disable('auto_archiver')
+            return
+
         # setup loguru logging
         try:
             logger.remove(0)  # remove the default logger
         except ValueError:
             pass
-
-        logging_config = config['logging']
 
         # add other logging info
         if self.logger_id is None: # note - need direct comparison to None since need to consider falsy value 0
