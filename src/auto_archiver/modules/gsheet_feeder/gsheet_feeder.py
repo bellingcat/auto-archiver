@@ -24,7 +24,7 @@ class GsheetsFeeder(Feeder):
     def setup(self) -> None:
         self.gsheets_client = gspread.service_account(filename=self.service_account)
         # TODO mv to validators
-        if not (self.sheet or self.sheet_id):
+        if not self.sheet and not self.sheet_id:
             raise ValueError("You need to define either a 'sheet' name or a 'sheet_id' in your manifest.")
 
     def open_sheet(self):

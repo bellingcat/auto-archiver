@@ -165,10 +165,10 @@ def test_load_settings_for_module_from_commandline(orchestrator, test_args):
 
 def test_multiple_orchestrator(test_args):
 
-    o1_args = test_args + ["--feeders", "gsheet_feeder"]
+    o1_args = test_args + ["--feeders", "gsheet_feeder", "--gsheet_feeder.service_account", "tests/data/test_service_account.json"]
     o1 = ArchivingOrchestrator()
 
-    with pytest.raises(AssertionError) as exit_error:
+    with pytest.raises(ValueError) as exit_error:
         # this should fail because the gsheet_feeder requires a sheet_id / sheet
         o1.setup(o1_args)
 
