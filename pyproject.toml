@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [project]
 name = "auto-archiver"
-version = "0.13.3"
+version = "0.13.4"
 description = "Automatically archive links to videos, images, and social media content from Google Sheets (and more)."
 
 requires-python = ">=3.10,<3.13"
@@ -63,6 +63,7 @@ dependencies = [
 pytest = "^8.3.4"
 autopep8 = "^2.3.1"
 pytest-loguru = "^0.4.0"
+pytest-mock = "^3.14.0"
 
 [tool.poetry.group.docs.dependencies]
 sphinx = "^8.1.3"

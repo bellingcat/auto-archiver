@@ -14,7 +14,7 @@ from auto_archiver.utils.misc import random_str
 
 from auto_archiver.core import Media, BaseModule, Metadata
 from auto_archiver.modules.hash_enricher.hash_enricher import HashEnricher
-from auto_archiver.core.module import get_module
+
 class Storage(BaseModule):
     
     """
@@ -74,7 +74,7 @@ class Storage(BaseModule):
             filename = random_str(24)
         elif filename_generator == "static":
             # load the hash_enricher module
-            he = get_module(HashEnricher, self.config)
+            he = self.module_factory.get_module(HashEnricher, self.config)
             hd = he.calculate_hash(media.filename)
             filename = hd[:24]
         else:

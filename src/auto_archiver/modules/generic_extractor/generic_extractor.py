@@ -281,7 +281,7 @@ class GenericExtractor(Extractor):
         # set up auth
         auth = self.auth_for_site(url, extract_cookies=False)
 
-        # order of importance: username/pasword -> api_key -> cookie -> cookie_from_browser -> cookies_file
+        # order of importance: username/pasword -> api_key -> cookie -> cookies_from_browser -> cookies_file
         if auth:
             if 'username' in auth and 'password' in auth:
                 logger.debug(f'Using provided auth username and password for {url}')
@@ -290,7 +290,7 @@ class GenericExtractor(Extractor):
             elif 'cookie' in auth:
                 logger.debug(f'Using provided auth cookie for {url}')
                 yt_dlp.utils.std_headers['cookie'] = auth['cookie']
-            elif 'cookie_from_browser' in auth:
+            elif 'cookies_from_browser' in auth:
                 logger.debug(f'Using extracted cookies from browser {auth["cookies_from_browser"]} for {url}')
                 ydl_options['cookiesfrombrowser'] = auth['cookies_from_browser']
             elif 'cookies_file' in auth:

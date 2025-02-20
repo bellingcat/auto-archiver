@@ -4,7 +4,6 @@ from loguru import logger
 
 from auto_archiver.core import Enricher
 from auto_archiver.core import Metadata, Media
-from auto_archiver.core.module import get_module
 
 class WhisperEnricher(Enricher):
     """
@@ -15,7 +14,7 @@ class WhisperEnricher(Enricher):
 
     def setup(self) -> None:
         self.stores = self.config['steps']['storages']
-        self.s3 = get_module("s3_storage", self.config)
+        self.s3 = self.module_factory.get_module("s3_storage", self.config)
         if not "s3_storage" in self.stores:
             logger.error("WhisperEnricher: To use the WhisperEnricher you need to use S3Storage so files are accessible publicly to the whisper service being called.")
             return
@@ -29,8 +28,7 @@ class WhisperEnricher(Enricher):
         job_results = {}
         for i, m in enumerate(to_enrich.media):
             if m.is_video() or m.is_audio():
-                # TODO: this used to pass all storage items to store now
-                # Now only passing S3, the rest will get added later in the usual order (?)
+                # Only storing S3, the rest will get added later in the usual order (?)
                 m.store(url=url, metadata=to_enrich, storages=[self.s3])
                 try:
                     job_id = self.submit_job(m)

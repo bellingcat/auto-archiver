@@ -2,27 +2,23 @@ from typing import Type
 
 import gspread
 import pytest
-from unittest.mock import patch, MagicMock
 from auto_archiver.modules.gsheet_feeder import GsheetsFeeder
 from auto_archiver.core import Metadata, Feeder
 
 
-def test_setup_without_sheet_and_sheet_id(setup_module):
+def test_setup_without_sheet_and_sheet_id(setup_module, mocker):
     # Ensure setup() raises AssertionError if neither sheet nor sheet_id is set.
-    with patch("gspread.service_account"):
-        with pytest.raises(AssertionError):
-            setup_module(
-                "gsheet_feeder",
-                {"service_account": "dummy.json", "sheet": None, "sheet_id": None},
-            )
+    mocker.patch("gspread.service_account")
+    with pytest.raises(AssertionError):
+        setup_module(
+            "gsheet_feeder",
+            {"service_account": "dummy.json", "sheet": None, "sheet_id": None},
+        )
 
 
 @pytest.fixture
-def gsheet_feeder(setup_module) -> GsheetsFeeder:
-    with patch("gspread.service_account"):
-        feeder = setup_module(
-            "gsheet_feeder",
-            {
+def gsheet_feeder(setup_module, mocker) -> GsheetsFeeder:
+    config: dict = {
                 "service_account": "dummy.json",
                 "sheet": "test-auto-archiver",
                 "sheet_id": None,
@@ -46,9 +42,13 @@ def gsheet_feeder(setup_module) -> GsheetsFeeder:
                 "allow_worksheets": set(),
                 "block_worksheets": set(),
                 "use_sheet_names_in_stored_paths": True,
-            },
-        )
-    feeder.gsheets_client = MagicMock()
+            }
+    mocker.patch("gspread.service_account")
+    feeder = setup_module(
+        "gsheet_feeder",
+        config
+    )
+    feeder.gsheets_client = mocker.MagicMock()
     return feeder
 
 
@@ -129,56 +129,56 @@ def test__set_metadata_with_folder(gsheet_feeder: GsheetsFeeder):
     ],
 )
 def test_open_sheet_with_name_or_id(
-    setup_module, sheet, sheet_id, expected_method, expected_arg, description
+    setup_module, sheet, sheet_id, expected_method, expected_arg, description, mocker
 ):
     """Ensure open_sheet() correctly opens by name or ID based on configuration."""
-    with patch("gspread.service_account") as mock_service_account:
-        mock_client = MagicMock()
-        mock_service_account.return_value = mock_client
-        mock_client.open.return_value = "MockSheet"
-        mock_client.open_by_key.return_value = "MockSheet"
+    mock_service_account = mocker.patch("gspread.service_account")
+    mock_client = mocker.MagicMock()
+    mock_service_account.return_value = mock_client
+    mock_client.open.return_value = "MockSheet"
+    mock_client.open_by_key.return_value = "MockSheet"
 
-        # Setup module with parameterized values
-        feeder = setup_module(
-            "gsheet_feeder",
-            {"service_account": "dummy.json", "sheet": sheet, "sheet_id": sheet_id},
-        )
-        sheet_result = feeder.open_sheet()
-        # Validate the correct method was called
-        getattr(mock_client, expected_method).assert_called_once_with(
-            expected_arg
-        ), f"Failed: {description}"
-        assert sheet_result == "MockSheet", f"Failed: {description}"
+    # Setup module with parameterized values
+    feeder = setup_module(
+        "gsheet_feeder",
+        {"service_account": "dummy.json", "sheet": sheet, "sheet_id": sheet_id},
+    )
+    sheet_result = feeder.open_sheet()
+    # Validate the correct method was called
+    getattr(mock_client, expected_method).assert_called_once_with(
+        expected_arg
+    ), f"Failed: {description}"
+    assert sheet_result == "MockSheet", f"Failed: {description}"
 
 
 @pytest.mark.usefixtures("setup_module")
-def test_open_sheet_with_sheet_id(setup_module):
+def test_open_sheet_with_sheet_id(setup_module, mocker):
     """Ensure open_sheet() correctly opens a sheet by ID."""
-    with patch("gspread.service_account") as mock_service_account:
-        mock_client = MagicMock()
-        mock_service_account.return_value = mock_client
-        mock_client.open_by_key.return_value = "MockSheet"
-        feeder = setup_module(
-            "gsheet_feeder",
-            {"service_account": "dummy.json", "sheet": None, "sheet_id": "ABC123"},
-        )
-        sheet = feeder.open_sheet()
-        mock_client.open_by_key.assert_called_once_with("ABC123")
-        assert sheet == "MockSheet"
+    mock_service_account = mocker.patch("gspread.service_account")
+    mock_client = mocker.MagicMock()
+    mock_service_account.return_value = mock_client
+    mock_client.open_by_key.return_value = "MockSheet"
+    feeder = setup_module(
+        "gsheet_feeder",
+        {"service_account": "dummy.json", "sheet": None, "sheet_id": "ABC123"},
+    )
+    sheet = feeder.open_sheet()
+    mock_client.open_by_key.assert_called_once_with("ABC123")
+    assert sheet == "MockSheet"
 
 
-def test_should_process_sheet(setup_module):
-    with patch("gspread.service_account"):
-        gdb = setup_module(
-            "gsheet_feeder",
-            {
-                "service_account": "dummy.json",
-                "sheet": "TestSheet",
-                "sheet_id": None,
-                "allow_worksheets": {"TestSheet", "Sheet2"},
-                "block_worksheets": {"Sheet3"},
-            },
-        )
+def test_should_process_sheet(setup_module, mocker):
+    mocker.patch("gspread.service_account")
+    gdb = setup_module(
+        "gsheet_feeder",
+        {
+            "service_account": "dummy.json",
+            "sheet": "TestSheet",
+            "sheet_id": None,
+            "allow_worksheets": {"TestSheet", "Sheet2"},
+            "block_worksheets": {"Sheet3"},
+        },
+    )
     assert gdb.should_process_sheet("TestSheet") == True
     assert gdb.should_process_sheet("Sheet3") == False
     # False if allow_worksheets is set

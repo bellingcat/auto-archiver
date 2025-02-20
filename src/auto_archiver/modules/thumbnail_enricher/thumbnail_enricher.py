@@ -42,7 +42,7 @@ class ThumbnailEnricher(Enricher):
                         logger.error(f"error getting duration of video {m.filename}: {e}")
                         return
 
-                num_thumbs = int(min(max(1, duration * self.thumbnails_per_minute), self.max_thumbnails))
+                num_thumbs = int(min(max(1, (duration / 60) * self.thumbnails_per_minute), self.max_thumbnails))
                 timestamps = [duration / (num_thumbs + 1) * i for i in range(1, num_thumbs + 1)]
 
                 thumbnails_media = []

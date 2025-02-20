@@ -1,24 +1,18 @@
 import sys
 import pytest
-from auto_archiver.core.module import get_module_lazy, BaseModule, LazyBaseModule, _LAZY_LOADED_MODULES
+from auto_archiver.core.module import ModuleFactory, LazyBaseModule
+from auto_archiver.core.base_module import BaseModule
 
 @pytest.fixture
 def example_module():
     import auto_archiver
 
+    module_factory = ModuleFactory()
+
     previous_path = auto_archiver.modules.__path__
     auto_archiver.modules.__path__.append("tests/data/test_modules/")
 
-    module = get_module_lazy("example_module")
-    yield module
-    # cleanup
-    try:
-        del module._manifest
-    except AttributeError:
-        pass
-    del _LAZY_LOADED_MODULES["example_module"]
-    sys.modules.pop("auto_archiver.modules.example_module.example_module", None)
-    auto_archiver.modules.__path__ = previous_path
+    return module_factory.get_module_lazy("example_module")
 
 def test_get_module_lazy(example_module):
     assert example_module.name == "example_module"
@@ -46,12 +40,14 @@ def test_module_dependency_check_loads_module(example_module):
     # monkey patch the manifest to include a nonexistnet dependency
     example_module.manifest["dependencies"]["python"] = ["hash_enricher"]
 
+    module_factory = example_module.module_factory
+
     loaded_module = example_module.load({})
     assert loaded_module is not None
 
     # check the dependency is loaded
-    assert _LAZY_LOADED_MODULES["hash_enricher"] is not None
-    assert _LAZY_LOADED_MODULES["hash_enricher"]._instance is not None
+    assert module_factory._lazy_modules["hash_enricher"] is not None
+    assert module_factory._lazy_modules["hash_enricher"]._instance is not None
 
 def test_load_module(example_module):
 
@@ -69,7 +65,7 @@ def test_load_module(example_module):
 @pytest.mark.parametrize("module_name", ["local_storage", "generic_extractor", "html_formatter", "csv_db"])
 def test_load_modules(module_name):
     # test that specific modules can be loaded
-    module = get_module_lazy(module_name)
+    module = ModuleFactory().get_module_lazy(module_name)
     assert module is not None
     assert isinstance(module, LazyBaseModule)
     assert module.name == module_name
@@ -86,7 +82,7 @@ def test_load_modules(module_name):
 
 @pytest.mark.parametrize("module_name", ["local_storage", "generic_extractor", "html_formatter", "csv_db"])
 def test_lazy_base_module(module_name):
-    lazy_module = get_module_lazy(module_name)
+    lazy_module = ModuleFactory().get_module_lazy(module_name)
 
     assert lazy_module is not None
     assert isinstance(lazy_module, LazyBaseModule)

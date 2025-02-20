@@ -1,6 +1,6 @@
 # iterate through all the modules in auto_archiver.modules and turn the __manifest__.py file into a markdown table
 from pathlib import Path
-from auto_archiver.core.module import available_modules
+from auto_archiver.core.module import ModuleFactory
 from auto_archiver.core.base_module import BaseModule
 from ruamel.yaml import YAML
 import io
@@ -41,7 +41,7 @@ def generate_module_docs():
     configs_cheatsheet = "\n## Configuration Options\n"
     configs_cheatsheet += header_row
 
-    for module in sorted(available_modules(with_manifest=True), key=lambda x: (x.requires_setup, x.name)):
+    for module in sorted(ModuleFactory().available_modules(), key=lambda x: (x.requires_setup, x.name)):
         # generate the markdown file from the __manifest__.py file.
 
         manifest = module.manifest
