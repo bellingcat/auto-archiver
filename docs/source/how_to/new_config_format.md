@@ -1,8 +1,8 @@
 # Upgrading to 0.13 Configuration Format
 
-```{note} This how-to is only relevant for people who used Auto-Archiver before February 2025 (versions prior to 0.13).
+```{note} This how-to is only relevant for people who used Auto Archiver before February 2025 (versions prior to 0.13).
 
-If you are new to Auto-Archiver, then you are already using the latest configuration format and this how-to is not relevant for you.
+If you are new to Auto Archiver, then you are already using the latest configuration format and this how-to is not relevant for you.
 ```
 
 Version 0.13 of Auto Archiver has breaking changes in the configuration format, which means earlier configuration formats will not work without slight modifications.
@@ -55,7 +55,7 @@ steps:
     - html_formatter
 ```
 
-```{note} Auto-Archiver still only supports one feeder and formatter, but from v0.13 onwards they must be added to the configuration file as a list.
+```{note} Auto Archiver still only supports one feeder and formatter, but from v0.13 onwards they must be added to the configuration file as a list.
 ```
 
 2. Extractor (formerly Archiver) Steps Settings

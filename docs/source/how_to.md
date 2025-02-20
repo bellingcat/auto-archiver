@@ -1,6 +1,6 @@
 # How-To Guides
 
-The follow pages contain helpful how-to guides for comon use cases of the Auto-Archiver.
+The follow pages contain helpful how-to guides for common use cases of the Auto Archiver.
 ---
 
 ```{toctree}
