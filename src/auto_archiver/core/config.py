@@ -208,7 +208,7 @@ def read_yaml(yaml_filename: str) -> CommentedMap:
         pass
 
     if not config:
-        config = EMPTY_CONFIG
+        config = deepcopy(EMPTY_CONFIG)
 
     return config
 
