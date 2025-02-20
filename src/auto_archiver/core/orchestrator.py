@@ -24,7 +24,6 @@ from .module import ModuleFactory, LazyBaseModule
 from . import validators, Feeder, Extractor, Database, Storage, Formatter, Enricher
 from .consts import MODULE_TYPES
 from auto_archiver.utils.url import check_url_or_raise
-from loguru import logger
 
 if TYPE_CHECKING:
     from .base_module import BaseModule
