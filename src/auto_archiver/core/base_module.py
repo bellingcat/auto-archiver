@@ -56,13 +56,6 @@ class BaseModule(ABC):
         config = deepcopy(config)
         authentication = deepcopy(config.pop('authentication', {}))
 
-        # extract out concatenated sites
-        for key, val in copy(authentication).items():
-            if "," in key:
-                for site in key.split(","):
-                    authentication[site] = val
-                del authentication[key]
-
         self.authentication = authentication
         self.config = config
         for key, val in config.get(self.name, {}).items():

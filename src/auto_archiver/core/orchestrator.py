@@ -6,13 +6,12 @@
 
 from __future__ import annotations
 from typing import Generator, Union, List, Type, TYPE_CHECKING
-from urllib.parse import urlparse
-from ipaddress import ip_address
 import argparse
 import os
 import sys
 from tempfile import TemporaryDirectory
 import traceback
+from copy import copy
 
 from rich_argparse import RichHelpFormatter
 from loguru import logger
@@ -24,6 +23,7 @@ from .config import read_yaml, store_yaml, to_dot_notation, merge_dicts, is_vali
 from .module import ModuleFactory, LazyBaseModule
 from . import validators, Feeder, Extractor, Database, Storage, Formatter, Enricher
 from .consts import MODULE_TYPES
+from auto_archiver.utils.url import check_url_or_raise
 from loguru import logger
 
 if TYPE_CHECKING:
@@ -134,6 +134,9 @@ class ArchivingOrchestrator:
         parsed, unknown = parser.parse_known_args(unused_args)
         # merge the new config with the old one
         config = merge_dicts(vars(parsed), yaml_config)
+
+        # set up the authentication dict as needed
+        config = self.setup_authentication(config)
 
         # clean out args from the base_parser that we don't want in the config
         for key in vars(basic_config):
@@ -287,6 +290,7 @@ class ArchivingOrchestrator:
 
                 if module in invalid_modules:
                     continue
+
                 try:
                     loaded_module: BaseModule = self.module_factory.get_module(module, self.config)
                 except (KeyboardInterrupt, Exception) as e:
@@ -442,8 +446,8 @@ class ArchivingOrchestrator:
 
         original_url = result.get_url().strip()
         try:
-            self.assert_valid_url(original_url)
-        except AssertionError as e:
+            check_url_or_raise(original_url)
+        except ValueError as e:
             logger.error(f"Error archiving URL {original_url}: {e}")
             raise e
 
@@ -503,26 +507,26 @@ class ArchivingOrchestrator:
                 logger.error(f"ERROR database {d.name}: {e}: {traceback.format_exc()}")
 
         return result
+    
 
-    def assert_valid_url(self, url: str) -> bool:
+    def setup_authentication(self, config: dict) -> dict:
         """
-        Blocks localhost, private, reserved, and link-local IPs and all non-http/https schemes.
+        Setup authentication for all modules that require it
+
+        Split up strings into multiple sites if they are comma separated
         """
-        assert url.startswith("http://") or url.startswith("https://"), f"Invalid URL scheme"
 
-        parsed = urlparse(url)
-        assert parsed.scheme in ["http", "https"], f"Invalid URL scheme"
-        assert parsed.hostname, f"Invalid URL hostname"
-        assert parsed.hostname != "localhost", f"Invalid URL"
+        authentication = config.get('authentication', {})
 
-        try:  # special rules for IP addresses
-            ip = ip_address(parsed.hostname)
-        except ValueError: pass
-        else:
-            assert ip.is_global, f"Invalid IP used"
-            assert not ip.is_reserved, f"Invalid IP used"
-            assert not ip.is_link_local, f"Invalid IP used"
-            assert not ip.is_private, f"Invalid IP used"
+        # extract out concatenated sites
+        for key, val in copy(authentication).items():
+            if "," in key:
+                for site in key.split(","):
+                    authentication[site] = val
+                del authentication[key]
+        
+        config['authentication'] = authentication
+        return config
 
     # Helper Properties
 
