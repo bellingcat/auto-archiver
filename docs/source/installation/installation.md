@@ -1,7 +1,7 @@
 # Installing Auto Archiver
 
 ```{toctree}
-:depth: 1
+:maxdepth: 1
 :hidden:
 
 configurations.md

@@ -527,6 +527,7 @@ class ArchivingOrchestrator:
         for key, val in copy(authentication).items():
             if "," in key:
                 for site in key.split(","):
+                    site = site.strip()
                     authentication[site] = val
                 del authentication[key]
         

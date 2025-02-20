@@ -13,7 +13,7 @@ auto-archiver [options] -- URL1 URL2 ...
 ```
 
 ```{toctree}
-:depth: 1
+:maxdepth: 1
 :glob:
 :hidden:
 autogen/feeder/*

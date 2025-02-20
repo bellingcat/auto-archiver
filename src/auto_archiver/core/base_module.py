@@ -85,6 +85,8 @@ class BaseModule(ABC):
         * api_key: str - the API key to use for login\n
         * api_secret: str - the API secret to use for login\n
         * cookie: str - a cookie string to use for login (specific to this site)\n
+        * cookies_file: str - the path to a cookies file to use for login (specific to this site)\n
+        * cookies_from_browser: str - the name of the browser to extract cookies from (specitic for this site)\n
         """
         # TODO: think about if/how we can deal with sites that have multiple domains (main one is x.com/twitter.com)
         # for now the user must enter them both, like "x.com,twitter.com" in their config. Maybe we just hard-code?
