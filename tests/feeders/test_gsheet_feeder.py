@@ -9,7 +9,7 @@ from auto_archiver.core import Metadata, Feeder
 def test_setup_without_sheet_and_sheet_id(setup_module, mocker):
     # Ensure setup() raises AssertionError if neither sheet nor sheet_id is set.
     mocker.patch("gspread.service_account")
-    with pytest.raises(AssertionError):
+    with pytest.raises(ValueError):
         setup_module(
             "gsheet_feeder",
             {"service_account": "dummy.json", "sheet": None, "sheet_id": None},

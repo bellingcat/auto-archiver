@@ -23,7 +23,7 @@ A default `orchestration.yaml` will be created for you the first time you run au
 
 ## Configuring from the Command Line
 
-You can run auto-archiver directy from the command line, without the need for a configuration file, command line arguments are parsed using the format `module_name.config_value`. For example, a config value of `api_key` in the `instagram_extractor` module would be passed on the command line with the flag `--instagram_extractor.api_key=API_KEY`.
+You can run auto-archiver directly from the command line, without the need for a configuration file, command line arguments are parsed using the format `module_name.config_value`. For example, a config value of `api_key` in the `instagram_extractor` module would be passed on the command line with the flag `--instagram_extractor.api_key=API_KEY`.
 
 The command line arguments are useful for testing or editing config values and enabling/disabling modules on the fly. When you are happy with your settings, you can store them back in your configuration file by passing the `-s/--store` flag on the command line.
 

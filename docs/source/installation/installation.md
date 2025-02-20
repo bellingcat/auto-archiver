@@ -1,10 +1,11 @@
 # Installing Auto Archiver
 
 ```{toctree}
-:depth: 1
+:maxdepth: 1
 :hidden:
 
 configurations.md
+authentication.md
 config_cheatsheet.md
 ```
 
@@ -14,7 +15,7 @@ There are 3  main ways to use the auto-archiver:
 3. Developer Install: [see the developer guidelines](../development/developer_guidelines)
 
 
-But **you always need a configuration/orchestration file**, which is where you'll configure where/what/how to archive. Make sure you read [orchestration](#orchestration).
+But **you always need a configuration/orchestration file**, which is where you'll configure where/what/how to archive. Make sure you read the [](configurations) page.
 
 
 ## Installing with Docker

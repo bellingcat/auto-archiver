@@ -9,7 +9,7 @@
 
 Overview <self>
 contributing
-installation/installation.rst
+installation/installation
 core_modules.md
 how_to
 development/developer_guidelines

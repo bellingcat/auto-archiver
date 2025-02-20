@@ -8,7 +8,7 @@ The default (enabled) databases are the CSV Database and the Console Database.
 ```
 
 ```{toctree}
-:depth: 1
+:maxdepth: 1
 :hidden:
 :glob:
 autogen/database/*

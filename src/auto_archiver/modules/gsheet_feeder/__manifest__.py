@@ -35,7 +35,7 @@
                 "replaywebpage": "replaywebpage",
             },
             "help": "names of columns in the google sheet (stringified JSON object)",
-            "type": "auto_archiver.utils.json_loader",
+            "type": "json_loader",
         },
         "allow_worksheets": {
             "default": set(),

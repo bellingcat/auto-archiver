@@ -1,7 +1,7 @@
 {
-    "name": "WACZ Enricher",
+    "name": "WACZ Enricher (and Extractor)",
     "type": ["enricher", "extractor"],
-    "entry_point": "wacz_enricher::WaczExtractorEnricher",
+    "entry_point": "wacz_extractor_enricher::WaczExtractorEnricher",
     "requires_setup": True,
     "dependencies": {
         "python": [

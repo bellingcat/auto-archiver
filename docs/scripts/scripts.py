@@ -68,7 +68,7 @@ def generate_module_docs():
             config_yaml = {}
             for key, value in manifest['configs'].items():
                 type = value.get('type', 'string')
-                if type == 'auto_archiver.utils.json_loader':
+                if type == 'json_loader':
                     value['type'] = 'json'
                 elif type == 'str':
                     type = "string"
