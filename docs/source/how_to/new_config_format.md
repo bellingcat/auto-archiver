@@ -42,10 +42,11 @@ The feeder and formatter settings have been changed from a single string to a li
 - `steps.formatter (string)` → `steps.formatters (list)`
 
 Example:
-```{yaml}
+
+```{code} yaml
+
 steps:
    feeder: cli_feeder
-   - telegram_archiver
    ...
    formatter: html_formatter
 
@@ -54,8 +55,8 @@ steps:
    feeders:
    - cli_feeder
    ...
-    formatters:
-    - html_formatter
+   formatters:
+   - html_formatter
 ```
 
 ```{note} Auto Archiver still only supports one feeder and formatter, but from v0.13 onwards they must be added to the configuration file as a list.
@@ -63,7 +64,7 @@ steps:
 
 #### b) Extractor (formerly Archiver) Steps Settings
 
-With v0.13 of Auto Archiver, the `archivers` have been renamed to `extractors` to reflect the work they actually do - extract information from a URL. Change the configuration by renaming:
+With v0.13 of Auto Archiver, `archivers` have been renamed to `extractors` to better reflect what they actually do - extract information from a URL. Change the configuration by renaming:
 
 - `steps.archivers` → `steps.extractors`
 
@@ -74,10 +75,10 @@ The names of the actual modules have also changed, so for any extractor modules 
 - `wayback_archiver_enricher` → `wayback_extractor_enricher`
 - `vk_archiver` → `vk_extractor`
 
-Additionally, the `youtube_archiver` has been renamed to `generic_extractor` and should be considere the default/fallback extractor. Read more about the [generic extractor](../modules/autogen/extractor/generic_extractor.md).
+Additionally, the `youtube_archiver` has been renamed to `generic_extractor` as it is considered the default/fallback extractor. Read more about the [generic extractor](../modules/autogen/extractor/generic_extractor.md).
 
 Example:
-```{yaml}
+```{code} yaml
 steps:
    ...
    archivers:
@@ -115,10 +116,10 @@ Then, you can generate a `simple` or `full` config using:
 >>> # generate a simple config
 >>> auto-archiver 
 >>> # config will be written to orchestration.yaml
->>>
+>>> 
 >>> # generate a full config
 >>> auto-archiver --mode=full
->>>
+>>> 
 ```
 
 After this, copy over any settings from your old config to the new config.

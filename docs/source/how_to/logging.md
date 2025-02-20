@@ -1,10 +1,26 @@
-# Logging
+# Keeping Logs
 
 Auto Archiver's logs can be helpful for debugging problematic archiving processes. This guide shows you how to use the logs to 
 
 ## Setting up logging
 
 Logging settings can be set on the command line or using the orchestration config file ([learn more](../installation/configuration)). A special `logging` section defines the logging options.
+
+#### Enabling or Disabling Logging
+
+Logging to the console is enabled by default. If you want to globally disable Auto Archiver's logging, then you can set `enabled: false` in your `logging` config:
+
+```{code} yaml
+
+...
+logging:
+   enabled: false
+...
+```
+
+```{note}
+This will disable all logs from Auto Archiver, but it does not disable logs for other tools that the Auto Archiver uses (for example: yt-dlp, firefox or ffmpeg). These logs will still appear in your console.
+```
 
 #### Logging Level
 
