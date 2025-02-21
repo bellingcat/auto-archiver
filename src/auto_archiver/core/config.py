@@ -18,7 +18,7 @@ from typing import Any, List, Type, Tuple
 
 _yaml: YAML = YAML()
 
-DEFAULT_CONFIG_FILE = "orchestration.yaml"
+DEFAULT_CONFIG_FILE = "secrets/orchestration.yaml"
 
 EMPTY_CONFIG = _yaml.load("""
 # Auto Archiver Configuration
