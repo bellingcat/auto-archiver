@@ -33,3 +33,4 @@ dist*
 docs/_build/
 docs/source/autoapi/
 docs/source/modules/autogen/
+scripts/settings_page.html
