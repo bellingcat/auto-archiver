@@ -134,7 +134,6 @@ class LazyBaseModule:
 
     """
     name: str
-    type: list
     description: str
     path: str
     module_factory: ModuleFactory
@@ -147,6 +146,10 @@ class LazyBaseModule:
         self.name = module_name
         self.path = path
         self.module_factory = factory
+
+    @property
+    def type(self):
+        return self.manifest['type']
 
     @property
     def entry_point(self):
@@ -186,7 +189,6 @@ class LazyBaseModule:
                 logger.error(f"Error loading manifest from file {self.path}/{MANIFEST_FILE}: {e}")
             
         self._manifest = manifest
-        self.type = manifest['type']
         self._entry_point = manifest['entry_point']
         self.description = manifest['description']
         self.version = manifest['version']

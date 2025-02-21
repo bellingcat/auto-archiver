@@ -6,7 +6,7 @@
 1. Update the version number in [version.py](src/auto_archiver/version.py)
 2. Go to github releases > new release > use `vx.y.z` for matching version notation
    1. package is automatically updated in pypi
-   2. docker image is automatically pushed to dockerhup
+   2. docker image is automatically pushed to dockerhub
 
 
 

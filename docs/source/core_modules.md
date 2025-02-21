@@ -1,8 +1,8 @@
 # Module Documentation
 
-These pages describe the core modules that come with `auto-archiver` and provide the main functionality for archiving websites on the internet. There are five core module types:
+These pages describe the core modules that come with Auto Archiver and provide the main functionality for archiving websites on the internet. There are five core module types:
 
-1. Feeders - these 'feed' information (the URLs) from various sources to the `auto-archiver` for processing
+1. Feeders - these 'feed' information (the URLs) from various sources to the Auto Archiver for processing
 2. Extractors - these 'extract' the page data for a given URL that is fed in by a feeder
 3. Enrichers - these 'enrich' the data extracted in the previous step with additional information
 4. Storage - these 'store' the data in a persistent location (on disk, Google Drive etc.)
