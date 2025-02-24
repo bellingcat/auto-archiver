@@ -11,7 +11,7 @@ from ruamel.yaml import YAML, CommentedMap, add_representer
 from loguru import logger
 
 from copy import deepcopy
-from .module import BaseModule
+from auto_archiver.core.consts import MODULE_TYPES
 
 from typing import Any, List, Type, Tuple
 
@@ -21,7 +21,7 @@ EMPTY_CONFIG = _yaml.load("""
 # Auto Archiver Configuration
 # Steps are the modules that will be run in the order they are defined
 
-steps:""" + "".join([f"\n   {module}s: []" for module in BaseModule.MODULE_TYPES]) + \
+steps:""" + "".join([f"\n   {module}s: []" for module in MODULE_TYPES]) + \
 """
 
 # Global configuration
@@ -48,6 +48,7 @@ authentication: {}
 
 logging:
   level: INFO
+
 """)
 # note: 'logging' is explicitly added above in order to better format the config file
 
@@ -128,6 +129,11 @@ def merge_dicts(dotdict: dict, yaml_dict: CommentedMap) -> CommentedMap:
                 yaml_subdict[key] = value
                 continue
 
+            if key == 'steps':
+                for module_type, modules in value.items():
+                    # overwrite the 'steps' from the config file with the ones from the CLI
+                    yaml_subdict[key][module_type] = modules
+
             if is_dict_type(value):
                 update_dict(value, yaml_subdict[key])
             elif is_list_type(value):
@@ -136,7 +142,6 @@ def merge_dicts(dotdict: dict, yaml_dict: CommentedMap) -> CommentedMap:
                 yaml_subdict[key] = value
 
     update_dict(from_dot_notation(dotdict), yaml_dict)
-
     return yaml_dict
 
 def read_yaml(yaml_filename: str) -> CommentedMap:
@@ -157,6 +162,11 @@ def read_yaml(yaml_filename: str) -> CommentedMap:
 
 def store_yaml(config: CommentedMap, yaml_filename: str) -> None:
     config_to_save = deepcopy(config)
+
+    auth_dict = config_to_save.get("authentication", {})
+    if auth_dict and auth_dict.get('load_from_file'):
+        # remove all other values from the config, don't want to store it in the config file
+        auth_dict = {"load_from_file": auth_dict["load_from_file"]}
 
     config_to_save.pop('urls', None)
     with open(yaml_filename, "w", encoding="utf-8") as outf:

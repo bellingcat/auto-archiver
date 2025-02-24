@@ -1,3 +1,7 @@
+"""
+Base module for Storage modules – modular components that store media objects in various locations.
+"""
+
 from __future__ import annotations
 from abc import abstractmethod
 from typing import IO
@@ -10,8 +14,14 @@ from auto_archiver.utils.misc import random_str
 
 from auto_archiver.core import Media, BaseModule, Metadata
 from auto_archiver.modules.hash_enricher.hash_enricher import HashEnricher
-from auto_archiver.core.module import get_module
+
 class Storage(BaseModule):
+    
+    """
+    Base class for implementing storage modules in the media archiving framework.
+
+    Subclasses must implement the `get_cdn_url` and `uploadf` methods to define their behavior.
+    """
 
     def store(self, media: Media, url: str, metadata: Metadata=None) -> None:
         if media.is_stored(in_storage=self): 
@@ -22,10 +32,18 @@ class Storage(BaseModule):
         media.add_url(self.get_cdn_url(media))
 
     @abstractmethod
-    def get_cdn_url(self, media: Media) -> str: pass
+    def get_cdn_url(self, media: Media) -> str:
+        """
+        Returns the URL of the media object stored in the CDN.
+        """
+        pass
 
     @abstractmethod
-    def uploadf(self, file: IO[bytes], key: str, **kwargs: dict) -> bool: pass
+    def uploadf(self, file: IO[bytes], key: str, **kwargs: dict) -> bool:
+        """
+        Uploads (or saves) a file to the storage service/location.
+        """
+        pass
 
     def upload(self, media: Media, **kwargs) -> bool:
         logger.debug(f'[{self.__class__.__name__}] storing file {media.filename} with key {media.key}')
@@ -56,7 +74,7 @@ class Storage(BaseModule):
             filename = random_str(24)
         elif filename_generator == "static":
             # load the hash_enricher module
-            he = get_module(HashEnricher, self.config)
+            he = self.module_factory.get_module(HashEnricher, self.config)
             hd = he.calculate_hash(media.filename)
             filename = hd[:24]
         else:

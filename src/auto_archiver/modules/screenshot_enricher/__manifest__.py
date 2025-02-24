@@ -4,7 +4,6 @@
     "requires_setup": True,
     "dependencies": {
         "python": ["loguru", "selenium"],
-        "bin": ["chromedriver"]
     },
     "configs": {
             "width": {"default": 1280, "help": "width of the screenshots"},

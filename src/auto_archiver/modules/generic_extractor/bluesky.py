@@ -39,11 +39,11 @@ class Bluesky(GenericDropin):
         for image_media in image_medias:
             url = media_url.format(image_media['image']['ref']['$link'], post['author']['did'])
             image_media = archiver.download_from_url(url)
-            media.append(image_media)
+            media.append(Media(image_media))
         for video_media in video_medias:
             url = media_url.format(video_media['ref']['$link'], post['author']['did'])
             video_media = archiver.download_from_url(url)
-            media.append(video_media)
+            media.append(Media(video_media))
         return media
 
 

@@ -23,7 +23,6 @@ class TestTwitterApiExtractor(TestExtractorBase):
     }
 
     @pytest.mark.parametrize("url, expected", [
-        ("https://t.co/yl3oOJatFp", "https://www.bellingcat.com/category/resources/"),  # t.co URL
         ("https://x.com/bellingcat/status/1874097816571961839", "https://x.com/bellingcat/status/1874097816571961839"), # x.com urls unchanged
         ("https://twitter.com/bellingcat/status/1874097816571961839", "https://twitter.com/bellingcat/status/1874097816571961839"), # twitter urls unchanged
         ("https://twitter.com/bellingcat/status/1874097816571961839?s=20&t=3d0g4ZQis7dCbSDg-mE7-w", "https://twitter.com/bellingcat/status/1874097816571961839?s=20&t=3d0g4ZQis7dCbSDg-mE7-w"), # don't strip params from twitter urls (changed Jan 2025)
@@ -32,7 +31,11 @@ class TestTwitterApiExtractor(TestExtractorBase):
     ])
     def test_sanitize_url(self, url, expected):
         assert expected == self.extractor.sanitize_url(url)
-    
+
+    @pytest.mark.download
+    def test_sanitize_url_download(self):
+        assert "https://www.bellingcat.com/category/resources/" == self.extractor.sanitize_url("https://t.co/yl3oOJatFp")
+
     @pytest.mark.parametrize("url, exptected_username, exptected_tweetid", [
         ("https://twitter.com/bellingcat/status/1874097816571961839", "bellingcat", "1874097816571961839"),
         ("https://x.com/bellingcat/status/1874097816571961839", "bellingcat", "1874097816571961839"),

@@ -1,5 +1,5 @@
 """
-Enrichers are modular components that enhance archived content by adding
+Base module for Enrichers – modular components that enhance archived content by adding
 context, metadata, or additional processing.
 
 These add additional information to the context, such as screenshots, hashes, and metadata.
@@ -13,7 +13,16 @@ from abc import abstractmethod
 from auto_archiver.core import Metadata, BaseModule
 
 class Enricher(BaseModule):
-    """Base classes and utilities for enrichers in the Auto-Archiver system."""
+    """Base classes and utilities for enrichers in the Auto-Archiver system.
+    
+    Enricher modules must implement the `enrich` method to define their behavior.
+    """
 
     @abstractmethod
-    def enrich(self, to_enrich: Metadata) -> None: pass
+    def enrich(self, to_enrich: Metadata) -> None:
+        """
+        Enriches a Metadata object with additional information or context.
+
+        Takes the metadata object to enrich as an argument and modifies it in place, returning None.
+        """
+        pass

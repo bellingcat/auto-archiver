@@ -1,13 +1,13 @@
+# Note this isn't a feeder, but contained as utility of the gsheet feeder module
 import pytest
-from unittest.mock import MagicMock
 
 from auto_archiver.modules.gsheet_feeder import GWorksheet
 
 
 class TestGWorksheet:
     @pytest.fixture
-    def mock_worksheet(self):
-        mock_ws = MagicMock()
+    def mock_worksheet(self, mocker):
+        mock_ws = mocker.MagicMock()
         mock_ws.get_values.return_value = [
             ["Link", "Archive Status", "Archive Location", "Archive Date"],
             ["url1", "archived", "filepath1", "2023-01-01"],
@@ -136,8 +136,8 @@ class TestGWorksheet:
         assert gworksheet.to_a1(row, col) == expected
 
     # Test empty worksheet
-    def test_empty_worksheet_initialization(self):
-        mock_ws = MagicMock()
+    def test_empty_worksheet_initialization(self, mocker):
+        mock_ws = mocker.MagicMock()
         mock_ws.get_values.return_value = []
         g = GWorksheet(mock_ws)
         assert g.headers == []

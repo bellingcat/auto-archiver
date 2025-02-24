@@ -10,7 +10,7 @@
         "sheet": {"default": None, "help": "name of the sheet to archive"},
         "sheet_id": {
             "default": None,
-            "help": "(alternative to sheet name) the id of the sheet to archive",
+            "help": "the id of the sheet to archive (alternative to 'sheet' config)",
         },
         "header": {"default": 1, "help": "index of the header row (starts at 1)", "type": "int"},
         "service_account": {

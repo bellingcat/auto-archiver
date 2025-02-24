@@ -1,6 +1,6 @@
 import datetime, os, yt_dlp, pysubs2
 import importlib
-from typing import Type
+from typing import Generator, Type
 from yt_dlp.extractor.common import InfoExtractor
 
 from loguru import logger
@@ -11,7 +11,7 @@ from auto_archiver.core import Metadata, Media
 class GenericExtractor(Extractor):
     _dropins = {}
 
-    def suitable_extractors(self, url: str) -> list[str]:
+    def suitable_extractors(self, url: str) -> Generator[str, None, None]:
         """
         Returns a list of valid extractors for the given URL"""
         for info_extractor in yt_dlp.YoutubeDL()._ies.values():
@@ -116,7 +116,7 @@ class GenericExtractor(Extractor):
 
     def get_metadata_for_post(self, info_extractor: Type[InfoExtractor], url: str, ydl: yt_dlp.YoutubeDL) -> Metadata:
         """
-        Calls into the ytdlp InfoExtract subclass to use the prive _extract_post method to get the post metadata.
+        Calls into the ytdlp InfoExtract subclass to use the private _extract_post method to get the post metadata.
         """
 
         ie_instance = info_extractor(downloader=ydl)
@@ -266,6 +266,11 @@ class GenericExtractor(Extractor):
     def download(self, item: Metadata) -> Metadata:
         url = item.get_url()
 
+        #TODO: this is a temporary hack until this issue is closed: https://github.com/yt-dlp/yt-dlp/issues/11025
+        if url.startswith("https://ya.ru"):
+            url = url.replace("https://ya.ru", "https://yandex.ru")
+            item.set("replaced_url", url)
+
 
         ydl_options = {'outtmpl': os.path.join(self.tmp_dir, f'%(id)s.%(ext)s'), 
                        'quiet': False, 'noplaylist': not self.allow_playlist ,
@@ -275,7 +280,7 @@ class GenericExtractor(Extractor):
         
         # set up auth
         auth = self.auth_for_site(url, extract_cookies=False)
-        # order of importance: username/pasword -> api_key -> cookie -> cookie_from_browser -> cookies_file
+        # order of importance: username/pasword -> api_key -> cookie -> cookies_from_browser -> cookies_file
         if auth:
             if 'username' in auth and 'password' in auth:
                 logger.debug(f'Using provided auth username and password for {url}')
@@ -284,7 +289,7 @@ class GenericExtractor(Extractor):
             elif 'cookie' in auth:
                 logger.debug(f'Using provided auth cookie for {url}')
                 yt_dlp.utils.std_headers['cookie'] = auth['cookie']
-            elif 'cookie_from_browser' in auth:
+            elif 'cookies_from_browser' in auth:
                 logger.debug(f'Using extracted cookies from browser {self.cookies_from_browser} for {url}')
                 ydl_options['cookiesfrombrowser'] = auth['cookies_from_browser']
             elif 'cookies_file' in auth:

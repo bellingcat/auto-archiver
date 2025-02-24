@@ -60,3 +60,15 @@ def test_run_auto_archiver_empty_file(caplog, autoarchiver, orchestration_file):
 
     # should treat an empty file as if there is no file at all
     assert " No URLs provided. Please provide at least one URL via the com" in caplog.text
+
+def test_call_autoarchiver_main(caplog, monkeypatch, tmp_path):
+    from auto_archiver.__main__ import main
+
+    # monkey patch to change the current working directory, so that we don't use the user's real config file
+    monkeypatch.chdir(tmp_path)
+    with monkeypatch.context() as m:
+        m.setattr(sys, "argv", ["auto-archiver"])
+        with pytest.raises(SystemExit):
+            main()
+
+    assert "No URLs provided. Please provide at least one" in caplog.text
