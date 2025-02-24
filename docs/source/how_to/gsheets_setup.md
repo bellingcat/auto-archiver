@@ -1,8 +1,18 @@
 # Using Google Sheets
 
-The `--gsheet_feeder.sheet` property is the name of the Google Sheet to check for URLs. 
-This sheet must have been shared with the Google Service account used by `gspread`. 
-This sheet must also have specific columns (case-insensitive) in the `header` - see the [Gsheet Feeder Docs](modules/autogen/feeder/gsheet_feeder.md) for more info. The default names of these columns and their purpose is:
+This guide explains how to set up Google Sheets to process URLs automatically and then store the archiving status back into the Google sheet. It is broadly split into 3 steps:
+
+1. Setting up your Google Sheet
+2. Setting up a service account so Auto Archiver can access the sheet
+3. Setting the Auto Archiver settings
+
+### 1. Setting up your Google Sheet
+
+Any Google sheet must have at least *one* column, with the name 'link' (you can change this name afterwards). This is the column with the URLs that you want the Auto Archiver to archive. Your sheet can have many other columns that the Auto Archiver can use, and you can also include any other columns for your own personal use.
+
+We recommend copying [this template Google Sheet](https://docs.google.com/spreadsheets/d/1NJZo_XZUBKTI1Ghlgi4nTPVvCfb0HXAs6j5tNGas72k/edit?usp=sharing) as a starting point for your project.
+
+Here's an overview of all the columns, and what a complete sheet would look like.
 
 Inputs:
 
@@ -27,9 +37,77 @@ For example, this is a spreadsheet configured with all of the columns for the au
 
 ![A screenshot of a Google Spreadsheet with column headers defined as above, and several Youtube and Twitter URLs in the "Link" column](../demo-before.png)
 
-Now the auto archiver can be invoked, with this command in this example: `docker run --rm -v $PWD/secrets:/app/secrets -v $PWD/local_archive:/app/local_archive bellingcat/auto-archiver:dockerize --config secrets/orchestration-global.yaml --gsheet_feeder.sheet "Auto archive test 2023-2"`. Note that the sheet name has been overridden/specified in the command line invocation.
+We'll change the name of the 'Destination Folder' column in step 3.
 
-When the auto archiver starts running, it updates the "Archive status" column.
+## 2. Setting up your Service Account
+
+Once your Google Sheet is set up, you need to create what's called a 'service account' that will allow the Auto Archiver to access it.
+
+To do this, follow the steps in [this guide](https://gspread.readthedocs.io/en/latest/oauth2.html) all the way up until step 8. You should have downloaded a file called `service_account.json` and shared the Google Sheet with the log 'client_email' email address in this file.
+
+Once you've downloaded the file, save it to `secrets/service_account.json`
+
+## 3. Setting up the configuration file
+
+Now that you've set up your Google sheet, and you've set up the service account so Auto Archiver can access the sheet, the final step is to set your configuration.
+
+First, make sure you have `gsheet_feeder` set in the `steps.feeders` section of your config. If you wish to store the results of the archiving process back in your Google sheet, make sure to also set the `ghseet_db` settig in the `steps.databases` section. Here's how this might look:
+
+```{code} yaml
+steps:
+    feeders:
+    - gsheet_feeder
+    ...
+    databases:
+    - gsheet_db # optional, if you also want to store the results in the Google sheet
+    ...
+```
+
+Next, set up the `gsheet_feeder` configuration settings in the 'Configurations' part of the config `orchestration.yaml` file. Open up he file, and set the `gsheet_feeder.sheet` setting or the `gsheet_feeder.sheet_id` setting. The `sheet` should be the name of your sheet, as it shows in the top left of the sheet. For example, the sheet [here](https://docs.google.com/spreadsheets/d/1NJZo_XZUBKTI1Ghlgi4nTPVvCfb0HXAs6j5tNGas72k/edit?gid=0#gid=0) is called 'Public Auto Archiver template'.
+
+Here's how this might look:
+
+```{code} yaml
+...
+gsheet_feeder:
+    sheet: 'My Awesome Sheet'
+    ...
+```
+
+You can also pass these settings directly on the command line without having to edit the file, here'a an example of how to do that (using docker):
+
+`docker run --rm -v $PWD/secrets:/app/secrets -v $PWD/local_archive:/app/local_archive bellingcat/auto-archiver:dockerize --gsheet_feeder.sheet "Auto archive test 2023-2"`. 
+
+Here, the sheet name has been overridden/specified in the command line invocation.
+
+### 3a. (Optional) Changing the column names
+
+In step 1, we said we would change the name of the 'Destination Folder'. Perhaps you don't like this name, or already have a sheet with a different name. In our example here, we want to name this column 'Save Folder'. To do this, we need to edit the `ghseet_feeder.column` setting in the configuration file. For more information on this setting, see the [Gsheet Feeder docs](../modules/autogen/feeder/gsheet_feeder.md#configuration-options). We will first copy the default settings from the Gsheet Feeder docs for the 'column' settings, and then edit the 'Destination Folder' section to rename it 'Save Folder'. Our final configuration section looks like:
+
+```{code} yaml
+...
+gsheet_feeder:
+    sheet: 'My Awesome Sheet'
+    columns:
+      url: link
+      status: archive status
+      folder: save folder # <-- note how this value has been changed
+      archive: archive location
+      date: archive date
+      thumbnail: thumbnail
+      timestamp: upload timestamp
+      title: upload title
+      text: text content
+      screenshot: screenshot
+      hash: hash
+      pdq_hash: perceptual hashes
+      wacz: wacz
+      replaywebpage: replaywebpage
+```
+
+## Viewing the Results after archiving
+
+With the `ghseet_db` installed, once you start running the Auto Archiver, it will updates the "Archive status" column.
 
 ![A screenshot of a Google Spreadsheet with column headers defined as above, and several Youtube and Twitter URLs in the "Link" column. The auto archiver has added "archive in progress" to one of the status columns.](../demo-progress.png)
 

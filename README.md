@@ -25,9 +25,11 @@ Read the [article about Auto Archiver on bellingcat.com](https://www.bellingcat.
 
 View the [Installation Guide](https://auto-archiver.readthedocs.io/en/latest/installation/installation.html) for full instructions
 
+**Advanced:**
+
 To get started quickly using Docker:
 
-`docker pull bellingcat/auto-archiver && docker run`
+`docker pull bellingcat/auto-archiver && docker run --rm -v secrets:/app/secrets bellingcat/auto-archiver --config secrets/orchestration.yaml`
 
 Or pip:
 

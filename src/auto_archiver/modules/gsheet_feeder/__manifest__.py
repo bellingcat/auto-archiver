@@ -15,7 +15,8 @@
         "header": {"default": 1, "help": "index of the header row (starts at 1)", "type": "int"},
         "service_account": {
             "default": "secrets/service_account.json",
-            "help": "service account JSON file path",
+            "help": "service account JSON file path. Learn how to create one: https://gspread.readthedocs.io/en/latest/oauth2.html",
+            "required": True,
         },
         "columns": {
             "default": {
@@ -34,16 +35,16 @@
                 "wacz": "wacz",
                 "replaywebpage": "replaywebpage",
             },
-            "help": "names of columns in the google sheet (stringified JSON object)",
+            "help": "Custom names for the columns in your Google sheet. If you don't want to use the default column names, change them with this setting",
             "type": "json_loader",
         },
         "allow_worksheets": {
             "default": set(),
-            "help": "(CSV) only worksheets whose name is included in allow are included (overrides worksheet_block), leave empty so all are allowed",
+            "help": "A list of worksheet names that should be processed (overrides worksheet_block), leave empty so all are allowed",
         },
         "block_worksheets": {
             "default": set(),
-            "help": "(CSV) explicitly block some worksheets from being processed",
+            "help": "A list of worksheet names for worksheets that should be explicitly blocked from being processed",
         },
         "use_sheet_names_in_stored_paths": {
             "default": True,
@@ -64,8 +65,10 @@
     - Ensures only rows with valid URLs and unprocessed statuses are included for archival.
     - Supports organizing stored files into folder paths based on sheet and worksheet names.
 
-    ### Notes
-    - Requires a Google Service Account JSON file for authentication. Suggested location is `secrets/gsheets_service_account.json`.
-    - Create the sheet using the template provided in the docs.
+    ### Setup
+    - Requires a Google Service Account JSON file for authentication, which should be stored in `secrets/gsheets_service_account.json`.
+    To set up a service account, follow the instructions [here](https://gspread.readthedocs.io/en/latest/oauth2.html).
+    - Define the `sheet` or `sheet_id` configuration to specify the sheet to archive.
+    - Customize the column names in your Google sheet using the `columns` configuration.
     """,
 }
