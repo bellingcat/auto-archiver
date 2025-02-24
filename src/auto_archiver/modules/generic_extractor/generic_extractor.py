@@ -170,8 +170,8 @@ class GenericExtractor(Extractor):
                 logger.error(f"Error processing entry {entry}: {e}")
 
         return self.add_metadata(data, info_extractor, url, result)
-    
-    def dropin_for_name(self, dropin_name: str, additional_paths = [], package=__package__) -> Type[InfoExtractor]:
+
+    def dropin_for_name(self, dropin_name: str, additional_paths=[], package=__package__) -> Type[InfoExtractor]:
         dropin_name = dropin_name.lower()
 
         if dropin_name == "generic":
@@ -179,6 +179,7 @@ class GenericExtractor(Extractor):
             return None
 
         dropin_class_name = dropin_name.title()
+
         def _load_dropin(dropin):
             dropin_class = getattr(dropin, dropin_class_name)()
             return self._dropins.setdefault(dropin_name, dropin_class)
@@ -202,7 +203,7 @@ class GenericExtractor(Extractor):
                 return _load_dropin(dropin)
             except (FileNotFoundError, ModuleNotFoundError):
                 pass
-        
+
         # fallback to loading the dropins within auto-archiver
         try:
             return _load_dropin(importlib.import_module(f".{dropin_name}", package=package))
@@ -241,7 +242,8 @@ class GenericExtractor(Extractor):
                 # don't clutter the logs with issues about the 'generic' extractor not having a dropin
                 return False
 
-            logger.debug(f'Issue using "{info_extractor.IE_NAME}" extractor to download video (error: {repr(e)}), attempting to use extractor to get post data instead')
+            logger.debug(
+                f'Issue using "{info_extractor.IE_NAME}" extractor to download video (error: {repr(e)}), attempting to use extractor to get post data instead')
             try:
                 result = self.get_metadata_for_post(info_extractor, url, ydl)
             except (yt_dlp.utils.DownloadError, yt_dlp.utils.ExtractorError) as post_e:
@@ -273,15 +275,22 @@ class GenericExtractor(Extractor):
 
 
         ydl_options = {'outtmpl': os.path.join(self.tmp_dir, f'%(id)s.%(ext)s'), 
-                       'quiet': False, 'noplaylist': not self.allow_playlist ,
-                       'writesubtitles': self.subtitles,'writeautomaticsub': self.subtitles,
-                       "live_from_start": self.live_from_start, "proxy": self.proxy,
-                       "max_downloads": self.max_downloads, "playlistend": self.max_downloads}
-        
-        # set up auth
-        auth = self.auth_for_site(url, extract_cookies=False)
+                       'quiet': False,
+                       'noplaylist': not self.allow_playlist ,
+                       'writesubtitles': self.subtitles,
+                       'writeautomaticsub': self.subtitles,
+                       "live_from_start": self.live_from_start,
+                       "proxy": self.proxy,
+                       "max_downloads": self.max_downloads,
+                       "playlistend": self.max_downloads,
+                       # TODO
+                       # "verbose": True,
+                       # "print_traffic": True,
+        }
 
-        # order of importance: username/pasword -> api_key -> cookie -> cookies_from_browser -> cookies_file
+        # Set up auth
+        auth = self.auth_for_site(url, extract_cookies=False)
+        # order of importance: username/password -> api_key -> cookie -> cookies_from_browser -> cookies_file
         if auth:
             if 'username' in auth and 'password' in auth:
                 logger.debug(f'Using provided auth username and password for {url}')
@@ -297,12 +306,46 @@ class GenericExtractor(Extractor):
                 logger.debug(f'Using cookies from file {auth["cookies_file"]} for {url}')
                 ydl_options['cookiefile'] = auth['cookies_file']
 
+
+        # Applying user-defined extractor_args
+        if self.extractor_args:
+            logger.info(f"Applying user-defined extractor_args")
+            ydl_options.setdefault('extractor_args', {})
+
+        for key, args in self.extractor_args.items():
+            logger.debug(f"Setting extractor_args: {key}")
+            if isinstance(args, dict):
+                # Site specific arguments (e.g., youtube: somekey=value)
+                ydl_options['extractor_args'].setdefault(key, {}).update(args)
+            else:
+                # General extractor_args (e.g., somekey=value)
+                ydl_options['extractor_args'][key] = args
+
+
         ydl = yt_dlp.YoutubeDL(ydl_options) # allsubtitles and subtitleslangs not working as expected, so default lang is always "en"
 
         for info_extractor in self.suitable_extractors(url):
-            result = self.download_for_extractor(info_extractor, url, ydl)
-            if result:
-                return result
-
+            try:
+                result = self.download_for_extractor(info_extractor, url, ydl)
+                if result:
+                    return result
+            except yt_dlp.utils.ExtractorError as e:
+                # TODO Does this catch empty/ incomplete failures?
+                if self.extractor_args:
+                    logger.warning(
+                        f"Extraction with custom extractor_args failed for {url}. Retrying without extractor_args...")
+                    # Remove extractor_args and try without
+                    del ydl_options['extractor_args']
+                    ydl = yt_dlp.YoutubeDL(ydl_options)
+                    try:
+                        result = self.download_for_extractor(info_extractor, url, ydl)
+                        if result:
+                            return result
+                    except Exception as retry_error:
+                        logger.error(f"Extraction failed for {url} after retrying: {retry_error}")
+                        return False
+                else:
+                    logger.error(f"Extraction failed for {url}: {e}")
+                    return False
 
         return False
