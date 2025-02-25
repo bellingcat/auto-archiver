@@ -134,7 +134,6 @@ class LazyBaseModule:
 
     """
     name: str
-    type: list
     description: str
     path: str
     module_factory: ModuleFactory
@@ -147,6 +146,10 @@ class LazyBaseModule:
         self.name = module_name
         self.path = path
         self.module_factory = factory
+
+    @property
+    def type(self):
+        return self.manifest['type']
 
     @property
     def entry_point(self):
@@ -183,10 +186,9 @@ class LazyBaseModule:
             try:
                 manifest.update(ast.literal_eval(f.read()))
             except (ValueError, TypeError, SyntaxError, MemoryError, RecursionError) as e:
-                logger.error(f"Error loading manifest from file {self.path}/{MANIFEST_FILE}: {e}")
+                raise ValueError(f"Error loading manifest from file {self.path}/{MANIFEST_FILE}: {e}")
             
         self._manifest = manifest
-        self.type = manifest['type']
         self._entry_point = manifest['entry_point']
         self.description = manifest['description']
         self.version = manifest['version']
@@ -254,7 +256,7 @@ class LazyBaseModule:
         instance.module_factory = self.module_factory
         
         # merge the default config with the user config
-        default_config = dict((k, v['default']) for k, v in self.configs.items() if v.get('default'))
+        default_config = dict((k, v['default']) for k, v in self.configs.items() if 'default' in v)
 
         config[self.name] = default_config  | config.get(self.name, {})
         instance.config_setup(config)

@@ -3,9 +3,11 @@
 import sys
 import os
 from importlib.metadata import metadata
+from datetime import datetime
 
 sys.path.append(os.path.abspath('../scripts'))
 from scripts import generate_module_docs
+from auto_archiver.version import __version__
 
 # -- Project Hooks -----------------------------------------------------------
 # convert the module __manifest__.py files into markdown files
@@ -15,7 +17,8 @@ generate_module_docs()
 # -- Project information -----------------------------------------------------
 package_metadata = metadata("auto-archiver")
 project = package_metadata["name"]
-authors = "Bellingcat"
+copyright = str(datetime.now().year)
+author = "Bellingcat"
 release = package_metadata["version"]
 language = 'en'
 
@@ -32,7 +35,7 @@ extensions = [
 ]
 
 templates_path = ['_templates']
-exclude_patterns = []
+exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", ""]
 
 
 # -- AutoAPI Configuration ---------------------------------------------------
@@ -76,6 +79,14 @@ source_suffix = {
 html_theme = 'sphinx_book_theme'
 html_static_path = ["../_static"]
 html_css_files = ["custom.css"]
+html_title = f"Auto Archiver v{__version__}"
+html_logo = "bc.png"
+html_theme_options = {
+    "repository_url": "https://github.com/bellingcat/auto-archiver",
+    "use_repository_button": True,
+}
+
+
 
 copybutton_prompt_text = r">>> |\.\.\."
 copybutton_prompt_is_regexp = True
