@@ -6,7 +6,9 @@ from auto_archiver.__main__ import main
 
 @pytest.fixture
 def orchestration_file_path(tmp_path):
-    return (tmp_path / "example_orch.yaml").as_posix()
+    folder = tmp_path / "secrets"
+    folder.mkdir(exist_ok=True)
+    return (folder / "example_orch.yaml").as_posix()
 
 @pytest.fixture
 def orchestration_file(orchestration_file_path):
@@ -28,6 +30,7 @@ def autoarchiver(tmp_path, monkeypatch, request):
                 logger.add(sys.stderr)
 
         request.addfinalizer(cleanup)
+        (tmp_path / "secrets").mkdir(exist_ok=True)
 
         # change dir to tmp_path
         monkeypatch.chdir(tmp_path)
@@ -66,6 +69,7 @@ def test_call_autoarchiver_main(caplog, monkeypatch, tmp_path):
 
     # monkey patch to change the current working directory, so that we don't use the user's real config file
     monkeypatch.chdir(tmp_path)
+    (tmp_path / "secrets").mkdir(exist_ok=True)
     with monkeypatch.context() as m:
         m.setattr(sys, "argv", ["auto-archiver"])
         with pytest.raises(SystemExit):

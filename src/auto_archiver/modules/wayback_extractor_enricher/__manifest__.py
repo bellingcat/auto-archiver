@@ -1,5 +1,5 @@
 {
-    "name": "Wayback Machine Enricher",
+    "name": "Wayback Machine Enricher (and Extractor)",
     "type": ["enricher", "extractor"],
     "entry_point": "wayback_extractor_enricher::WaybackExtractorEnricher",
     "requires_setup": True,

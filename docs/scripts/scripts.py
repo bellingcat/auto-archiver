@@ -3,6 +3,7 @@ from pathlib import Path
 from auto_archiver.core.module import ModuleFactory
 from auto_archiver.core.base_module import BaseModule
 from ruamel.yaml import YAML
+from ruamel.yaml.comments import CommentedMap
 import io
 
 MODULES_FOLDER = Path(__file__).parent.parent.parent.parent / "src" / "auto_archiver" / "modules"
@@ -30,6 +31,7 @@ steps:
 ...
 
 {config_string}
+
 """
 
 def generate_module_docs():
@@ -38,8 +40,9 @@ def generate_module_docs():
     modules_by_type = {}
 
     header_row = "| " + " | ".join(TABLE_HEADER) + "|\n" + "| --- " * len(TABLE_HEADER) + "|\n"
-    configs_cheatsheet = "\n## Configuration Options\n"
-    configs_cheatsheet += header_row
+    global_table = "\n## Configuration Options\n" + header_row
+
+    global_yaml = yaml.load("""\n# Module configuration\nplaceholder: {}""")
 
     for module in sorted(ModuleFactory().available_modules(), key=lambda x: (x.requires_setup, x.name)):
         # generate the markdown file from the __manifest__.py file.
@@ -66,19 +69,30 @@ def generate_module_docs():
 
             config_table = header_row
             config_yaml = {}
+
+            global_yaml[module.name] = CommentedMap()
+            global_yaml.yaml_set_comment_before_after_key(module.name, f"\n\n{module.display_name} configuration options")
+
+
             for key, value in manifest['configs'].items():
                 type = value.get('type', 'string')
-                if type == 'auto_archiver.utils.json_loader':
+                if type == 'json_loader':
                     value['type'] = 'json'
                 elif type == 'str':
                     type = "string"
                 
                 default = value.get('default', '')
                 config_yaml[key] = default
+
+                global_yaml[module.name][key] = default
+
+                if value.get('help', ''):
+                    global_yaml[module.name].yaml_add_eol_comment(value.get('help', ''), key)
+
                 help = "**Required**. " if value.get('required', False) else "Optional. "
                 help += value.get('help', '')
                 config_table += f"| `{module.name}.{key}` | {help} | {value.get('default', '')} | {type} |\n"
-                configs_cheatsheet += f"| `{module.name}.{key}` | {help} | {default} | {type} |\n"
+                global_table += f"| `{module.name}.{key}` | {help} | {default} | {type} |\n"
             readme_str += "\n## Configuration Options\n"
             readme_str += "\n### YAML\n"
 
@@ -103,8 +117,13 @@ def generate_module_docs():
                 f.write(readme_str)
         generate_index(modules_by_type)
 
+    del global_yaml['placeholder']
+    global_string = io.BytesIO()
+    global_yaml = yaml.dump(global_yaml, global_string)
+    global_string = global_string.getvalue().decode('utf-8')
+    global_yaml = f"```yaml\n{global_string}\n```"
     with open(SAVE_FOLDER / "configs_cheatsheet.md", "w") as f:
-        f.write(configs_cheatsheet)
+        f.write("### Configuration File\n" + global_yaml + "\n### Command Line\n" + global_table)
 
 
 def generate_index(modules_by_type):

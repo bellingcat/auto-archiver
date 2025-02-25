@@ -4,22 +4,42 @@ The Authentication framework for auto-archiver allows you to add login details f
 
 There are two main use cases for authentication:
 * Some websites require some kind of authentication in order to view the content. Examples include Facebook, Telegram etc.
-* Some websites use anti-bot systems to block bot-like tools from accessig the website. Adding real login information to auto-archiver can sometimes bypass this.
+* Some websites use anti-bot systems to block bot-like tools from accessing the website. Adding real login information to auto-archiver can sometimes bypass this.
 
 ## The Authentication Config
 
-You can save your authentication information directly inside your orchestration config file, or as a separate file (for security/multi-deploy purposes). Whether storing your settings inside the orchestration file, or as a separate file, the configuration format is the same.
+You can save your authentication information directly inside your orchestration config file, or as a separate file (for security/multi-deploy purposes). Whether storing your settings inside the orchestration file, or as a separate file, the configuration format is the same. Currently, auto-archiver supports the following authentication types:
+
+**Username & Password:**
+- `username`: str - the username to use for login
+- `password`: str - the password to use for login
+
+**API**
+- `api_key`: str - the API key to use for login
+- `api_secret`: str - the API secret to use for login
+  
+**Cookies**
+- `cookie`: str - a cookie string to use for login (specific to this site)
+- `cookies_from_browser`: str - load cookies from this browser, for this site only.
+- `cookies_file`: str - load cookies from this file, for this site only.
+
+```{note} 
+
+The Username & Password, and API settings only work with the Generic Extractor. Other modules (like the screenshot enricher) can only use the `cookies` options. Furthermore, many sites can still detect bots and block username/password logins. Twitter/X and YouTube are two prominent ones that block username/password logging.
+
+One of the 'Cookies' options is recommended for the most robust archiving.
+```
 
 ```{code} yaml
 authentication:
    # optional file to load authentication information from, for security or multi-system deploy purposes
    load_from_file: path/to/authentication/file.txt
-   # optional setting to load cookies from the named browser on the system.
+   # optional setting to load cookies from the named browser on the system, for **ALL** websites
    cookies_from_browser: firefox
-   # optional setting to load cookies from a cookies.txt/cookies.jar file. See note below on extracting these
+   # optional setting to load cookies from a cookies.txt/cookies.jar file, for **ALL** websites. See note below on extracting these
    cookies_file: path/to/cookies.jar
 
-   twitter.com,x.com:
+   mysite.com:
       username: myusername
       password: 123
     
@@ -29,14 +49,9 @@ authentication:
     othersite.com:
        api_key: 123
        api_secret: 1234
-
-# All available options:
-  # - username: str - the username to use for login
-  # - password: str - the password to use for login
-  # - api_key: str - the API key to use for login
-  # - api_secret: str - the API secret to use for login
-  # - cookie: str - a cookie string to use for login (specific to this site)
+  
 ```
+
 
 ### Recommendations for authentication
 

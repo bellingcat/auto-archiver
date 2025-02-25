@@ -7,6 +7,7 @@ flexible setup in various environments.
 
 import argparse
 from ruamel.yaml import YAML, CommentedMap, add_representer
+import json
 
 from loguru import logger
 
@@ -17,10 +18,12 @@ from typing import Any, List, Type, Tuple
 
 _yaml: YAML = YAML()
 
+DEFAULT_CONFIG_FILE = "secrets/orchestration.yaml"
+
 EMPTY_CONFIG = _yaml.load("""
 # Auto Archiver Configuration
-# Steps are the modules that will be run in the order they are defined
 
+# Steps are the modules that will be run in the order they are defined
 steps:""" + "".join([f"\n   {module}s: []" for module in MODULE_TYPES]) + \
 """
 
@@ -52,6 +55,57 @@ logging:
 """)
 # note: 'logging' is explicitly added above in order to better format the config file
 
+
+# Arg Parse Actions/Classes
+class AuthenticationJsonParseAction(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+
+        try:
+            auth_dict = json.loads(values)
+            setattr(namespace, self.dest, auth_dict)
+        except json.JSONDecodeError as e:
+            raise argparse.ArgumentTypeError(f"Invalid JSON input for argument '{self.dest}': {e}")
+
+        def load_from_file(path):
+            try:
+                with open(path, 'r') as f:
+                    try:
+                        auth_dict = json.load(f)
+                    except json.JSONDecodeError:
+                        f.seek(0)
+                        # maybe it's yaml, try that
+                        auth_dict = _yaml.load(f)
+                    if auth_dict.get('authentication'):
+                        auth_dict = auth_dict['authentication']
+                    auth_dict['load_from_file']  = path
+                    return auth_dict
+            except:
+                return None
+
+        if isinstance(auth_dict, dict) and auth_dict.get('from_file'):
+            auth_dict = load_from_file(auth_dict['from_file'])
+        elif isinstance(auth_dict, str):
+            # if it's a string
+            auth_dict = load_from_file(auth_dict)
+        
+        if not isinstance(auth_dict, dict):
+            raise argparse.ArgumentTypeError("Authentication must be a dictionary of site names and their authentication methods")
+        global_options = ['cookies_from_browser', 'cookies_file', 'load_from_file']
+        for key, auth in auth_dict.items():
+            if key in global_options:
+                continue
+            if not isinstance(key, str) or not isinstance(auth, dict):
+                raise argparse.ArgumentTypeError(f"Authentication must be a dictionary of site names and their authentication methods. Valid global configs are {global_options}")
+
+        setattr(namespace, self.dest, auth_dict)
+
+
+class UniqueAppendAction(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        for value in values:
+            if value not in getattr(namespace, self.dest):
+                getattr(namespace, self.dest).append(value)
+
 class DefaultValidatingParser(argparse.ArgumentParser):
 
     def error(self, message):
@@ -82,6 +136,7 @@ class DefaultValidatingParser(argparse.ArgumentParser):
 
         return super().parse_known_args(args, namespace)
 
+# Config Utils
 
 def to_dot_notation(yaml_conf: CommentedMap | dict) -> dict:
     dotdict = {}
@@ -153,8 +208,8 @@ def read_yaml(yaml_filename: str) -> CommentedMap:
         pass
 
     if not config:
-        config = EMPTY_CONFIG
-    
+        config = deepcopy(EMPTY_CONFIG)
+
     return config
 
 # TODO: make this tidier/find a way to notify of which keys should not be stored
@@ -171,3 +226,6 @@ def store_yaml(config: CommentedMap, yaml_filename: str) -> None:
     config_to_save.pop('urls', None)
     with open(yaml_filename, "w", encoding="utf-8") as outf:
         _yaml.dump(config_to_save, outf)
+
+def is_valid_config(config: CommentedMap) -> bool:
+    return config and config != EMPTY_CONFIG
