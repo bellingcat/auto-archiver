@@ -50,8 +50,6 @@ class BaseModule(ABC):
 
     def config_setup(self, config: dict):
 
-        authentication = config.get('authentication', {})
-
         # this is important. Each instance is given its own deepcopied config, so modules cannot
         # change values to affect other modules
         config = deepcopy(config)
