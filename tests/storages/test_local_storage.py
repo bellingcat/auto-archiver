@@ -9,11 +9,12 @@ from auto_archiver.modules.local_storage import LocalStorage
 
 
 @pytest.fixture
-def local_storage(setup_module) -> LocalStorage:
+def local_storage(setup_module, tmp_path) -> LocalStorage:
+    save_to = tmp_path / "local_archive"
     configs: dict = {
         "path_generator": "flat",
         "filename_generator": "static",
-        "save_to": "./local_archive",
+        "save_to": str(save_to),
         "save_absolute": False,
     }
     return setup_module("local_storage", configs)
