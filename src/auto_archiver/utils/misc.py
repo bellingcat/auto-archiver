@@ -1,11 +1,12 @@
-import os
+import hashlib
 import json
+import os
 import uuid
 from datetime import datetime, timezone
-import requests
-import hashlib
-from loguru import logger
+from dateutil.parser import parse as parse_dt
 
+import requests
+from loguru import logger
 
 def mkdir_if_not_exists(folder):
     if not os.path.exists(folder):
@@ -72,26 +73,23 @@ def calculate_file_hash(filename: str, hash_algo = hashlib.sha256, chunksize: in
             hash.update(buf)
     return hash.hexdigest()
 
-def get_current_datetime_iso() -> str:
-    return datetime.now(timezone.utc).replace(tzinfo=timezone.utc).isoformat()
 
-
-def get_datetime_from_str(dt_str: str, fmt: str | None = None) -> datetime | None:
+def get_datetime_from_str(dt_str: str, fmt: str | None = None, dayfirst=True) -> datetime | None:
     # parse a datetime string with option of passing a specific format
     try:
-        return datetime.strptime(dt_str, fmt) if fmt else datetime.fromisoformat(dt_str)
+        return datetime.strptime(dt_str, fmt) if fmt else parse_dt(dt_str, dayfirst=dayfirst)
     except ValueError as e:
         logger.error(f"Unable to parse datestring {dt_str}: {e}")
         return None
 
 
-def get_timestamp(ts, utc=True, iso=True) -> str | datetime | None:
+def get_timestamp(ts, utc=True, iso=True, dayfirst=True) -> str | datetime | None:
     # Consistent parsing of timestamps
     # If utc=True, the timezone is set to UTC,
     # if iso=True, the output is an iso string
     if not ts: return
     try:
-        if isinstance(ts, str): ts = datetime.fromisoformat(ts)
+        if isinstance(ts, str): ts = parse_dt(ts, dayfirst=dayfirst)
         if isinstance(ts, (int, float)): ts = datetime.fromtimestamp(ts)
         if utc: ts = ts.replace(tzinfo=timezone.utc)
         if iso: return ts.isoformat()
