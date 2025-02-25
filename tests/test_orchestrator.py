@@ -78,7 +78,7 @@ def test_help(orchestrator, basic_parser, capsys):
     assert "--logging.level" in logs
 
     # individual module configs
-    assert "--gsheet_feeder.sheet_id" in logs
+    assert "--gsheet_feeder_db.sheet_id" in logs
 
 
 def test_add_custom_modules_path(orchestrator, test_args):
@@ -154,22 +154,22 @@ def test_load_modules_from_commandline(orchestrator, test_args):
     assert orchestrator.formatters[0].name == "example_module"
 
 def test_load_settings_for_module_from_commandline(orchestrator, test_args):
-    args = test_args + ["--feeders", "gsheet_feeder", "--gsheet_feeder.sheet_id", "123", "--gsheet_feeder.service_account", "tests/data/test_service_account.json"]
+    args = test_args + ["--feeders", "gsheet_feeder_db", "--gsheet_feeder_db.sheet_id", "123", "--gsheet_feeder_db.service_account", "tests/data/test_service_account.json"]
 
     orchestrator.setup(args)
 
     assert len(orchestrator.feeders) == 1
-    assert orchestrator.feeders[0].name == "gsheet_feeder"
-    assert orchestrator.config['gsheet_feeder']['sheet_id'] == "123"
+    assert orchestrator.feeders[0].name == "gsheet_feeder_db"
+    assert orchestrator.config['gsheet_feeder_db']['sheet_id'] == "123"
 
 
 def test_multiple_orchestrator(test_args):
 
-    o1_args = test_args + ["--feeders", "gsheet_feeder", "--gsheet_feeder.service_account", "tests/data/test_service_account.json"]
+    o1_args = test_args + ["--feeders", "gsheet_feeder_db", "--gsheet_feeder_db.service_account", "tests/data/test_service_account.json"]
     o1 = ArchivingOrchestrator()
 
     with pytest.raises(ValueError) as exit_error:
-        # this should fail because the gsheet_feeder requires a sheet_id / sheet
+        # this should fail because the gsheet_feeder_db requires a sheet_id / sheet
         o1.setup(o1_args)
 
 

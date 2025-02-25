@@ -2,8 +2,7 @@ from datetime import datetime, timezone
 import pytest
 
 from auto_archiver.core import Metadata, Media
-from auto_archiver.modules.gsheet_db import GsheetsDb
-from auto_archiver.modules.gsheet_feeder import GWorksheet
+from auto_archiver.modules.gsheet_feeder_db import GsheetsFeederDB, GWorksheet
 
 
 @pytest.fixture
@@ -54,11 +53,18 @@ def mock_media(mocker):
 
 @pytest.fixture
 def gsheets_db(mock_gworksheet, setup_module, mocker):
-    db = setup_module("gsheet_db", {
-        "allow_worksheets": "set()",
-        "block_worksheets": "set()",
-        "use_sheet_names_in_stored_paths": "True",
-    })
+    mocker.patch("gspread.service_account")
+    config: dict = {
+        "sheet": "testsheet",
+        "sheet_id": None,
+        "header": 1,
+        "service_account": "test/service_account.json",
+        "columns": {'url': 'link', 'status': 'archive status', 'folder': 'destination folder', 'archive': 'archive location', 'date': 'archive date', 'thumbnail': 'thumbnail', 'timestamp': 'upload timestamp', 'title': 'upload title', 'text': 'text content', 'screenshot': 'screenshot', 'hash': 'hash', 'pdq_hash': 'perceptual hashes', 'wacz': 'wacz', 'replaywebpage': 'replaywebpage'},
+        "allow_worksheets": set(),
+        "block_worksheets": set(),
+        "use_sheet_names_in_stored_paths": True,
+    }
+    db = setup_module("gsheet_feeder_db", config)
     db._retrieve_gsheet = mocker.MagicMock(return_value=(mock_gworksheet, 1))
     return db
 
@@ -108,13 +114,13 @@ def test_aborted(gsheets_db, mock_metadata, mock_gworksheet):
 
 
 def test_done(gsheets_db, metadata, mock_gworksheet, expected_calls, mocker):
-    mocker.patch("auto_archiver.modules.gsheet_db.gsheet_db.get_current_timestamp", return_value='2025-02-01T00:00:00+00:00')
+    mocker.patch("auto_archiver.modules.gsheet_feeder_db.gsheet_feeder_db.get_current_timestamp", return_value='2025-02-01T00:00:00+00:00')
     gsheets_db.done(metadata)
     mock_gworksheet.batch_set_cell.assert_called_once_with(expected_calls)
 
 
 def test_done_cached(gsheets_db, metadata, mock_gworksheet, mocker):
-    mocker.patch("auto_archiver.modules.gsheet_db.gsheet_db.get_current_timestamp", return_value='2025-02-01T00:00:00+00:00')
+    mocker.patch("auto_archiver.modules.gsheet_feeder_db.gsheet_feeder_db.get_current_timestamp", return_value='2025-02-01T00:00:00+00:00')
     gsheets_db.done(metadata, cached=True)
 
     # Verify the status message includes "[cached]"
@@ -125,7 +131,7 @@ def test_done_cached(gsheets_db, metadata, mock_gworksheet, mocker):
 def test_done_missing_media(gsheets_db, metadata, mock_gworksheet, mocker):
     # clear media from metadata
     metadata.media = []
-    mocker.patch("auto_archiver.modules.gsheet_db.gsheet_db.get_current_timestamp", return_value='2025-02-01T00:00:00+00:00')
+    mocker.patch("auto_archiver.modules.gsheet_feeder_db.gsheet_feeder_db.get_current_timestamp", return_value='2025-02-01T00:00:00+00:00')
     gsheets_db.done(metadata)
     # Verify nothing media-related gets updated
     call_args = mock_gworksheet.batch_set_cell.call_args[0][0]

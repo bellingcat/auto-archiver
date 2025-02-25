@@ -1,7 +1,7 @@
 # Note this isn't a feeder, but contained as utility of the gsheet feeder module
 import pytest
 
-from auto_archiver.modules.gsheet_feeder import GWorksheet
+from auto_archiver.modules.gsheet_feeder_db import GWorksheet
 
 
 class TestGWorksheet:
