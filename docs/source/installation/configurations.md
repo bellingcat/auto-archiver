@@ -1,13 +1,18 @@
 
 # Configuration
 
-This section of the documentation provides guidelines for configuring the tool.
+The recommended way to configure auto-archiver for first-time users is to [run the Auto Archiver](setup.md#running) and have it auto-generate a default configuration for you. Then, if needed, you can edit the configuration file using one of the following methods.
 
-## Configuring using a file
 
-The recommended way to configure auto-archiver for long-term and deployed projects is a configuration file, typically called `orchestration.yaml`. This is a YAML file containing all the settings for your entire workflow.
+## 1. Configuration file
 
-The structure of orchestration file is split into 2 parts: `steps` (what [steps](../flow_overview.md) to use) and `configurations` (settings for different modules), here's a simplification:
+The configuration file is typically called `orchestration.yaml` and stored in the `secrets` folder on your desktop. The configuration file contains all the settings for your entire Auto Archiver workflow in one easy-to-find place.
+
+If you want to have Auto Archiver run with the recommended 'basic' setup, 
+
+### Advanced Configuration
+
+The structure of orchestration file is split into 2 parts: `steps` (what [steps](../flow_overview.md) to use) and `configurations` (settings for individual modules).
 
 A default `orchestration.yaml` will be created for you the first time you run auto-archiver (without any arguments). Here's what it looks like:
 
@@ -21,9 +26,9 @@ A default `orchestration.yaml` will be created for you the first time you run au
 
 </details>
 
-## Configuring from the Command Line
+## 2. Command Line configuration
 
-You can run auto-archiver directy from the command line, without the need for a configuration file, command line arguments are parsed using the format `module_name.config_value`. For example, a config value of `api_key` in the `instagram_extractor` module would be passed on the command line with the flag `--instagram_extractor.api_key=API_KEY`.
+You can run auto-archiver directly from the command line, without the need for a configuration file, command line arguments are parsed using the format `module_name.config_value`. For example, a config value of `api_key` in the `instagram_extractor` module would be passed on the command line with the flag `--instagram_extractor.api_key=API_KEY`.
 
 The command line arguments are useful for testing or editing config values and enabling/disabling modules on the fly. When you are happy with your settings, you can store them back in your configuration file by passing the `-s/--store` flag on the command line.
 

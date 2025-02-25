@@ -1,11 +1,49 @@
 import re
 from urllib.parse import urlparse, urlunparse
+from ipaddress import ip_address
 
 
 AUTHWALL_URLS = [
     re.compile(r"https:\/\/t\.me(\/c)\/(.+)\/(\d+)"), # telegram private channels
     re.compile(r"https:\/\/www\.instagram\.com"), # instagram
 ]
+
+
+def check_url_or_raise(url: str) -> bool | ValueError:
+    """
+    Blocks localhost, private, reserved, and link-local IPs and all non-http/https schemes.
+    """
+
+    
+    if not (url.startswith("http://") or url.startswith("https://")):
+        raise ValueError(f"Invalid URL scheme for url {url}")
+    
+    parsed = urlparse(url)
+    if not parsed.hostname:
+        raise ValueError(f"Invalid URL hostname for url {url}")
+    
+    if parsed.hostname == "localhost":
+        raise ValueError(f"Localhost URLs cannot be parsed for security reasons (for url {url})")
+    
+    if parsed.scheme not in ["http", "https"]:
+        raise ValueError(f"Invalid URL scheme, only http and https supported (for url {url})")
+
+    try:  # special rules for IP addresses
+        ip = ip_address(parsed.hostname)
+    except ValueError:
+        pass
+    
+    else:
+        if not ip.is_global:
+            raise ValueError(f"IP address {ip} is not globally reachable")
+        if ip.is_reserved:
+            raise ValueError(f"Reserved IP address {ip} used")
+        if ip.is_link_local:
+            raise ValueError(f"Link-local IP address {ip} used")
+        if ip.is_private:
+            raise ValueError(f"Private IP address {ip} used")
+    
+    return True
 
 def domain_for_url(url: str) -> str:
     """

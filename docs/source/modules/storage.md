@@ -8,7 +8,7 @@ The default is to store the files downloaded (e.g. images, videos) in a local di
 ```
 
 ```{toctree}
-:depth: 1
+:maxdepth: 1
 :hidden:
 :glob:
 autogen/storage/*

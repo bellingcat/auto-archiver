@@ -18,7 +18,7 @@ def wacz_enricher(setup_module, mock_binary_dependencies):
         "socks_proxy_port": None,
         "proxy_server": None,
     }
-    wacz = setup_module("wacz_enricher", configs)
+    wacz = setup_module("wacz_extractor_enricher", configs)
     return wacz
 
 
