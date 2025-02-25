@@ -59,6 +59,7 @@ dependencies = [
     "ruamel-yaml (>=0.18.10,<0.19.0)",
     "yt-dlp-get-pot (>=0.3.0,<0.4.0)",
     "yt-dlp-getpot-wpc (>=0.1.2,<0.2.0)",
+    "bgutil-ytdlp-pot-provider (>=0.7.3,<0.8.0)",
 ]
 
 [tool.poetry.group.dev.dependencies]
