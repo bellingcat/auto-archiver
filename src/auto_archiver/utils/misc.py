@@ -61,11 +61,7 @@ def random_str(length: int = 32) -> str:
     return str(uuid.uuid4()).replace("-", "")[:length]
 
 
-def json_loader(cli_val):
-    return json.loads(cli_val)
-
-
-def calculate_file_hash(filename: str, hash_algo=hashlib.sha256, chunksize: int = 16000000) -> str:
+def calculate_file_hash(filename: str, hash_algo = hashlib.sha256, chunksize: int = 16000000) -> str:
     hash = hash_algo()
     with open(filename, "rb") as f:
         while True:

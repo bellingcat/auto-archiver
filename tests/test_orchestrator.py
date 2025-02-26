@@ -4,7 +4,7 @@ from argparse import ArgumentParser, ArgumentTypeError
 from auto_archiver.core.orchestrator import ArchivingOrchestrator
 from auto_archiver.version import __version__
 from auto_archiver.core.config import read_yaml, store_yaml
-
+from auto_archiver.core import Metadata
 
 TEST_ORCHESTRATION = "tests/data/test_orchestration.yaml"
 TEST_MODULES = "tests/data/test_modules/"
@@ -161,3 +161,25 @@ def test_load_settings_for_module_from_commandline(orchestrator, test_args):
     assert len(orchestrator.feeders) == 1
     assert orchestrator.feeders[0].name == "gsheet_feeder"
     assert orchestrator.config['gsheet_feeder']['sheet_id'] == "123"
+
+
+def test_multiple_orchestrator(test_args):
+
+    o1_args = test_args + ["--feeders", "gsheet_feeder", "--gsheet_feeder.service_account", "tests/data/test_service_account.json"]
+    o1 = ArchivingOrchestrator()
+
+    with pytest.raises(ValueError) as exit_error:
+        # this should fail because the gsheet_feeder requires a sheet_id / sheet
+        o1.setup(o1_args)
+
+
+
+    o2_args = test_args + ["--feeders", "example_module"]
+    o2 = ArchivingOrchestrator()
+    o2.setup(o2_args)
+
+    assert o2.feeders[0].name == "example_module"
+
+    output: Metadata = list(o2.feed())
+    assert len(output) == 1
+    assert output[0].get_url() == "https://example.com"

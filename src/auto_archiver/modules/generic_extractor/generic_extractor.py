@@ -280,6 +280,7 @@ class GenericExtractor(Extractor):
         
         # set up auth
         auth = self.auth_for_site(url, extract_cookies=False)
+
         # order of importance: username/pasword -> api_key -> cookie -> cookies_from_browser -> cookies_file
         if auth:
             if 'username' in auth and 'password' in auth:
@@ -290,11 +291,11 @@ class GenericExtractor(Extractor):
                 logger.debug(f'Using provided auth cookie for {url}')
                 yt_dlp.utils.std_headers['cookie'] = auth['cookie']
             elif 'cookies_from_browser' in auth:
-                logger.debug(f'Using extracted cookies from browser {self.cookies_from_browser} for {url}')
+                logger.debug(f'Using extracted cookies from browser {auth["cookies_from_browser"]} for {url}')
                 ydl_options['cookiesfrombrowser'] = auth['cookies_from_browser']
             elif 'cookies_file' in auth:
-                logger.debug(f'Using cookies from file {self.cookie_file} for {url}')
-                ydl_options['cookiesfile'] = auth['cookies_file']
+                logger.debug(f'Using cookies from file {auth["cookies_file"]} for {url}')
+                ydl_options['cookiefile'] = auth['cookies_file']
 
         ydl = yt_dlp.YoutubeDL(ydl_options) # allsubtitles and subtitleslangs not working as expected, so default lang is always "en"
 
