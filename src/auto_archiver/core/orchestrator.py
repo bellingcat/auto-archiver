@@ -75,7 +75,6 @@ class ArchivingOrchestrator:
 
     def setup_complete_parser(self, basic_config: dict, yaml_config: dict, unused_args: list[str]) -> None:
 
-
         # modules parser to get the overridden 'steps' values
         modules_parser = argparse.ArgumentParser(
             add_help=False,
@@ -114,10 +113,6 @@ class ArchivingOrchestrator:
         elif basic_config.mode == 'simple':
             simple_modules = [module for module in self.module_factory.available_modules() if not module.requires_setup]
             self.add_individual_module_args(simple_modules, parser)
-
-            # for simple mode, we use the cli_feeder and any modules that don't require setup
-            if not yaml_config['steps']['feeders']:
-                yaml_config['steps']['feeders'] = ['cli_feeder']
 
             # add them to the config
             for module in simple_modules:
@@ -171,9 +166,6 @@ class ArchivingOrchestrator:
         if not parser:
             parser = self.parser
 
-        # allow passing URLs directly on the command line
-        parser.add_argument('urls', nargs='*', default=[], help='URL(s) to archive, either a single URL or a list of urls, should not come from config.yaml')
-
         parser.add_argument('--authentication', dest='authentication', help='A dictionary of sites and their authentication methods \
                                                                             (token, username etc.) that extractors can use to log into \
                                                                             a website. If passing this on the command line, use a JSON string. \
@@ -193,7 +185,11 @@ class ArchivingOrchestrator:
             modules = self.module_factory.available_modules()
         
         for module in modules:
-
+            if module.name == 'cli_feeder':
+                # special case. For the CLI feeder, allow passing URLs directly on the command line without setting --cli_feeder.urls=
+                parser.add_argument('urls', nargs='*', default=[], help='URL(s) to archive, either a single URL or a list of urls, should not come from config.yaml')
+                continue
+                
             if not module.configs:
                 # this module has no configs, don't show anything in the help
                 # (TODO: do we want to show something about this module though, like a description?)
@@ -277,27 +273,6 @@ class ArchivingOrchestrator:
                     raise SetupError(f"Only one {module_type} is allowed, found {len(step_items)} {module_type}s. Please remove one of the following from your configuration file: {modules_to_load}")
 
             for module in modules_to_load:
-                if module == 'cli_feeder':
-                    # cli_feeder is a pseudo module, it just takes the command line args for [URLS]
-                    urls = self.config['urls']
-                    if not urls:
-                        raise SetupError("No URLs provided. Please provide at least one URL via the command line, or set up an alternative feeder. Use --help for more information.")
-
-                    def feed(self) -> Generator[Metadata]:
-                        for url in urls:
-                            logger.debug(f"Processing URL: '{url}'")
-                            yield Metadata().set_url(url)
-
-                    pseudo_module = type('CLIFeeder', (Feeder,), {
-                        'name': 'cli_feeder',
-                        'display_name': 'CLI Feeder',
-                        '__iter__': feed
-
-                    })()
-
-                    pseudo_module.__iter__ = feed
-                    step_items.append(pseudo_module)
-                    continue
 
                 if module in invalid_modules:
                     continue
