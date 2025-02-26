@@ -20,7 +20,10 @@ def test_sign_data(setup_module):
     result: TimeStampResponse = tsp.sign_data(tsa_url, data)
     assert isinstance(result, TimeStampResponse)
 
-    
+    cert_chain = tsp.download_certificate(result)
+
+    assert len(cert_chain) == 2
+
     try:
         valid_root = tsp.verify_signed(result, data)
         assert valid_root.subject == "CN=Entrust Root Certification Authority - G2, OU=(c) 2009 Entrust, Inc. - for authorized use only, OU=See www.entrust.net/legal-terms, O=Entrust, Inc., C="
@@ -28,7 +31,6 @@ def test_sign_data(setup_module):
         pytest.fail(f"Verification failed: {e}")
 
     # test downloading the cert
-    cert_chain = tsp.download_and_verify_certificate(result)
 
 def test_tsp_enricher_download_syndication(setup_module, digicert):
     tsp: TimestampingEnricher = setup_module("timestamping_enricher")

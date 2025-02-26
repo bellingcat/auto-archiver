@@ -14,6 +14,7 @@ from rfc3161_client import VerificationError as Rfc3161VerificationError
 from rfc3161_client.base import HashAlgorithm
 from rfc3161_client.tsp import SignedData
 from cryptography import x509
+from cryptography.hazmat.primitives import serialization
 import certifi
 from auto_archiver.core import Enricher
 from auto_archiver.core import Metadata, Media
@@ -106,7 +107,6 @@ class TimestampingEnricher(Enricher):
             raise ValueError(f"No trusted roots found in {trusted_root_path}.")
         
 
-        valid = False
         for certificate in cert_authorities:
             builder = VerifierBuilder()
             builder.add_root_certificate(certificate)
@@ -144,7 +144,7 @@ class TimestampingEnricher(Enricher):
     
     def load_tst_certs(self, tsp_response: TimeStampResponse):
         signed_data: SignedData = tsp_response.signed_data
-        certs = signed_data.certificates
+        return [x509.load_der_x509_certificate(c) for c in signed_data.certificates]
 
     
     def download_certificate(self, tsp_response: TimeStampResponse) -> list[Media]:
@@ -154,10 +154,11 @@ class TimestampingEnricher(Enricher):
 
 
         cert_chain = []
-        for cert in path:
+        for cert in certificates:
             cert_fn = os.path.join(self.tmp_dir, f"{str(cert.serial_number)[:20]}.crt")
+            print(cert_fn)
             with open(cert_fn, "wb") as f:
-                f.write(cert.dump())
-            cert_chain.append(Media(filename=cert_fn).set("subject", cert.subject.native["common_name"]))
+                f.write(cert.public_bytes(encoding=serialization.Encoding.PEM))
+            cert_chain.append(Media(filename=cert_fn).set("subject", cert.subject.get_attributes_for_oid(x509.NameOID.COMMON_NAME)[0].value))
 
         return cert_chain
