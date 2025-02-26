@@ -5,6 +5,11 @@ from auto_archiver.core.metadata import Metadata
 
 class CLIFeeder(Feeder):
 
+    def setup(self) -> None:
+        self.urls = self.config['urls']
+        if not self.urls:
+            raise ValueError("No URLs provided. Please provide at least one URL via the command line, or set up an alternative feeder. Use --help for more information.")
+
     def __iter__(self) -> Metadata:
         urls = self.config['urls']
         for url in urls:
