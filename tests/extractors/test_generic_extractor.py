@@ -68,7 +68,7 @@ class TestGenericExtractor(TestExtractorBase):
         "twitter.com/bellingcat/status/123",
         "https://www.youtube.com/watch?v=1"
     ])
-    def test_download_nonexistend_media(self, make_item, url):
+    def test_download_nonexistent_media(self, make_item, url):
         """
         Test to make sure that the extractor doesn't break on non-existend posts/media
 

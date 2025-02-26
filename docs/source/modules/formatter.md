@@ -6,7 +6,7 @@ Formatter modules are used to format the data extracted from a URL into a specif
 ```
 
 ```{toctree}
-:depth: 1
+:maxdepth: 1
 :hidden:
 :glob:
 autogen/formatter/*
