@@ -1,15 +1,24 @@
 import os
 from loguru import logger
-from tsp_client import TSPSigner, SigningSettings, TSPVerifier
-from tsp_client.algorithms import DigestAlgorithm
-from importlib.metadata import version
-from asn1crypto.cms import ContentInfo
-from certvalidator import CertificateValidator, ValidationContext
-from asn1crypto import pem
-import certifi
 
+from importlib.metadata import version
+
+import requests
+from rfc3161_client import (
+    TimestampRequestBuilder,
+    TimeStampResponse,
+    decode_timestamp_response,
+    VerifierBuilder
+)
+from rfc3161_client import VerificationError as Rfc3161VerificationError
+from rfc3161_client.base import HashAlgorithm
+from rfc3161_client.tsp import SignedData
+from cryptography import x509
+from cryptography.hazmat.primitives import serialization
+import certifi
 from auto_archiver.core import Enricher
 from auto_archiver.core import Metadata, Media
+from auto_archiver.version import __version__
 
 class TimestampingEnricher(Enricher):
     """
@@ -19,6 +28,22 @@ class TimestampingEnricher(Enricher):
 
     See https://gist.github.com/Manouchehri/fd754e402d98430243455713efada710 for list of timestamp authorities.
     """
+
+    def setup(self):
+        self.session = requests.Session()
+        self.session.headers.update(
+            {
+                "Content-Type": "application/timestamp-query",
+                "User-Agent": f"Auto-Archiver {__version__}",
+                "Accept": "application/timestamp-reply",
+            }
+        )
+
+    def __del__(self) -> None:
+        """
+        Terminates the underlying network session.
+        """
+        self.session.close()
 
     def enrich(self, to_enrich: Metadata) -> None:
         url = to_enrich.get_url()
@@ -31,8 +56,7 @@ class TimestampingEnricher(Enricher):
             logger.warning(f"No hashes found in {url=}")
             return
         
-        tmp_dir = self.tmp_dir
-        hashes_fn = os.path.join(tmp_dir, "hashes.txt")
+        hashes_fn = os.path.join(self.tmp_dir, "hashes.txt")
 
         data_to_sign = "\n".join(hashes)
         with open(hashes_fn, "w") as f: 
@@ -43,18 +67,16 @@ class TimestampingEnricher(Enricher):
         from slugify import slugify
         for tsa_url in self.tsa_urls:
             try:
-                signing_settings = SigningSettings(tsp_server=tsa_url, digest_algorithm=DigestAlgorithm.SHA256)
-                signer = TSPSigner()
                 message = bytes(data_to_sign, encoding='utf8')
-                # send TSQ and get TSR from the TSA server
-                signed = signer.sign(message=message, signing_settings=signing_settings)
+                signed: TimeStampResponse = self.sign_data(tsa_url, message)
                 # fail if there's any issue with the certificates, uses certifi list of trusted CAs
-                TSPVerifier(certifi.where()).verify(signed, message=message)
+                self.verify_signed(signed, message)
                 # download and verify timestamping certificate
-                cert_chain = self.download_and_verify_certificate(signed)
+                cert_chain = self.download_certificate(signed)
                 # continue with saving the timestamp token
-                tst_fn = os.path.join(tmp_dir, f"timestamp_token_{slugify(tsa_url)}")
-                with open(tst_fn, "wb") as f: f.write(signed)
+                tst_fn = os.path.join(self.tmp_dir, f"timestamp_token_{slugify(tsa_url)}")
+                with open(tst_fn, "wb") as f:
+                    f.write(signed)
                 timestamp_tokens.append(Media(filename=tst_fn).set("tsa", tsa_url).set("cert_chain", cert_chain))
             except Exception as e:
                 logger.warning(f"Error while timestamping {url=} with {tsa_url=}: {e}")
@@ -70,30 +92,73 @@ class TimestampingEnricher(Enricher):
         else:
             logger.warning(f"No successful timestamps for {url=}")
 
-    def download_and_verify_certificate(self, signed: bytes) -> list[Media]:
+    def verify_signed(self, timestamp_response: TimeStampResponse, signature: bytes) ->  None:
+        """
+        Verify a Signed Timestamp using the TSA provided by the Trusted Root.
+        """
+
+        trusted_root_path = self.cert_authorities or certifi.where()
+        cert_authorities = []
+
+        with open(trusted_root_path, 'rb') as f:
+            cert_authorities = x509.load_pem_x509_certificates(f.read())
+
+        if not cert_authorities:
+            raise ValueError(f"No trusted roots found in {trusted_root_path}.")
+        
+
+        for certificate in cert_authorities:
+            builder = VerifierBuilder()
+            builder.add_root_certificate(certificate)
+
+            verifier = builder.build()
+            try:
+                verifier.verify(timestamp_response, signature)
+                return certificate
+            except Rfc3161VerificationError as e:
+                logger.debug(f"Unable to verify Timestamp with CA {certificate.subject}: {e}")
+                continue
+        
+        return False
+
+    def sign_data(self, tsa_url: str, bytes_data: bytes) -> TimeStampResponse:
+        # see https://github.com/sigstore/sigstore-python/blob/99948d5b80525a5a104e904ffea58169dc6e0629/sigstore/_internal/timestamp.py#L84-L121
+
+        timestamp_request = (
+                TimestampRequestBuilder().data(bytes_data).nonce(nonce=True).build()
+            )
+        try:
+            response = self.session.post(tsa_url, data=timestamp_request.as_bytes(), timeout=10)
+            response.raise_for_status()
+        except requests.RequestException as e:
+            logger.error(f"Error while sending request to {tsa_url=}: {e}")
+            raise
+
+        # Check that we can parse the response but do not *verify* it
+        try:
+            timestamp_response = decode_timestamp_response(response.content)
+        except ValueError as e:
+            logger.error(f"Invalid timestamp response from server {tsa_url}: {e}")
+            raise
+        return timestamp_response
+    
+    def load_tst_certs(self, tsp_response: TimeStampResponse):
+        signed_data: SignedData = tsp_response.signed_data
+        return [x509.load_der_x509_certificate(c) for c in signed_data.certificates]
+
+    
+    def download_certificate(self, tsp_response: TimeStampResponse) -> list[Media]:
         # returns the leaf certificate URL, fails if not set
-        tst = ContentInfo.load(signed)
 
-        trust_roots = []
-        with open(certifi.where(), 'rb') as f:
-            for _, _, der_bytes in pem.unarmor(f.read(), multiple=True):
-                trust_roots.append(der_bytes)
-        context = ValidationContext(trust_roots=trust_roots)
+        certificates = self.load_tst_certs(tsp_response)
 
-        certificates = tst["content"]["certificates"]
-        first_cert = certificates[0].dump()
-        intermediate_certs = []
-        for i in range(1, len(certificates)): # cannot use list comprehension [1:]
-            intermediate_certs.append(certificates[i].dump())
-
-        validator = CertificateValidator(first_cert, intermediate_certs=intermediate_certs, validation_context=context)
-        path = validator.validate_usage({'digital_signature'}, extended_key_usage={'time_stamping'})
 
         cert_chain = []
-        for cert in path:
+        for cert in certificates:
             cert_fn = os.path.join(self.tmp_dir, f"{str(cert.serial_number)[:20]}.crt")
+            print(cert_fn)
             with open(cert_fn, "wb") as f:
-                f.write(cert.dump())
-            cert_chain.append(Media(filename=cert_fn).set("subject", cert.subject.native["common_name"]))
+                f.write(cert.public_bytes(encoding=serialization.Encoding.PEM))
+            cert_chain.append(Media(filename=cert_fn).set("subject", cert.subject.get_attributes_for_oid(x509.NameOID.COMMON_NAME)[0].value))
 
         return cert_chain
