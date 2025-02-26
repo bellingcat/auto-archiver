@@ -8,6 +8,7 @@ from dateutil.parser import parse as parse_dt
 import requests
 from loguru import logger
 
+
 def mkdir_if_not_exists(folder):
     if not os.path.exists(folder):
         os.makedirs(folder)
@@ -64,7 +65,7 @@ def json_loader(cli_val):
     return json.loads(cli_val)
 
 
-def calculate_file_hash(filename: str, hash_algo = hashlib.sha256, chunksize: int = 16000000) -> str:
+def calculate_file_hash(filename: str, hash_algo=hashlib.sha256, chunksize: int = 16000000) -> str:
     hash = hash_algo()
     with open(filename, "rb") as f:
         while True:
@@ -75,7 +76,14 @@ def calculate_file_hash(filename: str, hash_algo = hashlib.sha256, chunksize: in
 
 
 def get_datetime_from_str(dt_str: str, fmt: str | None = None, dayfirst=True) -> datetime | None:
-    # parse a datetime string with option of passing a specific format
+    """ parse a datetime string with option of passing a specific format
+
+    Args:
+        dt_str: the datetime string to parse
+        fmt: the python date format of the datetime string, if None, dateutil.parser.parse is used
+        dayfirst: Use this to signify between date formats which put the day first, vs the month first:
+                    e.g. DD/MM/YYYY vs MM/DD/YYYY
+    """
     try:
         return datetime.strptime(dt_str, fmt) if fmt else parse_dt(dt_str, dayfirst=dayfirst)
     except ValueError as e:
@@ -84,9 +92,13 @@ def get_datetime_from_str(dt_str: str, fmt: str | None = None, dayfirst=True) ->
 
 
 def get_timestamp(ts, utc=True, iso=True, dayfirst=True) -> str | datetime | None:
-    # Consistent parsing of timestamps
-    # If utc=True, the timezone is set to UTC,
-    # if iso=True, the output is an iso string
+    """  Consistent parsing of timestamps.
+    Args:
+         If utc=True, the timezone is set to UTC,
+         if iso=True, the output is an iso string
+         Use dayfirst to signify between date formats which put the date vs month first:
+         e.g. DD/MM/YYYY vs MM/DD/YYYY
+     """
     if not ts: return
     try:
         if isinstance(ts, str): ts = parse_dt(ts, dayfirst=dayfirst)
@@ -97,6 +109,7 @@ def get_timestamp(ts, utc=True, iso=True, dayfirst=True) -> str | datetime | Non
     except Exception as e:
         logger.error(f"Unable to parse timestamp {ts}: {e}")
         return None
+
 
 def get_current_timestamp() -> str:
     return get_timestamp(datetime.now())
