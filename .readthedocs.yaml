@@ -18,6 +18,8 @@ build:
       # See https://github.com/readthedocs/readthedocs.org/pull/11152/
       - VIRTUAL_ENV=$READTHEDOCS_VIRTUALENV_PATH poetry install --with docs
 
+      # generate the config editor page. Schema then HTML
+      - poetry run python scripts/generate_settings_schema.py
       # install node dependencies and build the settings
       - cd scripts/settings && npm install && npm run build && cp dist/index.html ../../docs/source/installation/settings_base.html && cd ../..
 
