@@ -24,6 +24,8 @@ import {
 import type { DragStartEvent, DragEndEvent, UniqueIdentifier } from "@dnd-kit/core";
 
 
+import { Module } from './types';
+
 import { modules, steps, module_types } from './schema.json';
 import { 
   Stack,
@@ -33,14 +35,6 @@ import Grid from '@mui/material/Grid2';
 
 import { parseDocument, Document } from 'yaml'
 import StepCard from './StepCard';
-
-//  create a Typescript interface for module 
-interface Module<T> {
-  name: string;
-  description: string;
-  configs: object;
-  manifest: object;
-}
 
 
 function FileDrop({ setYamlFile }: { setYamlFile: React.Dispatch<React.SetStateAction<Document>> }) {
@@ -174,7 +168,7 @@ function ModuleTypes({ stepType, setEnabledModules, enabledModules, configValues
       <Grid container spacing={1} key={stepType}>
       <SortableContext items={items} strategy={rectSortingStrategy}>
       {items.map((name: string) => {
-          let m = modules[name];
+          let m: Module = modules[name];
           return (
             <StepCard key={name} type={stepType} module={m} toggleModule={toggleModule} enabledModules={enabledModules} configValues={configValues} />
           );
@@ -203,7 +197,12 @@ function ModuleTypes({ stepType, setEnabledModules, enabledModules, configValues
 export default function App() {
   const [yamlFile, setYamlFile] = useState<Document>(new Document());
   const [enabledModules, setEnabledModules] = useState<{}>(Object.fromEntries(Object.keys(steps).map(type => [type, steps[type].map((name: string) => [name, false])])));
-  const [configValues, setConfigValues] = useState<{}>(
+  const [configValues, setConfigValues] = useState<{
+    [key: string]: {
+      [key: string
+      ]: any
+    }
+  }>(
     Object.keys(modules).reduce((acc, module) => {
       acc[module] = {};
       return acc;
@@ -218,7 +217,7 @@ export default function App() {
 
       // create a yaml file from 
       const finalYaml = {
-        'steps': Object.keys(steps).reduce((acc, stepType) => {
+        'steps': Object.keys(steps).reduce((acc, stepType: string) => {
           acc[stepType] = stepsConfig[stepType].filter(([name, enabled]: [string, boolean]) => enabled).map(([name, enabled]: [string, boolean]) => name);
           return acc;
         }, {})

@@ -6,7 +6,6 @@ import { CSS } from "@dnd-kit/utilities";
 
 import { 
     Card,
-    CardContent,
     CardActions,
     CardHeader,
     Button,
@@ -20,7 +19,6 @@ import {
     MenuItem,
     FormControl,
     FormControlLabel,
-    Textarea,
     FormHelperText,
     TextField,
     Stack,
@@ -28,8 +26,7 @@ import {
   } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
-import { set } from "yaml/dist/schema/yaml-1.1/set";
-
+import { Module } from "./types";
 
 Object.defineProperty(String.prototype, 'capitalize', {
   value: function() {
@@ -46,7 +43,7 @@ const StepCard = ({
     configValues
 }: {
     type: string,
-    module: object,
+    module: Module,
     toggleModule: any,
     enabledModules: any,
     configValues: any 
