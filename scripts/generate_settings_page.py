@@ -31,7 +31,7 @@ output_schame = {
                          'configs': module.configs or None
                          }
                          ) for module in all_modules_ordered_by_type),
-    'steps': dict((module_type, [module.name for module in modules_by_type[module_type]]) for module_type in MODULE_TYPES),
+    'steps': dict((f"{module_type}s", [module.name for module in modules_by_type[module_type]]) for module_type in MODULE_TYPES),
     'configs': [m.name for m in all_modules_ordered_by_type if m.configs],
     'module_types': MODULE_TYPES,
 }

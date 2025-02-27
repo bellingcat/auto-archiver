@@ -81,7 +81,12 @@ function FileDrop({ setYamlFile }) {
 function ModuleTypes({ stepType, setEnabledModules, enabledModules, configValues }: { stepType: string, setEnabledModules: any, enabledModules: any, configValues: any }) {
   const [showError, setShowError] = useState(false);
   const [activeId, setActiveId] = useState(null);
-  const [items, setItems] = useState<string[]>(enabledModules[stepType].map(([name, enabled]: [string, boolean]) => name));
+  const [items, setItems] = useState<string[]>([]);
+
+  useEffect(() => {
+    setItems(enabledModules[stepType].map(([name, enabled]: [string, boolean]) => name));
+  }
+  , [enabledModules]);
 
   const toggleModule = (event: any) => {
     // make sure that 'feeder' and 'formatter' types only have one value
@@ -100,11 +105,12 @@ function ModuleTypes({ stepType, setEnabledModules, enabledModules, configValues
     } else {
       setShowError(false);
     }
-    let newEnabledModules = { ...enabledModules };
-    newEnabledModules[stepType] = enabledModules[stepType].map(([m, enabled]: [string, boolean]) => {
-      return (m === name) ? [m, checked] : [m, enabled];
-    }
-    );
+    let newEnabledModules = Object.fromEntries(Object.keys(enabledModules).map((type : string) => {
+      return [type, enabledModules[type].map(([m, enabled]: [string, boolean]) => {
+        return (m === name) ? [m, checked] : [m, enabled];
+      })];
+      }
+    ));
     setEnabledModules(newEnabledModules);
   }
 
@@ -134,17 +140,16 @@ function ModuleTypes({ stepType, setEnabledModules, enabledModules, configValues
           return newArray.indexOf(a[0]) - newArray.indexOf(b[0]);
         })
         setEnabledModules(newEnabledModules);
-        setItems(newArray);
     }
   };
   return (
     <>
     <Box sx={{ my: 4 }}>
       <Typography id={stepType} variant="h6" style={{ textTransform: 'capitalize' }} >
-      {stepType}s
+      {stepType}
       </Typography>
       <Typography variant="body1" >
-        Select the {stepType}s you wish to enable. You can drag and drop them to reorder them.
+        Select the {stepType} you wish to enable. You can drag and drop them to reorder them.
       </Typography>
       </Box>
       {showError ? <Typography variant="body1" color="error" >Only one {stepType} can be enabled at a time.</Typography> : null}
@@ -186,7 +191,7 @@ function ModuleTypes({ stepType, setEnabledModules, enabledModules, configValues
 
 export default function App() {
   const [yamlFile, setYamlFile] = useState<Document>(new Document());
-  const [enabledModules, setEnabledModules] = useState<{}>(Object.fromEntries(module_types.map(type => [type, steps[type].map((name: string) => [name, false])])));
+  const [enabledModules, setEnabledModules] = useState<{}>(Object.fromEntries(Object.keys(steps).map(type => [type, steps[type].map((name: string) => [name, false])])));
   const [configValues, setConfigValues] = useState<{}>(
     Object.keys(modules).reduce((acc, module) => {
       acc[module] = {};
@@ -202,7 +207,7 @@ export default function App() {
 
       // create a yaml file from 
       const finalYaml = {
-        'steps': Object.keys(stepsConfig).reduce((acc, stepType) => {
+        'steps': Object.keys(steps).reduce((acc, stepType) => {
           acc[stepType] = stepsConfig[stepType].filter(([name, enabled]: [string, boolean]) => enabled).map(([name, enabled]: [string, boolean]) => name);
           return acc;
         }, {})
@@ -257,10 +262,27 @@ export default function App() {
 
     let settings = yamlFile.toJS();
     // make a deep copy of settings
-    let newEnabledModules = Object.keys(settings['steps']).map((step: string) => {
-      return settings['steps'][step];
-    }).flat();
-    newEnabledModules = newEnabledModules.filter((m: string, i: number) => newEnabledModules.indexOf(m) === i);
+    let stepSettings = settings['steps'];
+    let newEnabledModules = Object.fromEntries(Object.keys(steps).map((type: string) => {
+        return [type, steps[type].map((name: string) => {
+          return [name, stepSettings[type].indexOf(name) !== -1];
+        }).sort((a, b) => {
+          let aIndex = stepSettings[type].indexOf(a[0]);
+          let bIndex = stepSettings[type].indexOf(b[0]);
+          if (aIndex === -1 && bIndex === -1) {
+            return a - b;
+          }
+          if (bIndex === -1) {
+            return -1;
+          }
+          if (aIndex === -1) {
+            return 1;
+          }
+          return aIndex - bIndex;
+        })];
+      }).sort((a, b) => {
+        return module_types.indexOf(a[0]) - module_types.indexOf(b[0]);
+      }));
     setEnabledModules(newEnabledModules);
   }, [yamlFile]);
 

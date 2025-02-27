@@ -20,7 +20,7 @@ import {
     MenuItem,
     FormControl,
     FormControlLabel,
-    InputLabel,
+    Textarea,
     FormHelperText,
     TextField,
     Stack,
@@ -141,13 +141,15 @@ function ConfigPanel({ module, open, setOpen, configValues }: { module: any, ope
               const value = configValues[module.name][config_value] || config_args.default;
               return (
                 <Box key={config_value}>
-                    <Typography variant='body1'>{config_display_name}</Typography>
+                    <Typography variant='body1' style={{fontWeight : 'bold'}}>{config_display_name}</Typography>
                   <FormControl size="small">
-                  { config_args.type === 'bool' ?                
+                  { config_args.type === 'bool' ? 
+                  <FormControlLabel control={               
                   <Checkbox defaultChecked={value} size="small" id={`${module}.${config_value}`}
                   onChange={(e) => {
                     setConfigValue(config_value, e.target.checked);
                     }} 
+                  />} label={config_args.help}
                   />
                     :
                     (
@@ -167,16 +169,16 @@ function ConfigPanel({ module, open, setOpen, configValues }: { module: any, ope
                       </Select>
                       :
                       ( config_args.type === 'json_loader' ? 
-                        <TextField size="small" id={`${module}.${config_value}`} defaultValue={JSON.stringify(value)} onChange={
+                        <TextField multiline size="small" id={`${module}.${config_value}`} defaultValue={JSON.stringify(value, null, 2)} rows={6} onChange={
                             (e) => {
                                 try {
-                                val = JSON.parse(e.target.value);
+                                let val = JSON.parse(e.target.value);
                                 setConfigValue(config_value, val);
                                 } catch (e) {
                                 console.log(e);
                                 }
                             }
-                        } type='text'  />
+                        } />
                         :
                         <TextField size="small" id={`${module}.${config_value}`} defaultValue={value} type={config_args.type === 'int' ? 'number' : 'text'} 
                         onChange={(e) => {
@@ -185,8 +187,10 @@ function ConfigPanel({ module, open, setOpen, configValues }: { module: any, ope
                     )
                     )
                   }
-                    <FormHelperText style={{ textTransform: 'capitalize'}}>{config_args.help}</FormHelperText>
-                    </FormControl>
+                  {config_args.type !== 'bool' && (
+                    <FormHelperText >{config_args.help}</FormHelperText>
+                  )}
+                  </FormControl>
                 </Box>
               );
             })}

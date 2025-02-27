@@ -799,6 +799,7 @@
                 "configs": {
                     "timeout": {
                         "default": 15,
+                        "type": "int",
                         "help": "seconds to wait for successful archive confirmation from wayback, if more than this passes the result contains the job_id so the status can later be checked manually."
                     },
                     "if_not_archived_within": {
@@ -826,6 +827,7 @@
             "configs": {
                 "timeout": {
                     "default": 15,
+                    "type": "int",
                     "help": "seconds to wait for successful archive confirmation from wayback, if more than this passes the result contains the job_id so the status can later be checked manually."
                 },
                 "if_not_archived_within": {
@@ -1046,18 +1048,22 @@
                 "configs": {
                     "width": {
                         "default": 1280,
+                        "type": "int",
                         "help": "width of the screenshots"
                     },
                     "height": {
                         "default": 720,
+                        "type": "int",
                         "help": "height of the screenshots"
                     },
                     "timeout": {
                         "default": 60,
+                        "type": "int",
                         "help": "timeout for taking the screenshot"
                     },
                     "sleep_before_screenshot": {
                         "default": 4,
+                        "type": "int",
                         "help": "seconds to wait for the pages to load before taking screenshot"
                     },
                     "http_proxy": {
@@ -1066,29 +1072,35 @@
                     },
                     "save_to_pdf": {
                         "default": false,
+                        "type": "bool",
                         "help": "save the page as pdf along with the screenshot. PDF saving options can be adjusted with the 'print_options' parameter"
                     },
                     "print_options": {
                         "default": {},
-                        "help": "options to pass to the pdf printer"
+                        "help": "options to pass to the pdf printer, in JSON format. See https://www.selenium.dev/documentation/webdriver/interactions/print_page/ for more information",
+                        "type": "json_loader"
                     }
                 }
             },
             "configs": {
                 "width": {
                     "default": 1280,
+                    "type": "int",
                     "help": "width of the screenshots"
                 },
                 "height": {
                     "default": 720,
+                    "type": "int",
                     "help": "height of the screenshots"
                 },
                 "timeout": {
                     "default": 60,
+                    "type": "int",
                     "help": "timeout for taking the screenshot"
                 },
                 "sleep_before_screenshot": {
                     "default": 4,
+                    "type": "int",
                     "help": "seconds to wait for the pages to load before taking screenshot"
                 },
                 "http_proxy": {
@@ -1097,11 +1109,13 @@
                 },
                 "save_to_pdf": {
                     "default": false,
+                    "type": "bool",
                     "help": "save the page as pdf along with the screenshot. PDF saving options can be adjusted with the 'print_options' parameter"
                 },
                 "print_options": {
                     "default": {},
-                    "help": "options to pass to the pdf printer"
+                    "help": "options to pass to the pdf printer, in JSON format. See https://www.selenium.dev/documentation/webdriver/interactions/print_page/ for more information",
+                    "type": "json_loader"
                 }
             }
         },
@@ -2007,13 +2021,13 @@
         }
     },
     "steps": {
-        "feeder": [
+        "feeders": [
             "cli_feeder",
             "gsheet_feeder",
             "atlos_feeder",
             "csv_feeder"
         ],
-        "extractor": [
+        "extractors": [
             "wayback_extractor_enricher",
             "wacz_extractor_enricher",
             "instagram_api_extractor",
@@ -2025,7 +2039,7 @@
             "vk_extractor",
             "telegram_extractor"
         ],
-        "enricher": [
+        "enrichers": [
             "wayback_extractor_enricher",
             "wacz_extractor_enricher",
             "metadata_enricher",
@@ -2038,20 +2052,20 @@
             "ssl_enricher",
             "hash_enricher"
         ],
-        "database": [
+        "databases": [
             "console_db",
             "atlos_db",
             "api_db",
             "csv_db",
             "gsheet_db"
         ],
-        "storage": [
+        "storages": [
             "local_storage",
             "gdrive_storage",
             "atlos_storage",
             "s3_storage"
         ],
-        "formatter": [
+        "formatters": [
             "html_formatter",
             "mute_formatter"
         ]
