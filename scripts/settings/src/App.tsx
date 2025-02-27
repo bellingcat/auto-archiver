@@ -21,6 +21,8 @@ import {
   rectSortingStrategy
 } from "@dnd-kit/sortable";
 
+import type { DragStartEvent, DragEndEvent, UniqueIdentifier } from "@dnd-kit/core";
+
 
 import { modules, steps, module_types } from './schema.json';
 import { 
@@ -32,7 +34,16 @@ import Grid from '@mui/material/Grid2';
 import { parseDocument, Document } from 'yaml'
 import StepCard from './StepCard';
 
-function FileDrop({ setYamlFile }) {
+//  create a Typescript interface for module 
+interface Module<T> {
+  name: string;
+  description: string;
+  configs: object;
+  manifest: object;
+}
+
+
+function FileDrop({ setYamlFile }: { setYamlFile: React.Dispatch<React.SetStateAction<Document>> }) {
 
   const [showError, setShowError] = useState(false);
   const [label, setLabel] = useState("Drag and drop your orchestration.yaml file here, or click to select a file.");
@@ -46,9 +57,9 @@ function FileDrop({ setYamlFile }) {
     }
     let reader = new FileReader();
     reader.onload = function(e) {
-      let contents = e.target.result;
+      let contents = e.target ? e.target.result : '';
       try {
-        let document = parseDocument(contents);
+        let document = parseDocument(contents as string);
         if (document.errors.length > 0) {
           // not a valid yaml file
           setShowError(true);
@@ -79,8 +90,8 @@ function FileDrop({ setYamlFile }) {
 }
 
 function ModuleTypes({ stepType, setEnabledModules, enabledModules, configValues }: { stepType: string, setEnabledModules: any, enabledModules: any, configValues: any }) {
-  const [showError, setShowError] = useState(false);
-  const [activeId, setActiveId] = useState(null);
+  const [showError, setShowError] = useState<boolean>(false);
+  const [activeId, setActiveId] = useState<UniqueIdentifier>();
   const [items, setItems] = useState<string[]>([]);
 
   useEffect(() => {
@@ -121,17 +132,17 @@ function ModuleTypes({ stepType, setEnabledModules, enabledModules, configValues
     })
   );
 
-  const handleDragStart = (event) => {
+  const handleDragStart = (event: DragStartEvent) => {
     setActiveId(event.active.id);
   };
 
-  const handleDragEnd = (event) => {
-    setActiveId(null);
+  const handleDragEnd = (event: DragEndEvent) => {
+    setActiveId(undefined);
     const { active, over } = event;
 
-    if (active.id !== over.id) {
-        const oldIndex = items.indexOf(active.id);
-        const newIndex = items.indexOf(over.id);
+    if (active.id !== over?.id) {
+        const oldIndex = items.indexOf(active.id as string);
+        const newIndex = items.indexOf(over?.id as string);
 
         let newArray = arrayMove(items, oldIndex, newIndex);
         // set it also on steps

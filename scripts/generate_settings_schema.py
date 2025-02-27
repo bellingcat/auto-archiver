@@ -1,4 +1,5 @@
 import json
+import os
 
 from auto_archiver.core.module import ModuleFactory
 from auto_archiver.core.consts import MODULE_TYPES
@@ -36,6 +37,7 @@ output_schame = {
     'module_types': MODULE_TYPES,
 }
 
-output_file = 'schema.json'
+current_file_dir = os.path.dirname(os.path.abspath(__file__))
+output_file = os.path.join(current_file_dir, 'settings/src/schema.json')
 with open(output_file, 'w') as file:
     json.dump(output_schame, file, indent=4, cls=SchemaEncoder)
