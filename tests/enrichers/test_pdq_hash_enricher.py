@@ -20,17 +20,15 @@ def metadata_with_images():
 
 
 def test_successful_enrich(metadata_with_images, mocker):
-    with (
-        mocker.patch("pdqhash.compute", return_value=([1, 0, 1, 0] * 64, 100)),
-        mocker.patch("PIL.Image.open"),
-        mocker.patch.object(Media, "is_image", return_value=True) as mock_is_image,
-    ):
-        enricher = PdqHashEnricher()
-        enricher.enrich(metadata_with_images)
+    mocker.patch("pdqhash.compute", return_value=([1, 0, 1, 0] * 64, 100))
+    mocker.patch("PIL.Image.open")
+    mocker.patch.object(Media, "is_image", return_value=True)
+    enricher = PdqHashEnricher()
+    enricher.enrich(metadata_with_images)
 
-        # Ensure the hash is set for image media
-        for media in metadata_with_images.media:
-            assert media.get("pdq_hash") is not None
+    # Ensure the hash is set for image media
+    for media in metadata_with_images.media:
+        assert media.get("pdq_hash") is not None
 
 
 def test_enrich_skip_non_image(metadata_with_images, mocker):

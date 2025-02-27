@@ -64,7 +64,7 @@ class GsheetsFeeder(Feeder):
             yield m
 
     def _set_context(self, m: Metadata, gw: GWorksheet, row: int) -> Metadata:
-        # TODO: Check folder value not being recognised
+
         m.set_context("gsheet", {"row": row, "worksheet": gw})
 
         if gw.get_cell_or_default(row, 'folder', "") is None:

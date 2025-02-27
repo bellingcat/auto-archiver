@@ -17,6 +17,7 @@ class GWorksheet:
         'thumbnail': 'thumbnail',
         'timestamp': 'upload timestamp',
         'title': 'upload title',
+        'text': 'text content',
         'screenshot': 'screenshot',
         'hash': 'hash',
         'pdq_hash': 'perceptual hashes',
