@@ -6,6 +6,7 @@
 
 installation.md
 configurations.md
+config_editor.md
 authentication.md
 requirements.md
 config_cheatsheet.md

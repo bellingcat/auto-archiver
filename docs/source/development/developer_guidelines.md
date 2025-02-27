@@ -31,4 +31,5 @@ docker_development
 testing
 docs
 release
+settings_page
 ```
