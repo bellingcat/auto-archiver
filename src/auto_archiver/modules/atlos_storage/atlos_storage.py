@@ -7,6 +7,7 @@ from loguru import logger
 
 from auto_archiver.core import Media, Metadata
 from auto_archiver.core import Storage
+from auto_archiver.utils import calculate_file_hash
 
 
 class AtlosStorage(Storage):
@@ -37,7 +38,8 @@ class AtlosStorage(Storage):
             return False
         
         media_hash = self._hash(media)
-        
+        # media_hash = calculate_file_hash(media.filename, hash_algo=hashlib.sha256, chunksize=4096)
+
         # Check whether the media has already been uploaded
         source_material = requests.get(
             f"{self.atlos_url}/api/v2/source_material/{atlos_id}",
