@@ -3,42 +3,34 @@ import { useEffect, useState } from 'react';
 import Container from '@mui/material/Container';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
-import Link from '@mui/material/Link';
-import { modules, steps, configs, module_types } from './schema.json';
+
+// 
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragOverlay
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  rectSortingStrategy
+} from "@dnd-kit/sortable";
+
+
+import { modules, steps, module_types } from './schema.json';
 import { 
-  Checkbox,
-  Select,
-  MenuItem,
-  FormControl,
-  FormControlLabel,
-  InputLabel,
-  FormHelperText,
   Stack,
-  TextField,
-  Card,
-  CardContent,
-  CardActions,
   Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
 } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 
-import Accordion from '@mui/material/Accordion';
-import AccordionDetails from '@mui/material/AccordionDetails';
-import AccordionSummary from '@mui/material/AccordionSummary';
-import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
-import ReactMarkdown from 'react-markdown';
-import { parseDocument, ParsedNode, Document } from 'yaml'
-import { set } from 'yaml/dist/schema/yaml-1.1/set';
-
-Object.defineProperty(String.prototype, 'capitalize', {
-  value: function() {
-    return this.charAt(0).toUpperCase() + this.slice(1);
-  },
-  enumerable: false
-});
+import { parseDocument, Document } from 'yaml'
+import StepCard from './StepCard';
 
 function FileDrop({ setYamlFile }) {
 
@@ -86,117 +78,21 @@ function FileDrop({ setYamlFile }) {
   );
 }
 
-
-function ModuleCheckbox({ module, toggleModule, enabledModules, configValues }: { module: object, toggleModule: any, enabledModules: any, configValues: any }) {
-  let name = module.name;
-  const [helpOpen, setHelpOpen] = useState(false);
-  const [configOpen, setConfigOpen] = useState(false);
-  if (name == 'metadata_enricher') {
-    console.log("hi");
-  }
-  return (
-  <>
-    <Card>
-      <CardContent>
-      <FormControlLabel
-      control={<Checkbox id={name} onClick={toggleModule} checked={enabledModules.includes(name)} />}
-      label={module.display_name} />
-      </CardContent>
-      <CardActions>
-        <Button size="small" onClick={() => setHelpOpen(true)}>Help</Button>
-        {enabledModules.includes(name) && module.configs && name != 'cli_feeder' ? (
-      <Button size="small" onClick={() => setConfigOpen(true)}>Configure</Button>
-      ) : null}
-      </CardActions>
-      </Card>
-      <Dialog
-      open={helpOpen}
-      onClose={() => setHelpOpen(false)}
-      maxWidth="lg"
-      >
-        <DialogTitle>
-          {module.display_name}
-        </DialogTitle>
-        <DialogContent>
-        <ReactMarkdown>
-          {module.manifest.description.split("\n").map((line: string) => line.trim()).join("\n")}
-          </ReactMarkdown>
-        </DialogContent>
-      </Dialog>
-      {module.configs && name != 'cli_feeder' && <ConfigPanel module={module} open={configOpen} setOpen={setConfigOpen} configValues={configValues[module.name]} />}
-    </>
-  )
-}
-
-
-function ConfigPanel({ module, open, setOpen, configValues }: { module: any, open: boolean, setOpen: any, configValues: any }) {
-  return (
-    <>
-        <Dialog
-        key={module}
-        open={open}
-        onClose={() => setOpen(false)}
-        maxWidth="lg"
-        >
-          <DialogTitle>
-            {module.display_name}
-          </DialogTitle>
-          <DialogContent>
-          <Stack key={module} direction="column" spacing={1}>
-          {Object.keys(module.configs).map((config_value: any) => {
-            let config_args = module.configs[config_value];
-            let config_name = config_value.replace(/_/g," ");
-            return (
-              <Box key={config_value}>
-                <FormControl size="small">
-                { config_args.type === 'bool' ?                
-                  <FormControlLabel style={{ textTransform: 'capitalize'}} control={<Checkbox checked={configValues[config_value]} size="small" id={`${module}.${config_value}`} />} label={config_name} />
-                  :
-                  ( config_args.type === 'int' ?
-                    <TextField size="small" id={`${module}.${config_value}`} label={config_name.capitalize()} value={configValues[config_value]} type="number" />
-                    :
-                  (
-                    config_args.choices !== undefined ?
-                    <>
-                    <InputLabel>{config_name}</InputLabel>
-                    <Select size="small" id={`${module}.${config_value}`}
-                      defaultValue={config_args.default} value={configValues[config_value] || ''}>
-                      {config_args.choices.map((choice: any) => {
-                        return (
-                          <MenuItem key={`${module}.${config_value}.${choice}`} 
-                          value={choice} selected={config_args.default === choice}>{choice}</MenuItem>
-                        );
-                      })}
-                    </Select>
-                    </>
-                    :
-                      <TextField size="small" id={`${module}.${config_value}`} value={configValues[config_value] || ''} label={config_name.capitalize()} />
-                  )
-                )
-                }
-                  <FormHelperText style={{ textTransform: 'capitalize'}}>{config_args.help}</FormHelperText>
-                  </FormControl>
-              </Box>
-            );
-          })}
-          </Stack>
-          </DialogContent>
-        </Dialog>
-    </>
-  );
-}
-
-function ModuleTypes({ stepType, toggleModule, enabledModules, configValues }: { stepType: string, toggleModule: any, enabledModules: any, configValues: any }) {
+function ModuleTypes({ stepType, setEnabledModules, enabledModules, configValues }: { stepType: string, setEnabledModules: any, enabledModules: any, configValues: any }) {
   const [showError, setShowError] = useState(false);
+  const [activeId, setActiveId] = useState(null);
+  const [items, setItems] = useState<string[]>(enabledModules[stepType].map(([name, enabled]: [string, boolean]) => name));
 
-  const _toggleModule = (event: any) => {
+  const toggleModule = (event: any) => {
     // make sure that 'feeder' and 'formatter' types only have one value
     let name = event.target.id;
+    let checked = event.target.checked;
     if (stepType === 'feeder' || stepType === 'formatter') {
-      let checked = event.target.checked;
       // check how many modules of this type are enabled
-      let modules = steps[stepType].filter((m: string) => (m !== name && enabledModules.includes(m)) || (checked && m === name));
-      if (modules.length > 1) {
+      const checkedModules = enabledModules[stepType].filter(([m, enabled]: [string, boolean]) => {
+        return (m !== name && enabled) || (checked && m === name)
+      });
+      if (checkedModules.length > 1) {
         setShowError(true);
       } else {
         setShowError(false);
@@ -204,24 +100,85 @@ function ModuleTypes({ stepType, toggleModule, enabledModules, configValues }: {
     } else {
       setShowError(false);
     }
-    toggleModule(event);
+    let newEnabledModules = { ...enabledModules };
+    newEnabledModules[stepType] = enabledModules[stepType].map(([m, enabled]: [string, boolean]) => {
+      return (m === name) ? [m, checked] : [m, enabled];
+    }
+    );
+    setEnabledModules(newEnabledModules);
   }
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates
+    })
+  );
+
+  const handleDragStart = (event) => {
+    setActiveId(event.active.id);
+  };
+
+  const handleDragEnd = (event) => {
+    setActiveId(null);
+    const { active, over } = event;
+
+    if (active.id !== over.id) {
+        const oldIndex = items.indexOf(active.id);
+        const newIndex = items.indexOf(over.id);
+
+        let newArray = arrayMove(items, oldIndex, newIndex);
+        // set it also on steps
+        let newEnabledModules = { ...enabledModules };
+        newEnabledModules[stepType] = enabledModules[stepType].sort((a, b) => {
+          return newArray.indexOf(a[0]) - newArray.indexOf(b[0]);
+        })
+        setEnabledModules(newEnabledModules);
+        setItems(newArray);
+    }
+  };
   return (
     <>
+    <Box sx={{ my: 4 }}>
       <Typography id={stepType} variant="h6" style={{ textTransform: 'capitalize' }} >
       {stepType}s
       </Typography>
+      <Typography variant="body1" >
+        Select the {stepType}s you wish to enable. You can drag and drop them to reorder them.
+      </Typography>
+      </Box>
       {showError ? <Typography variant="body1" color="error" >Only one {stepType} can be enabled at a time.</Typography> : null}
+
+      <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragEnd={handleDragEnd}
+      onDragStart={handleDragStart}
+    >
       <Grid container spacing={1} key={stepType}>
-      {steps[stepType].map((name: string) => {
+      <SortableContext items={items} strategy={rectSortingStrategy}>
+      {items.map((name: string) => {
           let m = modules[name];
           return (
-            <Grid key={name} size={{ xs: 6, sm: 4, md: 3 }}>
-            <ModuleCheckbox key={name} module={m} toggleModule={_toggleModule} enabledModules={enabledModules} configValues={configValues} />
-            </Grid>
+            <StepCard key={name} type={stepType} module={m} toggleModule={toggleModule} enabledModules={enabledModules} configValues={configValues} />
           );
         })}
+                  <DragOverlay>
+            {activeId ? (
+<div
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  backgroundColor: "grey",
+                  opacity:0.1,
+                }}
+              ></div>
+
+            ) : null}
+          </DragOverlay>
+      </SortableContext>
       </Grid>
+      </DndContext>
   </>
   );
 }
@@ -229,7 +186,7 @@ function ModuleTypes({ stepType, toggleModule, enabledModules, configValues }: {
 
 export default function App() {
   const [yamlFile, setYamlFile] = useState<Document>(new Document());
-  const [enabledModules, setEnabledModules] = useState<[]>([]);
+  const [enabledModules, setEnabledModules] = useState<{}>(Object.fromEntries(module_types.map(type => [type, steps[type].map((name: string) => [name, false])])));
   const [configValues, setConfigValues] = useState<{}>(
     Object.keys(modules).reduce((acc, module) => {
       acc[module] = {};
@@ -241,15 +198,14 @@ export default function App() {
     // edit the yamlFile
 
     // generate the steps config
-    let stepsConfig = {}
-    module_types.forEach((stepType: string) => {
-      stepsConfig[stepType] = enabledModules.filter((m: string) => steps[stepType].includes(m));
-    }
-    );
+    let stepsConfig = enabledModules;
 
       // create a yaml file from 
       const finalYaml = {
-        'steps': stepsConfig
+        'steps': Object.keys(stepsConfig).reduce((acc, stepType) => {
+          acc[stepType] = stepsConfig[stepType].filter(([name, enabled]: [string, boolean]) => enabled).map(([name, enabled]: [string, boolean]) => name);
+          return acc;
+        }, {})
       };
 
       Object.keys(configValues).map((module: string) => {
@@ -273,17 +229,6 @@ export default function App() {
         a.click();
       }
     }
-
-  const toggleModule = function (event: any) {
-    let module = event.target.id;
-    let checked = event.target.checked
-
-    if (checked) {
-      setEnabledModules([...enabledModules, module]);
-    } else {
-      setEnabledModules(enabledModules.filter((m: string) => m !== module));
-    }
-  }
 
   useEffect(() => {
     // load the configs, and set the default values if they exist
@@ -339,7 +284,9 @@ export default function App() {
         </Typography>
           {Object.keys(steps).map((stepType: string) => {
             return (
-              <ModuleTypes key={stepType} stepType={stepType} toggleModule={toggleModule} enabledModules={enabledModules} configValues={configValues} />
+              <Box key={stepType} sx={{ my: 4 }}>
+              <ModuleTypes stepType={stepType} setEnabledModules={setEnabledModules} enabledModules={enabledModules} configValues={configValues} />
+              </Box>
             );
           })}
         </Box>
@@ -355,8 +302,10 @@ export default function App() {
           <Typography variant="h5" >
             4. Save your settings
           </Typography>
+          <Stack direction="row" spacing={2} sx={{ my: 2 }}>
           <Button variant="contained" color="primary" onClick={() => saveSettings(true)}>Copy Settings to Clipboard</Button>
           <Button variant="contained" color="primary" onClick={() => saveSettings()}>Save Settings to File</Button>
+          </Stack>
           </Box>
       </Box>
     </Container>

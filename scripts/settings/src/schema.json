@@ -1914,6 +1914,7 @@
                     },
                     "save_absolute": {
                         "default": false,
+                        "type": "bool",
                         "help": "whether the path to the stored file is absolute or relative in the output result inc. formatters (WARN: leaks the file structure)"
                     }
                 }
@@ -1942,6 +1943,7 @@
                 },
                 "save_absolute": {
                     "default": false,
+                    "type": "bool",
                     "help": "whether the path to the stored file is absolute or relative in the output result inc. formatters (WARN: leaks the file structure)"
                 }
             }

@@ -17,7 +17,9 @@
             "choices": ["random", "static"],
         },
         "save_to": {"default": "./local_archive", "help": "folder where to save archived content"},
-        "save_absolute": {"default": False, "help": "whether the path to the stored file is absolute or relative in the output result inc. formatters (WARN: leaks the file structure)"},
+        "save_absolute": {"default": False, 
+                            "type": "bool",
+                          "help": "whether the path to the stored file is absolute or relative in the output result inc. formatters (WARN: leaks the file structure)"},
     },
     "description": """
     LocalStorage: A storage module for saving archived content locally on the filesystem.
