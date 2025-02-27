@@ -31,8 +31,8 @@
                     },
                     "header": {
                         "default": 1,
-                        "help": "index of the header row (starts at 1)",
-                        "type": "int"
+                        "type": "int",
+                        "help": "index of the header row (starts at 1)"
                     },
                     "service_account": {
                         "default": "secrets/service_account.json",
@@ -85,8 +85,8 @@
                 },
                 "header": {
                     "default": 1,
-                    "help": "index of the header row (starts at 1)",
-                    "type": "int"
+                    "type": "int",
+                    "help": "index of the header row (starts at 1)"
                 },
                 "service_account": {
                     "default": "secrets/service_account.json",
@@ -559,6 +559,7 @@
                     },
                     "join_channels": {
                         "default": true,
+                        "type": "bool",
                         "help": "disables the initial setup with channel_invites config, useful if you have a lot and get stuck"
                     },
                     "channel_invites": {
@@ -587,6 +588,7 @@
                 },
                 "join_channels": {
                     "default": true,
+                    "type": "bool",
                     "help": "disables the initial setup with channel_invites config, useful if you have a lot and get stuck"
                 },
                 "channel_invites": {
@@ -887,8 +889,8 @@
                     },
                     "timeout": {
                         "default": 120,
-                        "help": "timeout for WACZ generation in seconds",
-                        "type": "int"
+                        "type": "int",
+                        "help": "timeout for WACZ generation in seconds"
                     },
                     "extract_media": {
                         "default": false,
@@ -926,8 +928,8 @@
                 },
                 "timeout": {
                     "default": 120,
-                    "help": "timeout for WACZ generation in seconds",
-                    "type": "int"
+                    "type": "int",
+                    "help": "timeout for WACZ generation in seconds"
                 },
                 "extract_media": {
                     "default": false,
@@ -1150,10 +1152,12 @@
                     },
                     "include_srt": {
                         "default": false,
+                        "type": "bool",
                         "help": "Whether to include a subtitle SRT (SubRip Subtitle file) for the video (can be used in video players)."
                     },
                     "timeout": {
                         "default": 90,
+                        "type": "int",
                         "help": "How many seconds to wait at most for a successful job completion."
                     },
                     "action": {
@@ -1178,10 +1182,12 @@
                 },
                 "include_srt": {
                     "default": false,
+                    "type": "bool",
                     "help": "Whether to include a subtitle SRT (SubRip Subtitle file) for the video (can be used in video players)."
                 },
                 "timeout": {
                     "default": 90,
+                    "type": "int",
                     "help": "How many seconds to wait at most for a successful job completion."
                 },
                 "action": {
