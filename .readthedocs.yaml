@@ -9,7 +9,7 @@ build:
   os: ubuntu-22.04
   tools:
     python: "3.10"
-    node: "22"
+    nodejs: "22"
   jobs:
     post_install:
       - pip install poetry
