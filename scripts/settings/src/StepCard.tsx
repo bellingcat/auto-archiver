@@ -139,7 +139,7 @@ function ConfigField({ config_value, module, configValues }: { config_value: any
                             onChange={(e) => {
                                 setConfigValue(config_value, e.target.checked);
                             }}
-                        />} label={config_args.help}
+                        />} label={config_args.help.capitalize()}
                     />
                     :
                     (
