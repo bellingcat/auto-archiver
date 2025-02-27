@@ -9,6 +9,7 @@ build:
   os: ubuntu-22.04
   tools:
     python: "3.10"
+    node: "22"
   jobs:
     post_install:
       - pip install poetry
@@ -16,6 +17,9 @@ build:
       # VIRTUAL_ENV needs to be set manually for now.
       # See https://github.com/readthedocs/readthedocs.org/pull/11152/
       - VIRTUAL_ENV=$READTHEDOCS_VIRTUALENV_PATH poetry install --with docs
+
+      # install node dependencies and build the settings
+      - cd scripts/settings && npm install && npm run build && cp dist/index.html ../../docs/source/installation/settings_base.html && cd ../..
 
 
 sphinx:

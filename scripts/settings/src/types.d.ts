@@ -3,6 +3,9 @@ export interface Config {
   description: string;
   type: string?;
   default: any;
+  help: string;
+  choices: string[];
+  required: boolean;
 }
 
 interface Manifest {

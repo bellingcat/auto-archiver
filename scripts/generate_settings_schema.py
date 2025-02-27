@@ -23,7 +23,7 @@ for module in available_modules:
 
 all_modules_ordered_by_type = sorted(available_modules, key=lambda x: (MODULE_TYPES.index(x.type[0]), not x.requires_setup))
 
-output_schame = {
+output_schema = {
     'modules': dict((module.name, 
                      {
                          'name': module.name,
@@ -40,4 +40,4 @@ output_schame = {
 current_file_dir = os.path.dirname(os.path.abspath(__file__))
 output_file = os.path.join(current_file_dir, 'settings/src/schema.json')
 with open(output_file, 'w') as file:
-    json.dump(output_schame, file, indent=4, cls=SchemaEncoder)
+    json.dump(output_schema, file, indent=4, cls=SchemaEncoder)
