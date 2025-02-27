@@ -18,7 +18,7 @@
         },
         "save_to": {"default": "./local_archive", "help": "folder where to save archived content"},
         "save_absolute": {"default": False, 
-                            "type": "bool",
+                          "type": "bool",
                           "help": "whether the path to the stored file is absolute or relative in the output result inc. formatters (WARN: leaks the file structure)"},
     },
     "description": """
