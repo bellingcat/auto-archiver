@@ -36,6 +36,11 @@
                     "http://tss.accv.es:8318/tsa",
                 ],
             "help": "List of RFC3161 Time Stamp Authorities to use, separate with commas if passed via the command line.",
+        },
+        "cert_authorities": {
+            "default": None,
+            "help": "Path to a file containing trusted Certificate Authorities (CAs) in PEM format. If empty, the default system authorities are used.",
+            "type": "str",
         }
     },
     "description": """
