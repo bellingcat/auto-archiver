@@ -17,7 +17,7 @@ RUN add-apt-repository ppa:mozillateam/ppa && \
 	apt-get install -y --no-install-recommends firefox-esr && \
     ln -s /usr/bin/firefox-esr /usr/bin/firefox
 
-ARG GECKODRIVER_VERSION=0.35.0
+ARG GECKODRIVER_VERSION=0.36.0
 
 RUN if [ $(uname -m) = "aarch64" ]; then \
         GECKODRIVER_ARCH=linux-aarch64; \
