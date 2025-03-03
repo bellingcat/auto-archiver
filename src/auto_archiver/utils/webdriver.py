@@ -72,6 +72,8 @@ class CookieSettingDriver(webdriver.Firefox):
                 time.sleep(2)
             except Exception as e:
                 logger.warning(f'Failed on fb accept cookies.', e)
+        
+
         # now get the actual URL
         super(CookieSettingDriver, self).get(url)
         if self.facebook_accept_cookies:
@@ -79,7 +81,17 @@ class CookieSettingDriver(webdriver.Firefox):
             close_button = self.find_element(By.XPATH, "//div[@role='dialog']//div[@aria-label='Close']")
             if close_button:
                 close_button.click()
+        else:
 
+            # for all other sites, try and use some common button text to reject/accept cookies
+            for text in ["Refuse non-essential cookies", "Decline optional cookies", "Reject additional cookies", "Accept all cookies"]:
+                try:
+                    accept_button = self.find_element(By.XPATH, f"//*[contains(translate(text(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), '{text.lower()}')]")
+                    if accept_button:
+                        accept_button.click()
+                        break
+                except Exception as e:
+                    pass
 
     
 class Webdriver:
