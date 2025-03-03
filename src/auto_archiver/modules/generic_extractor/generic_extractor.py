@@ -86,7 +86,7 @@ class GenericExtractor(Extractor):
         # keep both 'title' and 'fulltitle', but prefer 'title', falling back to 'fulltitle' if it doesn't exist
         result.set_title(video_data.pop('title', video_data.pop('fulltitle', "")))
         result.set_url(url)
-
+        if "description" in video_data: result.set_content(video_data["description"])
         # extract comments if enabled
         if self.comments:
             result.set("comments", [{

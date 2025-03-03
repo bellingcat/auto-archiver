@@ -16,7 +16,7 @@ def mock_is_auth_wall(mocker):
 def mock_post_success(mocker):
     """Fixture to mock POST requests with a successful response."""
     def _mock_post(json_data: dict = None, status_code: int = 200):
-        json_data = json_data or {"job_id": "job123"}
+        json_data = {"job_id": "job123"} if json_data is None else json_data
         resp = mocker.Mock(status_code=status_code)
         resp.json.return_value = json_data
         return mocker.patch("requests.post", return_value=resp)

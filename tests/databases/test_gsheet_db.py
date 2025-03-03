@@ -32,9 +32,8 @@ def mock_metadata(mocker):
 @pytest.fixture
 def metadata():
     metadata = Metadata()
-    metadata.add_media(Media(filename="screenshot", urls=["http://example.com/screenshot.png"]))
-    metadata.add_media(Media(filename="browsertrix", urls=["http://example.com/browsertrix.wacz"]))
-    metadata.add_media(Media(filename="thumbnail", urls=["http://example.com/thumbnail.png"]))
+    metadata.add_media(Media(filename="screenshot.png", urls=["http://example.com/screenshot.png"]).set("id", "screenshot"))
+    metadata.add_media(Media(filename="browsertrix", urls=["http://example.com/browsertrix.wacz"]).set("id", "browsertrix"))
     metadata.set_url("http://example.com")
     metadata.set_title("Example Title")
     metadata.set_content("Example Content")
@@ -53,7 +52,7 @@ def mock_media(mocker):
     return mock_media
 
 @pytest.fixture
-def gsheets_db(mock_gworksheet, setup_module, mocker):
+def gsheets_db(mock_gworksheet, setup_module, mocker) -> GsheetsDb:
     db = setup_module("gsheet_db", {
         "allow_worksheets": "set()",
         "block_worksheets": "set()",
@@ -80,10 +79,10 @@ def expected_calls(mock_media, fixed_timestamp):
         (1, 'text', 'Example Content'),
         (1, 'timestamp', '2025-01-01T00:00:00+00:00'),
         (1, 'hash', 'not-calculated'),
-        # (1, 'screenshot', 'http://example.com/screenshot.png'),
-        # (1, 'thumbnail', '=IMAGE("http://example.com/thumbnail.png")'),
-        # (1, 'wacz', 'http://example.com/browsertrix.wacz'),
-        # (1, 'replaywebpage', 'https://replayweb.page/?source=http%3A%2F%2Fexample.com%2Fbrowsertrix.wacz#view=pages&url=')
+        (1, 'screenshot', 'http://example.com/screenshot.png'),
+        (1, 'thumbnail', '=IMAGE("http://example.com/screenshot.png")'),
+        (1, 'wacz', 'http://example.com/browsertrix.wacz'),
+        (1, 'replaywebpage', 'https://replayweb.page/?source=http%3A//example.com/browsertrix.wacz#view=pages&url=http%3A//example.com')
     ]
 
 def test_retrieve_gsheet(gsheets_db, metadata, mock_gworksheet):
