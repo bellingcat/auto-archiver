@@ -322,6 +322,22 @@ class GenericExtractor(Extractor):
                 ydl_options['extractor_args'][key] = args
 
 
+
+        # Applying user-defined extractor_args
+        if self.extractor_args:
+            logger.info(f"Applying user-defined extractor_args")
+            ydl_options.setdefault('extractor_args', {})
+
+        for key, args in self.extractor_args.items():
+            logger.debug(f"Setting extractor_args: {key}")
+            if isinstance(args, dict):
+                # Site specific arguments (e.g., youtube: somekey=value)
+                ydl_options['extractor_args'].setdefault(key, {}).update(args)
+            else:
+                # General extractor_args (e.g., somekey=value)
+                ydl_options['extractor_args'][key] = args
+
+
         ydl = yt_dlp.YoutubeDL(ydl_options) # allsubtitles and subtitleslangs not working as expected, so default lang is always "en"
 
         for info_extractor in self.suitable_extractors(url):
