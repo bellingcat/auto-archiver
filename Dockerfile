@@ -7,16 +7,26 @@ ENV RUNNING_IN_DOCKER=1 \
     PYTHONFAULTHANDLER=1 \
     PATH="/root/.local/bin:$PATH"
 
+
+ARG TARGETARCH
+
 # Installing system dependencies
 RUN add-apt-repository ppa:mozillateam/ppa && \
 	apt-get update && \
     apt-get install -y --no-install-recommends gcc ffmpeg fonts-noto exiftool && \
 	apt-get install -y --no-install-recommends firefox-esr && \
-    ln -s /usr/bin/firefox-esr /usr/bin/firefox && \
-    wget https://github.com/mozilla/geckodriver/releases/download/v0.35.0/geckodriver-v0.35.0-linux64.tar.gz && \
+    ln -s /usr/bin/firefox-esr /usr/bin/firefox
+
+ARG GECKODRIVER_VERSION=0.35.0
+
+RUN if [ $(uname -m) = "aarch64" ]; then \
+        GECKODRIVER_ARCH=linux-aarch64; \
+    else \
+        GECKODRIVER_ARCH=linux64; \
+    fi && \
+    wget https://github.com/mozilla/geckodriver/releases/download/v${GECKODRIVER_VERSION}/geckodriver-v${GECKODRIVER_VERSION}-${GECKODRIVER_ARCH}.tar.gz && \
     tar -xvzf geckodriver* -C /usr/local/bin && \
     chmod +x /usr/local/bin/geckodriver && \
-    rm geckodriver-v* && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 

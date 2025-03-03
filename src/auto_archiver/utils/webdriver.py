@@ -1,17 +1,21 @@
 """ This Webdriver class acts as a context manager for the selenium webdriver. """
 from __future__ import annotations
-from selenium import webdriver
-from selenium.common.exceptions import TimeoutException
-from selenium.webdriver.common.proxy import Proxy, ProxyType
-from selenium.webdriver.common.print_page_options import PrintOptions
 
-from loguru import logger
-from selenium.webdriver.common.by import By
+import os
 import time
 
 #import domain_for_url
 from urllib.parse import urlparse, urlunparse
 from http.cookiejar import MozillaCookieJar
+
+from selenium import webdriver
+from selenium.common.exceptions import TimeoutException
+from selenium.webdriver.common.proxy import Proxy, ProxyType
+from selenium.webdriver.common.print_page_options import PrintOptions
+from selenium.webdriver.common.by import By
+
+from loguru import logger
+
 
 class CookieSettingDriver(webdriver.Firefox):
 
@@ -20,6 +24,10 @@ class CookieSettingDriver(webdriver.Firefox):
     cookiejar: MozillaCookieJar
 
     def __init__(self, cookies, cookiejar, facebook_accept_cookies, *args, **kwargs):
+        if os.environ.get('RUNNING_IN_DOCKER'):
+            # Selenium doesn't support linux-aarch64 driver, we need to set this manually
+            kwargs['service'] = webdriver.FirefoxService(executable_path='/usr/local/bin/geckodriver')
+        
         super(CookieSettingDriver, self).__init__(*args, **kwargs)
         self.cookies = cookies
         self.cookiejar = cookiejar
@@ -90,7 +98,6 @@ class Webdriver:
             setattr(self.print_options, k, v)
 
     def __enter__(self) -> webdriver:
-
         options = webdriver.FirefoxOptions()
         options.add_argument("--headless")
         options.add_argument(f'--proxy-server={self.http_proxy}')
