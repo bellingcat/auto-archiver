@@ -3,7 +3,9 @@
     highlights, and tagged posts. Authentication is required via username/password or a session file.
 
 """
-import re, os, shutil, traceback
+import re, os, shutil
+from sys import exc_info
+
 import instaloader
 from loguru import logger
 
@@ -28,19 +30,27 @@ class InstagramExtractor(Extractor):
     def setup(self) -> None:
 
         self.insta = instaloader.Instaloader(
-            download_geotags=True, download_comments=True, compress_json=False, dirname_pattern=self.download_folder, filename_pattern="{date_utc}_UTC_{target}__{typename}"
+            download_geotags=True,
+            download_comments=True,
+            compress_json=False,
+            dirname_pattern=self.download_folder,
+            filename_pattern="{date_utc}_UTC_{target}__{typename}"
         )
         try:
             self.insta.load_session_from_file(self.username, self.session_file)
-        except Exception as e:
-            logger.error(f"Unable to login from session file: {e}\n{traceback.format_exc()}")
+        except FileNotFoundError:
+            logger.info("No existing session file found - Attempting login with use and password.")
             try:
-                self.insta.login(self.username, config.instagram_self.password)
-                # TODO: wait for this issue to be fixed https://github.com/instaloader/instaloader/issues/1758
+                self.insta.login(self.username, self.password)
                 self.insta.save_session_to_file(self.session_file)
-            except Exception as e2:
-                logger.error(f"Unable to finish login (retrying from file): {e2}\n{traceback.format_exc()}")
-
+            except Exception as e:
+                logger.error(f"Failed to log in with Instaloader: {e}")
+                # TODO raise exception?
+                # raise Exception(f"Failed to log in with Instaloader: {e}")
+        except Exception as e:
+            logger.error(f"Error loading session file: {e}")
+            # TODO raise exception?
+            # raise Exception(f"Error loading session file: {e}")
 
 
     def download(self, item: Metadata) -> Metadata:
