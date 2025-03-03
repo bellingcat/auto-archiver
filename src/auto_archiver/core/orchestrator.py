@@ -72,6 +72,17 @@ class ArchivingOrchestrator:
 
         self.basic_parser = parser
         return parser
+    
+    def check_steps(self, config):
+        for module_type in MODULE_TYPES:
+            if not config['steps'].get(f"{module_type}s", []):
+                if module_type == 'feeder' or module_type == 'formatter' and config['steps'].get(f"{module_type}"):
+                    raise SetupError(f"It appears you have '{module_type}' set under 'steps' in your configuration file, but as of version 0.13.0 of Auto Archiver, you must use '{module_type}s'. Change this in your configuration file and try again. \
+Here's how that would look: \n\nsteps:\n  {module_type}s:\n  - [your_{module_type}_name_here]\n  {'extractors:...' if module_type == 'feeder' else '...'}\n")
+                if module_type == 'extractor' and config['steps'].get('archivers'):
+                    raise SetupError(f"As of version 0.13.0 of Auto Archiver, the 'archivers' step name has been changed to 'extractors'. Change this in your configuration file and try again. \
+Here's how that would look: \n\nsteps:\n  extractors:\n  - [your_extractor_name_here]\n  enrichers:...\n")
+                raise SetupError(f"No {module_type}s were configured. Make sure to set at least one {module_type} in your configuration file or on the command line (using --{module_type}s)")
 
     def setup_complete_parser(self, basic_config: dict, yaml_config: dict, unused_args: list[str]) -> None:
 
@@ -99,6 +110,7 @@ class ArchivingOrchestrator:
         # but should we add them? Or should we just add them to the 'complete' parser?
 
         if is_valid_config(yaml_config):
+            self.check_steps(yaml_config)
             # only load the modules enabled in config
             # TODO: if some steps are empty (e.g. 'feeders' is empty), should we default to the 'simple' ones? Or only if they are ALL empty?
             enabled_modules = []
