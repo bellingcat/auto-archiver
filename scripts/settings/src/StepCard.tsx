@@ -64,6 +64,7 @@ const StepCard = ({
 
 
     const style = {
+        ...Card.style,
         transform: CSS.Transform.toString(transform),
         transition,
         zIndex: isDragging ? "100" : "auto",

@@ -154,7 +154,7 @@ function ModuleTypes({ stepType, setEnabledModules, enabledModules, configValues
           {stepType}
         </Typography>
         <Typography variant="body1" >
-          Select the {stepType} you wish to enable. Drag to re-order.
+          Select the {stepType} you wish to enable. Drag to.
           Learn more about {stepType} <a href={`https://auto-archiver.readthedocs.io/en/latest/modules/${stepType.slice(0,-1)}.html`} target="_blank">here</a>.
         </Typography>
       </Box>
