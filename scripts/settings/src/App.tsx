@@ -282,10 +282,7 @@ export default function App() {
       let existingSteps  = finalYamlFile.getIn(['steps', stepType]) as YAMLSeq;
       stepsConfig[stepType].forEach(([name, enabled]: [string, boolean]) => {
         let index = existingSteps.items.findIndex((item) => { 
-          return item.value === name
-        });
-        let commentIndex = existingSteps.items.findIndex((item) => {
-          return item.comment?.indexOf(name) || item.commentBefore?.indexOf()
+          return (item.value || item) === name
         });
         let stepItem = finalYamlFile.getIn(['steps', stepType], true) as YAMLSeq;
 
@@ -300,6 +297,11 @@ export default function App() {
             finalYamlFile.setIn(['steps', stepType], stepItem);
         }
       });
+      // sort the items
+      existingSteps.items.sort((a: Scalar | string, b: Scalar | string) => {
+        return (stepsConfig[stepType].findIndex((val: [string, boolean]) => {return val[0] === (a.value || a)}) -
+                stepsConfig[stepType].findIndex((val: [string, boolean]) => {return val[0] === (b.value || b)}))
+      });
       existingSteps.flow = existingSteps.items.length ? false : true;
     });
 
@@ -313,8 +315,6 @@ export default function App() {
             Object.keys(configValues[module_name]).forEach((config_name: string) => {
               let existingConfigYAML = existingConfig.get(config_name, true) as Scalar;
               if (existingConfigYAML) {
-                console.log(existingConfigYAML.comment);
-                console.log(existingConfigYAML.commentBefore);
                 existingConfigYAML.value = configValues[module_name][config_name];
                 existingConfig.set(config_name, existingConfigYAML);
               } else {

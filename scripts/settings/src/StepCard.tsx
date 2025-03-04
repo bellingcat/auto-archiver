@@ -146,7 +146,8 @@ function ConfigField({ config_value, module, configValues }: { config_value: any
                     (
                         config_args.choices !== undefined ?
                             <Select size="small" id={`${module}.${config_value}`}
-                                defaultValue={value}
+                                defaultValue={config_args.default}
+                                value={value}
                                 onChange={(e) => {
                                     setConfigValue(config_value, e.target.value);
                                 }}
