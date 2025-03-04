@@ -17,7 +17,8 @@ class GenericExtractor(Extractor):
         if self.ytdlp_update_interval < 0:
             return
         
-        path = os.path.join('secrets', '.ytdlp-update')
+        use_secrets = os.path.exists('secrets')
+        path = os.path.join('secrets' if use_secrets else '', '.ytdlp-update')
         next_update_check = None
         if os.path.exists(path):
             with open(path, "r") as f:
