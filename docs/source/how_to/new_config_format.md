@@ -1,11 +1,11 @@
-# Upgrading to v0.13
+# Upgrading from v0.12
 
 ```{note} This how-to is only relevant for people who used Auto Archiver before February 2025 (versions prior to 0.13).
 
 If you are new to Auto Archiver, then you are already using the latest configuration format and this how-to is not relevant for you.
 ```
 
-Version 0.13 of Auto Archiver has breaking changes in the configuration format, which means earlier configuration formats will not work without slight modifications.
+Versions 0.13+ of Auto Archiver has breaking changes in the configuration format, which means earlier configuration formats will not work without slight modifications.
 
 ## How do I know if I need to update my configuration format?
 

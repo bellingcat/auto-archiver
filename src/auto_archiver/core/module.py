@@ -80,7 +80,10 @@ class ModuleFactory:
 
         available = self.available_modules(limit_to_modules=[module_name], suppress_warnings=suppress_warnings)
         if not available:
-            raise IndexError(f"Module '{module_name}' not found. Are you sure it's installed/exists?")
+            message = f"Module '{module_name}' not found. Are you sure it's installed/exists?"
+            if 'archiver' in module_name:
+                message += f" Did you mean {module_name.replace('archiver', 'extractor')}?"
+            raise IndexError(message)
         return available[0]
 
     def available_modules(self, limit_to_modules: List[str]= [], suppress_warnings: bool = False) -> List[LazyBaseModule]:
