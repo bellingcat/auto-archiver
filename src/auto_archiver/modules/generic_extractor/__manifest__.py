@@ -64,5 +64,10 @@ via the command line using the `--dropins` option (TODO!).
             "default": "inf",
             "help": "Use to limit the number of videos to download when a channel or long page is being extracted. 'inf' means no limit.",
         },
+        "ytdlp_update_interval": {
+            "default": 5,
+            "help": "How often to check for yt-dlp updates (days). If positive, will check and update yt-dlp every [num] days. Set it to -1 to disable, or 0 to always update on every run.",
+            "type": "int",
+        },
     },
 }
