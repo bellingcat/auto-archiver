@@ -1,5 +1,6 @@
 import datetime, os, yt_dlp, pysubs2
 import importlib
+import subprocess
 from typing import Generator, Type
 from yt_dlp.extractor.common import InfoExtractor
 
@@ -10,6 +11,39 @@ from auto_archiver.core import Metadata, Media
 
 class GenericExtractor(Extractor):
     _dropins = {}
+
+    def setup(self):
+        # check for file .ytdlp-update in the secrets folder
+        if self.ytdlp_update_interval < 0:
+            return
+        
+        path = os.path.join('secrets', '.ytdlp-update')
+        next_update_check = None
+        if os.path.exists(path):
+            with open(path, "r") as f:
+                next_update_check = datetime.datetime.fromisoformat(f.read())
+        
+        if not next_update_check or next_update_check < datetime.datetime.now():
+            self.update_ytdlp()
+
+            next_update_check = datetime.datetime.now() + datetime.timedelta(days=self.ytdlp_update_interval)
+            with open(path, "w") as f:
+                f.write(next_update_check.isoformat())
+
+    def update_ytdlp(self):
+        logger.info("Checking and updating yt-dlp...")
+        try:
+            # try and update with pip (this works inside poetry environment and in a normal virtualenv)
+            result = subprocess.run(["pip", "install", "--upgrade", "yt-dlp"], check=True, capture_output=True)
+
+            if "Successfully installed yt-dlp" in result.stdout.decode():
+                logger.info("yt-dlp was updated successfully")
+                importlib.reload(yt_dlp)
+            else:
+                logger.info("yt-dlp already up to date")
+
+        except Exception as e:
+            logger.error(f"Error updating yt-dlp: {e}")
 
     def suitable_extractors(self, url: str) -> Generator[str, None, None]:
         """
