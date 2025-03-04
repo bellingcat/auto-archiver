@@ -1,9 +1,9 @@
 import * as React from 'react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import Container from '@mui/material/Container';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
-
+import FileUploadIcon from '@mui/icons-material/FileUpload';
 // 
 import {
   DndContext,
@@ -26,27 +26,28 @@ import type { DragStartEvent, DragEndEvent, UniqueIdentifier } from "@dnd-kit/co
 
 import { Module } from './types';
 
-import { modules, steps, module_types } from './schema.json';
+import { modules, steps, module_types, empty_config } from './schema.json';
 import {
   Stack,
   Button,
 } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 
-import { parseDocument, Document } from 'yaml'
+import { parseDocument, Document, YAMLSeq, YAMLMap, Scalar } from 'yaml'
 import StepCard from './StepCard';
 
 
 function FileDrop({ setYamlFile }: { setYamlFile: React.Dispatch<React.SetStateAction<Document>> }) {
 
   const [showError, setShowError] = useState(false);
-  const [label, setLabel] = useState("Drag and drop your orchestration.yaml file here, or click to select a file.");
+  const [label, setLabel] = useState(<>Drag and drop your orchestration.yaml file here, or click to select a file.</>);
+  const wrapperRef = useRef(null);
 
   function openYAMLFile(event: any) {
     let file = event.target.files[0];
-    if (file.type !== 'application/x-yaml') {
+    if (file.type.indexOf('yaml') === -1) {
       setShowError(true);
-      setLabel("Invalid type, only YAML files are accepted.")
+      setLabel(<>Invalid type, only YAML files are accepted.</>)
       return;
     }
     let reader = new FileReader();
@@ -57,12 +58,34 @@ function FileDrop({ setYamlFile }: { setYamlFile: React.Dispatch<React.SetStateA
         if (document.errors.length > 0) {
           // not a valid yaml file
           setShowError(true);
-          setLabel("Invalid file. Make sure your Orchestration is a valid YAML file with a 'steps' section in it.")
+          setLabel(<>Invalid file. Make sure your Orchestration is a valid YAML file with a 'steps' section in it.</>)
           return;
         } else {
           setShowError(false);
-          setLabel("File loaded successfully.")
+          setLabel(<>File loaded successfully.</>)
         }
+        // do some basic validation of 'steps'
+        let steps = document.get('steps');
+        if (!steps) {
+          setShowError(true);
+          setLabel(<>Invalid file. Your orchestration file must have a 'steps' section in it.</>)
+          return;
+        }
+        const replacements = {
+          feeder: 'feeders',
+          formatter: 'formatters',
+          archivers: 'extractors',
+        };
+
+        let error = false;
+        for (let stepType of Object.keys(replacements)) {
+          if (steps.get(stepType) !== undefined) {
+            setShowError(true);
+            setLabel(<>Invalid file. Your orchestration file appears to be in the old (v0.12) format with a '{stepType}' section.<br/>You should manually update your orchestration file first (hint: {stepType} → {replacements[stepType]})</>);
+            error = true;
+            return;
+          }
+        };
         setYamlFile(document);
       } catch (e) {
         console.error(e);
@@ -72,10 +95,39 @@ function FileDrop({ setYamlFile }: { setYamlFile: React.Dispatch<React.SetStateA
   }
   return (
     <>
-      <div style={{ width: '100%', border: 'dashed', textAlign: 'center', borderWidth: '1px', padding: '20px' }}>
-
-        <input name="file" type="file" accept=".yaml" onChange={openYAMLFile} />
-        <Typography style={{ marginTop: '20px' }} variant="body1" color={showError ? 'error' : ''} >
+      <div
+      style={{
+        position: 'relative',
+        width: '100%',
+        border: 'dashed',
+        borderRadius:'5px',
+        textAlign: 'center',
+        borderWidth: '1px',
+        padding: '20px' }}
+      onDragEnter={(e) => {
+        e.currentTarget.style.backgroundColor = 'var(--mui-palette-LinearProgress-infoBg)';
+      }}
+      onDragLeave={(e) => {
+        e.currentTarget.style.backgroundColor = '';
+      }}
+      onDrop={(e) => {
+        e.currentTarget.style.backgroundColor = '';
+      }}
+      >
+        <FileUploadIcon style={{ fontSize: 50 }} />
+        <input style={{
+          opacity: 0,
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          cursor: 'pointer',
+        }}
+        type="file" id="file"
+        accept=".yaml"
+        onChange={openYAMLFile} />
+        <Typography variant="body1" color={showError ? 'error' : ''} >
           {label}
         </Typography>
       </div>
@@ -216,28 +268,74 @@ export default function App() {
     // generate the steps config
     let stepsConfig = enabledModules;
 
-    // create a yaml file from 
-    const finalYaml = {
-      'steps': Object.keys(steps).reduce((acc, stepType: string) => {
-        acc[stepType] = stepsConfig[stepType].filter(([name, enabled]: [string, boolean]) => enabled).map(([name, enabled]: [string, boolean]) => name);
-        return acc;
-      }, {})
-    };
+    let finalYamlFile: Document = null;
+    if (!yamlFile || yamlFile.contents == null) {
+      // create the yaml file from 
+      finalYamlFile = parseDocument(empty_config as string);
+    } else {
+      finalYamlFile = yamlFile;
+    }
 
-    Object.keys(configValues).map((module: string) => {
-      let module_values = configValues[module];
-      if (module_values) {
-        finalYaml[module] = module_values;
-      }
+    // set the steps
+    module_types.forEach((type: string) => {
+      let stepType = type + 's';
+      let existingSteps  = finalYamlFile.getIn(['steps', stepType]) as YAMLSeq;
+      stepsConfig[stepType].forEach(([name, enabled]: [string, boolean]) => {
+        let index = existingSteps.items.findIndex((item) => { 
+          return item.value === name
+        });
+        let commentIndex = existingSteps.items.findIndex((item) => {
+          return item.comment?.indexOf(name) || item.commentBefore?.indexOf()
+        });
+        let stepItem = finalYamlFile.getIn(['steps', stepType], true) as YAMLSeq;
+
+        if (enabled && index === -1) {
+            finalYamlFile.addIn(['steps', stepType], name);
+            stepItem.commentBefore = stepItem.commentBefore?.replace("\n - " + name, '');
+            stepItem.comment = stepItem.comment?.replace("\n - " + name, '');
+        } else if (!enabled && index !== -1) {
+            // set the value to empty and add a comment before with the commented value
+            finalYamlFile.deleteIn(['steps', stepType, index]);
+            stepItem.commentBefore += "\n - " + name;
+            finalYamlFile.setIn(['steps', stepType], stepItem);
+        }
+      });
+      existingSteps.flow = existingSteps.items.length ? false : true;
     });
-    let newFile = new Document(finalYaml);
+
+    // set all other settings
+    // loop through each item that isn't 'steps' in the finalYamlFile and check if it exists in configValues
+
+        Object.keys(configValues).forEach((module_name: string) => {
+          // get an existing key
+          let existingConfig = finalYamlFile.get(module_name, true) as YAMLMap;
+          if (existingConfig) {
+            Object.keys(configValues[module_name]).forEach((config_name: string) => {
+              let existingConfigYAML = existingConfig.get(config_name, true) as Scalar;
+              if (existingConfigYAML) {
+                console.log(existingConfigYAML.comment);
+                console.log(existingConfigYAML.commentBefore);
+                existingConfigYAML.value = configValues[module_name][config_name];
+                existingConfig.set(config_name, existingConfigYAML);
+              } else {
+                existingConfig.set(config_name, configValues[module_name][config_name]);
+              }
+            });
+            finalYamlFile.set(module_name, existingConfig);
+          } else {
+            if (configValues[module_name] && Object.keys(configValues[module_name]).length > 0) {
+              finalYamlFile.set(module_name, configValues[module_name]);
+            }
+          }
+        });
+
     if (copy) {
-      navigator.clipboard.writeText(String(newFile)).then(() => {
+      navigator.clipboard.writeText(String(finalYamlFile)).then(() => {
         alert("Settings copied to clipboard.");
       });
     } else {
       // offer the file for download
-      const blob = new Blob([String(newFile)], { type: 'application/x-yaml' });
+      const blob = new Blob([String(finalYamlFile)], { type: 'application/x-yaml' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -274,6 +372,7 @@ export default function App() {
     let settings = yamlFile.toJS();
     // make a deep copy of settings
     let stepSettings = settings['steps'];
+   
     let newEnabledModules = Object.fromEntries(Object.keys(steps).map((type: string) => {
       return [type, steps[type].map((name: string) => {
         return [name, stepSettings[type].indexOf(name) !== -1];
@@ -295,6 +394,16 @@ export default function App() {
       return module_types.indexOf(a[0]) - module_types.indexOf(b[0]);
     }));
     setEnabledModules(newEnabledModules);
+
+    // set the config values
+    let newConfigValues = settings;
+    delete newConfigValues['steps'];
+
+
+    setConfigValues(Object.keys(modules).reduce((acc, module) => {
+      acc[module] = newConfigValues[module] || {};
+      return acc;
+    }, {}));
   }, [yamlFile]);
 
 
@@ -306,6 +415,7 @@ export default function App() {
           <Typography variant="h5" >
             1. Select your orchestration.yaml settings file.
           </Typography>
+          <Typography variant="body1">Or skip this step to start from scratch</Typography>
           <FileDrop setYamlFile={setYamlFile} />
         </Box>
         <Box sx={{ my: 4 }}>

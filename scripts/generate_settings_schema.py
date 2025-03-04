@@ -1,9 +1,12 @@
 import json
 import os
+import io
+
+from ruamel.yaml import YAML
 
 from auto_archiver.core.module import ModuleFactory
 from auto_archiver.core.consts import MODULE_TYPES
-
+from auto_archiver.core.config import EMPTY_CONFIG
 
 class SchemaEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -23,6 +26,11 @@ for module in available_modules:
 
 all_modules_ordered_by_type = sorted(available_modules, key=lambda x: (MODULE_TYPES.index(x.type[0]), not x.requires_setup))
 
+yaml: YAML = YAML()
+
+config_string = io.BytesIO()
+yaml.dump(EMPTY_CONFIG, config_string)
+config_string = config_string.getvalue().decode('utf-8')
 output_schema = {
     'modules': dict((module.name, 
                      {
@@ -35,6 +43,7 @@ output_schema = {
     'steps': dict((f"{module_type}s", [module.name for module in modules_by_type[module_type]]) for module_type in MODULE_TYPES),
     'configs': [m.name for m in all_modules_ordered_by_type if m.configs],
     'module_types': MODULE_TYPES,
+    'empty_config': config_string
 }
 
 current_file_dir = os.path.dirname(os.path.abspath(__file__))

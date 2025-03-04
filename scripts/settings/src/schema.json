@@ -2113,5 +2113,6 @@
         "database",
         "storage",
         "formatter"
-    ]
+    ],
+    "empty_config": "# Auto Archiver Configuration\n\n# Steps are the modules that will be run in the order they are defined\nsteps:\n  feeders: []\n  extractors: []\n  enrichers: []\n  databases: []\n  storages: []\n  formatters: []\n\n# Global configuration\n\n# Authentication\n# a dictionary of authentication information that can be used by extractors to login to website. \n# you can use a comma separated list for multiple domains on the same line (common usecase: x.com,twitter.com)\n# Common login 'types' are username/password, cookie, api key/token.\n# There are two special keys for using cookies, they are: cookies_file and cookies_from_browser. \n# Some Examples:\n# facebook.com:\n#   username: \"my_username\"\n#   password: \"my_password\"\n# or for a site that uses an API key:\n# twitter.com,x.com:\n#   api_key\n#   api_secret\n# youtube.com:\n#   cookie: \"login_cookie=value ; other_cookie=123\" # multiple 'key=value' pairs should be separated by ;\n\nauthentication: {}\n\n# These are the global configurations that are used by the modules\n\nlogging:\n  level: INFO\n\n"
 }
