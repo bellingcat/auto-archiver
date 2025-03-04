@@ -285,6 +285,8 @@ class GenericExtractor(Extractor):
                        "playlistend": self.max_downloads,
                        # TODO
                        # "verbose": True,
+                       # 'debug_extractor': True,
+                       # 'cachedir': False,
                        # "print_traffic": True,
         }
 
@@ -322,46 +324,10 @@ class GenericExtractor(Extractor):
                 ydl_options['extractor_args'][key] = args
 
 
-
-        # Applying user-defined extractor_args
-        if self.extractor_args:
-            logger.info(f"Applying user-defined extractor_args")
-            ydl_options.setdefault('extractor_args', {})
-
-        for key, args in self.extractor_args.items():
-            logger.debug(f"Setting extractor_args: {key}")
-            if isinstance(args, dict):
-                # Site specific arguments (e.g., youtube: somekey=value)
-                ydl_options['extractor_args'].setdefault(key, {}).update(args)
-            else:
-                # General extractor_args (e.g., somekey=value)
-                ydl_options['extractor_args'][key] = args
-
-
         ydl = yt_dlp.YoutubeDL(ydl_options) # allsubtitles and subtitleslangs not working as expected, so default lang is always "en"
 
         for info_extractor in self.suitable_extractors(url):
-            try:
-                result = self.download_for_extractor(info_extractor, url, ydl)
-                if result:
-                    return result
-            except yt_dlp.utils.ExtractorError as e:
-                # TODO Does this catch empty/ incomplete failures?
-                if self.extractor_args:
-                    logger.warning(
-                        f"Extraction with custom extractor_args failed for {url}. Retrying without extractor_args...")
-                    # Remove extractor_args and try without
-                    del ydl_options['extractor_args']
-                    ydl = yt_dlp.YoutubeDL(ydl_options)
-                    try:
-                        result = self.download_for_extractor(info_extractor, url, ydl)
-                        if result:
-                            return result
-                    except Exception as retry_error:
-                        logger.error(f"Extraction failed for {url} after retrying: {retry_error}")
-                        return False
-                else:
-                    logger.error(f"Extraction failed for {url}: {e}")
-                    return False
-
+            result = self.download_for_extractor(info_extractor, url, ydl)
+            if result:
+                return result
         return False
