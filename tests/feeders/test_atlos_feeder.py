@@ -1,5 +1,5 @@
 import pytest
-from auto_archiver.modules.atlos_feeder import AtlosFeeder
+from auto_archiver.modules.atlos_feeder_db_storage import AtlosFeederDbStorage as AtlosFeeder
 
 
 class FakeAPIResponse:
@@ -18,23 +18,26 @@ class FakeAPIResponse:
 
 
 @pytest.fixture
-def atlos_feeder(setup_module) -> AtlosFeeder:
+def atlos_feeder(setup_module, mocker) -> AtlosFeeder:
     """Fixture for AtlosFeeder."""
     configs: dict = {
         "api_token": "abc123",
         "atlos_url": "https://platform.atlos.org",
     }
-    return setup_module("atlos_feeder", configs)
+    mocker.patch("requests.Session")
+    atlos_feeder = setup_module("atlos_feeder_db_storage", configs)
+    fake_session = mocker.MagicMock()
+    # Configure the default response to have no results so that __iter__ terminates
+    fake_session.get.return_value = FakeAPIResponse({"next": None, "results": []})
+    atlos_feeder.session = fake_session
+    return atlos_feeder
 
 
 @pytest.fixture
-def mock_atlos_api(mocker):
-    """Fixture to mock requests to Atlos API."""
+def mock_atlos_api(atlos_feeder):
+    """Fixture to update the atlos_feeder.session.get side_effect."""
     def _mock_responses(responses):
-        mocker.patch(
-            "requests.get",
-            side_effect=[FakeAPIResponse(data) for data in responses],
-        )
+        atlos_feeder.session.get.side_effect = [FakeAPIResponse(data) for data in responses]
     return _mock_responses
 
 
@@ -100,9 +103,7 @@ def test_atlos_feeder_no_results(atlos_feeder, mock_atlos_api):
 
 def test_atlos_feeder_http_error(atlos_feeder, mocker):
     """Test raises an exception on HTTP error."""
-    mocker.patch(
-        "requests.get",
-        return_value=FakeAPIResponse({"next": None, "results": []}, raise_error=True),
-    )
+    fake_response = FakeAPIResponse({"next": None, "results": []}, raise_error=True)
+    atlos_feeder.session.get.side_effect = [fake_response]
     with pytest.raises(Exception, match="HTTP error"):
         list(atlos_feeder)
