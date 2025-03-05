@@ -11,12 +11,9 @@ from auto_archiver.utils import calculate_file_hash
 
 class AtlosFeederDbStorage(Feeder, Database, Storage):
 
-    @property
-    def session(self) -> requests.Session:
+    def setup(self) -> requests.Session:
         """create and return a persistent session."""
-        if not hasattr(self, "_session"):
-            self._session = requests.Session()
-        return self._session
+        self.session = requests.Session()
 
     def _get(self, endpoint: str, params: Optional[dict] = None) -> dict:
         """Wrapper for GET requests to the Atlos API."""
