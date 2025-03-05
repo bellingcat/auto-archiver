@@ -1,7 +1,7 @@
 {
-    "name": "Atlos Feeder Database",
-    "type": ["feeder", "database"],
-"entry_point": "atlos_feeder_db::AtlosFeederDb",
+    "name": "Atlos Feeder Database Storage",
+    "type": ["feeder", "database", "storage"],
+"entry_point": "atlos_feeder_db_storage::AtlosFeederDbStorage",
     "requires_setup": True,
     "dependencies": {
         "python": ["loguru", "requests"],
@@ -19,11 +19,9 @@
         },
     },
     "description": """
-    AtlosFeederDb: A feeder module that integrates with the Atlos API to fetch source material URLs for archival,
+    AtlosFeederDbStorage: A module that integrates with the Atlos API to fetch source material URLs for archival, uplaod extracted media,
     along with a database option to output archival results.
     
-    Feeder: A feeder module that integrates with the Atlos API to fetch source material URLs for archival.
-
     ### Features
     - Connects to the Atlos API to retrieve a list of source material URLs.
     - Filters source materials based on visibility, processing status, and metadata.
@@ -33,6 +31,7 @@
     - Updates failure status with error details when archiving fails.
     - Processes and formats metadata, including ISO formatting for datetime fields.
     - Skips processing for items without an Atlos ID.
+    - Saves media files to Atlos, organizing them into folders based on the provided path structure.
 
     ### Notes
     - Requires an Atlos API endpoint and a valid API token for authentication.
