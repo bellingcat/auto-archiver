@@ -4,8 +4,6 @@
 
 """
 import re, os, shutil
-from sys import exc_info
-
 import instaloader
 from loguru import logger
 
@@ -17,10 +15,9 @@ class InstagramExtractor(Extractor):
     """
     Uses Instaloader to download either a post (inc images, videos, text) or as much as possible from a profile (posts, stories, highlights, ...)
     """
+
     # NB: post regex should be tested before profile
-
     valid_url = re.compile(r"(?:(?:http|https):\/\/)?(?:www.)?(?:instagram.com|instagr.am|instagr.com)\/")
-
     # https://regex101.com/r/MGPquX/1
     post_pattern = re.compile(r"{valid_url}(?:p|reel)\/(\w+)".format(valid_url=valid_url))
     # https://regex101.com/r/6Wbsxa/1
@@ -38,19 +35,14 @@ class InstagramExtractor(Extractor):
         )
         try:
             self.insta.load_session_from_file(self.username, self.session_file)
-        except FileNotFoundError:
-            logger.info("No existing session file found - Attempting login with use and password.")
+        except Exception as e:
             try:
+                logger.debug(f"Session file failed", exc_info=True)
+                logger.info("No valid session file found - Attempting login with use and password.")
                 self.insta.login(self.username, self.password)
                 self.insta.save_session_to_file(self.session_file)
             except Exception as e:
-                logger.error(f"Failed to log in with Instaloader: {e}")
-                # TODO raise exception?
-                # raise Exception(f"Failed to log in with Instaloader: {e}")
-        except Exception as e:
-            logger.error(f"Error loading session file: {e}")
-            # TODO raise exception?
-            # raise Exception(f"Error loading session file: {e}")
+                logger.error(f"Failed to setup Instagram Extractor with Instagrapi. {e}")
 
 
     def download(self, item: Metadata) -> Metadata:
