@@ -1,3 +1,4 @@
+from typing import Type
 from yt_dlp.extractor.common import InfoExtractor
 from auto_archiver.core.metadata import Metadata
 from auto_archiver.core.extractor import Extractor
@@ -22,6 +23,8 @@ class GenericDropin:
 
 
     """
+
+    extractor: Type[Extractor] = None
 
     def extract_post(self, url: str, ie_instance: InfoExtractor):
         """
@@ -56,3 +59,10 @@ class GenericDropin:
         This method should download any additional media from the post.
         """
         return metadata
+    
+    def is_suitable(self, url, info_extractor: InfoExtractor):
+        """
+        Used to override the InfoExtractor's 'is_suitable' method. Dropins should override this method to return True if the url is suitable for the extractor
+        (based on being able to parse other URLs)
+        """
+        return False

@@ -39,6 +39,17 @@ class TestGenericExtractor(TestExtractorBase):
         assert self.extractor.dropin_for_name("dropin", additional_paths=[path])
 
 
+    @pytest.mark.parametrize("url, suitable_extractors", [
+        ("https://www.youtube.com/watch?v=5qap5aO4i9A", ["youtube"]),
+        ("https://www.tiktok.com/@funnycats0ftiktok/video/7345101300750748970?lang=en", ["tiktok"]),
+        ("https://www.instagram.com/p/CU1J9JYJ9Zz/", ["instagram"]),
+        ("https://www.facebook.com/nytimes/videos/10160796550110716", ["facebook"]),
+        ("https://www.facebook.com/BylineFest/photos/t.100057299682816/927879487315946/", ["facebook"]),])
+    def test_suitable_extractors(self, url, suitable_extractors):
+        suitable_extractors = suitable_extractors + ['generic'] # the generic is valid for all
+        extractors = list(self.extractor.suitable_extractors(url))
+        assert len(extractors) == len(suitable_extractors)
+        assert [e.ie_key().lower() for e in extractors] == suitable_extractors
 
     @pytest.mark.parametrize("url, is_suitable", [
         ("https://www.youtube.com/watch?v=5qap5aO4i9A", True),
@@ -48,7 +59,7 @@ class TestGenericExtractor(TestExtractorBase):
         ("https://www.twitch.tv/videos/1167226570", True),
         ("https://bellingcat.com/news/2021/10/08/ukrainian-soldiers-are-being-killed-by-landmines-in-the-donbas/", True),
         ("https://google.com", True)])
-    def test_suitable_urls(self, make_item, url, is_suitable):
+    def test_suitable_urls(self, url, is_suitable):
         """
             Note: expected behaviour is to return True for all URLs, as YoutubeDLArchiver should be able to handle all URLs
             This behaviour may be changed in the future (e.g. if we want the youtubedl archiver to just handle URLs it has extractors for,
@@ -210,3 +221,32 @@ class TestGenericExtractor(TestExtractorBase):
         )
         assert len(post.media) == 1
         assert post.media[0].hash == image_hash
+
+    @pytest.mark.download
+    def test_download_facebook_video(self, make_item):
+
+        post = self.extractor.download(make_item("https://www.facebook.com/bellingcat/videos/588371253839133"))
+        assert len(post.media) == 2
+        assert post.media[0].filename.endswith("588371253839133.mp4")
+        assert post.media[0].mimetype == "video/mp4"
+
+        assert post.media[1].filename.endswith(".jpg")
+        assert post.media[1].mimetype == "image/jpeg"
+
+        assert "Bellingchat Premium is with Kolina Koltai" in post.get_title()
+    
+    @pytest.mark.download
+    def test_download_facebook_image(self, make_item):
+
+        post = self.extractor.download(make_item("https://www.facebook.com/BylineFest/photos/t.100057299682816/927879487315946/"))
+
+        assert len(post.media) == 1
+        assert post.media[0].filename.endswith(".png")
+        assert "Byline Festival - BylineFest Partner" == post.get_title()
+
+    @pytest.mark.download
+    def test_download_facebook_text_only(self, make_item):
+        url = "https://www.facebook.com/bellingcat/posts/pfbid02rzpwZxAZ8bLkAX8NvHv4DWAidFaqAUfJMbo9vWkpwxL7uMUWzWMiizXLWRSjwihVl"
+        post = self.extractor.download(make_item(url))
+        assert "Bellingcat researcher Kolina Koltai delves deeper into Clothoff" in post.get('content')
+        assert post.get_title() == "Bellingcat"
