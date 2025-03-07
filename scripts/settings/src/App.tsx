@@ -162,12 +162,10 @@ function ModuleTypes({ stepType, setEnabledModules, enabledModules, configValues
     } else {
       setShowError(false);
     }
-    let newEnabledModules = Object.fromEntries(Object.keys(enabledModules).map((type: string) => {
-      return [type, enabledModules[type].map(([m, enabled]: [string, boolean]) => {
+    let newEnabledModules = { ...enabledModules };
+    newEnabledModules[stepType] = enabledModules[stepType].map(([m, enabled]: [string, boolean]) => {
         return (m === name) ? [m, checked] : [m, enabled];
-      })];
-    }
-    ));
+      });
     setEnabledModules(newEnabledModules);
   }
 
