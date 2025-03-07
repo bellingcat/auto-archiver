@@ -31,7 +31,7 @@
     
       > ⚠️ **Warning**  
       > This module is not actively maintained due to known issues with blocking.  
-      > Prioritise usage of the `instagram_tbot_extractor` and `instagram_api_extractor`.
+      > Prioritise usage of the [Instagram Tbot Extracto](./instagram_tbot_extractor.md) and [Instagram API Extractor](./instagram_api_extractor.md)
   
     This class handles both individual posts and user profiles, downloading as much information as possible, including images, videos, text, stories,
     highlights, and tagged posts. 
