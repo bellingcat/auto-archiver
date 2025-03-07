@@ -104,7 +104,7 @@ class InstagramTbotExtractor(Extractor):
         message = ""
         time.sleep(3)
         # media is added before text by the bot so it can be used as a stop-logic mechanism
-        while attempts < (self.timeout - 3) and (not message or not len(seen_media)):
+        while attempts < max(self.timeout - 3, 3) and (not message or not len(seen_media)):
             attempts += 1
             time.sleep(1)
             for post in self.client.iter_messages(chat, min_id=since_id):
