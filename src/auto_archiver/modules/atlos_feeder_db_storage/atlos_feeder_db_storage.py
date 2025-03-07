@@ -143,5 +143,5 @@ class AtlosFeederDbStorage(Feeder, Database, Storage):
 
     def uploadf(self, file: IO[bytes], key: str, **kwargs: dict) -> bool:
         """Upload a file-like object; not implemented."""
-        raise NotImplementedError("uploadf method is not implemented yet.")
+        pass
 
