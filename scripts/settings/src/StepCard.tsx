@@ -23,9 +23,12 @@ import {
     TextField,
     Stack,
     Typography,
+    InputAdornment,
 } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import HelpIconOutlined from '@mui/icons-material/HelpOutline';
 import { Module, Config } from "./types";
 
@@ -83,24 +86,24 @@ const StepCard = ({
                     title={
                         <FormControlLabel
                             style={{paddingRight: '0 !important'}}
-                            control={<Checkbox sx={{paddingTop:0, paddingBottom:0}} id={name} onClick={toggleModule} checked={enabled} />}
+                            control={<Checkbox title="Check to enable this module" sx={{paddingTop:0, paddingBottom:0}} id={name} onClick={toggleModule} checked={enabled} />}
                             label={module.display_name} />
                     }
                 />
                 <CardActions>
                     <Box sx={{ justifyContent: 'space-between', display: 'flex', width: '100%' }}>
                         <Box>
-                    <IconButton size="small" onClick={() => setHelpOpen(true)}>
+                    <IconButton title="Module information" size="small" onClick={() => setHelpOpen(true)}>
                         <HelpIconOutlined />
                     </IconButton>
                     {enabled && module.configs && name != 'cli_feeder' ? (
                         <Button size="small" onClick={() => setConfigOpen(true)}>Configure</Button>
                     ) : null}
                     </Box>
-                        <IconButton size="small" sx={{textAlight: 'right', cursor: 'grab' }}  {...listeners} {...attributes}>
-                            <DragIndicatorIcon />
-                        </IconButton>
-                        </Box>
+                    <IconButton size="small" title="Drag to reorder" sx={{ cursor: 'grab' }} {...listeners} {...attributes}>
+                        <DragIndicatorIcon/>
+                    </IconButton>
+                    </Box>
                 </CardActions>
             </Card>
             <Dialog
@@ -123,6 +126,17 @@ const StepCard = ({
 }
 
 function ConfigField({ config_value, module, configValues }: { config_value: any, module: Module, configValues: any }) {
+    const [showPassword, setShowPassword] = useState(false);
+    const handleClickShowPassword = () => setShowPassword((show) => !show);
+
+    const handleMouseDownPassword = (event: React.MouseEvent<HTMLButtonElement>) => {
+      event.preventDefault();
+    };
+  
+    const handleMouseUpPassword = (event: React.MouseEvent<HTMLButtonElement>) => {
+      event.preventDefault();
+    };
+
     function setConfigValue(config: any, value: any) {
         configValues[module.name][config] = value;
     }
@@ -130,6 +144,18 @@ function ConfigField({ config_value, module, configValues }: { config_value: any
     const config_name: string = config_value.replace(/_/g, " ");
     const config_display_name = config_name.capitalize();
     const value = configValues[module.name][config_value] || config_args.default;
+    
+
+    const config_value_lower = config_value.toLowerCase();
+    const is_password = config_value_lower.includes('password') ||
+                        config_value_lower.includes('secret') ||
+                        config_value_lower.includes('token') ||
+                        config_value_lower.includes('key') ||
+                        config_value_lower.includes('api_hash') ||
+                        config_args.type === 'password';
+
+    const text_input_type = is_password ? 'password' : (config_args.type === 'int' ? 'number' : 'text');
+
     return (
         <Box>
             <Typography variant='body1' style={{ fontWeight: 'bold' }}>{config_display_name} {config_args.required && (`(required)`)} </Typography>
@@ -172,11 +198,25 @@ function ConfigField({ config_value, module, configValues }: { config_value: any
                                     }
                                 } />
                                 :
-                                <TextField size="small" id={`${module}.${config_value}`} defaultValue={value} type={config_args.type === 'int' ? 'number' : 'text'}
+                                <TextField size="small" id={`${module}.${config_value}`} defaultValue={value} type={showPassword ? 'text' : text_input_type}
                                     onChange={(e) => {
                                         setConfigValue(config_value, e.target.value);
                                     }}
                                     required={config_args.required}
+                                    slotProps={ is_password ? {
+                                        input: { endAdornment: (
+                                            <InputAdornment position="end">
+                                                <IconButton
+                                                    aria-label="toggle password visibility"
+                                                    onClick={handleClickShowPassword}
+                                                    onMouseDown={handleMouseDownPassword}
+                                                    onMouseUp={handleMouseUpPassword}
+                                                >
+                                                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                                                </IconButton>
+                                            </InputAdornment>
+                                        )}
+                                    } : {}}
                                 />
                             )
                     )
