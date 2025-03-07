@@ -15,6 +15,7 @@ from copy import copy
 
 from rich_argparse import RichHelpFormatter
 from loguru import logger
+import requests
 
 from .metadata import Metadata, Media
 from auto_archiver.version import __version__
@@ -72,9 +73,19 @@ class ArchivingOrchestrator:
 
         self.basic_parser = parser
         return parser
+    
+    def check_steps(self, config):
+        for module_type in MODULE_TYPES:
+            if not config['steps'].get(f"{module_type}s", []):
+                if module_type == 'feeder' or module_type == 'formatter' and config['steps'].get(f"{module_type}"):
+                    raise SetupError(f"It appears you have '{module_type}' set under 'steps' in your configuration file, but as of version 0.13.0 of Auto Archiver, you must use '{module_type}s'. Change this in your configuration file and try again. \
+Here's how that would look: \n\nsteps:\n  {module_type}s:\n  - [your_{module_type}_name_here]\n  {'extractors:...' if module_type == 'feeder' else '...'}\n")
+                if module_type == 'extractor' and config['steps'].get('archivers'):
+                    raise SetupError(f"As of version 0.13.0 of Auto Archiver, the 'archivers' step name has been changed to 'extractors'. Change this in your configuration file and try again. \
+Here's how that would look: \n\nsteps:\n  extractors:\n  - [your_extractor_name_here]\n  enrichers:...\n")
+                raise SetupError(f"No {module_type}s were configured. Make sure to set at least one {module_type} in your configuration file or on the command line (using --{module_type}s)")
 
     def setup_complete_parser(self, basic_config: dict, yaml_config: dict, unused_args: list[str]) -> None:
-
 
         # modules parser to get the overridden 'steps' values
         modules_parser = argparse.ArgumentParser(
@@ -100,6 +111,7 @@ class ArchivingOrchestrator:
         # but should we add them? Or should we just add them to the 'complete' parser?
 
         if is_valid_config(yaml_config):
+            self.check_steps(yaml_config)
             # only load the modules enabled in config
             # TODO: if some steps are empty (e.g. 'feeders' is empty), should we default to the 'simple' ones? Or only if they are ALL empty?
             enabled_modules = []
@@ -114,10 +126,6 @@ class ArchivingOrchestrator:
         elif basic_config.mode == 'simple':
             simple_modules = [module for module in self.module_factory.available_modules() if not module.requires_setup]
             self.add_individual_module_args(simple_modules, parser)
-
-            # for simple mode, we use the cli_feeder and any modules that don't require setup
-            if not yaml_config['steps']['feeders']:
-                yaml_config['steps']['feeders'] = ['cli_feeder']
 
             # add them to the config
             for module in simple_modules:
@@ -171,9 +179,6 @@ class ArchivingOrchestrator:
         if not parser:
             parser = self.parser
 
-        # allow passing URLs directly on the command line
-        parser.add_argument('urls', nargs='*', default=[], help='URL(s) to archive, either a single URL or a list of urls, should not come from config.yaml')
-
         parser.add_argument('--authentication', dest='authentication', help='A dictionary of sites and their authentication methods \
                                                                             (token, username etc.) that extractors can use to log into \
                                                                             a website. If passing this on the command line, use a JSON string. \
@@ -193,7 +198,11 @@ class ArchivingOrchestrator:
             modules = self.module_factory.available_modules()
         
         for module in modules:
-
+            if module.name == 'cli_feeder':
+                # special case. For the CLI feeder, allow passing URLs directly on the command line without setting --cli_feeder.urls=
+                parser.add_argument('urls', nargs='*', default=[], help='URL(s) to archive, either a single URL or a list of urls, should not come from config.yaml')
+                continue
+                
             if not module.configs:
                 # this module has no configs, don't show anything in the help
                 # (TODO: do we want to show something about this module though, like a description?)
@@ -277,36 +286,16 @@ class ArchivingOrchestrator:
                     raise SetupError(f"Only one {module_type} is allowed, found {len(step_items)} {module_type}s. Please remove one of the following from your configuration file: {modules_to_load}")
 
             for module in modules_to_load:
-                if module == 'cli_feeder':
-                    # cli_feeder is a pseudo module, it just takes the command line args for [URLS]
-                    urls = self.config['urls']
-                    if not urls:
-                        raise SetupError("No URLs provided. Please provide at least one URL via the command line, or set up an alternative feeder. Use --help for more information.")
-
-                    def feed(self) -> Generator[Metadata]:
-                        for url in urls:
-                            logger.debug(f"Processing URL: '{url}'")
-                            yield Metadata().set_url(url)
-
-                    pseudo_module = type('CLIFeeder', (Feeder,), {
-                        'name': 'cli_feeder',
-                        'display_name': 'CLI Feeder',
-                        '__iter__': feed
-
-                    })()
-
-                    pseudo_module.__iter__ = feed
-                    step_items.append(pseudo_module)
-                    continue
 
                 if module in invalid_modules:
                     continue
 
+                loaded_module = None
                 try:
                     loaded_module: BaseModule = self.module_factory.get_module(module, self.config)
                 except (KeyboardInterrupt, Exception) as e:
                     logger.error(f"Error during setup of modules: {e}\n{traceback.format_exc()}")
-                    if module_type == 'extractor' and loaded_module.name == module:
+                    if loaded_module and module_type == 'extractor':
                         loaded_module.cleanup()
                     raise e
 
@@ -348,13 +337,31 @@ class ArchivingOrchestrator:
         yaml_config = self.load_config(basic_config.config_file)
 
         return self.setup_complete_parser(basic_config, yaml_config, unused_args)
+    
+    def check_for_updates(self):
+        response = requests.get("https://pypi.org/pypi/auto-archiver/json").json()
+        latest_version = response['info']['version']
+        # check version compared to current version
+        if latest_version != __version__:
+            if os.environ.get('RUNNING_IN_DOCKER'):
+                update_cmd = "`docker pull bellingcat/auto-archiver:latest`"
+            else:
+                update_cmd = "`pip install --upgrade auto-archiver`"
+            logger.warning("")
+            logger.warning("********* IMPORTANT: UPDATE AVAILABLE ********")
+            logger.warning(f"A new version of auto-archiver is available (v{latest_version}, you have {__version__})")
+            logger.warning(f"Make sure to update to the latest version using: {update_cmd}")
+            logger.warning("")
 
+        
     def setup(self, args: list):
         """
         Function to configure all setup of the orchestrator: setup configs and load modules.
         
         This method should only ever be called once
         """
+
+        self.check_for_updates()
 
         if self.setup_finished:
             logger.warning("The `setup_config()` function should only ever be run once. \

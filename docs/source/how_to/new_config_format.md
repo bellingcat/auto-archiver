@@ -1,11 +1,11 @@
-# Upgrading to v0.13
+# Upgrading from v0.12
 
 ```{note} This how-to is only relevant for people who used Auto Archiver before February 2025 (versions prior to 0.13).
 
 If you are new to Auto Archiver, then you are already using the latest configuration format and this how-to is not relevant for you.
 ```
 
-Version 0.13 of Auto Archiver has breaking changes in the configuration format, which means earlier configuration formats will not work without slight modifications.
+Versions 0.13+ of Auto Archiver has breaking changes in the configuration format, which means earlier configuration formats will not work without slight modifications.
 
 ## How do I know if I need to update my configuration format?
 
@@ -22,15 +22,13 @@ your configuration file or on the command line (using --feeders)
 ```{code} yaml
 
 steps:
-  feeder: gsheet_feeder
+  feeder: cli_feeder
 ...
 ```
 
-## Updating your configuration file
+The next two sections outline the two methods you have for updating your file.
 
-To update your configuration file, you can either:
-
-### 1. Manually edit the configuration file and change the values.
+## 1. Manually edit the configuration file and change the values.
 
 This is recommended if you want to keep all your old settings. Follow the steps below to change the relevant settings:
 
@@ -75,28 +73,49 @@ The names of the actual modules have also changed, so for any extractor modules 
 - `wayback_archiver_enricher` → `wayback_extractor_enricher`
 - `vk_archiver` → `vk_extractor`
 
-Additionally, the `youtube_archiver` has been renamed to `generic_extractor` as it is considered the default/fallback extractor. Read more about the [generic extractor](../modules/autogen/extractor/generic_extractor.md).
+
+#### c) Module Renaming
+
+
+The `youtube_archiver` has been renamed to `generic_extractor` as it is considered the default/fallback extractor. Read more about the [generic extractor](../modules/autogen/extractor/generic_extractor.md).
+
+The `atlos` modules have been merged into one, as have the `gsheets` feeder and database.
+
+- `atlos_feeder` → `atlos_feeder_db_storage`
+- `atlos_storage` → `atlos_feeder_db_storage`
+- `atlos_db` → `atlos_feeder_db_storage`
+- `gsheet_feeder` → `gsheet_feeder_db`
+- `gsheet_db` → `gsheet_feeder_db`
+
 
 Example:
 ```{code} yaml
 steps:
+   feeders:
+   - gsheet_feeder_db # formerly gsheet_feeder
    ...
-   archivers:
-   - telethon_archiver
-   - youtube_archiver
-   - vk_archiver
-
-# renaming 'archiver' to 'extractor', and renaming the youtube_archiver the above config will become:
-steps:
+   extractors: # formerly 'archivers'
+   - telethon_extractor # formerly telethon_archiver
+   - generic_extractor # formerly youtube_archiver
+   - vk_extractor # formerly vk_archiver
+   databases:
+   - gsheet_feeder_db # formerly gsheet_db
    ...
-   extractors:
-   - telethon_extractor
-   - vk_extractor
-   - generic_extractor
 
 ```
 
-#### c) Redundant / Obsolete Modules
+```{note}
+
+Don't forget to also rename the configuration settings. For example:
+
+```{code} yaml
+gsheet_feeder_db: # formerly gsheet_feeder
+  service_account: secrets/service_account.json
+  sheet: My Google Sheet
+...
+```
+
+#### d) Redundant / Obsolete Modules
 
 With v0.13 of Auto Archiver, the following modules have been removed and their features have been built in to the generic_extractor. You should remove them from the 'steps' section of your configuration file:
 
@@ -104,7 +123,7 @@ With v0.13 of Auto Archiver, the following modules have been removed and their f
 * `tiktok_archiver` - use the `generic_extractor` to extract TikTok videos.
 
 
-### 2. Auto-generate a new config, then copy over your settings.
+## 2. Auto-generate a new config, then copy over your settings.
 
 Using this method, you can have Auto Archiver auto-generate a configuration file for you, then you can copy over the desired settings from your old config file. This is probably the easiest method and quickest to setup, but it may require some trial and error as you copy over your settings.
 

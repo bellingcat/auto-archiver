@@ -7,7 +7,9 @@
     },
     'entry_point': 'ssl_enricher::SSLEnricher',
     "configs": {
-        "skip_when_nothing_archived": {"default": True, "help": "if true, will skip enriching when no media is archived"},
+        "skip_when_nothing_archived": {"default": True,
+                                       "type": 'bool',
+                                       "help": "if true, will skip enriching when no media is archived"},
     },
     "description": """
     Retrieves SSL certificate information for a domain and stores it as a file.

@@ -10,7 +10,7 @@ class ConsoleDb(Database):
     """
 
     def started(self, item: Metadata) -> None:
-        logger.warning(f"STARTED {item}")
+        logger.info(f"STARTED {item}")
 
     def failed(self, item: Metadata, reason:str) -> None:
         logger.error(f"FAILED {item}: {reason}")

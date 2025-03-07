@@ -6,7 +6,7 @@
                               },
     'entry_point': 'csv_db::CSVDb',
     "configs": {
-            "csv_file": {"default": "db.csv", "help": "CSV file name"}
+            "csv_file": {"default": "db.csv", "help": "CSV file name to save metadata to"},
         },
     "description": """
 Handles exporting archival results to a CSV file.

@@ -1,17 +1,22 @@
 """ This Webdriver class acts as a context manager for the selenium webdriver. """
 from __future__ import annotations
-from selenium import webdriver
-from selenium.common.exceptions import TimeoutException
-from selenium.webdriver.common.proxy import Proxy, ProxyType
-from selenium.webdriver.common.print_page_options import PrintOptions
 
-from loguru import logger
-from selenium.webdriver.common.by import By
+import os
 import time
 
 #import domain_for_url
 from urllib.parse import urlparse, urlunparse
 from http.cookiejar import MozillaCookieJar
+
+from selenium import webdriver
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.common import exceptions as selenium_exceptions
+from selenium.webdriver.common.print_page_options import PrintOptions
+from selenium.webdriver.common.by import By
+
+from loguru import logger
+
 
 class CookieSettingDriver(webdriver.Firefox):
 
@@ -20,6 +25,10 @@ class CookieSettingDriver(webdriver.Firefox):
     cookiejar: MozillaCookieJar
 
     def __init__(self, cookies, cookiejar, facebook_accept_cookies, *args, **kwargs):
+        if os.environ.get('RUNNING_IN_DOCKER'):
+            # Selenium doesn't support linux-aarch64 driver, we need to set this manually
+            kwargs['service'] = webdriver.FirefoxService(executable_path='/usr/local/bin/geckodriver')
+        
         super(CookieSettingDriver, self).__init__(*args, **kwargs)
         self.cookies = cookies
         self.cookiejar = cookiejar
@@ -64,14 +73,29 @@ class CookieSettingDriver(webdriver.Firefox):
                 time.sleep(2)
             except Exception as e:
                 logger.warning(f'Failed on fb accept cookies.', e)
+        
+
         # now get the actual URL
         super(CookieSettingDriver, self).get(url)
         if self.facebook_accept_cookies:
             # try and click the 'close' button on the 'login' window to close it
-            close_button = self.find_element(By.XPATH, "//div[@role='dialog']//div[@aria-label='Close']")
-            if close_button:
-                close_button.click()
+            try:
+                xpath = "//div[@role='dialog']//div[@aria-label='Close']"
+                WebDriverWait(self, 5).until(EC.element_to_be_clickable((By.XPATH, xpath))).click()
+            except selenium_exceptions.NoSuchElementException:
+                logger.warning("Unable to find the 'close' button on the facebook login window")
+                pass
 
+        else:
+
+            # for all other sites, try and use some common button text to reject/accept cookies
+            for text in ["Refuse non-essential cookies", "Decline optional cookies", "Reject additional cookies", "Reject all", "Accept all cookies"]:
+                try:
+                    xpath = f"//*[contains(translate(text(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), '{text.lower()}')]"
+                    WebDriverWait(self, 5).until(EC.element_to_be_clickable((By.XPATH, xpath))).click()
+                    break
+                except selenium_exceptions.WebDriverException:
+                    pass
 
     
 class Webdriver:
@@ -90,7 +114,6 @@ class Webdriver:
             setattr(self.print_options, k, v)
 
     def __enter__(self) -> webdriver:
-
         options = webdriver.FirefoxOptions()
         options.add_argument("--headless")
         options.add_argument(f'--proxy-server={self.http_proxy}')
@@ -105,7 +128,7 @@ class Webdriver:
             self.driver.set_window_size(self.width, self.height)
             self.driver.set_page_load_timeout(self.timeout_seconds)
             self.driver.print_options = self.print_options
-        except TimeoutException as e:
+        except selenium_exceptions.TimeoutException as e:
             logger.error(f"failed to get new webdriver, possibly due to insufficient system resources or timeout settings: {e}")
 
         return self.driver

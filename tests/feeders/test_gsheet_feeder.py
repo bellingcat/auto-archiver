@@ -2,7 +2,7 @@ from typing import Type
 
 import gspread
 import pytest
-from auto_archiver.modules.gsheet_feeder import GsheetsFeeder
+from auto_archiver.modules.gsheet_feeder_db import GsheetsFeederDB
 from auto_archiver.core import Metadata, Feeder
 
 
@@ -11,13 +11,13 @@ def test_setup_without_sheet_and_sheet_id(setup_module, mocker):
     mocker.patch("gspread.service_account")
     with pytest.raises(ValueError):
         setup_module(
-            "gsheet_feeder",
+            "gsheet_feeder_db",
             {"service_account": "dummy.json", "sheet": None, "sheet_id": None},
         )
 
 
 @pytest.fixture
-def gsheet_feeder(setup_module, mocker) -> GsheetsFeeder:
+def gsheet_feeder(setup_module, mocker) -> GsheetsFeederDB:
     config: dict = {
                 "service_account": "dummy.json",
                 "sheet": "test-auto-archiver",
@@ -45,7 +45,7 @@ def gsheet_feeder(setup_module, mocker) -> GsheetsFeeder:
             }
     mocker.patch("gspread.service_account")
     feeder = setup_module(
-        "gsheet_feeder",
+        "gsheet_feeder_db",
         config
     )
     feeder.gsheets_client = mocker.MagicMock()
@@ -90,7 +90,7 @@ class MockWorksheet:
         return matching.get(col_name, default)
 
 
-def test__process_rows(gsheet_feeder: GsheetsFeeder):
+def test__process_rows(gsheet_feeder: GsheetsFeederDB):
     testworksheet = MockWorksheet()
     metadata_items = list(gsheet_feeder._process_rows(testworksheet))
     assert len(metadata_items) == 3
@@ -98,7 +98,7 @@ def test__process_rows(gsheet_feeder: GsheetsFeeder):
     assert metadata_items[0].get("url") == "http://example.com"
 
 
-def test__set_metadata(gsheet_feeder: GsheetsFeeder):
+def test__set_metadata(gsheet_feeder: GsheetsFeederDB):
     worksheet = MockWorksheet()
     metadata = Metadata()
     gsheet_feeder._set_context(metadata, worksheet, 1)
@@ -106,12 +106,12 @@ def test__set_metadata(gsheet_feeder: GsheetsFeeder):
 
 
 @pytest.mark.skip(reason="Not recognising folder column")
-def test__set_metadata_with_folder_pickled(gsheet_feeder: GsheetsFeeder, worksheet):
+def test__set_metadata_with_folder_pickled(gsheet_feeder: GsheetsFeederDB, worksheet):
     gsheet_feeder._set_context(worksheet, 7)
     assert Metadata.get_context("gsheet") == {"row": 1, "worksheet": worksheet}
 
 
-def test__set_metadata_with_folder(gsheet_feeder: GsheetsFeeder):
+def test__set_metadata_with_folder(gsheet_feeder: GsheetsFeederDB):
     testworksheet = MockWorksheet()
     metadata = Metadata()
     testworksheet.wks.title = "TestSheet"
@@ -140,7 +140,7 @@ def test_open_sheet_with_name_or_id(
 
     # Setup module with parameterized values
     feeder = setup_module(
-        "gsheet_feeder",
+        "gsheet_feeder_db",
         {"service_account": "dummy.json", "sheet": sheet, "sheet_id": sheet_id},
     )
     sheet_result = feeder.open_sheet()
@@ -159,7 +159,7 @@ def test_open_sheet_with_sheet_id(setup_module, mocker):
     mock_service_account.return_value = mock_client
     mock_client.open_by_key.return_value = "MockSheet"
     feeder = setup_module(
-        "gsheet_feeder",
+        "gsheet_feeder_db",
         {"service_account": "dummy.json", "sheet": None, "sheet_id": "ABC123"},
     )
     sheet = feeder.open_sheet()
@@ -170,7 +170,7 @@ def test_open_sheet_with_sheet_id(setup_module, mocker):
 def test_should_process_sheet(setup_module, mocker):
     mocker.patch("gspread.service_account")
     gdb = setup_module(
-        "gsheet_feeder",
+        "gsheet_feeder_db",
         {
             "service_account": "dummy.json",
             "sheet": "TestSheet",
@@ -187,10 +187,10 @@ def test_should_process_sheet(setup_module, mocker):
 
 @pytest.mark.skip(reason="Requires a real connection")
 class TestGSheetsFeederReal:
-    """Testing GSheetsFeeder class"""
+    """Testing GsheetsFeeder class"""
 
-    module_name: str = "gsheet_feeder"
-    feeder: GsheetsFeeder
+    module_name: str = "gsheet_feeder_db"
+    feeder: GsheetsFeederDB
     # You must follow the setup process explain in the docs for this to work
     config: dict = {
         "service_account": "secrets/service_account.json",
