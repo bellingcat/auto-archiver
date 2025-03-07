@@ -26,11 +26,9 @@ steps:
 ...
 ```
 
-## Updating your configuration file
+The next two sections outline the two methods you have for updating your file.
 
-To update your configuration file, you can either:
-
-### 1. Manually edit the configuration file and change the values.
+## 1. Manually edit the configuration file and change the values.
 
 This is recommended if you want to keep all your old settings. Follow the steps below to change the relevant settings:
 
@@ -106,6 +104,16 @@ steps:
 
 ```
 
+```{note}
+
+Don't forget to also rename the configuration settings. For example:
+
+```{code} yaml
+gsheet_feeder_db: # formerly gsheet_feeder
+  service_account: secrets/service_account.json
+  sheet: My Google Sheet
+...
+```
 
 #### d) Redundant / Obsolete Modules
 
@@ -115,7 +123,7 @@ With v0.13 of Auto Archiver, the following modules have been removed and their f
 * `tiktok_archiver` - use the `generic_extractor` to extract TikTok videos.
 
 
-### 2. Auto-generate a new config, then copy over your settings.
+## 2. Auto-generate a new config, then copy over your settings.
 
 Using this method, you can have Auto Archiver auto-generate a configuration file for you, then you can copy over the desired settings from your old config file. This is probably the easiest method and quickest to setup, but it may require some trial and error as you copy over your settings.
 

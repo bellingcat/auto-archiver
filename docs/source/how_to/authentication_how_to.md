@@ -46,7 +46,7 @@ First, we need to install an extension in our browser to export the cookies for 
 
 **2. Export the cookies**
 
-```{note} See the note [here](../installation/authentication.md#recommendations-for-authentication) on why you shouldn't use your own personal account for achiving.
+```{note} See the note [here](../installation/authentication.md#recommendations-for-authentication) on why you shouldn't use your own personal account for archiving.
 ```
 
 Once the extension is installed in your preferred browser, login to Twitter in this browser, and then activate the extension and export the cookies. You can choose to export all your cookies for your browser, or just cookies for this specific site. In the image below, we're only exporting cookies for Twitter/x.com:
