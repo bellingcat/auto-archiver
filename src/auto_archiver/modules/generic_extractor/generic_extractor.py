@@ -36,6 +36,7 @@ class GenericExtractor(Extractor):
 
     def update_ytdlp(self):
         logger.info("Checking and updating yt-dlp...")
+        logger.info(f"Tip: change the 'ytdlp_update_interval' setting to control how often yt-dlp is updated. Set to -1 to disable or 0 to enable on every run. Current setting: {self.ytdlp_update_interval}")
         from importlib.metadata import version as get_version
         old_version = get_version("yt-dlp")
         try:
