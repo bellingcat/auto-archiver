@@ -12,8 +12,8 @@ on:
 env:
   # Use docker.io for Docker Hub if empty
   REGISTRY: docker.io
-
-  IMAGE_NAME: bellingcat/auto-archiver
+  # github.repository as <account>/<repo>
+  IMAGE_NAME: ${{ github.repository }}
 
 
 jobs:
@@ -42,7 +42,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@369eb591f429131d6889c46b94e711f089e6ca96
         with:
-          images: ${{ env.IMAGE_NAME }}
+          images: bellingcat/auto-archiver
       
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
