@@ -22,7 +22,7 @@ your configuration file or on the command line (using --feeders)
 ```{code} yaml
 
 steps:
-  feeder: gsheet_feeder
+  feeder: cli_feeder
 ...
 ```
 
@@ -75,28 +75,39 @@ The names of the actual modules have also changed, so for any extractor modules 
 - `wayback_archiver_enricher` → `wayback_extractor_enricher`
 - `vk_archiver` → `vk_extractor`
 
-Additionally, the `youtube_archiver` has been renamed to `generic_extractor` as it is considered the default/fallback extractor. Read more about the [generic extractor](../modules/autogen/extractor/generic_extractor.md).
+
+#### c) Module Renaming
+
+
+The `youtube_archiver` has been renamed to `generic_extractor` as it is considered the default/fallback extractor. Read more about the [generic extractor](../modules/autogen/extractor/generic_extractor.md).
+
+The `atlos` modules have been merged into one, as have the `gsheets` feeder and database.
+
+- `atlos_feeder` → `atlos_feeder_db_storage`
+- `atlos_storage` → `atlos_feeder_db_storage`
+- `atlos_db` → `atlos_feeder_db_storage`
+- `gsheet_feeder` → `gsheet_feeder_db`
+- `gsheet_db` → `gsheet_feeder_db`
+
 
 Example:
 ```{code} yaml
 steps:
+   feeders:
+   - gsheet_feeder_db # formerly gsheet_feeder
    ...
-   archivers:
-   - telethon_archiver
-   - youtube_archiver
-   - vk_archiver
-
-# renaming 'archiver' to 'extractor', and renaming the youtube_archiver the above config will become:
-steps:
+   extractors: # formerly 'archivers'
+   - telethon_extractor # formerly telethon_archiver
+   - generic_extractor # formerly youtube_archiver
+   - vk_extractor # formerly vk_archiver
+   databases:
+   - gsheet_feeder_db # formerly gsheet_db
    ...
-   extractors:
-   - telethon_extractor
-   - vk_extractor
-   - generic_extractor
 
 ```
 
-#### c) Redundant / Obsolete Modules
+
+#### d) Redundant / Obsolete Modules
 
 With v0.13 of Auto Archiver, the following modules have been removed and their features have been built in to the generic_extractor. You should remove them from the 'steps' section of your configuration file:
 
