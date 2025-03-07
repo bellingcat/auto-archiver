@@ -50,7 +50,6 @@ class BaseModule(ABC):
 
     def config_setup(self, config: dict):
 
-        authentication = config.get('authentication', {})
         # this is important. Each instance is given its own deepcopied config, so modules cannot
         # change values to affect other modules
         config = deepcopy(config)
@@ -106,8 +105,8 @@ class BaseModule(ABC):
             for key in self.authentication.keys():
                 if key in site or site in key:
                     logger.debug(f"Could not find exact authentication information for site '{site}'. \
-                                    did find information for '{key}' which is close, is this what you meant? \
-                                    If so, edit your authentication settings to make sure it exactly matches.")
+did find information for '{key}' which is close, is this what you meant? \
+If so, edit your authentication settings to make sure it exactly matches.")
 
         def get_ytdlp_cookiejar(args):
             import yt_dlp
@@ -117,7 +116,7 @@ class BaseModule(ABC):
             # collections.namedtuple('ParsedOptions', ('parser', 'options', 'urls', 'ydl_opts'))
             ytdlp_opts = getattr(parse_options(args), 'ydl_opts')
             return yt_dlp.YoutubeDL(ytdlp_opts).cookiejar
-        
+
         get_cookiejar_options = None
 
         # order of priority:

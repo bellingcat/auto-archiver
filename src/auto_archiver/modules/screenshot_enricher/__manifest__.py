@@ -9,7 +9,7 @@
             "width": {"default": 1280,
                       "type": "int",
                       "help": "width of the screenshots"},
-            "height": {"default": 720,
+            "height": {"default": 1024,
                         "type": "int",
                        "help": "height of the screenshots"},
             "timeout": {"default": 60,

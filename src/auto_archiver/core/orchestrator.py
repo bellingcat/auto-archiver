@@ -15,6 +15,7 @@ from copy import copy
 
 from rich_argparse import RichHelpFormatter
 from loguru import logger
+import requests
 
 from .metadata import Metadata, Media
 from auto_archiver.version import __version__
@@ -335,13 +336,31 @@ Here's how that would look: \n\nsteps:\n  extractors:\n  - [your_extractor_name_
         yaml_config = self.load_config(basic_config.config_file)
 
         return self.setup_complete_parser(basic_config, yaml_config, unused_args)
+    
+    def check_for_updates(self):
+        response = requests.get("https://pypi.org/pypi/auto-archiver/json").json()
+        latest_version = response['info']['version']
+        # check version compared to current version
+        if latest_version != __version__:
+            if os.environ.get('RUNNING_IN_DOCKER'):
+                update_cmd = "`docker pull bellingcat/auto-archiver:latest`"
+            else:
+                update_cmd = "`pip install --upgrade auto-archiver`"
+            logger.warning("")
+            logger.warning("********* IMPORTANT: UPDATE AVAILABLE ********")
+            logger.warning(f"A new version of auto-archiver is available (v{latest_version}, you have {__version__})")
+            logger.warning(f"Make sure to update to the latest version using: {update_cmd}")
+            logger.warning("")
 
+        
     def setup(self, args: list):
         """
         Function to configure all setup of the orchestrator: setup configs and load modules.
         
         This method should only ever be called once
         """
+
+        self.check_for_updates()
 
         if self.setup_finished:
             logger.warning("The `setup_config()` function should only ever be run once. \
