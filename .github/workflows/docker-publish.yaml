@@ -45,7 +45,7 @@ jobs:
           images: bellingcat/auto-archiver
       
       - name: Build and push Docker image
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v6
         with:
           context: .
           platforms: linux/amd64,linux/arm64
