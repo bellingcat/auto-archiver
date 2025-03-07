@@ -27,6 +27,7 @@ RUN if [ $(uname -m) = "aarch64" ]; then \
     wget https://github.com/mozilla/geckodriver/releases/download/v${GECKODRIVER_VERSION}/geckodriver-v${GECKODRIVER_VERSION}-${GECKODRIVER_ARCH}.tar.gz && \
     tar -xvzf geckodriver* -C /usr/local/bin && \
     chmod +x /usr/local/bin/geckodriver && \
+    rm geckodriver-v* && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
