@@ -28,6 +28,13 @@ the broader archiving framework.
  metadata objects. Some dropins are included in this generic_archiver by default, but
 custom dropins can be created to handle additional websites and passed to the archiver
 via the command line using the `--dropins` option (TODO!).
+
+### Auto-Updates
+
+The Generic Extractor will also automatically check for updates to `yt-dlp` (every 5 days by default).
+This can be configured using the `ytdlp_update_interval` setting (or disabled by setting it to -1).
+If you are having issues with the extractor, you can review the version of `yt-dlp` being used with `yt-dlp --version`.
+
 """,
     "configs": {
         "subtitles": {"default": True, "help": "download subtitles if available", "type": "bool"},
