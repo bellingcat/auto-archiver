@@ -64,5 +64,10 @@ via the command line using the `--dropins` option (TODO!).
             "default": "inf",
             "help": "Use to limit the number of videos to download when a channel or long page is being extracted. 'inf' means no limit.",
         },
+        "extractor_args": {
+            "default": {},
+            "help": "Additional arguments to pass to the yt-dlp extractor. See https://github.com/yt-dlp/yt-dlp/blob/master/README.md#extractor-arguments.",
+            "type": "json_loader",
+        },
     },
 }
