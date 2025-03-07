@@ -89,7 +89,7 @@ class CookieSettingDriver(webdriver.Firefox):
         else:
 
             # for all other sites, try and use some common button text to reject/accept cookies
-            for text in ["Refuse non-essential cookies", "Decline optional cookies", "Reject additional cookies", "Accept all cookies"]:
+            for text in ["Refuse non-essential cookies", "Decline optional cookies", "Reject additional cookies", "Reject all", "Accept all cookies"]:
                 try:
                     xpath = f"//*[contains(translate(text(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), '{text.lower()}')]"
                     WebDriverWait(self, 5).until(EC.element_to_be_clickable((By.XPATH, xpath))).click()
