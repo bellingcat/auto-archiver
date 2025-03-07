@@ -5,9 +5,13 @@ on:
     branches: [ main ]
     paths:
       - src/**
+      - poetry.lock
+      - pyproject.toml
   pull_request:
     paths:
       - src/**
+      - poetry.lock
+      - pyproject.toml
 
 jobs:
   tests:
