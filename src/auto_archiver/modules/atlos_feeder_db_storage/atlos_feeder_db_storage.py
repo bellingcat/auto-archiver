@@ -43,6 +43,8 @@ class AtlosFeederDbStorage(Feeder, Database, Storage):
         response.raise_for_status()
         return response.json()
 
+    # ! Atlos Module - Feeder Methods
+
     def __iter__(self) -> Iterator[Metadata]:
         """Iterate over unprocessed, visible source materials from Atlos."""
         cursor = None
@@ -60,6 +62,8 @@ class AtlosFeederDbStorage(Feeder, Database, Storage):
                     yield Metadata().set_url(item["source_url"]).set("atlos_id", item["id"])
             if not results or cursor is None:
                 break
+
+    # ! Atlos Module - Database Methods
 
     def failed(self, item: Metadata, reason: str) -> None:
         """Mark an item as failed in Atlos, if the ID exists."""
@@ -103,6 +107,8 @@ class AtlosFeederDbStorage(Feeder, Database, Storage):
             },
         )
         logger.info(f"Stored success for {item.get_url()} (ID {atlos_id}) on Atlos")
+
+    # ! Atlos Module - Storage Methods
 
     def get_cdn_url(self, _media: Media) -> str:
         """Return the base Atlos URL as the CDN URL."""
