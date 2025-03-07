@@ -302,11 +302,12 @@ class ArchivingOrchestrator:
                 if module in invalid_modules:
                     continue
 
+                loaded_module = None
                 try:
                     loaded_module: BaseModule = self.module_factory.get_module(module, self.config)
                 except (KeyboardInterrupt, Exception) as e:
                     logger.error(f"Error during setup of modules: {e}\n{traceback.format_exc()}")
-                    if module_type == 'extractor' and loaded_module.name == module:
+                    if loaded_module and module_type == 'extractor':
                         loaded_module.cleanup()
                     raise e
 
