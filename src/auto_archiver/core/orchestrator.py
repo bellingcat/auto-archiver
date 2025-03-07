@@ -360,9 +360,9 @@ class ArchivingOrchestrator:
             else:
                 update_cmd = "`pip install --upgrade auto-archiver`"
             logger.warning("")
-            logger.warning(f"********* IMPORTANT: UPDATE AVAILABLE ********")
+            logger.warning("********* IMPORTANT: UPDATE AVAILABLE ********")
             logger.warning(f"A new version of auto-archiver is available (v{latest_version}, you have {__version__})")
-            logger.warning("Make sure to update to the latest version using: {update_cmd}")
+            logger.warning(f"Make sure to update to the latest version using: {update_cmd}")
             logger.warning("")
 
         

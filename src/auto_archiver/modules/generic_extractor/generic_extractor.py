@@ -1,8 +1,11 @@
-import datetime, os, yt_dlp, pysubs2
+import datetime, os
 import importlib
 import subprocess
 from typing import Generator, Type
+
+import yt_dlp
 from yt_dlp.extractor.common import InfoExtractor
+import pysubs2
 
 from loguru import logger
 
@@ -33,12 +36,15 @@ class GenericExtractor(Extractor):
 
     def update_ytdlp(self):
         logger.info("Checking and updating yt-dlp...")
+        from importlib.metadata import version as get_version
+        old_version = get_version("yt-dlp")
         try:
             # try and update with pip (this works inside poetry environment and in a normal virtualenv)
             result = subprocess.run(["pip", "install", "--upgrade", "yt-dlp"], check=True, capture_output=True)
 
             if "Successfully installed yt-dlp" in result.stdout.decode():
-                logger.info("yt-dlp was updated successfully")
+                new_version = importlib.metadata.version("yt-dlp")
+                logger.info(f"yt-dlp successfully (from {old_version} to {new_version})")
                 importlib.reload(yt_dlp)
             else:
                 logger.info("yt-dlp already up to date")
