@@ -13,3 +13,8 @@
 manual release to docker hub
   * `docker image tag auto-archiver bellingcat/auto-archiver:latest`
   * `docker push bellingcat/auto-archiver`
+
+
+### Building the Settings Page
+
+The Settings page is built as part of the python-publish workflow and packaged within the app.

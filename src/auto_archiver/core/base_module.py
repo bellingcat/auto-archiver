@@ -105,8 +105,8 @@ class BaseModule(ABC):
             for key in self.authentication.keys():
                 if key in site or site in key:
                     logger.debug(f"Could not find exact authentication information for site '{site}'. \
-                                    did find information for '{key}' which is close, is this what you meant? \
-                                    If so, edit your authentication settings to make sure it exactly matches.")
+did find information for '{key}' which is close, is this what you meant? \
+If so, edit your authentication settings to make sure it exactly matches.")
 
         def get_ytdlp_cookiejar(args):
             import yt_dlp
