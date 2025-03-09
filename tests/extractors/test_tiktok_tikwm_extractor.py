@@ -1,7 +1,5 @@
 from datetime import datetime, timezone
 import time
-from unittest.mock import patch
-
 import pytest
 
 from auto_archiver.modules.tiktok_tikwm_extractor.tiktok_tikwm_extractor import TiktokTikwmExtractor
@@ -18,30 +16,38 @@ class TestTiktokTikwmExtractor(TestExtractorBase):
 
     config = {}
 
+    VALID_EXAMPLE_URL = "https://www.tiktok.com/@example/video/1234"
+
+    @staticmethod
+    def get_mockers(mocker):
+        mock_get = mocker.patch("auto_archiver.modules.tiktok_tikwm_extractor.tiktok_tikwm_extractor.requests.get")
+        mock_logger = mocker.patch("auto_archiver.modules.tiktok_tikwm_extractor.tiktok_tikwm_extractor.logger")
+        return mock_get, mock_logger
+
     @pytest.mark.parametrize("url,valid_url", [
         ("https://bellingcat.com", False),
         ("https://youtube.com", False),
         ("https://tiktok.co/", False),
-        ("https://tiktok.com/", True),
-        ("https://www.tiktok.com/", True),
-        ("https://api.cool.tiktok.com/", True),
+        ("https://tiktok.com/", False),
+        ("https://www.tiktok.com/", False),
+        ("https://api.cool.tiktok.com/", False),
+        (VALID_EXAMPLE_URL, True),
+        ("https://www.tiktok.com/@bbcnews/video/7478038212070411542", True),
+        ("https://www.tiktok.com/@ggs68taiwan.official/video/7441821351142362375", True),
     ])
-    @patch('auto_archiver.modules.tiktok_tikwm_extractor.tiktok_tikwm_extractor.logger')
-    @patch('auto_archiver.modules.tiktok_tikwm_extractor.tiktok_tikwm_extractor.requests.get')
-    def test_valid_urls(self, mock_get, mock_logger, make_item, url, valid_url):
+    def test_valid_urls(self, mocker, make_item, url, valid_url):
+        mock_get, mock_logger = self.get_mockers(mocker)
         if valid_url:
             mock_get.return_value.status_code = 404
         assert self.extractor.download(make_item(url)) == False
         assert mock_get.call_count == int(valid_url)
         assert mock_logger.error.call_count == int(valid_url)
 
-    @patch('auto_archiver.modules.tiktok_tikwm_extractor.tiktok_tikwm_extractor.logger')
-    @patch('auto_archiver.modules.tiktok_tikwm_extractor.tiktok_tikwm_extractor.requests.get')
-    def test_invalid_json_responses(self, mock_get, mock_logger, make_item):
-        url = "https://tiktok.com/@user/123"
+    def test_invalid_json_responses(self, mocker, make_item):
+        mock_get, mock_logger = self.get_mockers(mocker)
         mock_get.return_value.status_code = 200
         mock_get.return_value.json.side_effect = ValueError
-        assert self.extractor.download(make_item(url)) == False
+        assert self.extractor.download(make_item(self.VALID_EXAMPLE_URL)) == False
         mock_get.assert_called_once()
         mock_get.return_value.json.assert_called_once()
         mock_logger.error.assert_called_once()
@@ -49,7 +55,7 @@ class TestTiktokTikwmExtractor(TestExtractorBase):
 
         mock_get.return_value.json.side_effect = Exception
         with pytest.raises(Exception):
-            self.extractor.download(make_item(url))
+            self.extractor.download(make_item(self.VALID_EXAMPLE_URL))
         mock_get.assert_called()
         assert mock_get.call_count == 2
         assert mock_get.return_value.json.call_count == 2
@@ -58,13 +64,11 @@ class TestTiktokTikwmExtractor(TestExtractorBase):
         ({"msg": "failure"}),
         ({"msg": "success"}),
     ])
-    @patch('auto_archiver.modules.tiktok_tikwm_extractor.tiktok_tikwm_extractor.logger')
-    @patch('auto_archiver.modules.tiktok_tikwm_extractor.tiktok_tikwm_extractor.requests.get')
-    def test_unsuccessful_responses(self, mock_get, mock_logger, make_item, response):
-        url = "https://tiktok.com/@user/123"
+    def test_unsuccessful_responses(self, mocker, make_item, response):
+        mock_get, mock_logger = self.get_mockers(mocker)
         mock_get.return_value.status_code = 200
         mock_get.return_value.json.return_value = response
-        assert self.extractor.download(make_item(url)) == False
+        assert self.extractor.download(make_item(self.VALID_EXAMPLE_URL)) == False
         mock_get.assert_called_once()
         mock_get.return_value.json.assert_called_once()
         mock_logger.error.assert_called_once()
@@ -75,14 +79,12 @@ class TestTiktokTikwmExtractor(TestExtractorBase):
         ({"data": {"wmplay": "url"}}, True),
         ({"data": {"play": "url"}}, True),
     ])
-    @patch('auto_archiver.modules.tiktok_tikwm_extractor.tiktok_tikwm_extractor.logger')
-    @patch('auto_archiver.modules.tiktok_tikwm_extractor.tiktok_tikwm_extractor.requests.get')
-    def test_correct_extraction(self, mock_get, mock_logger, make_item, response, has_vid):
-        url = "https://tiktok.com/@user/123"
+    def test_correct_extraction(self, mocker, make_item, response, has_vid):
+        mock_get, mock_logger = self.get_mockers(mocker)
         mock_get.return_value.status_code = 200
         mock_get.return_value.json.return_value = {"msg": "success", **response}
 
-        result = self.extractor.download(make_item(url))
+        result = self.extractor.download(make_item(self.VALID_EXAMPLE_URL))
         if not has_vid:
             assert result == False
         else:
@@ -97,9 +99,8 @@ class TestTiktokTikwmExtractor(TestExtractorBase):
         else:
             mock_logger.error.assert_not_called()
 
-    @patch('auto_archiver.modules.tiktok_tikwm_extractor.tiktok_tikwm_extractor.requests.get')
-    def test_correct_extraction(self, mock_get, make_item):
-        url = "https://tiktok.com/@user/123"
+    def test_correct_extraction(self, mocker, make_item):
+        mock_get, _ = self.get_mockers(mocker)
         mock_get.return_value.status_code = 200
         mock_get.return_value.json.return_value = {"msg": "success", "data": {
             "wmplay": "url",
@@ -112,14 +113,12 @@ class TestTiktokTikwmExtractor(TestExtractorBase):
             "other": "data"
         }}
 
-        result = self.extractor.download(make_item(url))
+        result = self.extractor.download(make_item(self.VALID_EXAMPLE_URL))
         assert result.is_success()
         assert len(result.media) == 2
         assert result.get_title() == "Title"
         assert result.get("author") == "Author"
         assert result.get("api_data") == {"other": "data", "id": 123}
-        # assert result.media[0].filename == "cover.jpg"
-        # assert result.media[1].filename == "vid_123.mp4"
         assert result.media[1].get("duration") == 60
         assert result.get("timestamp") == datetime.fromtimestamp(1736301699, tz=timezone.utc)
 

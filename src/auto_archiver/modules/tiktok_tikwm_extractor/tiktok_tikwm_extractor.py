@@ -1,6 +1,8 @@
+import re
 import requests
 from loguru import logger
 from datetime import datetime, timezone
+from yt_dlp.extractor.tiktok import TikTokIE
 
 from auto_archiver.core import Extractor
 from auto_archiver.core import Metadata, Media
@@ -10,15 +12,15 @@ class TiktokTikwmExtractor(Extractor):
     """
     Extractor for TikTok that uses an unofficial API and can capture content that requires a login, like sensitive content.
     """
+    TIKWM_ENDPOINT = "https://www.tikwm.com/api/?url={url}"
 
     def download(self, item: Metadata) -> Metadata:
         url = item.get_url()
-
-        # detect URLs that we definitely cannot handle
-        if 'tiktok.com' not in item.netloc:
+        
+        if not re.match(TikTokIE._VALID_URL, url):
             return False
 
-        endpoint = f"https://www.tikwm.com/api/?url={url}"
+        endpoint = TiktokTikwmExtractor.TIKWM_ENDPOINT.format(url=url)
 
         r = requests.get(endpoint)
         if r.status_code != 200:
