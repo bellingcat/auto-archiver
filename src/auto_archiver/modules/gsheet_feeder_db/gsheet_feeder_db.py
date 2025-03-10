@@ -20,7 +20,7 @@ from slugify import slugify
 from auto_archiver.core import Feeder, Database, Media
 from auto_archiver.core import Metadata
 from auto_archiver.modules.gsheet_feeder_db import GWorksheet
-from auto_archiver.utils.misc import calculate_file_hash, get_current_timestamp
+from auto_archiver.utils.misc import get_current_timestamp
 
 
 class GsheetsFeederDB(Feeder, Database):

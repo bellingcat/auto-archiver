@@ -7,7 +7,8 @@ and identify important moments without watching the entire video.
 
 """
 
-import ffmpeg, os
+import ffmpeg
+import os
 from loguru import logger
 
 from auto_archiver.core import Enricher

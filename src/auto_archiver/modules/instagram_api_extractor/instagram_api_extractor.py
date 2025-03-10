@@ -95,7 +95,7 @@ class InstagramAPIExtractor(Extractor):
         result.set_title(user.get("full_name", username)).set("data", user)
         if pic_url := user.get("profile_pic_url_hd", user.get("profile_pic_url")):
             filename = self.download_from_url(pic_url)
-            result.add_media(Media(filename=filename), id=f"profile_picture")
+            result.add_media(Media(filename=filename), id="profile_picture")
 
         if self.full_profile:
             user_id = user.get("pk")
@@ -133,7 +133,7 @@ class InstagramAPIExtractor(Extractor):
 
     def download_all_highlights(self, result, username, user_id):
         count_highlights = 0
-        highlights = self.call_api(f"v1/user/highlights", {"user_id": user_id})
+        highlights = self.call_api("v1/user/highlights", {"user_id": user_id})
         for h in highlights:
             try:
                 h_info = self._download_highlights_reusable(result, h.get("pk"))
@@ -151,9 +151,9 @@ class InstagramAPIExtractor(Extractor):
 
     def download_post(self, result: Metadata, code: str = None, id: str = None, context: str = None) -> Metadata:
         if id:
-            post = self.call_api(f"v1/media/by/id", {"id": id})
+            post = self.call_api("v1/media/by/id", {"id": id})
         else:
-            post = self.call_api(f"v1/media/by/code", {"code": code})
+            post = self.call_api("v1/media/by/code", {"code": code})
         assert post, f"Post {id or code} not found"
 
         if caption_text := post.get("caption_text"):
@@ -173,7 +173,7 @@ class InstagramAPIExtractor(Extractor):
         return result.success("insta highlights")
 
     def _download_highlights_reusable(self, result: Metadata, id: str) -> dict:
-        full_h = self.call_api(f"v2/highlight/by/id", {"id": id})
+        full_h = self.call_api("v2/highlight/by/id", {"id": id})
         h_info = full_h.get("response", {}).get("reels", {}).get(f"highlight:{id}")
         assert h_info, f"Highlight {id} not found: {full_h=}"
 
@@ -200,7 +200,7 @@ class InstagramAPIExtractor(Extractor):
         return result.success(f"insta stories {now}")
 
     def _download_stories_reusable(self, result: Metadata, username: str) -> list[dict]:
-        stories = self.call_api(f"v1/user/stories/by/username", {"username": username})
+        stories = self.call_api("v1/user/stories/by/username", {"username": username})
         if not stories or not len(stories):
             return []
         stories = stories[::-1]  # newest to oldest
@@ -219,7 +219,7 @@ class InstagramAPIExtractor(Extractor):
 
         post_count = 0
         while end_cursor != "":
-            posts = self.call_api(f"v1/user/medias/chunk", {"user_id": user_id, "end_cursor": end_cursor})
+            posts = self.call_api("v1/user/medias/chunk", {"user_id": user_id, "end_cursor": end_cursor})
             if not len(posts) or not type(posts) == list or len(posts) != 2:
                 break
             posts, end_cursor = posts[0], posts[1]
@@ -244,7 +244,7 @@ class InstagramAPIExtractor(Extractor):
 
         tagged_count = 0
         while next_page_id != None:
-            resp = self.call_api(f"v2/user/tag/medias", {"user_id": user_id, "page_id": next_page_id})
+            resp = self.call_api("v2/user/tag/medias", {"user_id": user_id, "page_id": next_page_id})
             posts = resp.get("response", {}).get("items", [])
             if not len(posts):
                 break

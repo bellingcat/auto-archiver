@@ -1,4 +1,6 @@
-import re, mimetypes, json
+import re
+import mimetypes
+import json
 from datetime import datetime
 
 from loguru import logger
@@ -35,7 +37,7 @@ class Twitter(GenericDropin):
         result = Metadata()
         try:
             if not tweet.get("user") or not tweet.get("created_at"):
-                raise ValueError(f"Error retreiving post. Are you sure it exists?")
+                raise ValueError("Error retreiving post. Are you sure it exists?")
             timestamp = datetime.strptime(tweet["created_at"], "%a %b %d %H:%M:%S %z %Y")
         except (ValueError, KeyError) as ex:
             logger.warning(f"Unable to parse tweet: {str(ex)}\nRetreived tweet data: {tweet}")

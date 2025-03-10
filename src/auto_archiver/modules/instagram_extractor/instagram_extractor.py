@@ -4,7 +4,9 @@ highlights, and tagged posts. Authentication is required via username/password o
 
 """
 
-import re, os, shutil
+import re
+import os
+import shutil
 import instaloader
 from loguru import logger
 
@@ -36,9 +38,9 @@ class InstagramExtractor(Extractor):
         )
         try:
             self.insta.load_session_from_file(self.username, self.session_file)
-        except Exception as e:
+        except Exception:
             try:
-                logger.debug(f"Session file failed", exc_info=True)
+                logger.debug("Session file failed", exc_info=True)
                 logger.info("No valid session file found - Attempting login with use and password.")
                 self.insta.login(self.username, self.password)
                 self.insta.save_session_to_file(self.session_file)

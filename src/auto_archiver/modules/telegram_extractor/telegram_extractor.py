@@ -1,4 +1,6 @@
-import requests, re, html
+import requests
+import re
+import html
 from bs4 import BeautifulSoup
 from loguru import logger
 

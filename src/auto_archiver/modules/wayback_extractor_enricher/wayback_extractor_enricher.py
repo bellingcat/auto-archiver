@@ -1,6 +1,7 @@
 import json
 from loguru import logger
-import time, requests
+import time
+import requests
 
 from auto_archiver.core import Extractor, Enricher
 from auto_archiver.utils import url as UrlUtil
@@ -57,7 +58,7 @@ class WaybackExtractorEnricher(Enricher, Extractor):
             if not job_id:
                 logger.error(f"Wayback failed with {r.json()}")
                 return False
-        except json.decoder.JSONDecodeError as e:
+        except json.decoder.JSONDecodeError:
             logger.error(f"Expected a JSON with job_id from Wayback and got {r.text}")
             return False
 
@@ -80,7 +81,7 @@ class WaybackExtractorEnricher(Enricher, Extractor):
             except requests.exceptions.RequestException as e:
                 logger.warning(f"RequestException: fetching status for {url=} due to: {e}")
                 break
-            except json.decoder.JSONDecodeError as e:
+            except json.decoder.JSONDecodeError:
                 logger.error(f"Expected a JSON from Wayback and got {r.text} for {url=}")
                 break
             except Exception as e:

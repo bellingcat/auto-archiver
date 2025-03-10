@@ -6,7 +6,7 @@ flexible setup in various environments.
 """
 
 import argparse
-from ruamel.yaml import YAML, CommentedMap, add_representer
+from ruamel.yaml import YAML, CommentedMap
 import json
 
 from loguru import logger
@@ -14,7 +14,6 @@ from loguru import logger
 from copy import deepcopy
 from auto_archiver.core.consts import MODULE_TYPES
 
-from typing import Any, List, Type, Tuple
 
 _yaml: YAML = YAML()
 

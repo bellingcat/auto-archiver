@@ -66,15 +66,15 @@ class CookieSettingDriver(webdriver.Firefox):
 
         if self.facebook_accept_cookies:
             try:
-                logger.debug(f"Trying fb click accept cookie popup.")
+                logger.debug("Trying fb click accept cookie popup.")
                 super(CookieSettingDriver, self).get("http://www.facebook.com")
                 essential_only = self.find_element(By.XPATH, "//span[contains(text(), 'Decline optional cookies')]")
                 essential_only.click()
-                logger.debug(f"fb click worked")
+                logger.debug("fb click worked")
                 # linux server needs a sleep otherwise facebook cookie won't have worked and we'll get a popup on next page
                 time.sleep(2)
             except Exception as e:
-                logger.warning(f"Failed on fb accept cookies.", e)
+                logger.warning("Failed on fb accept cookies.", e)
 
         # now get the actual URL
         super(CookieSettingDriver, self).get(url)

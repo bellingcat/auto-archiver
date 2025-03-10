@@ -1,6 +1,8 @@
 import jsonlines
 import mimetypes
-import os, shutil, subprocess
+import os
+import shutil
+import subprocess
 from zipfile import ZipFile
 from loguru import logger
 from warcio.archiveiterator import ArchiveIterator
@@ -186,7 +188,6 @@ class WaczExtractorEnricher(Enricher, Extractor):
         # get media out of .warc
         counter = 0
         seen_urls = set()
-        import json
 
         with open(warc_filename, "rb") as warc_stream:
             for record in ArchiveIterator(warc_stream):

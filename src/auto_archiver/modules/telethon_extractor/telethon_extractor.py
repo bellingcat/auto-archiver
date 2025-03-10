@@ -10,7 +10,9 @@ from telethon.errors.rpcerrorlist import (
 )
 from loguru import logger
 from tqdm import tqdm
-import re, time, os
+import re
+import time
+import os
 
 from auto_archiver.core import Extractor
 from auto_archiver.core import Metadata, Media
@@ -63,11 +65,11 @@ class TelethonExtractor(Extractor):
                                 logger.warning(
                                     f"please add the property id='{ent.id}' to the 'channel_invites' configuration where {invite=}, not doing so can lead to a minutes-long setup time due to telegram's rate limiting."
                                 )
-                        except ValueError as e:
+                        except ValueError:
                             logger.info(f"joining new channel {invite=}")
                             try:
                                 self.client(ImportChatInviteRequest(match.group(2)))
-                            except UserAlreadyParticipantError as e:
+                            except UserAlreadyParticipantError:
                                 logger.info(f"already joined {invite=}")
                             except InviteRequestSentError:
                                 logger.warning(f"already sent a join request with {invite} still no answer")

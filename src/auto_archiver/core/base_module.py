@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from typing import Mapping, Any, Type, TYPE_CHECKING
+from typing import Mapping, Any, TYPE_CHECKING
 from abc import ABC
-from copy import deepcopy, copy
+from copy import deepcopy
 from tempfile import TemporaryDirectory
 from auto_archiver.utils import url as UrlUtil
 from auto_archiver.core.consts import MODULE_TYPES as CONF_MODULE_TYPES

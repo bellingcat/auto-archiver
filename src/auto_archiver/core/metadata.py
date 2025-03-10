@@ -13,7 +13,7 @@ from __future__ import annotations
 import hashlib
 from typing import Any, List, Union, Dict
 from dataclasses import dataclass, field
-from dataclasses_json import dataclass_json, config
+from dataclasses_json import dataclass_json
 import datetime
 from urllib.parse import urlparse
 from dateutil.parser import parse as parse_dt

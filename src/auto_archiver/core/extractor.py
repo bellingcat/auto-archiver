@@ -7,12 +7,9 @@ Factory method to initialize an extractor instance based on its name.
 """
 
 from __future__ import annotations
-from pathlib import Path
 from abc import abstractmethod
-from dataclasses import dataclass
 import mimetypes
 import os
-import mimetypes
 import requests
 from loguru import logger
 from retrying import retry

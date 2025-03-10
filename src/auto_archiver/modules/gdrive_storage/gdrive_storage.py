@@ -135,7 +135,7 @@ class GDriveStorage(Storage):
         debug_header: str = f"[searching {name=} in {parent_id=}]"
         query_string = f"'{parent_id}' in parents and name = '{name}' and trashed = false "
         if use_mime_type:
-            query_string += f" and mimeType='application/vnd.google-apps.folder' "
+            query_string += " and mimeType='application/vnd.google-apps.folder' "
 
         for attempt in range(retries):
             results = (

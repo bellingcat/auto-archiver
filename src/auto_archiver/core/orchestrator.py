@@ -123,7 +123,7 @@ Here's how that would look: \n\nsteps:\n  {module_type}s:\n  - [your_{module_typ
                     )
                 if module_type == "extractor" and config["steps"].get("archivers"):
                     raise SetupError(
-                        f"As of version 0.13.0 of Auto Archiver, the 'archivers' step name has been changed to 'extractors'. Change this in your configuration file and try again. \
+                        "As of version 0.13.0 of Auto Archiver, the 'archivers' step name has been changed to 'extractors'. Change this in your configuration file and try again. \
 Here's how that would look: \n\nsteps:\n  extractors:\n  - [your_extractor_name_here]\n  enrichers:...\n"
                     )
                 raise SetupError(

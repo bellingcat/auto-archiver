@@ -1,5 +1,7 @@
 from __future__ import annotations
-import mimetypes, os, pathlib
+import mimetypes
+import os
+import pathlib
 from jinja2 import Environment, FileSystemLoader
 from urllib.parse import quote
 from loguru import logger

@@ -1,4 +1,5 @@
-import ssl, os
+import ssl
+import os
 from slugify import slugify
 from urllib.parse import urlparse
 from loguru import logger

@@ -51,7 +51,7 @@ class InstagramTbotExtractor(Extractor):
         """Initializes the Telegram client."""
         try:
             self.client = TelegramClient(self.session_file, self.api_id, self.api_hash)
-        except OperationalError as e:
+        except OperationalError:
             logger.error(
                 f"Unable to access the {self.session_file} session. "
                 "Ensure that you don't use the same session file here and in telethon_extractor. "
@@ -68,7 +68,7 @@ class InstagramTbotExtractor(Extractor):
 
     def download(self, item: Metadata) -> Metadata:
         url = item.get_url()
-        if not "instagram.com" in url:
+        if "instagram.com" not in url:
             return False
 
         result = Metadata()

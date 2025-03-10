@@ -1,5 +1,6 @@
 from loguru import logger
-import time, os
+import time
+import os
 import base64
 
 from selenium.common.exceptions import TimeoutException

@@ -1,4 +1,5 @@
-import datetime, os
+import datetime
+import os
 import importlib
 import subprocess
 from typing import Generator, Type
@@ -386,7 +387,7 @@ class GenericExtractor(Extractor):
             item.set("replaced_url", url)
 
         ydl_options = {
-            "outtmpl": os.path.join(self.tmp_dir, f"%(id)s.%(ext)s"),
+            "outtmpl": os.path.join(self.tmp_dir, "%(id)s.%(ext)s"),
             "quiet": False,
             "noplaylist": not self.allow_playlist,
             "writesubtitles": self.subtitles,
