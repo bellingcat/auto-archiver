@@ -32,12 +32,15 @@ def test_too_long_save_path(setup_module):
         setup_module("local_storage", {"save_to": "long"*100})
 
 def test_get_cdn_url_relative(local_storage):
+    local_storage.filename_generator = "random"
     media = Media(filename="dummy.txt")
     local_storage.set_key(media, "https://example.com", Metadata())
     expected = os.path.join(local_storage.save_to, media.key)
     assert local_storage.get_cdn_url(media) == expected
 
 def test_get_cdn_url_absolute(local_storage):
+    local_storage.filename_generator = "random"
+
     media = Media(filename="dummy.txt")
     local_storage.save_absolute = True
     local_storage.set_key(media, "https://example.com", Metadata())

@@ -33,6 +33,13 @@ class TestBaseStorage(Storage):
         return True
 
 @pytest.fixture
+def dummy_file(tmp_path):
+    # create dummy.txt file
+    dummy_file = tmp_path / "dummy.txt"
+    dummy_file.write_text("test content")
+    return str(dummy_file)
+
+@pytest.fixture
 def storage_base():
     def _storage_base(config):
         storage_base = TestBaseStorage()
@@ -54,13 +61,10 @@ def storage_base():
 
     ],
 )
-def test_storage_name_generation(storage_base, path_generator, filename_generator, url, expected_key, mocker):
+def test_storage_name_generation(storage_base, path_generator, filename_generator, url, 
+                                 expected_key, mocker, tmp_path, dummy_file):
     mock_random = mocker.patch("auto_archiver.core.storage.random_str")
     mock_random.return_value = "pretend-random"
-
-    # create dummy.txt file
-    with open("dummy.txt", "w") as f:
-        f.write("test content")
 
     config: dict = {
         "path_generator": path_generator,
@@ -72,24 +76,20 @@ def test_storage_name_generation(storage_base, path_generator, filename_generato
 
     metadata = Metadata()
     metadata.set_context("folder", "folder")
-    media = Media(filename="dummy.txt")
+    media = Media(filename=dummy_file)
     storage.set_key(media, url, metadata)
     print(media.key)
     assert media.key == expected_key
 
 
-def test_really_long_name(storage_base):
+def test_really_long_name(storage_base, dummy_file):
     config: dict = {
         "path_generator": "url",
         "filename_generator": "static",
     }
     storage: Storage = storage_base(config)
 
-    # create dummy.txt file
-    with open("dummy.txt", "w") as f:
-        f.write("test content")
-
     url = f"https://example.com/{'file'*100}"
-    media = Media(filename="dummy.txt")
+    media = Media(filename=dummy_file)
     storage.set_key(media, url, Metadata())
     assert media.key == f"https-example-com-{'file'*13}/6ae8a75555209fd6c44157c0.txt"
