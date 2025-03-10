@@ -1,5 +1,22 @@
 """
 Base module for Storage modules – modular components that store media objects in various locations.
+
+If you are looking to implement a new storage module, you should subclass the `Storage` class and
+implement the `get_cdn_url` and `uploadf` methods.
+
+Your module **must** also have two config variables 'path_generator' and 'filename_generator' which
+determine how the key is generated for the media object. The 'path_generator' and 'filename_generator'
+variables can be set to one of the following values:
+- 'flat': A flat structure with no subfolders
+- 'url': A structure based on the URL of the media object
+- 'random': A random structure
+
+The 'filename_generator' variable can be set to one of the following values:
+- 'random': A random string
+- 'static': A replicable strategy such as a hash
+
+If you don't want to use this naming convention, you can override the `set_key` method in your subclass.
+
 """
 
 from __future__ import annotations
