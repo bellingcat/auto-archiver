@@ -123,6 +123,6 @@ class Media:
             try:
                 fsize = os.path.getsize(self.filename)
                 return fsize > 20_000
-            except:
+            except Exception as e:
                 pass
         return True

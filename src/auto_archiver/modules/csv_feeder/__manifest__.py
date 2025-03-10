@@ -1,7 +1,6 @@
 {
     "name": "CSV Feeder",
     "type": ["feeder"],
-    "requires_setup": False,
     "dependencies": {"python": ["loguru"], "bin": [""]},
     "requires_setup": True,
     "entry_point": "csv_feeder::CSVFeeder",

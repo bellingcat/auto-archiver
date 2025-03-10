@@ -61,7 +61,7 @@ class TelegramExtractor(Extractor):
                 else:
                     duration = float(duration)
                 m_video.set("duration", duration)
-            except:
+            except Exception:
                 pass
             result.add_media(m_video)
 

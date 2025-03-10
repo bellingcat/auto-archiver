@@ -14,7 +14,9 @@
             "help": "browsertrix-profile (for profile generation see https://github.com/webrecorder/browsertrix-crawler#creating-and-using-browser-profiles).",
         },
         "docker_commands": {"default": None, "help": "if a custom docker invocation is needed"},
-        "timeout": {"default": 120, "type": "int", "help": "timeout for WACZ generation in seconds", "type": "int"},
+        "timeout": {"default": 120,
+                    "help": "timeout for WACZ generation in seconds",
+                    "type": "int"},
         "extract_media": {
             "default": False,
             "type": "bool",

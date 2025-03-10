@@ -21,7 +21,7 @@ def expand_url(url):
             r = requests.get(url)
             logger.debug(f"Expanded url {url} to {r.url}")
             return r.url
-        except:
+        except Exception:
             logger.error(f"Failed to expand url {url}")
     return url
 
@@ -32,7 +32,7 @@ def getattr_or(o: object, prop: str, default=None):
         if res is None:
             raise
         return res
-    except:
+    except Exception:
         return default
 
 

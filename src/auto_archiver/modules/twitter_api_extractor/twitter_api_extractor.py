@@ -46,7 +46,7 @@ class TwitterApiExtractor(Extractor):
                 r = requests.get(url, timeout=30)
                 logger.debug(f"Expanded url {url} to {r.url}")
                 url = r.url
-            except:
+            except Exception:
                 logger.error(f"Failed to expand url {url}")
         return url
 

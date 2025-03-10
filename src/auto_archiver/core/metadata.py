@@ -48,15 +48,16 @@ class Metadata:
                 self.status = right.status
             self._context.update(right._context)
             for k, v in right.metadata.items():
-                assert k not in self.metadata or type(v) == type(self.get(k))
-                if type(v) not in [dict, list, set] or k not in self.metadata:
+                assert k not in self.metadata or type(v) is type(self.get(k))
+                if not isinstance(v, (dict, list, set)) or k not in self.metadata:
                     self.set(k, v)
                 else:  # key conflict
-                    if type(v) in [dict, set]:
+                    if isinstance(v, (dict, set)):
                         self.set(k, self.get(k) | v)
-                    elif type(v) == list:
+                    elif type(v) is list:
                         self.set(k, self.get(k) + v)
             self.media.extend(right.media)
+
         else:  # invert and do same logic
             return right.merge(self)
         return self
@@ -126,28 +127,26 @@ class Metadata:
         return self.get("title")
 
     def set_timestamp(self, timestamp: datetime.datetime) -> Metadata:
-        if type(timestamp) == str:
+        if isinstance(timestamp, str):
             timestamp = parse_dt(timestamp)
-        assert type(timestamp) == datetime.datetime, "set_timestamp expects a datetime instance"
+        assert isinstance(timestamp, datetime.datetime), "set_timestamp expects a datetime instance"
         return self.set("timestamp", timestamp)
 
-    def get_timestamp(self, utc=True, iso=True) -> datetime.datetime:
+    def get_timestamp(self, utc=True, iso=True) -> datetime.datetime | str | None:
         ts = self.get("timestamp")
         if not ts:
-            return
+            return None
         try:
-            if type(ts) == str:
+            if isinstance(ts, str):
                 ts = datetime.datetime.fromisoformat(ts)
-            if type(ts) == float:
+            elif isinstance(ts, float):
                 ts = datetime.datetime.fromtimestamp(ts)
             if utc:
                 ts = ts.replace(tzinfo=datetime.timezone.utc)
-            if iso:
-                return ts.isoformat()
-            return ts
+            return ts.isoformat() if iso else ts
         except Exception as e:
             logger.error(f"Unable to parse timestamp {ts}: {e}")
-            return
+            return None
 
     def add_media(self, media: Media, id: str = None) -> Metadata:
         # adds a new media, optionally including an id

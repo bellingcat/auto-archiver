@@ -531,7 +531,7 @@ Here's how that would look: \n\nsteps:\n  extractors:\n  - [your_extractor_name_
         except Exception as e:
             logger.error(f"Got unexpected error on item {item}: {e}\n{traceback.format_exc()}")
             for d in self.databases:
-                if type(e) == AssertionError:
+                if isinstance(e, AssertionError):
                     d.failed(item, str(e))
                 else:
                     d.failed(item, reason="unexpected error")

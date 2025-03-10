@@ -3,7 +3,6 @@
     "type": ["feeder"],
     "entry_point": "cli_feeder::CLIFeeder",
     "requires_setup": False,
-    "description": "Feeds URLs to orchestrator from the command line",
     "configs": {
         "urls": {
             "default": None,

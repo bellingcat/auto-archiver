@@ -68,7 +68,7 @@ class GWorksheet:
 
         if fresh:
             return self.wks.cell(row, col_index + 1).value
-        if type(row) == int:
+        if isinstance(row, int):
             row = self.get_row(row)
 
         if col_index >= len(row):
@@ -84,7 +84,7 @@ class GWorksheet:
             if when_empty_use_default and val.strip() == "":
                 return default
             return val
-        except:
+        except Exception:
             return default
 
     def set_cell(self, row: int, col: str, val):

@@ -74,9 +74,9 @@ class InstagramAPIExtractor(Extractor):
         # repeats 3 times to remove nested empty values
         if not self.minimize_json_output:
             return d
-        if type(d) == list:
+        if isinstance(d, list):
             return [self.cleanup_dict(v) for v in d]
-        if type(d) != dict:
+        if not isinstance(d, dict):
             return d
         return {
             k: clean_v
@@ -220,7 +220,7 @@ class InstagramAPIExtractor(Extractor):
         post_count = 0
         while end_cursor != "":
             posts = self.call_api("v1/user/medias/chunk", {"user_id": user_id, "end_cursor": end_cursor})
-            if not len(posts) or not type(posts) == list or len(posts) != 2:
+            if not posts or not isinstance(posts, list) or len(posts) != 2:
                 break
             posts, end_cursor = posts[0], posts[1]
             logger.info(f"parsing {len(posts)} posts, next {end_cursor=}")
@@ -243,7 +243,7 @@ class InstagramAPIExtractor(Extractor):
         pbar = tqdm(desc="downloading tagged posts")
 
         tagged_count = 0
-        while next_page_id != None:
+        while next_page_id is not None:
             resp = self.call_api("v2/user/tag/medias", {"user_id": user_id, "page_id": next_page_id})
             posts = resp.get("response", {}).get("items", [])
             if not len(posts):

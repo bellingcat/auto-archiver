@@ -80,7 +80,7 @@ class AuthenticationJsonParseAction(argparse.Action):
                         auth_dict = auth_dict["authentication"]
                     auth_dict["load_from_file"] = path
                     return auth_dict
-            except:
+            except Exception:
                 return None
 
         if isinstance(auth_dict, dict) and auth_dict.get("from_file"):

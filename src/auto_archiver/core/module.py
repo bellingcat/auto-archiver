@@ -47,7 +47,7 @@ class ModuleFactory:
 
             # see odoo/module/module.py -> initialize_sys_path
             if path not in auto_archiver.modules.__path__:
-                if HAS_SETUP_PATHS == True:
+                if HAS_SETUP_PATHS:
                     logger.warning(
                         f"You are attempting to re-initialise the module paths with: '{path}' for a 2nd time. \
                                        This could lead to unexpected behaviour. It is recommended to only use a single modules path. \
@@ -228,7 +228,7 @@ class LazyBaseModule:
                     # we must now load this module and set it up with the config
                     m.load(config)
                     return True
-                except:
+                except Exception:
                     logger.error(f"Unable to setup module '{dep}' for use in module '{self.name}'")
                     return False
             except IndexError:
