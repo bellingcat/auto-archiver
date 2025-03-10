@@ -13,7 +13,7 @@ class LocalStorage(Storage):
 
     def setup(self) -> None:
         if len(self.save_to) > 200:
-            raise SetupError(f"Your save_to path is  long, this will cause issues saving files on your computer. Please use a shorter path")
+            raise SetupError(f"Your save_to path is too long, this will cause issues saving files on your computer. Please use a shorter path.")
 
     def get_cdn_url(self, media: Media) -> str:
         dest = media.key
