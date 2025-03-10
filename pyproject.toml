@@ -57,6 +57,7 @@ dependencies = [
     "certvalidator (>=0.0.0)",
     "rich-argparse (>=1.6.0,<2.0.0)",
     "ruamel-yaml (>=0.18.10,<0.19.0)",
+    "ruff (>=0.9.10,<0.10.0)",
 ]
 
 [tool.poetry.group.dev.dependencies]
@@ -64,8 +65,6 @@ pytest = "^8.3.4"
 autopep8 = "^2.3.1"
 pytest-loguru = "^0.4.0"
 pytest-mock = "^3.14.0"
-flake8 = "^7.1.2"
-black = "^25.1.0"
 
 [tool.poetry.group.docs.dependencies]
 sphinx = "^8.1.3"
@@ -92,3 +91,22 @@ markers = [
     "download: marks tests that download content from the network",
     "incremental: marks a class to run tests incrementally. If a test fails in the class, the remaining tests will be skipped",
 ]
+
+[tool.ruff]
+#exclude = ["docs"]
+line-length = 120
+
+[tool.ruff.lint]
+#add bugbear?
+#extend-select = ["B"]
+
+# E701 - multiple statements on one line (I vote to keep this but I notice it's used quite a lot!)
+ignore = []
+
+[tool.ruff.lint.per-file-ignores]
+# Ignore import violations in __init__.py files
+"__init__.py" = ["F401"]
+
+[tool.ruff.format]
+docstring-code-format = false
+
