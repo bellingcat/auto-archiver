@@ -27,6 +27,7 @@ class Media:
     - properties: Additional metadata or transformations for the media.
     - _mimetype: The media's mimetype (e.g., image/jpeg, video/mp4).
     """
+
     filename: str
     key: str = None
     urls: List[str] = field(default_factory=list)
@@ -52,14 +53,15 @@ class Media:
         This function returns a generator for all the inner media.
 
         """
-        if include_self: yield self
+        if include_self:
+            yield self
         for prop in self.properties.values():
-            if isinstance(prop, Media): 
+            if isinstance(prop, Media):
                 for inner_media in prop.all_inner_media(include_self=True):
                     yield inner_media
             if isinstance(prop, list):
                 for prop_media in prop:
-                    if isinstance(prop_media, Media): 
+                    if isinstance(prop_media, Media):
                         for inner_media in prop_media.all_inner_media(include_self=True):
                             yield inner_media
 
@@ -110,15 +112,17 @@ class Media:
         # checks for video streams with ffmpeg, or min file size for a video
         # self.is_video() should be used together with this method
         try:
-            streams = ffmpeg.probe(self.filename, select_streams='v')['streams']
+            streams = ffmpeg.probe(self.filename, select_streams="v")["streams"]
             logger.warning(f"STREAMS FOR {self.filename} {streams}")
             return any(s.get("duration_ts", 0) > 0 for s in streams)
-        except Error: return False # ffmpeg errors when reading bad files
+        except Error:
+            return False  # ffmpeg errors when reading bad files
         except Exception as e:
             logger.error(e)
             logger.error(traceback.format_exc())
             try:
                 fsize = os.path.getsize(self.filename)
                 return fsize > 20_000
-            except: pass
+            except:
+                pass
         return True

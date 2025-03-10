@@ -81,40 +81,27 @@ class TestGWorksheet:
             (False, ""),
         ],
     )
-    def test_get_cell_or_default_handles_empty_values(
-        self, mock_worksheet, when_empty, expected
-    ):
+    def test_get_cell_or_default_handles_empty_values(self, mock_worksheet, when_empty, expected):
         mock_worksheet.get_values.return_value[1][0] = ""  # Empty URL cell
         g = GWorksheet(mock_worksheet)
-        assert (
-            g.get_cell_or_default(
-                2, "url", default="default", when_empty_use_default=when_empty
-            )
-            == expected
-        )
+        assert g.get_cell_or_default(2, "url", default="default", when_empty_use_default=when_empty) == expected
 
     def test_get_cell_or_default_handles_missing_columns(self, gworksheet):
-        assert (
-            gworksheet.get_cell_or_default(1, "invalid_col", default="safe") == "safe"
-        )
+        assert gworksheet.get_cell_or_default(1, "invalid_col", default="safe") == "safe"
 
     # Test write operations
     def test_set_cell_updates_correct_position(self, mock_worksheet, gworksheet):
         gworksheet.set_cell(2, "url", "new_url")
         mock_worksheet.update_cell.assert_called_once_with(2, 1, "new_url")
 
-    def test_batch_set_cell_formats_requests_correctly(
-        self, mock_worksheet, gworksheet
-    ):
+    def test_batch_set_cell_formats_requests_correctly(self, mock_worksheet, gworksheet):
         updates = [(2, "url", "new_url"), (3, "status", "processed")]
         gworksheet.batch_set_cell(updates)
         expected_batch = [
             {"range": "A2", "values": [["new_url"]]},
             {"range": "B3", "values": [["processed"]]},
         ]
-        mock_worksheet.batch_update.assert_called_once_with(
-            expected_batch, value_input_option="USER_ENTERED"
-        )
+        mock_worksheet.batch_update.assert_called_once_with(expected_batch, value_input_option="USER_ENTERED")
 
     def test_batch_set_cell_truncates_long_values(self, mock_worksheet, gworksheet):
         long_value = "x" * 50000

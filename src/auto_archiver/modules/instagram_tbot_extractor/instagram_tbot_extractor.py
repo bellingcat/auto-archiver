@@ -65,15 +65,15 @@ class InstagramTbotExtractor(Extractor):
         session_file_name = self.session_file + ".session"
         if os.path.exists(session_file_name):
             os.remove(session_file_name)
-        
+
     def download(self, item: Metadata) -> Metadata:
         url = item.get_url()
-        if not "instagram.com" in url: return False
+        if not "instagram.com" in url:
+            return False
 
         result = Metadata()
         tmp_dir = self.tmp_dir
         with self.client.start():
-
             chat, since_id = self._send_url_to_bot(url)
             message = self._process_messages(chat, since_id, tmp_dir, result)
 
@@ -110,13 +110,14 @@ class InstagramTbotExtractor(Extractor):
             for post in self.client.iter_messages(chat, min_id=since_id):
                 since_id = max(since_id, post.id)
                 # Skip known filler message:
-                if post.message == 'The bot receives information through https://hikerapi.com/p/hJqpppqi':
+                if post.message == "The bot receives information through https://hikerapi.com/p/hJqpppqi":
                     continue
                 if post.media and post.id not in seen_media:
-                    filename_dest = os.path.join(tmp_dir, f'{chat.id}_{post.id}')
+                    filename_dest = os.path.join(tmp_dir, f"{chat.id}_{post.id}")
                     media = self.client.download_media(post.media, filename_dest)
                     if media:
                         result.add_media(Media(media))
                         seen_media.append(post.id)
-                if post.message: message += post.message
+                if post.message:
+                    message += post.message
         return message.strip()

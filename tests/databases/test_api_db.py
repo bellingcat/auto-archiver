@@ -41,9 +41,16 @@ def test_fetch(api_db, metadata, mocker):
     mock_datetime = mocker.patch("auto_archiver.core.metadata.datetime.datetime")
     mock_datetime.now.return_value = "2021-01-01T00:00:00"
     mock_get.return_value.status_code = 200
-    mock_get.return_value.json.return_value = [{"result": {}}, {"result":
-        {'media': [], 'metadata': {'_processed_at': '2021-01-01T00:00:00', 'url': 'https://example.com'},
-         'status': 'no archiver'}}]
+    mock_get.return_value.json.return_value = [
+        {"result": {}},
+        {
+            "result": {
+                "media": [],
+                "metadata": {"_processed_at": "2021-01-01T00:00:00", "url": "https://example.com"},
+                "status": "no archiver",
+            }
+        },
+    ]
     assert api_db.fetch(metadata) == metadata
 
 
@@ -52,8 +59,15 @@ def test_done_success(api_db, metadata, mocker):
     mock_post.return_value.status_code = 201
     api_db.done(metadata)
     mock_post.assert_called_once()
-    mock_post.assert_called_once_with("https://api.example.com/interop/submit-archive",
-                                      json={'author_id': 'Someone', 'url': 'https://example.com',
-                                            'public': False, 'group_id': '123', 'tags': ['[', ']'], 'result': '{"status": "no archiver", "metadata": {"_processed_at": "2021-01-01T00:00:00", "url": "https://example.com"}, "media": []}'},
-                                      headers={'Authorization': 'Bearer test-token'})
-
+    mock_post.assert_called_once_with(
+        "https://api.example.com/interop/submit-archive",
+        json={
+            "author_id": "Someone",
+            "url": "https://example.com",
+            "public": False,
+            "group_id": "123",
+            "tags": ["[", "]"],
+            "result": '{"status": "no archiver", "metadata": {"_processed_at": "2021-01-01T00:00:00", "url": "https://example.com"}, "media": []}',
+        },
+        headers={"Authorization": "Bearer test-token"},
+    )

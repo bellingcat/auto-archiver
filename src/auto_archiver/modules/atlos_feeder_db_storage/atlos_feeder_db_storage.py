@@ -10,7 +10,6 @@ from auto_archiver.utils import calculate_file_hash
 
 
 class AtlosFeederDbStorage(Feeder, Database, Storage):
-
     def setup(self) -> requests.Session:
         """create and return a persistent session."""
         self.session = requests.Session()
@@ -18,9 +17,7 @@ class AtlosFeederDbStorage(Feeder, Database, Storage):
     def _get(self, endpoint: str, params: Optional[dict] = None) -> dict:
         """Wrapper for GET requests to the Atlos API."""
         url = f"{self.atlos_url}{endpoint}"
-        response = self.session.get(
-            url, headers={"Authorization": f"Bearer {self.api_token}"}, params=params
-        )
+        response = self.session.get(url, headers={"Authorization": f"Bearer {self.api_token}"}, params=params)
         response.raise_for_status()
         return response.json()
 
@@ -85,10 +82,7 @@ class AtlosFeederDbStorage(Feeder, Database, Storage):
     def _process_metadata(self, item: Metadata) -> dict:
         """Process metadata for storage on Atlos. Will convert any datetime
         objects to ISO format."""
-        return {
-            k: v.isoformat() if hasattr(v, "isoformat") else v
-            for k, v in item.metadata.items()
-        }
+        return {k: v.isoformat() if hasattr(v, "isoformat") else v for k, v in item.metadata.items()}
 
     def done(self, item: Metadata, cached: bool = False) -> None:
         """Mark an item as successfully archived in Atlos."""
@@ -129,10 +123,7 @@ class AtlosFeederDbStorage(Feeder, Database, Storage):
 
         # Check whether the media has already been uploaded
         source_material = self._get(f"/api/v2/source_material/{atlos_id}")["result"]
-        existing_media = [
-            artifact.get("file_hash_sha256")
-            for artifact in source_material.get("artifacts", [])
-        ]
+        existing_media = [artifact.get("file_hash_sha256") for artifact in source_material.get("artifacts", [])]
         if media_hash in existing_media:
             logger.info(f"{media.filename} with SHA256 {media_hash} already uploaded to Atlos")
             return True
@@ -150,4 +141,3 @@ class AtlosFeederDbStorage(Feeder, Database, Storage):
     def uploadf(self, file: IO[bytes], key: str, **kwargs: dict) -> bool:
         """Upload a file-like object; not implemented."""
         pass
-

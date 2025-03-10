@@ -36,21 +36,16 @@ class InstagramAPIExtractor(Extractor):
         if self.api_endpoint[-1] == "/":
             self.api_endpoint = self.api_endpoint[:-1]
 
-
     def download(self, item: Metadata) -> Metadata:
         url = item.get_url()
 
-        url.replace("instagr.com", "instagram.com").replace(
-            "instagr.am", "instagram.com"
-        )
+        url.replace("instagr.com", "instagram.com").replace("instagr.am", "instagram.com")
         insta_matches = self.valid_url.findall(url)
         logger.info(f"{insta_matches=}")
         if not len(insta_matches) or len(insta_matches[0]) != 3:
             return
         if len(insta_matches) > 1:
-            logger.warning(
-                f"Multiple instagram matches found in {url=}, using the first one"
-            )
+            logger.warning(f"Multiple instagram matches found in {url=}, using the first one")
             return
         g1, g2, g3 = insta_matches[0][0], insta_matches[0][1], insta_matches[0][2]
         if g1 == "":
@@ -73,9 +68,7 @@ class InstagramAPIExtractor(Extractor):
     def call_api(self, path: str, params: dict) -> dict:
         headers = {"accept": "application/json", "x-access-key": self.access_token}
         logger.debug(f"calling {self.api_endpoint}/{path} with {params=}")
-        return requests.get(
-            f"{self.api_endpoint}/{path}", headers=headers, params=params
-        ).json()
+        return requests.get(f"{self.api_endpoint}/{path}", headers=headers, params=params).json()
 
     def cleanup_dict(self, d: dict | list) -> dict:
         # repeats 3 times to remove nested empty values
@@ -88,8 +81,7 @@ class InstagramAPIExtractor(Extractor):
         return {
             k: clean_v
             for k, v in d.items()
-            if (clean_v := self.cleanup_dict(v))
-            not in [0.0, 0, [], {}, "", None, "null"]
+            if (clean_v := self.cleanup_dict(v)) not in [0.0, 0, [], {}, "", None, "null"]
             and k not in ["x", "y", "width", "height"]
         }
 
@@ -126,9 +118,7 @@ class InstagramAPIExtractor(Extractor):
             try:
                 self.download_all_tagged(result, user_id)
             except Exception as e:
-                result.append(
-                    "errors", f"Error downloading tagged posts for {username}"
-                )
+                result.append("errors", f"Error downloading tagged posts for {username}")
                 logger.error(f"Error downloading tagged posts for {username}: {e}")
 
             # download all highlights
@@ -153,22 +143,13 @@ class InstagramAPIExtractor(Extractor):
                     "errors",
                     f"Error downloading highlight id{h.get('pk')} for {username}",
                 )
-                logger.error(
-                    f"Error downloading highlight id{h.get('pk')} for {username}: {e}"
-                )
-            if (
-                self.full_profile_max_posts
-                and count_highlights >= self.full_profile_max_posts
-            ):
-                logger.info(
-                    f"HIGHLIGHTS reached full_profile_max_posts={self.full_profile_max_posts}"
-                )
+                logger.error(f"Error downloading highlight id{h.get('pk')} for {username}: {e}")
+            if self.full_profile_max_posts and count_highlights >= self.full_profile_max_posts:
+                logger.info(f"HIGHLIGHTS reached full_profile_max_posts={self.full_profile_max_posts}")
                 break
         result.set("#highlights", count_highlights)
 
-    def download_post(
-        self, result: Metadata, code: str = None, id: str = None, context: str = None
-    ) -> Metadata:
+    def download_post(self, result: Metadata, code: str = None, id: str = None, context: str = None) -> Metadata:
         if id:
             post = self.call_api(f"v1/media/by/id", {"id": id})
         else:
@@ -196,11 +177,7 @@ class InstagramAPIExtractor(Extractor):
         h_info = full_h.get("response", {}).get("reels", {}).get(f"highlight:{id}")
         assert h_info, f"Highlight {id} not found: {full_h=}"
 
-        if (
-            cover_media := h_info.get("cover_media", {})
-            .get("cropped_image_version", {})
-            .get("url")
-        ):
+        if cover_media := h_info.get("cover_media", {}).get("cropped_image_version", {}).get("url"):
             filename = self.download_from_url(cover_media)
             result.add_media(Media(filename=filename), id=f"cover_media highlight {id}")
 
@@ -210,9 +187,7 @@ class InstagramAPIExtractor(Extractor):
                 self.scrape_item(result, h, "highlight")
             except Exception as e:
                 result.append("errors", f"Error downloading highlight {h.get('id')}")
-                logger.error(
-                    f"Error downloading highlight, skipping {h.get('id')}: {e}"
-                )
+                logger.error(f"Error downloading highlight, skipping {h.get('id')}: {e}")
 
         return h_info
 
@@ -244,9 +219,7 @@ class InstagramAPIExtractor(Extractor):
 
         post_count = 0
         while end_cursor != "":
-            posts = self.call_api(
-                f"v1/user/medias/chunk", {"user_id": user_id, "end_cursor": end_cursor}
-            )
+            posts = self.call_api(f"v1/user/medias/chunk", {"user_id": user_id, "end_cursor": end_cursor})
             if not len(posts) or not type(posts) == list or len(posts) != 2:
                 break
             posts, end_cursor = posts[0], posts[1]
@@ -260,13 +233,8 @@ class InstagramAPIExtractor(Extractor):
                     logger.error(f"Error downloading post, skipping {p.get('id')}: {e}")
                 pbar.update(1)
                 post_count += 1
-            if (
-                self.full_profile_max_posts
-                and post_count >= self.full_profile_max_posts
-            ):
-                logger.info(
-                    f"POSTS reached full_profile_max_posts={self.full_profile_max_posts}"
-                )
+            if self.full_profile_max_posts and post_count >= self.full_profile_max_posts:
+                logger.info(f"POSTS reached full_profile_max_posts={self.full_profile_max_posts}")
                 break
         result.set("#posts", post_count)
 
@@ -276,9 +244,7 @@ class InstagramAPIExtractor(Extractor):
 
         tagged_count = 0
         while next_page_id != None:
-            resp = self.call_api(
-                f"v2/user/tag/medias", {"user_id": user_id, "page_id": next_page_id}
-            )
+            resp = self.call_api(f"v2/user/tag/medias", {"user_id": user_id, "page_id": next_page_id})
             posts = resp.get("response", {}).get("items", [])
             if not len(posts):
                 break
@@ -290,21 +256,12 @@ class InstagramAPIExtractor(Extractor):
                 try:
                     self.scrape_item(result, p, "tagged")
                 except Exception as e:
-                    result.append(
-                        "errors", f"Error downloading tagged post {p.get('id')}"
-                    )
-                    logger.error(
-                        f"Error downloading tagged post, skipping {p.get('id')}: {e}"
-                    )
+                    result.append("errors", f"Error downloading tagged post {p.get('id')}")
+                    logger.error(f"Error downloading tagged post, skipping {p.get('id')}: {e}")
                 pbar.update(1)
                 tagged_count += 1
-            if (
-                self.full_profile_max_posts
-                and tagged_count >= self.full_profile_max_posts
-            ):
-                logger.info(
-                    f"TAGS reached full_profile_max_posts={self.full_profile_max_posts}"
-                )
+            if self.full_profile_max_posts and tagged_count >= self.full_profile_max_posts:
+                logger.info(f"TAGS reached full_profile_max_posts={self.full_profile_max_posts}")
                 break
         result.set("#tagged", tagged_count)
 
@@ -318,9 +275,7 @@ class InstagramAPIExtractor(Extractor):
         context can be used to give specific id prefixes to media
         """
         if "clips_metadata" in item:
-            if reusable_text := item.get("clips_metadata", {}).get(
-                "reusable_text_attribute_string"
-            ):
+            if reusable_text := item.get("clips_metadata", {}).get("reusable_text_attribute_string"):
                 item["clips_metadata_text"] = reusable_text
             if self.minimize_json_output:
                 del item["clips_metadata"]

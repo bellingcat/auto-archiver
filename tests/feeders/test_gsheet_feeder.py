@@ -19,35 +19,32 @@ def test_setup_without_sheet_and_sheet_id(setup_module, mocker):
 @pytest.fixture
 def gsheet_feeder(setup_module, mocker) -> GsheetsFeederDB:
     config: dict = {
-                "service_account": "dummy.json",
-                "sheet": "test-auto-archiver",
-                "sheet_id": None,
-                "header": 1,
-                "columns": {
-                    "url": "link",
-                    "status": "archive status",
-                    "folder": "destination folder",
-                    "archive": "archive location",
-                    "date": "archive date",
-                    "thumbnail": "thumbnail",
-                    "timestamp": "upload timestamp",
-                    "title": "upload title",
-                    "text": "text content",
-                    "screenshot": "screenshot",
-                    "hash": "hash",
-                    "pdq_hash": "perceptual hashes",
-                    "wacz": "wacz",
-                    "replaywebpage": "replaywebpage",
-                },
-                "allow_worksheets": set(),
-                "block_worksheets": set(),
-                "use_sheet_names_in_stored_paths": True,
-            }
+        "service_account": "dummy.json",
+        "sheet": "test-auto-archiver",
+        "sheet_id": None,
+        "header": 1,
+        "columns": {
+            "url": "link",
+            "status": "archive status",
+            "folder": "destination folder",
+            "archive": "archive location",
+            "date": "archive date",
+            "thumbnail": "thumbnail",
+            "timestamp": "upload timestamp",
+            "title": "upload title",
+            "text": "text content",
+            "screenshot": "screenshot",
+            "hash": "hash",
+            "pdq_hash": "perceptual hashes",
+            "wacz": "wacz",
+            "replaywebpage": "replaywebpage",
+        },
+        "allow_worksheets": set(),
+        "block_worksheets": set(),
+        "use_sheet_names_in_stored_paths": True,
+    }
     mocker.patch("gspread.service_account")
-    feeder = setup_module(
-        "gsheet_feeder_db",
-        config
-    )
+    feeder = setup_module("gsheet_feeder_db", config)
     feeder.gsheets_client = mocker.MagicMock()
     return feeder
 
@@ -128,9 +125,7 @@ def test__set_metadata_with_folder(gsheet_feeder: GsheetsFeederDB):
         (None, "ABC123", "open_by_key", "ABC123", "opening by sheet ID"),
     ],
 )
-def test_open_sheet_with_name_or_id(
-    setup_module, sheet, sheet_id, expected_method, expected_arg, description, mocker
-):
+def test_open_sheet_with_name_or_id(setup_module, sheet, sheet_id, expected_method, expected_arg, description, mocker):
     """Ensure open_sheet() correctly opens by name or ID based on configuration."""
     mock_service_account = mocker.patch("gspread.service_account")
     mock_client = mocker.MagicMock()
@@ -145,9 +140,7 @@ def test_open_sheet_with_name_or_id(
     )
     sheet_result = feeder.open_sheet()
     # Validate the correct method was called
-    getattr(mock_client, expected_method).assert_called_once_with(
-        expected_arg
-    ), f"Failed: {description}"
+    getattr(mock_client, expected_method).assert_called_once_with(expected_arg), f"Failed: {description}"
     assert sheet_result == "MockSheet", f"Failed: {description}"
 
 
@@ -220,9 +213,7 @@ class TestGSheetsFeederReal:
 
     @pytest.fixture(autouse=True)
     def setup_feeder(self, setup_module):
-        assert (
-            self.module_name is not None
-        ), "self.module_name must be set on the subclass"
+        assert self.module_name is not None, "self.module_name must be set on the subclass"
         assert self.config is not None, "self.config must be a dict set on the subclass"
         self.feeder: Type[Feeder] = setup_module(self.module_name, self.config)
 
@@ -241,9 +232,7 @@ class TestGSheetsFeederReal:
         """Ensure open_sheet() connects to a real Google Sheets instance."""
         sheet = self.feeder.open_sheet()
         assert sheet is not None, "open_sheet() should return a valid sheet instance"
-        assert hasattr(
-            sheet, "worksheets"
-        ), "Returned object should have worksheets method"
+        assert hasattr(sheet, "worksheets"), "Returned object should have worksheets method"
 
     def test_iter_yields_metadata_real_data(self):
         """Ensure __iter__() yields Metadata objects for real test sheet data."""

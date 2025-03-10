@@ -1,9 +1,13 @@
-
 import shutil
 from telethon.sync import TelegramClient
 from telethon.errors import ChannelInvalidError
 from telethon.tl.functions.messages import ImportChatInviteRequest
-from telethon.errors.rpcerrorlist import UserAlreadyParticipantError, FloodWaitError, InviteRequestSentError, InviteHashExpiredError
+from telethon.errors.rpcerrorlist import (
+    UserAlreadyParticipantError,
+    FloodWaitError,
+    InviteRequestSentError,
+    InviteHashExpiredError,
+)
 from loguru import logger
 from tqdm import tqdm
 import re, time, os
@@ -17,9 +21,7 @@ class TelethonExtractor(Extractor):
     valid_url = re.compile(r"https:\/\/t\.me(\/c){0,1}\/(.+)\/(\d+)")
     invite_pattern = re.compile(r"t.me(\/joinchat){0,1}\/\+?(.+)")
 
-
     def setup(self) -> None:
-
         """
         1. makes a copy of session_file that is removed in cleanup
         2. trigger login process for telegram or proceed if already saved in a session file
@@ -34,7 +36,7 @@ class TelethonExtractor(Extractor):
 
         # initiate the client
         self.client = TelegramClient(self.session_file, self.api_id, self.api_hash)
-        
+
         with self.client.start():
             logger.success(f"SETUP {self.name} login works.")
 
@@ -52,13 +54,15 @@ class TelethonExtractor(Extractor):
                     channel_invite = self.channel_invites[i]
                     channel_id = channel_invite.get("id", False)
                     invite = channel_invite["invite"]
-                    if (match := self.invite_pattern.search(invite)):
+                    if match := self.invite_pattern.search(invite):
                         try:
                             if channel_id:
                                 ent = self.client.get_entity(int(channel_id))  # fails if not a member
                             else:
                                 ent = self.client.get_entity(invite)  # fails if not a member
-                                logger.warning(f"please add the property id='{ent.id}' to the 'channel_invites' configuration where {invite=}, not doing so can lead to a minutes-long setup time due to telegram's rate limiting.")
+                                logger.warning(
+                                    f"please add the property id='{ent.id}' to the 'channel_invites' configuration where {invite=}, not doing so can lead to a minutes-long setup time due to telegram's rate limiting."
+                                )
                         except ValueError as e:
                             logger.info(f"joining new channel {invite=}")
                             try:
@@ -95,7 +99,8 @@ class TelethonExtractor(Extractor):
         # detect URLs that we definitely cannot handle
         match = self.valid_url.search(url)
         logger.debug(f"TELETHON: {match=}")
-        if not match: return False
+        if not match:
+            return False
 
         is_private = match.group(1) == "/c"
         chat = int(match.group(2)) if is_private else match.group(2)
@@ -105,45 +110,53 @@ class TelethonExtractor(Extractor):
 
         # NB: not using bot_token since then private channels cannot be archived: self.client.start(bot_token=self.bot_token)
         with self.client.start():
-        # with self.client.start(bot_token=self.bot_token):
+            # with self.client.start(bot_token=self.bot_token):
             try:
                 post = self.client.get_messages(chat, ids=post_id)
             except ValueError as e:
                 logger.error(f"Could not fetch telegram {url} possibly it's private: {e}")
                 return False
             except ChannelInvalidError as e:
-                logger.error(f"Could not fetch telegram {url}. This error may be fixed if you setup a bot_token in addition to api_id and api_hash (but then private channels will not be archived, we need to update this logic to handle both): {e}")
+                logger.error(
+                    f"Could not fetch telegram {url}. This error may be fixed if you setup a bot_token in addition to api_id and api_hash (but then private channels will not be archived, we need to update this logic to handle both): {e}"
+                )
                 return False
 
             logger.debug(f"TELETHON GOT POST {post=}")
-            if post is None: return False
+            if post is None:
+                return False
 
             media_posts = self._get_media_posts_in_group(chat, post)
-            logger.debug(f'got {len(media_posts)=} for {url=}')
+            logger.debug(f"got {len(media_posts)=} for {url=}")
 
             tmp_dir = self.tmp_dir
 
             group_id = post.grouped_id if post.grouped_id is not None else post.id
             title = post.message
             for mp in media_posts:
-                if len(mp.message) > len(title): title = mp.message  # save the longest text found (usually only 1)
+                if len(mp.message) > len(title):
+                    title = mp.message  # save the longest text found (usually only 1)
 
                 # media can also be in entities
                 if mp.entities:
-                    other_media_urls = [e.url for e in mp.entities if hasattr(e, "url") and e.url and self._guess_file_type(e.url) in ["video", "image", "audio"]]
+                    other_media_urls = [
+                        e.url
+                        for e in mp.entities
+                        if hasattr(e, "url") and e.url and self._guess_file_type(e.url) in ["video", "image", "audio"]
+                    ]
                     if len(other_media_urls):
                         logger.debug(f"Got {len(other_media_urls)} other media urls from {mp.id=}: {other_media_urls}")
                     for i, om_url in enumerate(other_media_urls):
-                        filename = self.download_from_url(om_url, f'{chat}_{group_id}_{i}')
+                        filename = self.download_from_url(om_url, f"{chat}_{group_id}_{i}")
                         result.add_media(Media(filename=filename), id=f"{group_id}_{i}")
 
-                filename_dest = os.path.join(tmp_dir, f'{chat}_{group_id}', str(mp.id))
+                filename_dest = os.path.join(tmp_dir, f"{chat}_{group_id}", str(mp.id))
                 filename = self.client.download_media(mp.media, filename_dest)
                 if not filename:
                     logger.debug(f"Empty media found, skipping {str(mp)=}")
                     continue
                 result.add_media(Media(filename))
-            
+
             result.set_title(title).set_timestamp(post.date).set("api_data", post.to_dict())
             if post.message != title:
                 result.set_content(post.message)

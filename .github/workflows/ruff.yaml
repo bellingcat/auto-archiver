@@ -1,0 +1,22 @@
+name: Ruff Formatting & Linting
+
+on: [push, pull_request]
+
+jobs:
+  ruff:
+    name: Run Ruff Checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run Ruff (Lint & Format Check)
+        uses: astral-sh/ruff-action@v1
+        with:
+          args: "check . --output-format=concise"
+
+      - name: Run Ruff Format Check
+        uses: astral-sh/ruff-action@v1
+        with:
+          args: "format --check ."

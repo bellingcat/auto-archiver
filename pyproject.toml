@@ -98,6 +98,9 @@ line-length = 120
 
 [tool.ruff.lint]
 #add bugbear?
+# I : isort
+# UP : upgrade, e.g. use fstrings
+# ANN : annotations
 #extend-select = ["B"]
 
 # E701 - multiple statements on one line (I vote to keep this but I notice it's used quite a lot!)

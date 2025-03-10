@@ -3,6 +3,7 @@ import pytest
 from auto_archiver.core.module import ModuleFactory, LazyBaseModule
 from auto_archiver.core.base_module import BaseModule
 
+
 @pytest.fixture
 def example_module():
     import auto_archiver
@@ -14,11 +15,13 @@ def example_module():
 
     return module_factory.get_module_lazy("example_module")
 
+
 def test_get_module_lazy(example_module):
     assert example_module.name == "example_module"
     assert example_module.display_name == "Example Module"
 
     assert example_module.manifest is not None
+
 
 def test_python_dependency_check(example_module):
     # example_module requires loguru, which is not installed
@@ -30,10 +33,12 @@ def test_python_dependency_check(example_module):
 
     assert load_error.value.code == 1
 
+
 def test_binary_dependency_check(example_module):
     # example_module requires ffmpeg, which is not installed
     # monkey patch the manifest to include a nonexistnet dependency
     example_module.manifest["dependencies"]["binary"] = ["does_not_exist"]
+
 
 def test_module_dependency_check_loads_module(example_module):
     # example_module requires cli_feeder, which is not installed
@@ -49,18 +54,19 @@ def test_module_dependency_check_loads_module(example_module):
     assert module_factory._lazy_modules["hash_enricher"] is not None
     assert module_factory._lazy_modules["hash_enricher"]._instance is not None
 
-def test_load_module(example_module):
 
+def test_load_module(example_module):
     # setup the module, and check that config is set to the default values
     loaded_module = example_module.load({})
     assert loaded_module is not None
     assert isinstance(loaded_module, BaseModule)
     assert loaded_module.name == "example_module"
     assert loaded_module.display_name == "Example Module"
-    assert loaded_module.config["example_module"] ==  {"csv_file" : "db.csv"}
+    assert loaded_module.config["example_module"] == {"csv_file": "db.csv"}
 
     # check that the vlaue is set on the module itself
     assert loaded_module.csv_file == "db.csv"
+
 
 @pytest.mark.parametrize("module_name", ["local_storage", "generic_extractor", "html_formatter", "csv_db"])
 def test_load_modules(module_name):
@@ -96,5 +102,3 @@ def test_lazy_base_module(module_name):
     assert len(lazy_module.configs) > 0
     assert len(lazy_module.description) > 0
     assert len(lazy_module.version) > 0
-
-

@@ -6,6 +6,7 @@ visual snapshots of the video's keyframes, helping users preview content
 and identify important moments without watching the entire video.
 
 """
+
 import ffmpeg, os
 from loguru import logger
 
@@ -18,7 +19,7 @@ class ThumbnailEnricher(Enricher):
     """
     Generates thumbnails for all the media
     """
-    
+
     def enrich(self, to_enrich: Metadata) -> None:
         """
         Uses or reads the video duration to generate thumbnails
@@ -36,7 +37,9 @@ class ThumbnailEnricher(Enricher):
                 if duration is None:
                     try:
                         probe = ffmpeg.probe(m.filename)
-                        duration = float(next(stream for stream in probe['streams'] if stream['codec_type'] == 'video')['duration'])
+                        duration = float(
+                            next(stream for stream in probe["streams"] if stream["codec_type"] == "video")["duration"]
+                        )
                         to_enrich.media[m_id].set("duration", duration)
                     except Exception as e:
                         logger.error(f"error getting duration of video {m.filename}: {e}")
@@ -48,11 +51,13 @@ class ThumbnailEnricher(Enricher):
                 thumbnails_media = []
                 for index, timestamp in enumerate(timestamps):
                     output_path = os.path.join(folder, f"out{index}.jpg")
-                    ffmpeg.input(m.filename, ss=timestamp).filter('scale', 512, -1).output(output_path, vframes=1, loglevel="quiet").run()
+                    ffmpeg.input(m.filename, ss=timestamp).filter("scale", 512, -1).output(
+                        output_path, vframes=1, loglevel="quiet"
+                    ).run()
 
                     try:
-                        thumbnails_media.append(Media(
-                            filename=output_path)
+                        thumbnails_media.append(
+                            Media(filename=output_path)
                             .set("id", f"thumbnail_{index}")
                             .set("timestamp", "%.3fs" % timestamp)
                         )

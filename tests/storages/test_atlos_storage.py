@@ -101,7 +101,9 @@ def test_upload_not_uploaded(tmp_path, atlos_storage: AtlosStorage, metadata: Me
     assert file_tuple[0] == os.path.basename(media.filename)
 
 
-def test_upload_post_http_error(tmp_path, atlos_storage: AtlosStorage, metadata: Metadata, media: Media, mocker) -> None:
+def test_upload_post_http_error(
+    tmp_path, atlos_storage: AtlosStorage, metadata: Metadata, media: Media, mocker
+) -> None:
     """Test upload() propagates HTTP error during POST."""
     metadata.set("atlos_id", 303)
     fake_get_response = {"result": {"artifacts": []}}
@@ -109,4 +111,3 @@ def test_upload_post_http_error(tmp_path, atlos_storage: AtlosStorage, metadata:
     mocker.patch.object(atlos_storage, "_post", side_effect=Exception("HTTP error"))
     with pytest.raises(Exception, match="HTTP error"):
         atlos_storage.upload(media, metadata)
-

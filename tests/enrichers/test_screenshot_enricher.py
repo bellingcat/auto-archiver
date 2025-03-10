@@ -19,9 +19,11 @@ def mock_selenium_env(mocker):
     mock_popen = mocker.patch("subprocess.Popen")
     mock_is_connectable = mocker.patch("selenium.webdriver.common.service.Service.is_connectable", return_value=True)
     mock_firefox_options = mocker.patch("selenium.webdriver.FirefoxOptions")
+
     # Define side effect for `shutil.which`
     def mock_which_side_effect(dep):
         return "/mock/geckodriver" if dep == "geckodriver" else None
+
     mock_which.side_effect = mock_which_side_effect
 
     # Mock binary paths
@@ -104,13 +106,7 @@ def test_enrich_adds_screenshot(
     ],
 )
 def test_enrich_auth_wall(
-    screenshot_enricher,
-    metadata_with_video,
-    mock_selenium_env,
-    common_patches,
-    url,
-    is_auth,
-    mocker
+    screenshot_enricher, metadata_with_video, mock_selenium_env, common_patches, url, is_auth, mocker
 ):
     # Testing with and without is_auth_wall
     mock_driver, mock_driver_class, _ = mock_selenium_env
@@ -128,9 +124,7 @@ def test_enrich_auth_wall(
         assert metadata_with_video.media[1].properties.get("id") == "screenshot"
 
 
-def test_handle_timeout_exception(
-    screenshot_enricher, metadata_with_video, mock_selenium_env, mocker
-):
+def test_handle_timeout_exception(screenshot_enricher, metadata_with_video, mock_selenium_env, mocker):
     mock_driver, mock_driver_class, mock_options_instance = mock_selenium_env
 
     mock_driver.get.side_effect = TimeoutException
@@ -140,9 +134,7 @@ def test_handle_timeout_exception(
     assert len(metadata_with_video.media) == 1
 
 
-def test_handle_general_exception(
-    screenshot_enricher, metadata_with_video, mock_selenium_env, mocker
-):
+def test_handle_general_exception(screenshot_enricher, metadata_with_video, mock_selenium_env, mocker):
     """Test proper handling of unexpected general exceptions"""
     mock_driver, mock_driver_class, mock_options_instance = mock_selenium_env
     # Simulate a generic exception when save_screenshot is called
@@ -152,9 +144,7 @@ def test_handle_general_exception(
     mock_log = mocker.patch("loguru.logger.error")
     screenshot_enricher.enrich(metadata_with_video)
     # Verify that the exception was logged with the log
-    mock_log.assert_called_once_with(
-        "Got error while loading webdriver for screenshot enricher: Unexpected Error"
-    )
+    mock_log.assert_called_once_with("Got error while loading webdriver for screenshot enricher: Unexpected Error")
     # And no new media was added due to the error
     assert len(metadata_with_video.media) == 1
 

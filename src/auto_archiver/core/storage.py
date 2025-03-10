@@ -15,16 +15,16 @@ from auto_archiver.utils.misc import random_str
 from auto_archiver.core import Media, BaseModule, Metadata
 from auto_archiver.modules.hash_enricher.hash_enricher import HashEnricher
 
+
 class Storage(BaseModule):
-    
     """
     Base class for implementing storage modules in the media archiving framework.
 
     Subclasses must implement the `get_cdn_url` and `uploadf` methods to define their behavior.
     """
 
-    def store(self, media: Media, url: str, metadata: Metadata=None) -> None:
-        if media.is_stored(in_storage=self): 
+    def store(self, media: Media, url: str, metadata: Metadata = None) -> None:
+        if media.is_stored(in_storage=self):
             logger.debug(f"{media.key} already stored, skipping")
             return
         self.set_key(media, url, metadata)
@@ -46,14 +46,15 @@ class Storage(BaseModule):
         pass
 
     def upload(self, media: Media, **kwargs) -> bool:
-        logger.debug(f'[{self.__class__.__name__}] storing file {media.filename} with key {media.key}')
-        with open(media.filename, 'rb') as f:
+        logger.debug(f"[{self.__class__.__name__}] storing file {media.filename} with key {media.key}")
+        with open(media.filename, "rb") as f:
             return self.uploadf(f, media, **kwargs)
 
     def set_key(self, media: Media, url, metadata: Metadata) -> None:
         """takes the media and optionally item info and generates a key"""
-        if media.key is not None and len(media.key) > 0: return
-        folder = metadata.get_context('folder', '')
+        if media.key is not None and len(media.key) > 0:
+            return
+        folder = metadata.get_context("folder", "")
         filename, ext = os.path.splitext(media.filename)
 
         # Handle path_generator logic

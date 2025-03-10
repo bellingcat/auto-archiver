@@ -12,26 +12,28 @@ from tests.storages.test_storage_base import TestStorageBase
 def gdrive_storage(setup_module, mocker):
     module_name: str = "gdrive_storage"
     storage: GDriveStorage
-    config: dict = {'path_generator': 'url',
-            'filename_generator': 'static',
-            'root_folder_id': "fake_root_folder_id",
-            'oauth_token': None,
-            'service_account': 'fake_service_account.json'
-                    }
-    mocker.patch('google.oauth2.service_account.Credentials.from_service_account_file')
+    config: dict = {
+        "path_generator": "url",
+        "filename_generator": "static",
+        "root_folder_id": "fake_root_folder_id",
+        "oauth_token": None,
+        "service_account": "fake_service_account.json",
+    }
+    mocker.patch("google.oauth2.service_account.Credentials.from_service_account_file")
     return setup_module(module_name, config)
 
 
 def test_initialize_fails_with_non_existent_creds(setup_module):
     """Test that the Google Drive service raises a FileNotFoundError when the service account file does not exist.
-        (and isn't mocked)
+    (and isn't mocked)
     """
-    config: dict = {'path_generator': 'url',
-                    'filename_generator': 'static',
-                    'root_folder_id': "fake_root_folder_id",
-                    'oauth_token': None,
-                    'service_account': 'fake_service_account.json'
-                    }
+    config: dict = {
+        "path_generator": "url",
+        "filename_generator": "static",
+        "root_folder_id": "fake_root_folder_id",
+        "oauth_token": None,
+        "service_account": "fake_service_account.json",
+    }
     with pytest.raises(FileNotFoundError) as exc_info:
         setup_module("gdrive_storage", config)
     assert "No such file or directory" in str(exc_info.value)
@@ -48,10 +50,10 @@ def test_get_id_from_parent_and_name(gdrive_storage, mocker):
     result = gdrive_storage._get_id_from_parent_and_name("parent", "mock", retries=1, use_mime_type=False)
     assert result == "123"
 
+
 def test_path_parts():
     media = Media(filename="test.jpg")
     media.key = "folder1/folder2/test.jpg"
-
 
 
 @pytest.mark.skip(reason="Requires real credentials")
@@ -63,19 +65,17 @@ class TestGDriveStorageConnected(TestStorageBase):
 
     module_name: str = "gdrive_storage"
     storage: Type[GDriveStorage]
-    config: dict = {'path_generator': 'url',
-            'filename_generator': 'static',
-            # TODO: replace with real root folder id
-            'root_folder_id': "1TVY_oJt95_dmRSEdP9m5zFy7l50TeCSk",
-            'oauth_token': None,
-            'service_account': 'secrets/service_account.json'
-                    }
-
+    config: dict = {
+        "path_generator": "url",
+        "filename_generator": "static",
+        # TODO: replace with real root folder id
+        "root_folder_id": "1TVY_oJt95_dmRSEdP9m5zFy7l50TeCSk",
+        "oauth_token": None,
+        "service_account": "secrets/service_account.json",
+    }
 
     def test_initialize_with_real_credentials(self):
         """
         Test that the Google Drive service can be initialized with real credentials.
         """
         assert self.storage.service is not None
-
-

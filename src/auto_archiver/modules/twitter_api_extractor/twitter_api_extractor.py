@@ -11,8 +11,8 @@ from slugify import slugify
 from auto_archiver.core import Extractor
 from auto_archiver.core import Metadata, Media
 
-class TwitterApiExtractor(Extractor):
 
+class TwitterApiExtractor(Extractor):
     valid_url: re.Pattern = re.compile(r"(?:twitter|x).com\/(?:\#!\/)?(\w+)\/status(?:es)?\/(\d+)")
 
     def setup(self) -> None:
@@ -23,30 +23,38 @@ class TwitterApiExtractor(Extractor):
         if self.bearer_token:
             self.apis.append(Api(bearer_token=self.bearer_token))
         if self.consumer_key and self.consumer_secret and self.access_token and self.access_secret:
-            self.apis.append(Api(consumer_key=self.consumer_key, consumer_secret=self.consumer_secret,
-                             access_token=self.access_token, access_secret=self.access_secret))
-        assert self.api_client is not None, "Missing Twitter API configurations, please provide either AND/OR (consumer_key, consumer_secret, access_token, access_secret) to use this archiver, you can provide both for better rate-limit results."
+            self.apis.append(
+                Api(
+                    consumer_key=self.consumer_key,
+                    consumer_secret=self.consumer_secret,
+                    access_token=self.access_token,
+                    access_secret=self.access_secret,
+                )
+            )
+        assert self.api_client is not None, (
+            "Missing Twitter API configurations, please provide either AND/OR (consumer_key, consumer_secret, access_token, access_secret) to use this archiver, you can provide both for better rate-limit results."
+        )
 
     @property  # getter .mimetype
     def api_client(self) -> str:
         return self.apis[self.api_index]
-    
+
     def sanitize_url(self, url: str) -> str:
         # expand URL if t.co and clean tracker GET params
-        if 'https://t.co/' in url:
+        if "https://t.co/" in url:
             try:
                 r = requests.get(url, timeout=30)
-                logger.debug(f'Expanded url {url} to {r.url}')
+                logger.debug(f"Expanded url {url} to {r.url}")
                 url = r.url
             except:
-                logger.error(f'Failed to expand url {url}')
+                logger.error(f"Failed to expand url {url}")
         return url
-
 
     def download(self, item: Metadata) -> Metadata:
         # call download retry until success or no more apis
         while self.api_index < len(self.apis):
-            if res := self.download_retry(item): return res
+            if res := self.download_retry(item):
+                return res
             self.api_index += 1
         self.api_index = 0
         return False
@@ -54,7 +62,8 @@ class TwitterApiExtractor(Extractor):
     def get_username_tweet_id(self, url):
         # detect URLs that we definitely cannot handle
         matches = self.valid_url.findall(url)
-        if not len(matches): return False, False
+        if not len(matches):
+            return False, False
 
         username, tweet_id = matches[0]  # only one URL supported
         logger.debug(f"Found {username=} and {tweet_id=} in {url=}")
@@ -65,10 +74,16 @@ class TwitterApiExtractor(Extractor):
         url = item.get_url()
         # detect URLs that we definitely cannot handle
         username, tweet_id = self.get_username_tweet_id(url)
-        if not username: return False
+        if not username:
+            return False
 
         try:
-            tweet = self.api_client.get_tweet(tweet_id, expansions=["attachments.media_keys"], media_fields=["type", "duration_ms", "url", "variants"], tweet_fields=["attachments", "author_id", "created_at", "entities", "id", "text", "possibly_sensitive"])
+            tweet = self.api_client.get_tweet(
+                tweet_id,
+                expansions=["attachments.media_keys"],
+                media_fields=["type", "duration_ms", "url", "variants"],
+                tweet_fields=["attachments", "author_id", "created_at", "entities", "id", "text", "possibly_sensitive"],
+            )
             logger.debug(tweet)
         except Exception as e:
             logger.error(f"Could not get tweet: {e}")
@@ -88,29 +103,35 @@ class TwitterApiExtractor(Extractor):
                     mimetype = "image/jpeg"
                 elif hasattr(m, "variants"):
                     variant = self.choose_variant(m.variants)
-                    if not variant: continue
+                    if not variant:
+                        continue
                     media.set("src", variant.url)
                     mimetype = variant.content_type
                 else:
                     continue
                 logger.info(f"Found media {media}")
                 ext = mimetypes.guess_extension(mimetype)
-                media.filename = self.download_from_url(media.get("src"), f'{slugify(url)}_{i}{ext}')
+                media.filename = self.download_from_url(media.get("src"), f"{slugify(url)}_{i}{ext}")
                 result.add_media(media)
 
-        result.set_content(json.dumps({
-            "id": tweet.data.id,
-            "text": tweet.data.text,
-            "created_at": tweet.data.created_at,
-            "author_id": tweet.data.author_id,
-            "geo": tweet.data.geo,
-            "lang": tweet.data.lang,
-            "media": urls
-        }, ensure_ascii=False, indent=4))
+        result.set_content(
+            json.dumps(
+                {
+                    "id": tweet.data.id,
+                    "text": tweet.data.text,
+                    "created_at": tweet.data.created_at,
+                    "author_id": tweet.data.author_id,
+                    "geo": tweet.data.geo,
+                    "lang": tweet.data.lang,
+                    "media": urls,
+                },
+                ensure_ascii=False,
+                indent=4,
+            )
+        )
         return result.success("twitter-api")
 
     def choose_variant(self, variants):
-
         """
         Chooses the highest quality variable possible out of a list of variants
         """

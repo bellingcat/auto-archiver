@@ -70,11 +70,7 @@ def main(credentials, token):
         print(emailAddress)
 
         # Call the Drive v3 API and return some files
-        results = (
-            service.files()
-            .list(pageSize=10, fields="nextPageToken, files(id, name)")
-            .execute()
-        )
+        results = service.files().list(pageSize=10, fields="nextPageToken, files(id, name)").execute()
         items = results.get("files", [])
 
         if not items:

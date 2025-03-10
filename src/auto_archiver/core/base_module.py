@@ -1,7 +1,6 @@
-
 from __future__ import annotations
 
-from typing import  Mapping, Any, Type, TYPE_CHECKING
+from typing import Mapping, Any, Type, TYPE_CHECKING
 from abc import ABC
 from copy import deepcopy, copy
 from tempfile import TemporaryDirectory
@@ -13,8 +12,8 @@ from loguru import logger
 if TYPE_CHECKING:
     from .module import ModuleFactory
 
-class BaseModule(ABC):
 
+class BaseModule(ABC):
     """
     Base module class. All modules should inherit from this class.
 
@@ -46,14 +45,13 @@ class BaseModule(ABC):
 
     @property
     def storages(self) -> list:
-        return self.config.get('storages', [])
+        return self.config.get("storages", [])
 
     def config_setup(self, config: dict):
-
         # this is important. Each instance is given its own deepcopied config, so modules cannot
         # change values to affect other modules
         config = deepcopy(config)
-        authentication = deepcopy(config.pop('authentication', {}))
+        authentication = deepcopy(config.pop("authentication", {}))
 
         self.authentication = authentication
         self.config = config
@@ -68,7 +66,7 @@ class BaseModule(ABC):
         """
         Returns the authentication information for a given site. This is used to authenticate
         with a site before extracting data. The site should be the domain of the site, e.g. 'twitter.com'
-        
+
         :param site: the domain of the site to get authentication information for
         :param extract_cookies: whether or not to extract cookies from the given browser/file and return the cookie jar (disabling can speed up processing if you don't actually need the cookies jar).
 
@@ -94,7 +92,6 @@ class BaseModule(ABC):
         # add the 'www' version of the site to the list of sites to check
         authdict = {}
 
-
         for to_try in [site, f"www.{site}"]:
             if to_try in self.authentication:
                 authdict.update(self.authentication[to_try])
@@ -104,17 +101,20 @@ class BaseModule(ABC):
         if not authdict:
             for key in self.authentication.keys():
                 if key in site or site in key:
-                    logger.debug(f"Could not find exact authentication information for site '{site}'. \
+                    logger.debug(
+                        f"Could not find exact authentication information for site '{site}'. \
 did find information for '{key}' which is close, is this what you meant? \
-If so, edit your authentication settings to make sure it exactly matches.")
+If so, edit your authentication settings to make sure it exactly matches."
+                    )
 
         def get_ytdlp_cookiejar(args):
             import yt_dlp
             from yt_dlp import parse_options
+
             logger.debug(f"Extracting cookies from settings: {args[1]}")
             # parse_options returns a named tuple as follows, we only need the ydl_options part
             # collections.namedtuple('ParsedOptions', ('parser', 'options', 'urls', 'ydl_opts'))
-            ytdlp_opts = getattr(parse_options(args), 'ydl_opts')
+            ytdlp_opts = getattr(parse_options(args), "ydl_opts")
             return yt_dlp.YoutubeDL(ytdlp_opts).cookiejar
 
         get_cookiejar_options = None
@@ -125,22 +125,21 @@ If so, edit your authentication settings to make sure it exactly matches.")
         # 3. cookies_from_browser setting in global config
         # 4. cookies_file setting in global config
 
-        if 'cookies_from_browser' in authdict:
-            get_cookiejar_options = ['--cookies-from-browser', authdict['cookies_from_browser']]
-        elif 'cookies_file' in authdict:
-            get_cookiejar_options = ['--cookies', authdict['cookies_file']]
-        elif 'cookies_from_browser' in self.authentication:
-            authdict['cookies_from_browser'] = self.authentication['cookies_from_browser']
-            get_cookiejar_options = ['--cookies-from-browser', self.authentication['cookies_from_browser']]
-        elif 'cookies_file' in self.authentication:
-            authdict['cookies_file'] = self.authentication['cookies_file']
-            get_cookiejar_options = ['--cookies', self.authentication['cookies_file']]
+        if "cookies_from_browser" in authdict:
+            get_cookiejar_options = ["--cookies-from-browser", authdict["cookies_from_browser"]]
+        elif "cookies_file" in authdict:
+            get_cookiejar_options = ["--cookies", authdict["cookies_file"]]
+        elif "cookies_from_browser" in self.authentication:
+            authdict["cookies_from_browser"] = self.authentication["cookies_from_browser"]
+            get_cookiejar_options = ["--cookies-from-browser", self.authentication["cookies_from_browser"]]
+        elif "cookies_file" in self.authentication:
+            authdict["cookies_file"] = self.authentication["cookies_file"]
+            get_cookiejar_options = ["--cookies", self.authentication["cookies_file"]]
 
-        
         if get_cookiejar_options:
-            authdict['cookies_jar'] = get_ytdlp_cookiejar(get_cookiejar_options)
+            authdict["cookies_jar"] = get_ytdlp_cookiejar(get_cookiejar_options)
 
         return authdict
-    
+
     def repr(self):
         return f"Module<'{self.display_name}' (config: {self.config[self.name]})>"

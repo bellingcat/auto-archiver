@@ -1,4 +1,3 @@
-
 import json
 import os
 import time
@@ -15,12 +14,9 @@ from auto_archiver.core import Media
 from auto_archiver.core import Storage
 
 
-
-
 class GDriveStorage(Storage):
-
     def setup(self) -> None:
-        self.scopes = ['https://www.googleapis.com/auth/drive']
+        self.scopes = ["https://www.googleapis.com/auth/drive"]
         # Initialize Google Drive service
         self._setup_google_drive_service()
 
@@ -37,25 +33,25 @@ class GDriveStorage(Storage):
 
     def _initialize_with_oauth_token(self):
         """Initialize Google Drive service with OAuth token."""
-        with open(self.oauth_token, 'r') as stream:
+        with open(self.oauth_token, "r") as stream:
             creds_json = json.load(stream)
-            creds_json['refresh_token'] = creds_json.get("refresh_token", "")
+            creds_json["refresh_token"] = creds_json.get("refresh_token", "")
 
         creds = Credentials.from_authorized_user_info(creds_json, self.scopes)
         if not creds.valid and creds.expired and creds.refresh_token:
             creds.refresh(Request())
-            with open(self.oauth_token, 'w') as token_file:
+            with open(self.oauth_token, "w") as token_file:
                 logger.debug("Saving refreshed OAuth token.")
                 token_file.write(creds.to_json())
         elif not creds.valid:
             raise ValueError("Invalid OAuth token. Please regenerate the token.")
 
-        return build('drive', 'v3', credentials=creds)
+        return build("drive", "v3", credentials=creds)
 
     def _initialize_with_service_account(self):
         """Initialize Google Drive service with service account."""
         creds = service_account.Credentials.from_service_account_file(self.service_account, scopes=self.scopes)
-        return build('drive', 'v3', credentials=creds)
+        return build("drive", "v3", credentials=creds)
 
     def get_cdn_url(self, media: Media) -> str:
         """
@@ -79,7 +75,7 @@ class GDriveStorage(Storage):
         return f"https://drive.google.com/file/d/{file_id}/view?usp=sharing"
 
     def upload(self, media: Media, **kwargs) -> bool:
-        logger.debug(f'[{self.__class__.__name__}] storing file {media.filename} with key {media.key}')
+        logger.debug(f"[{self.__class__.__name__}] storing file {media.filename} with key {media.key}")
         """
         1. for each sub-folder in the path check if exists or create
         2. upload file to root_id/other_paths.../filename
@@ -95,25 +91,30 @@ class GDriveStorage(Storage):
             parent_id = upload_to
 
         # upload file to gd
-        logger.debug(f'uploading {filename=} to folder id {upload_to}')
-        file_metadata = {
-            'name': [filename],
-            'parents': [upload_to]
-        }
+        logger.debug(f"uploading {filename=} to folder id {upload_to}")
+        file_metadata = {"name": [filename], "parents": [upload_to]}
         media = MediaFileUpload(media.filename, resumable=True)
-        gd_file = self.service.files().create(supportsAllDrives=True, body=file_metadata, media_body=media, fields='id').execute()
-        logger.debug(f'uploadf: uploaded file {gd_file["id"]} successfully in folder={upload_to}')
+        gd_file = (
+            self.service.files()
+            .create(supportsAllDrives=True, body=file_metadata, media_body=media, fields="id")
+            .execute()
+        )
+        logger.debug(f"uploadf: uploaded file {gd_file['id']} successfully in folder={upload_to}")
 
     # must be implemented even if unused
-    def uploadf(self, file: IO[bytes], key: str, **kwargs: dict) -> bool: pass
+    def uploadf(self, file: IO[bytes], key: str, **kwargs: dict) -> bool:
+        pass
 
-    def _get_id_from_parent_and_name(self, parent_id: str,
-                                     name: str,
-                                     retries: int = 1,
-                                     sleep_seconds: int = 10,
-                                     use_mime_type: bool = False,
-                                     raise_on_missing: bool = True,
-                                     use_cache=False):
+    def _get_id_from_parent_and_name(
+        self,
+        parent_id: str,
+        name: str,
+        retries: int = 1,
+        sleep_seconds: int = 10,
+        use_mime_type: bool = False,
+        raise_on_missing: bool = True,
+        use_cache=False,
+    ):
         """
         Retrieves the id of a folder or file from its @name and the @parent_id folder
         Optionally does multiple @retries and sleeps @sleep_seconds between them
@@ -137,29 +138,36 @@ class GDriveStorage(Storage):
             query_string += f" and mimeType='application/vnd.google-apps.folder' "
 
         for attempt in range(retries):
-            results = self.service.files().list(
-                # both below for Google Shared Drives
-                supportsAllDrives=True,
-                includeItemsFromAllDrives=True,
-                q=query_string,
-                spaces='drive',  # ie not appDataFolder or photos
-                fields='files(id, name)'
-            ).execute()
-            items = results.get('files', [])
+            results = (
+                self.service.files()
+                .list(
+                    # both below for Google Shared Drives
+                    supportsAllDrives=True,
+                    includeItemsFromAllDrives=True,
+                    q=query_string,
+                    spaces="drive",  # ie not appDataFolder or photos
+                    fields="files(id, name)",
+                )
+                .execute()
+            )
+            items = results.get("files", [])
 
             if len(items) > 0:
-                logger.debug(f"{debug_header} found {len(items)} matches, returning last of {','.join([i['id'] for i in items])}")
-                _id = items[-1]['id']
-                if use_cache: self.api_cache[cache_key] = _id
+                logger.debug(
+                    f"{debug_header} found {len(items)} matches, returning last of {','.join([i['id'] for i in items])}"
+                )
+                _id = items[-1]["id"]
+                if use_cache:
+                    self.api_cache[cache_key] = _id
                 return _id
             else:
-                logger.debug(f'{debug_header} not found, attempt {attempt+1}/{retries}.')
+                logger.debug(f"{debug_header} not found, attempt {attempt + 1}/{retries}.")
                 if attempt < retries - 1:
-                    logger.debug(f'sleeping for {sleep_seconds} second(s)')
+                    logger.debug(f"sleeping for {sleep_seconds} second(s)")
                     time.sleep(sleep_seconds)
 
         if raise_on_missing:
-            raise ValueError(f'{debug_header} not found after {retries} attempt(s)')
+            raise ValueError(f"{debug_header} not found after {retries} attempt(s)")
         return None
 
     def _mkdir(self, name: str, parent_id: str):
@@ -167,12 +175,7 @@ class GDriveStorage(Storage):
         Creates a new GDrive folder @name inside folder @parent_id
         Returns id of the created folder
         """
-        logger.debug(f'Creating new folder with {name=} inside {parent_id=}')
-        file_metadata = {
-            'name': [name],
-            'mimeType': 'application/vnd.google-apps.folder',
-            'parents': [parent_id]
-        }
-        gd_folder = self.service.files().create(supportsAllDrives=True, body=file_metadata, fields='id').execute()
-        return gd_folder.get('id')
-
+        logger.debug(f"Creating new folder with {name=} inside {parent_id=}")
+        file_metadata = {"name": [name], "mimeType": "application/vnd.google-apps.folder", "parents": [parent_id]}
+        gd_folder = self.service.files().create(supportsAllDrives=True, body=file_metadata, fields="id").execute()
+        return gd_folder.get("id")

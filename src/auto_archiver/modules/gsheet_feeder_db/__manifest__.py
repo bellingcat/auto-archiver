@@ -12,9 +12,7 @@
             "default": None,
             "help": "the id of the sheet to archive (alternative to 'sheet' config)",
         },
-        "header": {"default": 1,
-                   "type": "int",
-                   "help": "index of the header row (starts at 1)", "type": "int"},
+        "header": {"default": 1, "type": "int", "help": "index of the header row (starts at 1)", "type": "int"},
         "service_account": {
             "default": "secrets/service_account.json",
             "help": "service account JSON file path. Learn how to create one: https://gspread.readthedocs.io/en/latest/oauth2.html",
@@ -65,7 +63,7 @@
             "default": True,
             "type": "bool",
             "help": "if True the stored files path will include 'workbook_name/worksheet_name/...'",
-        }
+        },
     },
     "description": """
     GsheetsFeederDatabase

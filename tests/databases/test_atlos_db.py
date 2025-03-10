@@ -50,9 +50,7 @@ def test_failed_with_atlos_id(atlos_db, metadata, mocker):
     post_mock = mocker.patch.object(atlos_db, "_post", return_value=fake_resp)
     atlos_db.failed(metadata, "failure reason")
     expected_endpoint = f"/api/v2/source_material/metadata/42/auto_archiver"
-    expected_json = {
-        "metadata": {"processed": True, "status": "error", "error": "failure reason"}
-    }
+    expected_json = {"metadata": {"processed": True, "status": "error", "error": "failure reason"}}
     post_mock.assert_called_once_with(expected_endpoint, json=expected_json)
 
 

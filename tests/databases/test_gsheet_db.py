@@ -28,6 +28,7 @@ def mock_metadata(mocker):
     metadata.get_first_image.return_value = None
     return metadata
 
+
 @pytest.fixture
 def metadata():
     metadata = Metadata()
@@ -51,6 +52,7 @@ def mock_media(mocker):
     mock_media.get.return_value = "not-calculated"
     return mock_media
 
+
 @pytest.fixture
 def gsheets_db(mock_gworksheet, setup_module, mocker):
     mocker.patch("gspread.service_account")
@@ -59,7 +61,22 @@ def gsheets_db(mock_gworksheet, setup_module, mocker):
         "sheet_id": None,
         "header": 1,
         "service_account": "test/service_account.json",
-        "columns": {'url': 'link', 'status': 'archive status', 'folder': 'destination folder', 'archive': 'archive location', 'date': 'archive date', 'thumbnail': 'thumbnail', 'timestamp': 'upload timestamp', 'title': 'upload title', 'text': 'text content', 'screenshot': 'screenshot', 'hash': 'hash', 'pdq_hash': 'perceptual hashes', 'wacz': 'wacz', 'replaywebpage': 'replaywebpage'},
+        "columns": {
+            "url": "link",
+            "status": "archive status",
+            "folder": "destination folder",
+            "archive": "archive location",
+            "date": "archive date",
+            "thumbnail": "thumbnail",
+            "timestamp": "upload timestamp",
+            "title": "upload title",
+            "text": "text content",
+            "screenshot": "screenshot",
+            "hash": "hash",
+            "pdq_hash": "perceptual hashes",
+            "wacz": "wacz",
+            "replaywebpage": "replaywebpage",
+        },
         "allow_worksheets": set(),
         "block_worksheets": set(),
         "use_sheet_names_in_stored_paths": True,
@@ -78,19 +95,20 @@ def fixed_timestamp():
 @pytest.fixture
 def expected_calls(mock_media, fixed_timestamp):
     """Fixture for the expected cell updates."""
-    return  [
-        (1, 'status', 'my-archiver: success'),
-        (1, 'archive', 'http://example.com/screenshot.png'),
-        (1, 'date', '2025-02-01T00:00:00+00:00'),
-        (1, 'title', 'Example Title'),
-        (1, 'text', 'Example Content'),
-        (1, 'timestamp', '2025-01-01T00:00:00+00:00'),
-        (1, 'hash', 'not-calculated'),
+    return [
+        (1, "status", "my-archiver: success"),
+        (1, "archive", "http://example.com/screenshot.png"),
+        (1, "date", "2025-02-01T00:00:00+00:00"),
+        (1, "title", "Example Title"),
+        (1, "text", "Example Content"),
+        (1, "timestamp", "2025-01-01T00:00:00+00:00"),
+        (1, "hash", "not-calculated"),
         # (1, 'screenshot', 'http://example.com/screenshot.png'),
         # (1, 'thumbnail', '=IMAGE("http://example.com/thumbnail.png")'),
         # (1, 'wacz', 'http://example.com/browsertrix.wacz'),
         # (1, 'replaywebpage', 'https://replayweb.page/?source=http%3A%2F%2Fexample.com%2Fbrowsertrix.wacz#view=pages&url=')
     ]
+
 
 def test_retrieve_gsheet(gsheets_db, metadata, mock_gworksheet):
     gw, row = gsheets_db._retrieve_gsheet(metadata)
@@ -100,27 +118,34 @@ def test_retrieve_gsheet(gsheets_db, metadata, mock_gworksheet):
 
 def test_started(gsheets_db, mock_metadata, mock_gworksheet):
     gsheets_db.started(mock_metadata)
-    mock_gworksheet.set_cell.assert_called_once_with(1, 'status', 'Archive in progress')
+    mock_gworksheet.set_cell.assert_called_once_with(1, "status", "Archive in progress")
+
 
 def test_failed(gsheets_db, mock_metadata, mock_gworksheet):
     reason = "Test failure"
     gsheets_db.failed(mock_metadata, reason)
-    mock_gworksheet.set_cell.assert_called_once_with(1, 'status', f'Archive failed {reason}')
+    mock_gworksheet.set_cell.assert_called_once_with(1, "status", f"Archive failed {reason}")
 
 
 def test_aborted(gsheets_db, mock_metadata, mock_gworksheet):
     gsheets_db.aborted(mock_metadata)
-    mock_gworksheet.set_cell.assert_called_once_with(1, 'status', '')
+    mock_gworksheet.set_cell.assert_called_once_with(1, "status", "")
 
 
 def test_done(gsheets_db, metadata, mock_gworksheet, expected_calls, mocker):
-    mocker.patch("auto_archiver.modules.gsheet_feeder_db.gsheet_feeder_db.get_current_timestamp", return_value='2025-02-01T00:00:00+00:00')
+    mocker.patch(
+        "auto_archiver.modules.gsheet_feeder_db.gsheet_feeder_db.get_current_timestamp",
+        return_value="2025-02-01T00:00:00+00:00",
+    )
     gsheets_db.done(metadata)
     mock_gworksheet.batch_set_cell.assert_called_once_with(expected_calls)
 
 
 def test_done_cached(gsheets_db, metadata, mock_gworksheet, mocker):
-    mocker.patch("auto_archiver.modules.gsheet_feeder_db.gsheet_feeder_db.get_current_timestamp", return_value='2025-02-01T00:00:00+00:00')
+    mocker.patch(
+        "auto_archiver.modules.gsheet_feeder_db.gsheet_feeder_db.get_current_timestamp",
+        return_value="2025-02-01T00:00:00+00:00",
+    )
     gsheets_db.done(metadata, cached=True)
 
     # Verify the status message includes "[cached]"
@@ -131,15 +156,17 @@ def test_done_cached(gsheets_db, metadata, mock_gworksheet, mocker):
 def test_done_missing_media(gsheets_db, metadata, mock_gworksheet, mocker):
     # clear media from metadata
     metadata.media = []
-    mocker.patch("auto_archiver.modules.gsheet_feeder_db.gsheet_feeder_db.get_current_timestamp", return_value='2025-02-01T00:00:00+00:00')
+    mocker.patch(
+        "auto_archiver.modules.gsheet_feeder_db.gsheet_feeder_db.get_current_timestamp",
+        return_value="2025-02-01T00:00:00+00:00",
+    )
     gsheets_db.done(metadata)
     # Verify nothing media-related gets updated
     call_args = mock_gworksheet.batch_set_cell.call_args[0][0]
-    media_fields = {'archive', 'screenshot', 'thumbnail', 'wacz', 'replaywebpage'}
+    media_fields = {"archive", "screenshot", "thumbnail", "wacz", "replaywebpage"}
     assert all(call[1] not in media_fields for call in call_args)
+
 
 def test_safe_status_update(gsheets_db, metadata, mock_gworksheet):
     gsheets_db._safe_status_update(metadata, "Test status")
-    mock_gworksheet.set_cell.assert_called_once_with(1, 'status', 'Test status')
-
-
+    mock_gworksheet.set_cell.assert_called_once_with(1, "status", "Test status")
