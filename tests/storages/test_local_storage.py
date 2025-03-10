@@ -11,6 +11,7 @@ from auto_archiver.modules.local_storage import LocalStorage
 @pytest.fixture
 def local_storage(setup_module, tmp_path) -> LocalStorage:
     save_to = tmp_path / "local_archive"
+    save_to.mkdir()
     configs: dict = {
         "path_generator": "flat",
         "filename_generator": "static",
@@ -19,7 +20,6 @@ def local_storage(setup_module, tmp_path) -> LocalStorage:
     }
     return setup_module("local_storage", configs)
 
-
 @pytest.fixture
 def sample_media(tmp_path) -> Media:
     """Fixture creating a Media object with temporary source file"""
@@ -27,6 +27,13 @@ def sample_media(tmp_path) -> Media:
     src_file.write_text("test content")
     return Media(key="subdir/test.txt", filename=str(src_file))
 
+def test_really_long_website_url_save(local_storage, tmp_path):
+    long_filename = os.path.join(local_storage.save_to, "file"*100 + ".txt")
+    src_file = tmp_path / "source.txt"
+    src_file.write_text("test content")
+    media = Media(key=long_filename, filename=str(src_file))
+    assert local_storage.upload(media) is True
+    assert src_file.read_text() == Path(local_storage.get_cdn_url(media)).read_text()
 
 def test_get_cdn_url_relative(local_storage):
     media = Media(key="test.txt", filename="dummy.txt")

@@ -67,4 +67,8 @@ class S3Storage(Storage):
         if 'Contents' in resp:
             return resp['Contents'][0]['Key']
         return False
+    
+    def max_file_length(self):
+        # Amazon AWS max file length is 1024, but we will use 1000 to be safe
+        return 1000
 

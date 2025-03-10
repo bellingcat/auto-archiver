@@ -6,7 +6,7 @@ nested media retrieval, and type validation.
 from __future__ import annotations
 import os
 import traceback
-from typing import Any, List
+from typing import Any, List, Iterator
 from dataclasses import dataclass, field
 from dataclasses_json import dataclass_json, config
 import mimetypes
@@ -47,7 +47,7 @@ class Media:
             for any_media in self.all_inner_media(include_self=True):
                 s.store(any_media, url, metadata=metadata)
 
-    def all_inner_media(self, include_self=False):
+    def all_inner_media(self, include_self=False) -> Iterator[Media]:
         """Retrieves all media, including nested media within properties or transformations on original media.
         This function returns a generator for all the inner media.
 
