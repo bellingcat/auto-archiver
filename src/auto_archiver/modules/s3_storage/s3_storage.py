@@ -42,7 +42,7 @@ class S3Storage(Storage):
                 logger.warning(f"Unable to get mimetype for {media.key=}, error: {e}")
         self.s3.upload_fileobj(file, Bucket=self.bucket, Key=media.key, ExtraArgs=extra_args)
         return True
-    
+
     def is_upload_needed(self, media: Media) -> bool:
         if self.random_no_duplicate:
             # checks if a folder with the hash already exists, if so it skips the upload
@@ -50,13 +50,13 @@ class S3Storage(Storage):
             path = os.path.join(NO_DUPLICATES_FOLDER, hd[:24])
 
             if existing_key:=self.file_in_folder(path):
-                media.key = existing_key
+                media._key = existing_key
                 media.set("previously archived", True)
                 logger.debug(f"skipping upload of {media.filename} because it already exists in {media.key}")
                 return False
             
             _, ext = os.path.splitext(media.key)
-            media.key = os.path.join(path, f"{random_str(24)}{ext}")
+            media._key = os.path.join(path, f"{random_str(24)}{ext}")
         return True
 
     def file_in_folder(self, path:str) -> str:
@@ -67,8 +67,3 @@ class S3Storage(Storage):
         if 'Contents' in resp:
             return resp['Contents'][0]['Key']
         return False
-    
-    def max_file_length(self):
-        # Amazon AWS max file length is 1024, but we will use 1000 to be safe
-        return 1000
-

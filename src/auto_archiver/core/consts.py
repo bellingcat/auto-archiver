@@ -1,3 +1,5 @@
+class SetupError(ValueError):
+    pass
 
 MODULE_TYPES = [
     'feeder',

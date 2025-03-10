@@ -21,14 +21,13 @@ class Media:
     Represents a media file with associated properties and storage details.
 
     Attributes:
-    - filename: The file path of the media.
-    - key: An optional identifier for the media.
+    - filename: The file path of the media as saved locally (temporarily, before uploading to the storage).
     - urls: A list of URLs where the media is stored or accessible.
     - properties: Additional metadata or transformations for the media.
     - _mimetype: The media's mimetype (e.g., image/jpeg, video/mp4).
     """
     filename: str
-    key: str = None
+    _key: str = None
     urls: List[str] = field(default_factory=list)
     properties: dict = field(default_factory=dict)
     _mimetype: str = None  # eg: image/jpeg
@@ -66,6 +65,10 @@ class Media:
     def is_stored(self, in_storage) -> bool:
         # checks if the media is already stored in the given storage
         return len(self.urls) > 0 and len(self.urls) == len(in_storage.config["steps"]["storages"])
+
+    @property
+    def key(self) -> str:
+        return self._key
 
     def set(self, key: str, value: Any) -> Media:
         self.properties[key] = value

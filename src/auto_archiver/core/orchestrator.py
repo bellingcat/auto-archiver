@@ -23,15 +23,13 @@ from .config import read_yaml, store_yaml, to_dot_notation, merge_dicts, is_vali
     DefaultValidatingParser, UniqueAppendAction, AuthenticationJsonParseAction, DEFAULT_CONFIG_FILE
 from .module import ModuleFactory, LazyBaseModule
 from . import validators, Feeder, Extractor, Database, Storage, Formatter, Enricher
-from .consts import MODULE_TYPES
+from .consts import MODULE_TYPES, SetupError
 from auto_archiver.utils.url import check_url_or_raise
 
 if TYPE_CHECKING:
     from .base_module import BaseModule
     from .module import LazyBaseModule
 
-class SetupError(ValueError):
-    pass
 class ArchivingOrchestrator:
 
     # instance variables

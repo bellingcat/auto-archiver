@@ -37,10 +37,10 @@ class TestS3Storage:
     def test_get_cdn_url_generation(self):
         """Test CDN URL formatting """
         media = Media("test.txt")
-        media.key = "path/to/file.txt"
+        media._key = "path/to/file.txt"
         url = self.storage.get_cdn_url(media)
         assert url == "https://cdn.example.com/path/to/file.txt"
-        media.key = "another/path.jpg"
+        media._key = "another/path.jpg"
         assert self.storage.get_cdn_url(media) == "https://cdn.example.com/another/path.jpg"
 
     def test_uploadf_sets_acl_public(self, mocker):
@@ -72,7 +72,7 @@ class TestS3Storage:
         self.storage.random_no_duplicate = True
         mock_file_in_folder = mocker.patch.object(S3Storage, 'file_in_folder', return_value="existing_folder/existing_file.txt")
         media = Media("test.txt")
-        media.key = "original_path.txt"
+        media._key = "original_path.txt"
         mock_calculate_hash = mocker.patch('auto_archiver.modules.s3_storage.s3_storage.calculate_file_hash', return_value="beepboop123beepboop123beepboop123")
         assert self.storage.is_upload_needed(media) is False
         assert media.key == "existing_folder/existing_file.txt"
@@ -84,7 +84,7 @@ class TestS3Storage:
 
     def test_uploads_with_correct_parameters(self, mocker):
         media = Media("test.txt")
-        media.key = "original_key.txt"
+        media._key = "original_key.txt"
         mocker.patch.object(S3Storage, 'is_upload_needed', return_value=True)
         media.mimetype = 'image/png'
         mock_file = mocker.MagicMock()

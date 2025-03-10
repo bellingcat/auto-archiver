@@ -54,7 +54,7 @@ def storage_base():
 
     ],
 )
-def test_storage_setup(storage_base, path_generator, filename_generator, url, expected_key, mocker):
+def test_storage_name_generation(storage_base, path_generator, filename_generator, url, expected_key, mocker):
     mock_random = mocker.patch("auto_archiver.core.storage.random_str")
     mock_random.return_value = "pretend-random"
 
@@ -92,7 +92,4 @@ def test_really_long_name(storage_base):
     url = f"https://example.com/{'file'*100}"
     media = Media(filename="dummy.txt")
     storage.set_key(media, url, Metadata())
-    assert len(media.key) <= storage.max_file_length()
-    assert media.key == "https-example-com-filefilefilefilefilefilefilefilefilefilefilefile\
-filefilefilefilefilefilefilefilefilefilefilefilefilefilefilefilefilefilefilefilefilefilefile\
-filefilefilefilefilefilefilefilefilefilefilefilefilefilefilefilefile/6ae8a75555209fd6c44157c0.txt"
+    assert media.key == f"https-example-com-{'file'*13}/6ae8a75555209fd6c44157c0.txt"

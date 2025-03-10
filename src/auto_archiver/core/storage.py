@@ -6,6 +6,7 @@ from __future__ import annotations
 from abc import abstractmethod
 from typing import IO
 import os
+import platform
 
 from loguru import logger
 from slugify import slugify
@@ -43,17 +44,30 @@ class Storage(BaseModule):
     def uploadf(self, file: IO[bytes], key: str, **kwargs: dict) -> bool:
         """
         Uploads (or saves) a file to the storage service/location.
+
+        This method should not be called directly, but instead through the 'store' method,
+        which sets up the media for storage.
         """
         pass
 
     def upload(self, media: Media, **kwargs) -> bool:
+        """
+        Uploads a media object to the storage service.
+
+        This method should not be called directly, but instead be called through the 'store' method,
+        which sets up the media for storage.
+        """
         logger.debug(f'[{self.__class__.__name__}] storing file {media.filename} with key {media.key}')
         with open(media.filename, 'rb') as f:
             return self.uploadf(f, media, **kwargs)
 
     def set_key(self, media: Media, url: str, metadata: Metadata) -> None:
         """takes the media and optionally item info and generates a key"""
-        if media.key is not None and len(media.key) > 0: return
+        
+        if media.key is not None and len(media.key) > 0:
+            # media key is already set
+            return
+
         folder = metadata.get_context('folder', '')
         filename, ext = os.path.splitext(media.filename)
 
@@ -61,10 +75,8 @@ class Storage(BaseModule):
         path_generator = self.path_generator
         if path_generator == "flat":
             path = ""
-            # TODO: this is never used
-            filename = slugify(filename)  # Ensure filename is slugified
         elif path_generator == "url":
-            path = slugify(url)
+            path = slugify(url)[:70]
         elif path_generator == "random":
             path = random_str(24)
         else:
@@ -81,25 +93,7 @@ class Storage(BaseModule):
             filename = hd[:24]
         else:
             raise ValueError(f"Invalid filename_generator: {filename_generator}")
-
+        
         key = os.path.join(folder, path, f"{filename}{ext}")
-        if len(key) > self.max_file_length():
-            # truncate the path
-            max_path_length = self.max_file_length() - len(filename) - len(ext) - len(folder) - 1
-            path = path[:max_path_length]
-            logger.warning(f'Filename too long ({len(key)} characters), truncating to {self.max_file_length()} characters')
-            key = os.path.join(folder, path, f"{filename}{ext}")
 
-
-        media.key = key
-
-
-    def max_file_length(self) -> int:
-        """
-        Returns the maximum length of a file name that can be stored in the storage service.
-
-        Files are truncated if they exceed this length.
-        Override this method in subclasses if the storage service has a different maximum file length.
-        """
-        return 255 # safe max file length for most filesystems (macOS, Windows, Linux)
-
+        media._key = key
