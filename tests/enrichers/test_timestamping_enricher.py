@@ -29,6 +29,41 @@ def selfsigned_response() -> TimeStampResponse:
 def filehash():
     return "4b7b4e39f12b8c725e6e603e6d4422500316df94211070682ef10260ff5759ef"
 
+@pytest.mark.download
+def test_enriching(setup_module, sample_media):
+    tsp: TimestampingEnricher = setup_module("timestamping_enricher")
+
+    # tests the current TSAs set as default in the __manifest__ to make sure they are all still working
+
+    # test the enrich method
+    metadata = Metadata().set_url("https://example.com")
+    sample_media.set('hash', "4b7b4e39f12b8c725e6e603e6d4422500316df94211070682ef10260ff5759ef")
+    metadata.add_media(sample_media)
+    tsp.enrich(metadata)
+
+
+def test_full_enriching_selfsigned(setup_module, sample_media, mocker, selfsigned_response, filehash):
+    mock_post = mocker.patch("requests.sessions.Session.post")
+    mock_post.return_value.status_code = 200
+    mock_decode_timestamp_response = mocker.patch("auto_archiver.modules.timestamping_enricher.timestamping_enricher.decode_timestamp_response")
+    mock_decode_timestamp_response.return_value = selfsigned_response
+
+    tsp: TimestampingEnricher = setup_module("timestamping_enricher", {"tsa_urls": ["http://timestamp.identrust.com"]})
+    metadata = Metadata().set_url("https://example.com")
+    sample_media.set('hash', filehash)
+    metadata.add_media(sample_media)
+    tsp.enrich(metadata)
+
+    assert len(metadata.media) == 1 # doesn't allow self-signed
+
+    # set self-signed on tsp
+    tsp.allow_selfsigned = True
+
+    tsp.enrich(metadata)
+
+    assert len(metadata.media)
+
+
 def test_full_enriching(setup_module, sample_media, mocker, timestamp_response, filehash):
     mock_post = mocker.patch("requests.sessions.Session.post")
     mock_post.return_value.status_code = 200
@@ -80,24 +115,6 @@ def test_full_enriching_multiple_tsa(setup_module, sample_media, mocker, timesta
     for timestamp_token_media in timestamp_media.get('timestamp_authority_files'):
             assert Path(timestamp_token_media.filename).read_bytes() == timestamp_response.time_stamp_token()
             assert len(timestamp_token_media.get('cert_chain')) == 3
-
-
-
-
-
-
-
-
-
-
-def test_enriching(setup_module, sample_media):
-    tsp: TimestampingEnricher = setup_module("timestamping_enricher")
-
-    # test the enrich method
-    metadata = Metadata().set_url("https://example.com")
-    sample_media.set('hash', "4b7b4e39f12b8c725e6e603e6d4422500316df94211070682ef10260ff5759ef")
-    metadata.add_media(sample_media)
-    tsp.enrich(metadata)
 
 @pytest.mark.download
 def test_fails_for_digicert(setup_module):

@@ -82,7 +82,10 @@ class TimestampingEnricher(Enricher):
                 # fail if there's any issue with the certificates, uses certifi list of trusted CAs or the user-defined `cert_authorities`
                 root_cert = self.verify_signed(signed, message)
                 if not root_cert:
-                    raise ValueError(f"No valid root certificate found for {tsa_url=}. Are you sure it's a trusted TSA? Or define an alternative trusted root with `cert_authorities`. (tried: {self.cert_authorities or certifi.where()})")
+                    if self.allow_selfsigned:
+                        logger.warning(f"Allowing self-signed certificat from TSA {tsa_url=}")
+                    else:
+                        raise ValueError(f"No valid root certificate found for {tsa_url=}. Are you sure it's a trusted TSA? Or define an alternative trusted root with `cert_authorities`. (tried: {self.cert_authorities or certifi.where()})")
 
                 # save the timestamping certificate
                 cert_chain = self.save_certificate(signed, root_cert)
