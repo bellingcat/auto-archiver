@@ -17,6 +17,21 @@ def wrong_order_timestamp_response() -> TimeStampResponse:
     with open("tests/data/timestamping/rfc3161-client-issue-104.tsr", "rb") as f:
         return decode_timestamp_response(f.read())
 
+
+@pytest.mark.download
+def test_fails_for_digicert(setup_module):
+    """
+    Digicert TSRs are not compliant with RFC 3161.
+    See https://github.com/trailofbits/rfc3161-client/issues/104#issuecomment-2621960840
+    """
+    tsa_url = "http://timestamp.digicert.com"
+    tsp: TimestampingEnricher = setup_module("timestamping_enricher")
+
+    data = b"4b7b4e39f12b8c725e6e603e6d4422500316df94211070682ef10260ff5759ef"
+    with pytest.raises(ValueError) as e:
+        tsp.sign_data(tsa_url, data)
+    assert "ASN.1 parse error: ParseError" in str(e.value)
+
 @pytest.mark.download
 def test_download_tsr(setup_module):
     tsa_url = "http://timestamp.identrust.com"
