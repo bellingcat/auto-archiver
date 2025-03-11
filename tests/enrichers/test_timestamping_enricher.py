@@ -1,7 +1,6 @@
 import pytest
 from auto_archiver.modules.timestamping_enricher.timestamping_enricher import TimestampingEnricher
 from rfc3161_client import (
-    TimestampRequestBuilder,
     TimeStampResponse,
     decode_timestamp_response,
 )
@@ -9,12 +8,17 @@ from rfc3161_client import (
 from cryptography import x509
 
 @pytest.fixture
-def digicert():
-    with open("tests/data/timestamp_token_digicert_com.crt", "rb") as f:
-        return f.read()
+def timestamp_response() -> TimeStampResponse:
+    with open("tests/data/timestamping/timestamp_response.tsr", "rb") as f:
+        return decode_timestamp_response(f.read())
+
+@pytest.fixture
+def wrong_order_timestamp_response() -> TimeStampResponse:
+    with open("tests/data/timestamping/rfc3161-client-issue-104.tsr", "rb") as f:
+        return decode_timestamp_response(f.read())
 
 @pytest.mark.download
-def test_sign_data(setup_module):
+def test_download_tsr(setup_module):
     tsa_url = "http://timestamp.identrust.com"
     tsp: TimestampingEnricher = setup_module("timestamping_enricher")
 
@@ -22,27 +26,36 @@ def test_sign_data(setup_module):
     result: TimeStampResponse = tsp.sign_data(tsa_url, data)
     assert isinstance(result, TimeStampResponse)
 
-    root_cert: x509.Certificate = tsp.verify_signed(result, data)
-    assert root_cert.subject.rfc4514_string() == "CN=IdenTrust Commercial Root CA 1,O=IdenTrust,C=US"
+    verified_root_cert = tsp.verify_signed(result, data)
+    assert verified_root_cert.subject.rfc4514_string() == "CN=IdenTrust Commercial Root CA 1,O=IdenTrust,C=US"
 
     # test downloading the cert
-    cert_chain = tsp.save_certificate(result)
-    assert len(cert_chain) == 2
-
-def test_tsp_enricher_download_syndication(setup_module, digicert):
-    tsp: TimestampingEnricher = setup_module("timestamping_enricher")
-
-    cert_chain = tsp.download_and_verify_certificate(digicert)
+    cert_chain = tsp.save_certificate(result, verified_root_cert)
     assert len(cert_chain) == 3
-    assert cert_chain[0].filename == f"{tsp.tmp_dir}/74515005589773707779.crt"
-    assert cert_chain[1].filename == f"{tsp.tmp_dir}/95861100433808324400.crt"
-    assert cert_chain[2].filename == f"{tsp.tmp_dir}/15527051335772373346.crt"
 
-
-def test_tst_cert_valid(setup_module, digicert):
+def test_verify_save(setup_module, timestamp_response):
     tsp: TimestampingEnricher = setup_module("timestamping_enricher")
-    
-    try:
-        tsp.verify_signed(digicert, b"4b7b4e39f12b8c725e6e603e6d4422500316df94211070682ef10260ff5759ef")
-    except Exception as e:
-        pytest.fail(f"Verification failed: {e}") 
+
+    verified_root_cert = tsp.verify_signed(timestamp_response, b"4b7b4e39f12b8c725e6e603e6d4422500316df94211070682ef10260ff5759ef")
+    assert verified_root_cert.subject.rfc4514_string() == "CN=IdenTrust Commercial Root CA 1,O=IdenTrust,C=US"
+
+    cert_chain = tsp.save_certificate(timestamp_response, verified_root_cert)
+    assert len(cert_chain) == 3
+
+    assert cert_chain[0].filename == f"{tsp.tmp_dir}/1 – 85078371663472981624.crt"
+    assert cert_chain[1].filename == f"{tsp.tmp_dir}/2 – 85078758028491331763.crt"
+    assert cert_chain[2].filename == f"{tsp.tmp_dir}/3 – 13298821034946342390.crt"
+
+
+def test_order_crt_correctly(setup_module, wrong_order_timestamp_response):
+    # reference: https://github.com/trailofbits/rfc3161-client/issues/104#issuecomment-2711244010
+    tsp: TimestampingEnricher = setup_module("timestamping_enricher")
+
+    # get the certificates, make sure the reordering is working:
+
+    ordered_certs = tsp.tst_certs(wrong_order_timestamp_response)
+    assert len(ordered_certs) == 2
+    assert ordered_certs[0].subject.rfc4514_string() == "CN=TrustID Timestamping CA 3,O=IdenTrust,C=US"
+    assert ordered_certs[1].subject.rfc4514_string() == "CN=TrustID Timestamp Authority,O=IdenTrust,C=US"
+
+
