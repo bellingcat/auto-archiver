@@ -93,3 +93,20 @@ def test_really_long_name(storage_base, dummy_file):
     media = Media(filename=dummy_file)
     storage.set_key(media, url, Metadata())
     assert media.key == f"https-example-com-{'file'*13}/6ae8a75555209fd6c44157c0.txt"
+
+
+def test_storage_loads_hash_enricher(storage_base, dummy_file):
+    """Ensure 'hash_enricher' is properly loaded without an explicit import."""
+    config = {"path_generator": "url", "filename_generator": "static"}
+    storage = storage_base(config)
+
+    url = "https://example.com/file/"
+    media = Media(filename=dummy_file)
+    metadata = Metadata()
+
+    try:
+        storage.set_key(media, url, metadata)
+    except Exception as e:
+        pytest.fail(f"Storage failed to dynamically load hash_enricher: {e}")
+
+    assert media.key is not None, "Expected media.key to be set, but it was None"
