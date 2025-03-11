@@ -76,5 +76,12 @@ If you are having issues with the extractor, you can review the version of `yt-d
             "help": "How often to check for yt-dlp updates (days). If positive, will check and update yt-dlp every [num] days. Set it to -1 to disable, or 0 to always update on every run.",
             "type": "int",
         },
+        "ytdlp_args": {
+            "default": "",
+            "help": "Additional arguments to pass to yt-dlp, e.g. --no-check-certificate or --plugin-dirs.\
+See yt-dlp documentation here for more information: https://github.com/yt-dlp/yt-dlp?tab=readme-ov-file#general-options\
+Note: this is not to be confused with 'extractor_args' which are specific to the extractor itself.",
+            "type": "str",
+        },
     },
 }

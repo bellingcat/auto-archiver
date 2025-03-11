@@ -1,6 +1,7 @@
 import datetime, os
 import importlib
 import subprocess
+
 from typing import Generator, Type
 
 import yt_dlp
@@ -166,7 +167,7 @@ class GenericExtractor(Extractor):
 
         if not dropin:
             # TODO: add a proper link to 'how to create your own dropin'
-            logger.debug(f"""Could not find valid dropin for {info_extractor.IE_NAME}.
+            logger.debug(f"""Could not find valid dropin for {info_extractor.ie_key()}.
                      Why not try creating your own, and make sure it has a valid function called 'create_metadata'. Learn more: https://auto-archiver.readthedocs.io/en/latest/user_guidelines.html#""")
             return False
         
@@ -279,18 +280,18 @@ class GenericExtractor(Extractor):
             result = self.get_metadata_for_video(data, info_extractor, url, ydl)
 
         except Exception as e:
-            if info_extractor.ie_key() == "generic":
+            if info_extractor.IE_NAME == "generic":
                 # don't clutter the logs with issues about the 'generic' extractor not having a dropin
                 return False
 
-            logger.debug(f'Issue using "{info_extractor.IE_NAME}" extractor to download video (error: {repr(e)}), attempting to use extractor to get post data instead')
+            logger.debug(f'Issue using "{info_extractor.IE_NAME}" extractor to download video (error: {repr(e)}), attempting to use dropin to get post data instead')
             try:
                 result = self.get_metadata_for_post(info_extractor, url, ydl)
             except (yt_dlp.utils.DownloadError, yt_dlp.utils.ExtractorError) as post_e:
                 logger.error(f'Error downloading metadata for post: {post_e}')
                 return False
             except Exception as generic_e:
-                logger.debug(f'Attempt to extract using ytdlp extractor "{info_extractor.IE_NAME}" failed:  \n  {repr(generic_e)}', exc_info=True)
+                logger.debug(f'Attempt to extract using ytdlp dropin "{info_extractor.IE_NAME}" failed:  \n  {repr(generic_e)}', exc_info=True)
                 return False
         
         if result:
@@ -314,11 +315,16 @@ class GenericExtractor(Extractor):
             item.set("replaced_url", url)
 
 
-        ydl_options = {'outtmpl': os.path.join(self.tmp_dir, f'%(id)s.%(ext)s'), 
-                       'quiet': False, 'noplaylist': not self.allow_playlist ,
-                       'writesubtitles': self.subtitles,'writeautomaticsub': self.subtitles,
-                       "live_from_start": self.live_from_start, "proxy": self.proxy,
-                       "max_downloads": self.max_downloads, "playlistend": self.max_downloads}
+        ydl_options = ["-o", os.path.join(self.tmp_dir, f'%(id)s.%(ext)s'),
+                       "--quiet",
+                       "--no-playlist" if not self.allow_playlist else "--yes-playlist",
+                       "--write-subs" if self.subtitles else "--no-write-subs",
+                       "--write-auto-subs" if self.subtitles else "--no-write-auto-subs",
+                       "--live-from-start" if self.live_from_start else "--no-live-from-start",
+                       "--proxy", self.proxy if self.proxy else '',
+                       f"--max-downloads {self.max_downloads}" if self.max_downloads != "inf" else '',
+                       f"--playlist-end {self.max_downloads}" if self.max_downloads != "inf" else ''
+                       ]
         
         # set up auth
         auth = self.auth_for_site(url, extract_cookies=False)
@@ -327,19 +333,23 @@ class GenericExtractor(Extractor):
         if auth:
             if 'username' in auth and 'password' in auth:
                 logger.debug(f'Using provided auth username and password for {url}')
-                ydl_options['username'] = auth['username']
-                ydl_options['password'] = auth['password']
+                ydl_options.extend(('--username', auth['username']))
+                ydl_options.extend(('--password', auth['password']))
             elif 'cookie' in auth:
                 logger.debug(f'Using provided auth cookie for {url}')
                 yt_dlp.utils.std_headers['cookie'] = auth['cookie']
             elif 'cookies_from_browser' in auth:
                 logger.debug(f'Using extracted cookies from browser {auth["cookies_from_browser"]} for {url}')
-                ydl_options['cookiesfrombrowser'] = auth['cookies_from_browser']
+                ydl_options.extend(('--cookies-from-browser', auth['cookies_from_browser']))
             elif 'cookies_file' in auth:
                 logger.debug(f'Using cookies from file {auth["cookies_file"]} for {url}')
-                ydl_options['cookiefile'] = auth['cookies_file']
+                ydl_options.extend(('--cookies', auth['cookies_file']))
 
-        ydl = yt_dlp.YoutubeDL(ydl_options) # allsubtitles and subtitleslangs not working as expected, so default lang is always "en"
+        if self.ytdlp_args:
+            ydl_options += self.ytdlp_args.split(" ")
+
+        _, _, _, validated_options = yt_dlp.parse_options(ydl_options)
+        ydl = yt_dlp.YoutubeDL(validated_options) # allsubtitles and subtitleslangs not working as expected, so default lang is always "en"
 
         for info_extractor in self.suitable_extractors(url):
             result = self.download_for_extractor(info_extractor, url, ydl)
