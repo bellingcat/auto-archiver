@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import os
 import time
+import re
 
 #import domain_for_url
 from urllib.parse import urlparse, urlunparse
@@ -48,8 +49,9 @@ class CookieSettingDriver(webdriver.Firefox):
                         self.driver.add_cookie({'name': name, 'value': value})
             elif self.cookiejar:
                 domain = urlparse(url).netloc.lstrip("www.")
+                regex = re.compile(f"(www)?\.?{domain}$")
                 for cookie in self.cookiejar:
-                    if domain in cookie.domain:
+                    if regex.match(cookie.domain):
                         try:
                             self.add_cookie({
                                 'name': cookie.name,
@@ -60,7 +62,7 @@ class CookieSettingDriver(webdriver.Firefox):
                                 'expiry': cookie.expires
                             })
                         except Exception as e:
-                            logger.warning(f"Failed to add cookie to webdriver: {e}")
+                            logger.warning(f"Failed to add cookie ({cookie.domain}) to webdriver for url {domain}: {e}")
         
         if self.facebook_accept_cookies:
             try:
@@ -81,7 +83,7 @@ class CookieSettingDriver(webdriver.Firefox):
             # try and click the 'close' button on the 'login' window to close it
             try:
                 xpath = "//div[@role='dialog']//div[@aria-label='Close']"
-                WebDriverWait(self, 5).until(EC.element_to_be_clickable((By.XPATH, xpath))).click()
+                WebDriverWait(self, 2).until(EC.element_to_be_clickable((By.XPATH, xpath))).click()
             except selenium_exceptions.NoSuchElementException:
                 logger.warning("Unable to find the 'close' button on the facebook login window")
                 pass
