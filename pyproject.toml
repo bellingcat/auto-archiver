@@ -57,7 +57,6 @@ dependencies = [
     "certvalidator (>=0.0.0)",
     "rich-argparse (>=1.6.0,<2.0.0)",
     "ruamel-yaml (>=0.18.10,<0.19.0)",
-    "ruff (>=0.9.10,<0.10.0)",
 ]
 
 [tool.poetry.group.dev.dependencies]
@@ -65,6 +64,7 @@ pytest = "^8.3.4"
 autopep8 = "^2.3.1"
 pytest-loguru = "^0.4.0"
 pytest-mock = "^3.14.0"
+ruff = "^0.9.10"
 
 [tool.poetry.group.docs.dependencies]
 sphinx = "^8.1.3"
