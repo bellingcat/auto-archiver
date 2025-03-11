@@ -79,7 +79,7 @@ class ArchivingOrchestrator:
                     raise SetupError(f"It appears you have '{module_type}' set under 'steps' in your configuration file, but as of version 0.13.0 of Auto Archiver, you must use '{module_type}s'. Change this in your configuration file and try again. \
 Here's how that would look: \n\nsteps:\n  {module_type}s:\n  - [your_{module_type}_name_here]\n  {'extractors:...' if module_type == 'feeder' else '...'}\n")
                 if module_type == 'extractor' and config['steps'].get('archivers'):
-                    raise SetupError(f"As of version 0.13.0 of Auto Archiver, the 'archivers' step name has been changed to 'extractors'. Change this in your configuration file and try again. \
+                    raise SetupError("As of version 0.13.0 of Auto Archiver, the 'archivers' step name has been changed to 'extractors'. Change this in your configuration file and try again. \
 Here's how that would look: \n\nsteps:\n  extractors:\n  - [your_extractor_name_here]\n  enrichers:...\n")
                 raise SetupError(f"No {module_type}s were configured. Make sure to set at least one {module_type} in your configuration file or on the command line (using --{module_type}s)")
 
@@ -438,7 +438,7 @@ Here's how that would look: \n\nsteps:\n  extractors:\n  - [your_extractor_name_
         except Exception as e:
             logger.error(f'Got unexpected error on item {item}: {e}\n{traceback.format_exc()}')
             for d in self.databases:
-                if type(e) == AssertionError:
+                if isinstance(e, AssertionError):
                     d.failed(item, str(e))
                 else:
                     d.failed(item, reason="unexpected error")
@@ -473,7 +473,8 @@ Here's how that would look: \n\nsteps:\n  extractors:\n  - [your_extractor_name_
             url = a.sanitize_url(url)
 
         result.set_url(url)
-        if original_url != url: result.set("original_url", original_url)
+        if original_url != url:
+            result.set("original_url", original_url)
 
         # 2 - notify start to DBs, propagate already archived if feature enabled in DBs
         cached_result = None
@@ -484,7 +485,8 @@ Here's how that would look: \n\nsteps:\n  extractors:\n  - [your_extractor_name_
         if cached_result:
             logger.debug("Found previously archived entry")
             for d in self.databases:
-                try: d.done(cached_result, cached=True)
+                try:
+                    d.done(cached_result, cached=True)
                 except Exception as e:
                     logger.error(f"ERROR database {d.name}: {e}: {traceback.format_exc()}")
             return cached_result
@@ -494,13 +496,15 @@ Here's how that would look: \n\nsteps:\n  extractors:\n  - [your_extractor_name_
             logger.info(f"Trying extractor {a.name} for {url}")
             try:
                 result.merge(a.download(result))
-                if result.is_success(): break
+                if result.is_success():
+                    break
             except Exception as e:
                 logger.error(f"ERROR archiver {a.name}: {e}: {traceback.format_exc()}")
 
         # 4 - call enrichers to work with archived content
         for e in self.enrichers:
-            try: e.enrich(result)
+            try:
+                e.enrich(result)
             except Exception as exc:
                 logger.error(f"ERROR enricher {e.name}: {exc}: {traceback.format_exc()}")
 
@@ -518,7 +522,8 @@ Here's how that would look: \n\nsteps:\n  extractors:\n  - [your_extractor_name_
 
         # signal completion to databases and archivers
         for d in self.databases:
-            try: d.done(result)
+            try:
+                d.done(result)
             except Exception as e:
                 logger.error(f"ERROR database {d.name}: {e}: {traceback.format_exc()}")
 

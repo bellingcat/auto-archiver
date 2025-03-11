@@ -28,7 +28,8 @@ class S3Storage(Storage):
         return self.cdn_url.format(bucket=self.bucket, region=self.region, key=media.key)
 
     def uploadf(self, file: IO[bytes], media: Media, **kwargs: dict) -> None:
-        if not self.is_upload_needed(media): return True
+        if not self.is_upload_needed(media):
+            return True
 
         extra_args = kwargs.get("extra_args", {})
         if not self.private and 'ACL' not in extra_args:
