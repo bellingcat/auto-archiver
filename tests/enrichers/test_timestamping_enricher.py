@@ -6,6 +6,8 @@ from rfc3161_client import (
     decode_timestamp_response,
 )
 
+from cryptography import x509
+
 @pytest.fixture
 def digicert():
     with open("tests/data/timestamp_token_digicert_com.crt", "rb") as f:
@@ -20,17 +22,12 @@ def test_sign_data(setup_module):
     result: TimeStampResponse = tsp.sign_data(tsa_url, data)
     assert isinstance(result, TimeStampResponse)
 
-    cert_chain = tsp.download_certificate(result)
-
-    assert len(cert_chain) == 2
-
-    try:
-        valid_root = tsp.verify_signed(result, data)
-        assert valid_root.subject == "CN=Entrust Root Certification Authority - G2, OU=(c) 2009 Entrust, Inc. - for authorized use only, OU=See www.entrust.net/legal-terms, O=Entrust, Inc., C="
-    except Exception as e:
-        pytest.fail(f"Verification failed: {e}")
+    root_cert: x509.Certificate = tsp.verify_signed(result, data)
+    assert root_cert.subject.rfc4514_string() == "CN=IdenTrust Commercial Root CA 1,O=IdenTrust,C=US"
 
     # test downloading the cert
+    cert_chain = tsp.save_certificate(result)
+    assert len(cert_chain) == 2
 
 def test_tsp_enricher_download_syndication(setup_module, digicert):
     tsp: TimestampingEnricher = setup_module("timestamping_enricher")

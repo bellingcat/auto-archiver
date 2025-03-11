@@ -2,8 +2,10 @@ import os
 from loguru import logger
 
 from importlib.metadata import version
+import hashlib
 
 import requests
+
 from rfc3161_client import (
     TimestampRequestBuilder,
     TimeStampResponse,
@@ -19,6 +21,8 @@ import certifi
 from auto_archiver.core import Enricher
 from auto_archiver.core import Metadata, Media
 from auto_archiver.version import __version__
+
+
 
 class TimestampingEnricher(Enricher):
     """
@@ -98,7 +102,7 @@ class TimestampingEnricher(Enricher):
         else:
             logger.warning(f"No successful timestamps for {url=}")
 
-    def verify_signed(self, timestamp_response: TimeStampResponse, signature: bytes) ->  None:
+    def verify_signed(self, timestamp_response: TimeStampResponse, message: bytes) ->  None:
         """
         Verify a Signed Timestamp using the TSA provided by the Trusted Root.
         """
@@ -117,6 +121,16 @@ class TimestampingEnricher(Enricher):
         for i, cert in enumerate(timestamp_certs): # cannot use list comprehension, it's a set
             intermediate_certs.append(cert)
 
+
+        message_hash = None
+        hash_algorithm = timestamp_response.tst_info.message_imprint.hash_algorithm
+        if hash_algorithm == x509.ObjectIdentifier(value="2.16.840.1.101.3.4.2.3"):
+            message_hash = hashlib.sha512(message).digest()
+        elif hash_algorithm == x509.ObjectIdentifier(value="2.16.840.1.101.3.4.2.1"):
+            message_hash = hashlib.sha256(message).digest()
+        else:
+            raise ValueError(f"Unsupported hash algorithm: {hash_algorithm}")
+        
         for certificate in cert_authorities:
             builder = VerifierBuilder()
             builder.add_root_certificate(certificate)
@@ -125,8 +139,10 @@ class TimestampingEnricher(Enricher):
                 builder.add_intermediate_certificate(intermediate_cert)
 
             verifier = builder.build()
+
+            
             try:
-                verifier.verify(timestamp_response, signature)
+                verifier.verify(timestamp_response, message_hash)
                 return certificate
             except Rfc3161VerificationError as e:
                 logger.debug(f"Unable to verify Timestamp with CA {certificate.subject}: {e}")
@@ -163,7 +179,7 @@ class TimestampingEnricher(Enricher):
     def save_certificate(self, tsp_response: TimeStampResponse) -> list[Media]:
         # returns the leaf certificate URL, fails if not set
 
-        certificates = self.load_tst_certs(tsp_response)
+        certificates = self.tst_certs(tsp_response)
 
 
         cert_chain = []
