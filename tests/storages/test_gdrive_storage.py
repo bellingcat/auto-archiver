@@ -53,7 +53,7 @@ def test_get_id_from_parent_and_name(gdrive_storage, mocker):
 
 def test_path_parts():
     media = Media(filename="test.jpg")
-    media.key = "folder1/folder2/test.jpg"
+    media._key = "folder1/folder2/test.jpg"
 
 
 @pytest.mark.skip(reason="Requires real credentials")

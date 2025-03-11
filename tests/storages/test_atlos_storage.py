@@ -44,7 +44,7 @@ def media(tmp_path) -> Media:
     file_path.write_bytes(content)
     media = Media(filename=str(file_path))
     media.properties = {"something": "Title"}
-    media.key = "key"
+    media._key = "key"
     return media
 
 

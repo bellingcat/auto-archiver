@@ -14,8 +14,8 @@ def enricher(setup_module):
 def metadata_with_images():
     m = Metadata()
     m.set_url("https://example.com")
-    m.add_media(Media(filename="image1.jpg", key="image1"))
-    m.add_media(Media(filename="image2.jpg", key="image2"))
+    m.add_media(Media(filename="image1.jpg", _key="image1"))
+    m.add_media(Media(filename="image2.jpg", _key="image2"))
     return m
 
 

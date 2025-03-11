@@ -23,9 +23,9 @@
             "help": "which group of users have access to the archive in case public=false as author",
         },
         "use_api_cache": {
-            "default": True,
+            "default": False,
             "type": "bool",
-            "help": "if False then the API database will be queried prior to any archiving operations and stop if the link has already been archived",
+            "help": "if True then the API database will be queried prior to any archiving operations and stop if the link has already been archived",
         },
         "store_results": {
             "default": True,

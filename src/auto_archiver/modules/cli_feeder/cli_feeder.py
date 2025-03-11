@@ -17,7 +17,6 @@ class CLIFeeder(Feeder):
         for url in urls:
             logger.debug(f"Processing {url}")
             m = Metadata().set_url(url)
-            m.set_context("folder", "cli")
             yield m
 
         logger.success(f"Processed {len(urls)} URL(s)")
