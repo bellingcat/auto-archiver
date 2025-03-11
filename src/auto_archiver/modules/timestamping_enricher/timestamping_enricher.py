@@ -1,10 +1,11 @@
 import os
-from loguru import logger
 
 from importlib.metadata import version
 import hashlib
 
+from slugify import slugify
 import requests
+from loguru import logger
 
 from rfc3161_client import (
     TimestampRequestBuilder,
@@ -23,7 +24,6 @@ from auto_archiver.core import Metadata, Media
 from auto_archiver.version import __version__
 
 
-
 class TimestampingEnricher(Enricher):
     """
     Uses several RFC3161 Time Stamp Authorities to generate a timestamp token that will be preserved. This can be used to prove that a certain file existed at a certain time, useful for legal purposes, for example, to prove that a certain file was not tampered with after a certain date.
@@ -32,6 +32,8 @@ class TimestampingEnricher(Enricher):
 
     See https://gist.github.com/Manouchehri/fd754e402d98430243455713efada710 for list of timestamp authorities.
     """
+
+    session = None
 
     def setup(self):
         self.session = requests.Session()
@@ -43,11 +45,12 @@ class TimestampingEnricher(Enricher):
             }
         )
 
-    def __del__(self) -> None:
+    def cleaup(self) -> None:
         """
         Terminates the underlying network session.
         """
-        self.session.close()
+        if self.session:
+            self.session.close()
 
     def enrich(self, to_enrich: Metadata) -> None:
         url = to_enrich.get_url()
@@ -68,39 +71,46 @@ class TimestampingEnricher(Enricher):
         hashes_media = Media(filename=hashes_fn)
 
         timestamp_tokens = []
-        from slugify import slugify
         for tsa_url in self.tsa_urls:
             try:
                 message = bytes(data_to_sign, encoding='utf8')
+
+                print(tsa_url)
+                logger.debug(f"Timestamping {url=} with {tsa_url=}")
                 signed: TimeStampResponse = self.sign_data(tsa_url, message)
                 
                 # fail if there's any issue with the certificates, uses certifi list of trusted CAs or the user-defined `cert_authorities`
                 root_cert = self.verify_signed(signed, message)
-
                 if not root_cert:
-                    raise ValueError(f"No valid root certificate found for {tsa_url=}. Are you sure it's a trusted TSA? Or define an alternative trusted root with `cert_authorities`.")
+                    raise ValueError(f"No valid root certificate found for {tsa_url=}. Are you sure it's a trusted TSA? Or define an alternative trusted root with `cert_authorities`. (tried: {self.cert_authorities or certifi.where()})")
 
                 # save the timestamping certificate
                 cert_chain = self.save_certificate(signed, root_cert)
 
-                # continue with saving the timestamp token
-                tst_fn = os.path.join(self.tmp_dir, f"timestamp_token_{slugify(tsa_url)}")
-                with open(tst_fn, "wb") as f:
-                    f.write(signed)
-                timestamp_tokens.append(Media(filename=tst_fn).set("tsa", tsa_url).set("cert_chain", cert_chain))
+                timestamp_token_path = self.save_timestamp_token(signed.time_stamp_token(), tsa_url)
+                timestamp_tokens.append(Media(filename=timestamp_token_path).set("tsa", tsa_url).set("cert_chain", cert_chain))
             except Exception as e:
                 logger.warning(f"Error while timestamping {url=} with {tsa_url=}: {e}")
 
         if len(timestamp_tokens):
             hashes_media.set("timestamp_authority_files", timestamp_tokens)
             hashes_media.set("certifi v", version("certifi"))
-            hashes_media.set("tsp_client v", version("tsp_client"))
-            hashes_media.set("certvalidator v", version("certvalidator"))
+            hashes_media.set("rfc3161-client v", version("rfc3161_client"))
+            hashes_media.set("cryptography v", version("cryptography"))
             to_enrich.add_media(hashes_media, id="timestamped_hashes")
             to_enrich.set("timestamped", True)
             logger.success(f"{len(timestamp_tokens)} timestamp tokens created for {url=}")
         else:
             logger.warning(f"No successful timestamps for {url=}")
+
+    def save_timestamp_token(self, timestamp_token: bytes, tsa_url: str) -> str:
+        """
+        Takes a timestamp token, and saves it to a file with the TSA URL as part of the filename.
+        """
+        tst_path = os.path.join(self.tmp_dir, f"timestamp_token_{slugify(tsa_url)}")
+        with open(tst_path, "wb") as f:
+            f.write(timestamp_token)
+        return tst_path
 
     def verify_signed(self, timestamp_response: TimeStampResponse, message: bytes) ->  x509.Certificate:
         """
@@ -127,10 +137,7 @@ class TimestampingEnricher(Enricher):
             raise ValueError(f"No trusted roots found in {trusted_root_path}.")
         
         timestamp_certs = self.tst_certs(timestamp_response)
-        intermediate_certs = []
-        for i, cert in enumerate(timestamp_certs): # cannot use list comprehension, it's a set
-            intermediate_certs.append(cert)
-
+        intermediate_certs = timestamp_certs[1:-1]
 
         message_hash = None
         hash_algorithm = timestamp_response.tst_info.message_imprint.hash_algorithm
@@ -155,10 +162,9 @@ class TimestampingEnricher(Enricher):
                 verifier.verify(timestamp_response, message_hash)
                 return certificate
             except Rfc3161VerificationError as e:
-                logger.debug(f"Unable to verify Timestamp with CA {certificate.subject}: {e}")
                 continue
     
-        raise ValueError(f"No valid root certificate found in {trusted_root_path}.")
+        return None
 
     def sign_data(self, tsa_url: str, bytes_data: bytes) -> TimeStampResponse:
         # see https://github.com/sigstore/sigstore-python/blob/99948d5b80525a5a104e904ffea58169dc6e0629/sigstore/_internal/timestamp.py#L84-L121
@@ -186,15 +192,18 @@ class TimestampingEnricher(Enricher):
         certs = [x509.load_der_x509_certificate(c) for c in signed_data.certificates]
         # reorder the certs to be in the correct order
         ordered_certs = []
+        if len(certs) == 1:
+            return certs
+
         while(len(ordered_certs) < len(certs)):
             if len(ordered_certs) == 0:
                 for cert in certs:
-                    if not [c for c in certs if c.subject == cert.issuer]:
+                    if not [c for c in certs if cert.subject == c.issuer]:
                         ordered_certs.append(cert)
                         break
             else:
                 for cert in certs:
-                    if cert.issuer == ordered_certs[-1].subject:
+                    if cert.subject == ordered_certs[-1].issuer:
                         ordered_certs.append(cert)
                         break
         return ordered_certs
