@@ -77,13 +77,14 @@ class InstagramTbotExtractor(Extractor):
             chat, since_id = self._send_url_to_bot(url)
             message = self._process_messages(chat, since_id, tmp_dir, result)
 
+            # This may be outdated and replaced by the below message, but keeping until confirmed
             if "You must enter a URL to a post" in message:
                 logger.debug(f"invalid link {url=} for {self.name}: {message}")
                 return False
-            # # TODO: It currently returns this as a success - is that intentional?
-            # if "Media not found or unavailable" in message:
-            #     logger.debug(f"invalid link {url=} for {self.name}: {message}")
-            #     return False
+
+            if "Media not found or unavailable" in message:
+                logger.debug(f"No media found for link {url=} for {self.name}: {message}")
+                return False
 
             if message:
                 result.set_content(message).set_title(message[:128])
@@ -103,7 +104,7 @@ class InstagramTbotExtractor(Extractor):
         message = ""
         time.sleep(3)
         # media is added before text by the bot so it can be used as a stop-logic mechanism
-        while attempts < (self.timeout - 3) and (not message or not len(seen_media)):
+        while attempts < max(self.timeout - 3, 3) and (not message or not len(seen_media)):
             attempts += 1
             time.sleep(1)
             for post in self.client.iter_messages(chat, min_id=since_id):

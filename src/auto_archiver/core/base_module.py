@@ -1,12 +1,17 @@
 
-from urllib.parse import urlparse
-from typing import  Mapping, Any
+from __future__ import annotations
+
+from typing import  Mapping, Any, Type, TYPE_CHECKING
 from abc import ABC
 from copy import deepcopy, copy
 from tempfile import TemporaryDirectory
 from auto_archiver.utils import url as UrlUtil
+from auto_archiver.core.consts import MODULE_TYPES as CONF_MODULE_TYPES
 
 from loguru import logger
+
+if TYPE_CHECKING:
+    from .module import ModuleFactory
 
 class BaseModule(ABC):
 
@@ -17,41 +22,24 @@ class BaseModule(ABC):
     however modules can have a .setup() method to run any setup code
     (e.g. logging in to a site, spinning up a browser etc.)
 
-    See BaseModule.MODULE_TYPES for the types of modules you can create, noting that
+    See consts.MODULE_TYPES for the types of modules you can create, noting that
     a subclass can be of multiple types. For example, a module that extracts data from
     a website and stores it in a database would be both an 'extractor' and a 'database' module.
 
     Each module is a python package, and should have a __manifest__.py file in the
     same directory as the module file. The __manifest__.py specifies the module information
-    like name, author, version, dependencies etc. See BaseModule._DEFAULT_MANIFEST for the
+    like name, author, version, dependencies etc. See DEFAULT_MANIFEST for the
     default manifest structure.
 
     """
 
-    MODULE_TYPES = [
-        'feeder',
-        'extractor',
-        'enricher',
-        'database',
-        'storage',
-        'formatter'
-    ]
+    MODULE_TYPES = CONF_MODULE_TYPES
 
-    _DEFAULT_MANIFEST = {
-    'name': '', # the display name of the module
-    'author': 'Bellingcat', # creator of the module, leave this as Bellingcat or set your own name!
-    'type': [], # the type of the module, can be one or more of BaseModule.MODULE_TYPES
-    'requires_setup': True, # whether or not this module requires additional setup such as setting API Keys or installing additional softare
-    'description': '', # a description of the module
-    'dependencies': {}, # external dependencies, e.g. python packages or binaries, in dictionary format
-    'entry_point': '', # the entry point for the module, in the format 'module_name::ClassName'. This can be left blank to use the default entry point of module_name::ModuleName
-    'version': '1.0', # the version of the module
-    'configs': {} # any configuration options this module has, these will be exposed to the user in the config file or via the command line
-}
-
+    # NOTE: these here are declard as class variables, but they are overridden by the instance variables in the __init__ method
     config: Mapping[str, Any]
     authentication: Mapping[str, Mapping[str, str]]
     name: str
+    module_factory: ModuleFactory
 
     # this is set by the orchestrator prior to archiving
     tmp_dir: TemporaryDirectory = None
@@ -61,14 +49,6 @@ class BaseModule(ABC):
         return self.config.get('storages', [])
 
     def config_setup(self, config: dict):
-
-        authentication = config.get('authentication', {})
-        # extract out concatenated sites
-        for key, val in copy(authentication).items():
-            if "," in key:
-                for site in key.split(","):
-                    authentication[site] = val
-                del authentication[key]
 
         # this is important. Each instance is given its own deepcopied config, so modules cannot
         # change values to affect other modules
@@ -89,21 +69,28 @@ class BaseModule(ABC):
         Returns the authentication information for a given site. This is used to authenticate
         with a site before extracting data. The site should be the domain of the site, e.g. 'twitter.com'
         
-        extract_cookies: bool - whether or not to extract cookies from the given browser and return the 
-        cookie jar (disabling can speed up) processing if you don't actually need the cookies jar
+        :param site: the domain of the site to get authentication information for
+        :param extract_cookies: whether or not to extract cookies from the given browser/file and return the cookie jar (disabling can speed up processing if you don't actually need the cookies jar).
 
-        Currently, the dict can have keys of the following types:
-        - username: str - the username to use for login
-        - password: str - the password to use for login
-        - api_key: str - the API key to use for login
-        - api_secret: str - the API secret to use for login
-        - cookie: str - a cookie string to use for login (specific to this site)
-        - cookies_jar: YoutubeDLCookieJar | http.cookiejar.MozillaCookieJar - a cookie jar compatible with requests (e.g. `requests.get(cookies=cookie_jar)`)
+        :returns: authdict dict of login information for the given site
+
+        **Global options:**\n
+        * cookies_from_browser: str - the name of the browser to extract cookies from (e.g. 'chrome', 'firefox' - uses ytdlp under the hood to extract\n
+        * cookies_file: str - the path to a cookies file to use for login\n
+
+        **Currently, the sites dict can have keys of the following types:**\n
+        * username: str - the username to use for login\n
+        * password: str - the password to use for login\n
+        * api_key: str - the API key to use for login\n
+        * api_secret: str - the API secret to use for login\n
+        * cookie: str - a cookie string to use for login (specific to this site)\n
+        * cookies_file: str - the path to a cookies file to use for login (specific to this site)\n
+        * cookies_from_browser: str - the name of the browser to extract cookies from (specitic for this site)\n
         """
         # TODO: think about if/how we can deal with sites that have multiple domains (main one is x.com/twitter.com)
         # for now the user must enter them both, like "x.com,twitter.com" in their config. Maybe we just hard-code?
 
-        site = UrlUtil.domain_for_url(site)
+        site = UrlUtil.domain_for_url(site).lstrip("www.")
         # add the 'www' version of the site to the list of sites to check
         authdict = {}
 
@@ -118,8 +105,8 @@ class BaseModule(ABC):
             for key in self.authentication.keys():
                 if key in site or site in key:
                     logger.debug(f"Could not find exact authentication information for site '{site}'. \
-                                    did find information for '{key}' which is close, is this what you meant? \
-                                    If so, edit your authentication settings to make sure it exactly matches.")
+did find information for '{key}' which is close, is this what you meant? \
+If so, edit your authentication settings to make sure it exactly matches.")
 
         def get_ytdlp_cookiejar(args):
             import yt_dlp
@@ -130,16 +117,29 @@ class BaseModule(ABC):
             ytdlp_opts = getattr(parse_options(args), 'ydl_opts')
             return yt_dlp.YoutubeDL(ytdlp_opts).cookiejar
 
-        # get the cookies jar, prefer the browser cookies than the file
-        if 'cookies_from_browser' in self.authentication:
+        get_cookiejar_options = None
+
+        # order of priority:
+        # 1. cookies_from_browser setting in site config
+        # 2. cookies_file setting in site config
+        # 3. cookies_from_browser setting in global config
+        # 4. cookies_file setting in global config
+
+        if 'cookies_from_browser' in authdict:
+            get_cookiejar_options = ['--cookies-from-browser', authdict['cookies_from_browser']]
+        elif 'cookies_file' in authdict:
+            get_cookiejar_options = ['--cookies', authdict['cookies_file']]
+        elif 'cookies_from_browser' in self.authentication:
             authdict['cookies_from_browser'] = self.authentication['cookies_from_browser']
-            if extract_cookies:
-                authdict['cookies_jar'] = get_ytdlp_cookiejar(['--cookies-from-browser', self.authentication['cookies_from_browser']])
+            get_cookiejar_options = ['--cookies-from-browser', self.authentication['cookies_from_browser']]
         elif 'cookies_file' in self.authentication:
             authdict['cookies_file'] = self.authentication['cookies_file']
-            if extract_cookies:
-                authdict['cookies_jar'] = get_ytdlp_cookiejar(['--cookies', self.authentication['cookies_file']])
+            get_cookiejar_options = ['--cookies', self.authentication['cookies_file']]
+
         
+        if get_cookiejar_options:
+            authdict['cookies_jar'] = get_ytdlp_cookiejar(get_cookiejar_options)
+
         return authdict
     
     def repr(self):

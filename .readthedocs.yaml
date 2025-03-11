@@ -9,13 +9,19 @@ build:
   os: ubuntu-22.04
   tools:
     python: "3.10"
+    nodejs: "22"
   jobs:
     post_install:
       - pip install poetry
       # https://python-poetry.org/docs/managing-dependencies/#dependency-groups
       # VIRTUAL_ENV needs to be set manually for now.
       # See https://github.com/readthedocs/readthedocs.org/pull/11152/
-      - VIRTUAL_ENV=$READTHEDOCS_VIRTUALENV_PATH poetry install --only docs
+      - VIRTUAL_ENV=$READTHEDOCS_VIRTUALENV_PATH poetry install --with docs
+
+      # generate the config editor page. Schema then HTML
+      - VIRTUAL_ENV=$READTHEDOCS_VIRTUALENV_PATH poetry run python scripts/generate_settings_schema.py
+      # install node dependencies and build the settings
+      - cd scripts/settings && npm install && npm run build && yes | cp dist/index.html ../../docs/source/installation/settings_base.html && cd ../..
 
 
 sphinx:

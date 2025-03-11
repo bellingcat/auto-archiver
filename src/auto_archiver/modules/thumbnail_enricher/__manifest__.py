@@ -7,8 +7,12 @@
         "bin": ["ffmpeg"]
     },
     "configs": {
-            "thumbnails_per_minute": {"default": 60, "help": "how many thumbnails to generate per minute of video, can be limited by max_thumbnails"},
-            "max_thumbnails": {"default": 16, "help": "limit the number of thumbnails to generate per video, 0 means no limit"},
+            "thumbnails_per_minute": {"default": 60,
+                                      "type": "int",
+                                      "help": "how many thumbnails to generate per minute of video, can be limited by max_thumbnails"},
+            "max_thumbnails": {"default": 16,
+                               "type": "int",
+                               "help": "limit the number of thumbnails to generate per video, 0 means no limit"},
         },
     "description": """
     Generates thumbnails for video files to provide visual previews.

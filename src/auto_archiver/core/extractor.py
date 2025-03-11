@@ -29,14 +29,24 @@ class Extractor(BaseModule):
     valid_url: re.Pattern = None
 
     def cleanup(self) -> None:
-        # called when extractors are done, or upon errors, cleanup any resources
+        """
+        Called when extractors are done, or upon errors, cleanup any resources
+        """
         pass
 
     def sanitize_url(self, url: str) -> str:
-        # used to clean unnecessary URL parameters OR unfurl redirect links
+        """
+        Used to clean unnecessary URL parameters OR unfurl redirect links
+        """
         return url
     
     def match_link(self, url: str) -> re.Match:
+        """
+        Returns a match object if the given URL matches the valid_url pattern or False/None if not.
+
+        Normally used in the `suitable` method to check if the URL is supported by this extractor.
+
+        """
         return self.valid_url.match(url)
 
     def suitable(self, url: str) -> bool:
@@ -71,7 +81,8 @@ class Extractor(BaseModule):
             if len(to_filename) > 64:
                 to_filename = to_filename[-64:]
         to_filename = os.path.join(self.tmp_dir, to_filename)
-        if verbose: logger.debug(f"downloading {url[0:50]=} {to_filename=}")
+        if verbose:
+            logger.debug(f"downloading {url[0:50]=} {to_filename=}")
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36'
         }
@@ -80,8 +91,8 @@ class Extractor(BaseModule):
             d.raise_for_status()
 
             # get mimetype from the response headers
-            if not Path(to_filename).suffix:
-                content_type = d.headers.get('Content-Type')
+            if not mimetypes.guess_type(to_filename)[0]:
+                content_type = d.headers.get('Content-Type') or self._guess_file_type(url)
                 extension = mimetypes.guess_extension(content_type)
                 if extension:
                     to_filename += extension

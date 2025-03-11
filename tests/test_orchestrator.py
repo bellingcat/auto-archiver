@@ -4,7 +4,7 @@ from argparse import ArgumentParser, ArgumentTypeError
 from auto_archiver.core.orchestrator import ArchivingOrchestrator
 from auto_archiver.version import __version__
 from auto_archiver.core.config import read_yaml, store_yaml
-from auto_archiver.core.module import _LAZY_LOADED_MODULES
+from auto_archiver.core import Metadata
 
 TEST_ORCHESTRATION = "tests/data/test_orchestration.yaml"
 TEST_MODULES = "tests/data/test_modules/"
@@ -17,22 +17,7 @@ def test_args():
 
 @pytest.fixture
 def orchestrator():
-    yield ArchivingOrchestrator()
-    # hack - the loguru logger starts with one logger, but if orchestrator has run before
-    # it'll remove the default logger, add it back in:
-
-    from loguru import logger
-
-    if not logger._core.handlers.get(0):
-        logger._core.handlers_count = 0
-        logger.add(sys.stderr)
-    # and remove the custom logger
-    if logger._core.handlers.get(1):
-        logger.remove(1)
-
-    # delete out any loaded modules
-    _LAZY_LOADED_MODULES.clear()
-
+    return ArchivingOrchestrator()
 
 @pytest.fixture
 def basic_parser(orchestrator) -> ArgumentParser:
@@ -75,18 +60,36 @@ def test_help(orchestrator, basic_parser, capsys):
         orchestrator.show_help(args)
 
     assert exit_error.value.code == 0
-    assert "Usage: auto-archiver [--help] [--version] [--config CONFIG_FILE]" in capsys.readouterr().out
+
+    logs = capsys.readouterr().out
+    assert "Usage: auto-archiver [--help] [--version] [--config CONFIG_FILE]" in logs
+
+    # basic config options
+    assert "--version" in logs
+
+    # setting modules options
+    assert "--feeders" in logs
+    assert "--extractors" in logs
+
+    # authentication options
+    assert "--authentication" in logs
+
+    # logging options
+    assert "--logging.level" in logs
+
+    # individual module configs
+    assert "--gsheet_feeder_db.sheet_id" in logs
 
 
 def test_add_custom_modules_path(orchestrator, test_args):
-    orchestrator.run(test_args)
+    orchestrator.setup_config(test_args)
     
     import auto_archiver
     assert "tests/data/test_modules/" in auto_archiver.modules.__path__
 
 def test_add_custom_modules_path_invalid(orchestrator, caplog, test_args):
 
-    orchestrator.run(test_args +  # we still need to load the real path to get the example_module 
+    orchestrator.setup_config(test_args +  # we still need to load the real path to get the example_module 
                           ["--module_paths", "tests/data/invalid_test_modules/"])
 
     assert caplog.records[0].message == "Path 'tests/data/invalid_test_modules/' does not exist. Skipping..."
@@ -97,7 +100,7 @@ def test_check_required_values(orchestrator, caplog, test_args):
     test_args = test_args[:-2]
 
     with pytest.raises(SystemExit) as exit_error:
-        orchestrator.run(test_args)
+        config = orchestrator.setup_config(test_args)
 
     assert caplog.records[1].message == "the following arguments are required: --example_module.required_field"
 
@@ -111,24 +114,72 @@ def test_get_required_values_from_config(orchestrator, test_args, tmp_path):
     store_yaml(test_yaml, tmp_file)
 
     # run the orchestrator
-    orchestrator.run(["--config", tmp_file, "--module_paths", TEST_MODULES])
-    assert orchestrator.config is not None
+    config = orchestrator.setup_config(["--config", tmp_file, "--module_paths", TEST_MODULES])
+    assert config is not None
 
 def test_load_authentication_string(orchestrator, test_args):
 
-    orchestrator.run(test_args + ["--authentication", '{"facebook.com": {"username": "my_username", "password": "my_password"}}'])
-    assert orchestrator.config['authentication'] == {"facebook.com": {"username": "my_username", "password": "my_password"}}
+    config = orchestrator.setup_config(test_args + ["--authentication", '{"facebook.com": {"username": "my_username", "password": "my_password"}}'])
+    assert config['authentication'] == {"facebook.com": {"username": "my_username", "password": "my_password"}}
 
 def test_load_authentication_string_concat_site(orchestrator, test_args):
     
-    orchestrator.run(test_args + ["--authentication", '{"x.com,twitter.com": {"api_key": "my_key"}}'])
-    assert orchestrator.config['authentication'] == {"x.com": {"api_key": "my_key"},
+    config = orchestrator.setup_config(test_args + ["--authentication", '{"x.com,twitter.com": {"api_key": "my_key"}}'])
+    assert config['authentication'] == {"x.com": {"api_key": "my_key"},
                                                      "twitter.com": {"api_key": "my_key"}}
 
 def test_load_invalid_authentication_string(orchestrator, test_args):
     with pytest.raises(ArgumentTypeError):
-        orchestrator.run(test_args + ["--authentication", "{\''invalid_json"])
+        orchestrator.setup_config(test_args + ["--authentication", "{\''invalid_json"])
 
 def test_load_authentication_invalid_dict(orchestrator, test_args):
     with pytest.raises(ArgumentTypeError):
-        orchestrator.run(test_args + ["--authentication", "[true, false]"])
+        orchestrator.setup_config(test_args + ["--authentication", "[true, false]"])
+
+def test_load_modules_from_commandline(orchestrator, test_args):
+    args = test_args + ["--feeders", "example_module", "--extractors", "example_module", "--databases", "example_module", "--enrichers", "example_module", "--formatters", "example_module"]
+
+    orchestrator.setup(args)
+
+    assert len(orchestrator.feeders) == 1
+    assert len(orchestrator.extractors) == 1
+    assert len(orchestrator.databases) == 1
+    assert len(orchestrator.enrichers) == 1
+    assert len(orchestrator.formatters) == 1
+
+    assert orchestrator.feeders[0].name == "example_module"
+    assert orchestrator.extractors[0].name == "example_module"
+    assert orchestrator.databases[0].name == "example_module"
+    assert orchestrator.enrichers[0].name == "example_module"
+    assert orchestrator.formatters[0].name == "example_module"
+
+def test_load_settings_for_module_from_commandline(orchestrator, test_args):
+    args = test_args + ["--feeders", "gsheet_feeder_db", "--gsheet_feeder_db.sheet_id", "123", "--gsheet_feeder_db.service_account", "tests/data/test_service_account.json"]
+
+    orchestrator.setup(args)
+
+    assert len(orchestrator.feeders) == 1
+    assert orchestrator.feeders[0].name == "gsheet_feeder_db"
+    assert orchestrator.config['gsheet_feeder_db']['sheet_id'] == "123"
+
+
+def test_multiple_orchestrator(test_args):
+
+    o1_args = test_args + ["--feeders", "gsheet_feeder_db", "--gsheet_feeder_db.service_account", "tests/data/test_service_account.json"]
+    o1 = ArchivingOrchestrator()
+
+    with pytest.raises(ValueError) as exit_error:
+        # this should fail because the gsheet_feeder_db requires a sheet_id / sheet
+        o1.setup(o1_args)
+
+
+
+    o2_args = test_args + ["--feeders", "example_module"]
+    o2 = ArchivingOrchestrator()
+    o2.setup(o2_args)
+
+    assert o2.feeders[0].name == "example_module"
+
+    output: Metadata = list(o2.feed())
+    assert len(output) == 1
+    assert output[0].get_url() == "https://example.com"

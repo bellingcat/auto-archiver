@@ -200,7 +200,7 @@
                 el.innerHTML = decodeCertificate(certificate);
 
                 let cyberChefUrl =
-                    `https://gchq.github.io/CyberChef/#recipe=Parse_X.509_certificate('PEM')&input=${btoa(certificate)}`;
+                    `https://gchq.github.io/CyberChef/#recipe=Parse_X.509_certificate('PEM')&input=${btoa(certificate).replace(/=+$/, '')}`;
                 // create a new anchor with this url and append after the code
                 let a = document.createElement("a");
                 a.href = cyberChefUrl;

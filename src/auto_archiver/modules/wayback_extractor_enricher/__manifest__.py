@@ -1,6 +1,6 @@
 {
-    "name": "Wayback Machine Enricher",
-    "type": ["enricher", "archiver"],
+    "name": "Wayback Machine Enricher (and Extractor)",
+    "type": ["enricher", "extractor"],
     "entry_point": "wayback_extractor_enricher::WaybackExtractorEnricher",
     "requires_setup": True,
     "dependencies": {
@@ -9,6 +9,7 @@
     "configs": {
         "timeout": {
             "default": 15,
+            "type": "int",
             "help": "seconds to wait for successful archive confirmation from wayback, if more than this passes the result contains the job_id so the status can later be checked manually.",
         },
         "if_not_archived_within": {

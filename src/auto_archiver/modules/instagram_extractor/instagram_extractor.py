@@ -3,7 +3,7 @@
     highlights, and tagged posts. Authentication is required via username/password or a session file.
 
 """
-import re, os, shutil, traceback
+import re, os, shutil
 import instaloader
 from loguru import logger
 
@@ -15,10 +15,9 @@ class InstagramExtractor(Extractor):
     """
     Uses Instaloader to download either a post (inc images, videos, text) or as much as possible from a profile (posts, stories, highlights, ...)
     """
+
     # NB: post regex should be tested before profile
-
     valid_url = re.compile(r"(?:(?:http|https):\/\/)?(?:www.)?(?:instagram.com|instagr.am|instagr.com)\/")
-
     # https://regex101.com/r/MGPquX/1
     post_pattern = re.compile(r"{valid_url}(?:p|reel)\/(\w+)".format(valid_url=valid_url))
     # https://regex101.com/r/6Wbsxa/1
@@ -28,19 +27,22 @@ class InstagramExtractor(Extractor):
     def setup(self) -> None:
 
         self.insta = instaloader.Instaloader(
-            download_geotags=True, download_comments=True, compress_json=False, dirname_pattern=self.download_folder, filename_pattern="{date_utc}_UTC_{target}__{typename}"
+            download_geotags=True,
+            download_comments=True,
+            compress_json=False,
+            dirname_pattern=self.download_folder,
+            filename_pattern="{date_utc}_UTC_{target}__{typename}"
         )
         try:
             self.insta.load_session_from_file(self.username, self.session_file)
         except Exception as e:
-            logger.error(f"Unable to login from session file: {e}\n{traceback.format_exc()}")
             try:
-                self.insta.login(self.username, config.instagram_self.password)
-                # TODO: wait for this issue to be fixed https://github.com/instaloader/instaloader/issues/1758
+                logger.debug(f"Session file failed", exc_info=True)
+                logger.info("No valid session file found - Attempting login with use and password.")
+                self.insta.login(self.username, self.password)
                 self.insta.save_session_to_file(self.session_file)
-            except Exception as e2:
-                logger.error(f"Unable to finish login (retrying from file): {e2}\n{traceback.format_exc()}")
-
+            except Exception as e:
+                logger.error(f"Failed to setup Instagram Extractor with Instagrapi. {e}")
 
 
     def download(self, item: Metadata) -> Metadata:

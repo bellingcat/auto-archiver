@@ -1,0 +1,79 @@
+# Auto Archiver Configuration
+# Steps are the modules that will be run in the order they are defined
+
+steps:
+  feeders:
+  - cli_feeder
+  extractors:
+  - generic_extractor
+  - telegram_extractor
+  enrichers:
+  - thumbnail_enricher
+  - meta_enricher
+  - pdq_hash_enricher
+  - ssl_enricher
+  - hash_enricher
+  databases:
+  - console_db
+  - csv_db
+  storages:
+  - local_storage
+  formatters:
+  - html_formatter
+
+# Global configuration
+
+# Authentication
+# a dictionary of authentication information that can be used by extractors to login to website. 
+# you can use a comma separated list for multiple domains on the same line (common usecase: x.com,twitter.com)
+# Common login 'types' are username/password, cookie, api key/token.
+# There are two special keys for using cookies, they are: cookies_file and cookies_from_browser. 
+# Some Examples:
+# facebook.com:
+#   username: "my_username"
+#   password: "my_password"
+# or for a site that uses an API key:
+# twitter.com,x.com:
+#   api_key
+#   api_secret
+# youtube.com:
+#   cookie: "login_cookie=value ; other_cookie=123" # multiple 'key=value' pairs should be separated by ;
+
+authentication: {}
+
+# Logging settings for your project. See the logging settings with --help
+
+logging:
+  level: INFO
+
+# These are the global configurations that are used by the modules
+
+  file:
+  rotation:
+local_storage:
+  path_generator: flat
+  filename_generator: static
+  save_to: ./local_archive
+  save_absolute: false
+html_formatter:
+  detect_thumbnails: true
+thumbnail_enricher:
+  thumbnails_per_minute: 60
+  max_thumbnails: 16
+generic_extractor:
+  subtitles: true
+  comments: false
+  livestreams: false
+  live_from_start: false
+  proxy: ''
+  end_means_success: true
+  allow_playlist: false
+  max_downloads: inf
+csv_db:
+  csv_file: db.csv
+ssl_enricher:
+  skip_when_nothing_archived: true
+hash_enricher:
+  algorithm: SHA-256
+  chunksize: 16000000
+

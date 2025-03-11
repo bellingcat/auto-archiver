@@ -5,9 +5,13 @@ on:
     branches: [ main ]
     paths:
       - src/**
+      - poetry.lock
+      - pyproject.toml
   pull_request:
     paths:
       - src/**
+      - poetry.lock
+      - pyproject.toml
 
 jobs:
   tests:
@@ -16,7 +20,8 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ["3.10", "3.11", "3.12"]
-        os: [ubuntu-22.04, ubuntu-latest]
+        os: [ubuntu-22.04]
+        #TODO: re-enable ubuntu-latest, this is disabled as oscrypto cannot be pinned to github commit and pushed to pypi
     defaults:
       run:
         working-directory: ./

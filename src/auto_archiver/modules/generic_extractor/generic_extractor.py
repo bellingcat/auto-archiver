@@ -1,7 +1,11 @@
-import datetime, os, yt_dlp, pysubs2
+import datetime, os
 import importlib
-from typing import Type
+import subprocess
+from typing import Generator, Type
+
+import yt_dlp
 from yt_dlp.extractor.common import InfoExtractor
+import pysubs2
 
 from loguru import logger
 
@@ -11,7 +15,45 @@ from auto_archiver.core import Metadata, Media
 class GenericExtractor(Extractor):
     _dropins = {}
 
-    def suitable_extractors(self, url: str) -> list[str]:
+    def setup(self):
+        # check for file .ytdlp-update in the secrets folder
+        if self.ytdlp_update_interval < 0:
+            return
+        
+        use_secrets = os.path.exists('secrets')
+        path = os.path.join('secrets' if use_secrets else '', '.ytdlp-update')
+        next_update_check = None
+        if os.path.exists(path):
+            with open(path, "r") as f:
+                next_update_check = datetime.datetime.fromisoformat(f.read())
+        
+        if not next_update_check or next_update_check < datetime.datetime.now():
+            self.update_ytdlp()
+
+            next_update_check = datetime.datetime.now() + datetime.timedelta(days=self.ytdlp_update_interval)
+            with open(path, "w") as f:
+                f.write(next_update_check.isoformat())
+
+    def update_ytdlp(self):
+        logger.info("Checking and updating yt-dlp...")
+        logger.info(f"Tip: change the 'ytdlp_update_interval' setting to control how often yt-dlp is updated. Set to -1 to disable or 0 to enable on every run. Current setting: {self.ytdlp_update_interval}")
+        from importlib.metadata import version as get_version
+        old_version = get_version("yt-dlp")
+        try:
+            # try and update with pip (this works inside poetry environment and in a normal virtualenv)
+            result = subprocess.run(["pip", "install", "--upgrade", "yt-dlp"], check=True, capture_output=True)
+
+            if "Successfully installed yt-dlp" in result.stdout.decode():
+                new_version = importlib.metadata.version("yt-dlp")
+                logger.info(f"yt-dlp successfully (from {old_version} to {new_version})")
+                importlib.reload(yt_dlp)
+            else:
+                logger.info("yt-dlp already up to date")
+
+        except Exception as e:
+            logger.error(f"Error updating yt-dlp: {e}")
+
+    def suitable_extractors(self, url: str) -> Generator[str, None, None]:
         """
         Returns a list of valid extractors for the given URL"""
         for info_extractor in yt_dlp.YoutubeDL()._ies.values():
@@ -86,7 +128,7 @@ class GenericExtractor(Extractor):
         # keep both 'title' and 'fulltitle', but prefer 'title', falling back to 'fulltitle' if it doesn't exist
         result.set_title(video_data.pop('title', video_data.pop('fulltitle', "")))
         result.set_url(url)
-
+        if "description" in video_data: result.set_content(video_data["description"])
         # extract comments if enabled
         if self.comments:
             result.set("comments", [{
@@ -116,7 +158,7 @@ class GenericExtractor(Extractor):
 
     def get_metadata_for_post(self, info_extractor: Type[InfoExtractor], url: str, ydl: yt_dlp.YoutubeDL) -> Metadata:
         """
-        Calls into the ytdlp InfoExtract subclass to use the prive _extract_post method to get the post metadata.
+        Calls into the ytdlp InfoExtract subclass to use the private _extract_post method to get the post metadata.
         """
 
         ie_instance = info_extractor(downloader=ydl)
@@ -266,6 +308,11 @@ class GenericExtractor(Extractor):
     def download(self, item: Metadata) -> Metadata:
         url = item.get_url()
 
+        #TODO: this is a temporary hack until this issue is closed: https://github.com/yt-dlp/yt-dlp/issues/11025
+        if url.startswith("https://ya.ru"):
+            url = url.replace("https://ya.ru", "https://yandex.ru")
+            item.set("replaced_url", url)
+
 
         ydl_options = {'outtmpl': os.path.join(self.tmp_dir, f'%(id)s.%(ext)s'), 
                        'quiet': False, 'noplaylist': not self.allow_playlist ,
@@ -275,7 +322,8 @@ class GenericExtractor(Extractor):
         
         # set up auth
         auth = self.auth_for_site(url, extract_cookies=False)
-        # order of importance: username/pasword -> api_key -> cookie -> cookie_from_browser -> cookies_file
+
+        # order of importance: username/pasword -> api_key -> cookie -> cookies_from_browser -> cookies_file
         if auth:
             if 'username' in auth and 'password' in auth:
                 logger.debug(f'Using provided auth username and password for {url}')
@@ -284,12 +332,12 @@ class GenericExtractor(Extractor):
             elif 'cookie' in auth:
                 logger.debug(f'Using provided auth cookie for {url}')
                 yt_dlp.utils.std_headers['cookie'] = auth['cookie']
-            elif 'cookie_from_browser' in auth:
-                logger.debug(f'Using extracted cookies from browser {self.cookies_from_browser} for {url}')
+            elif 'cookies_from_browser' in auth:
+                logger.debug(f'Using extracted cookies from browser {auth["cookies_from_browser"]} for {url}')
                 ydl_options['cookiesfrombrowser'] = auth['cookies_from_browser']
             elif 'cookies_file' in auth:
-                logger.debug(f'Using cookies from file {self.cookie_file} for {url}')
-                ydl_options['cookiesfile'] = auth['cookies_file']
+                logger.debug(f'Using cookies from file {auth["cookies_file"]} for {url}')
+                ydl_options['cookiefile'] = auth['cookies_file']
 
         ydl = yt_dlp.YoutubeDL(ydl_options) # allsubtitles and subtitleslangs not working as expected, so default lang is always "en"
 
