@@ -1,6 +1,5 @@
 import os
-import hashlib
-from typing import TYPE_CHECKING
+import datetime
 
 from loguru import logger
 import opentimestamps
@@ -108,7 +107,7 @@ class OpentimestampsEnricher(Enricher):
                 # Create media for the timestamp file
                 timestamp_media = Media(filename=timestamp_path)
                 # explicitly set the mimetype, normally .ots files are 'application/vnd.oasis.opendocument.spreadsheet-template'
-                media.mimetype = "application/vnd.opentimestamps"
+                timestamp_media.mimetype = "application/vnd.opentimestamps"
                 timestamp_media.set("opentimestamps_version", opentimestamps.__version__)
                 
                 # Verify the timestamp if needed
@@ -158,12 +157,14 @@ class OpentimestampsEnricher(Enricher):
                 
                 # Process different types of attestations
                 if isinstance(attestation, PendingAttestation):
-                    info["type"] = f"pending (as of {attestation.date})"
+                    info["type"] = f"pending"
                     info["uri"] = attestation.uri
                 
                 elif isinstance(attestation, BitcoinBlockHeaderAttestation):
                     info["type"] = "bitcoin"
                     info["block_height"] = attestation.height
+
+                info["last_check"] = datetime.datetime.now().isoformat()[:-7]
                 
                 attestation_info.append(info)
             
@@ -178,5 +179,6 @@ class OpentimestampsEnricher(Enricher):
         else:
             result["verified"] = False
             result["pending"] = False
+        result["last_updated"] = datetime.datetime.now().isoformat()[:-7]
         
         return result
