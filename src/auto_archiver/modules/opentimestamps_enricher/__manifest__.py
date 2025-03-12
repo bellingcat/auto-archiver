@@ -6,7 +6,6 @@
         "python": [
             "loguru",
             "opentimestamps",
-            "slugify",
         ],
     },
     "configs": {
@@ -19,14 +18,16 @@
             "default": [
                 "https://alice.btc.calendar.opentimestamps.org",
                 "https://bob.btc.calendar.opentimestamps.org",
-                "https://finney.calendar.eternitywall.com"
+                "https://finney.calendar.eternitywall.com",
+                # "https://ots.btc.catallaxy.com/", # ipv4 only
             ],
-            "help": "List of OpenTimestamps calendar servers to use for timestamping.",
+            "help": "List of OpenTimestamps calendar servers to use for timestamping. See here for a list of calendars maintained by opentimestamps:\
+https://opentimestamps.org/#calendars",
             "type": "list"
         },
         "calendar_whitelist": {
             "default": [],
-            "help": "Optional whitelist of calendar servers. If empty, all calendar servers are allowed.",
+            "help": "Optional whitelist of calendar servers. Override this if you are using your own calendar servers. e.g. ['https://mycalendar.com']",
             "type": "list"
         },
         "verify_timestamps": {
@@ -37,6 +38,9 @@
     },
     "description": """
     Creates OpenTimestamps proofs for archived files, providing blockchain-backed evidence of file existence at a specific time.
+
+    Uses OpenTimestamps – a service that timestamps data using the Bitcoin blockchain, providing a decentralized 
+    and secure way to prove that data existed at a certain point in time.
 
     ### Features
     - Creates cryptographic timestamp proofs that link files to the Bitcoin blockchain

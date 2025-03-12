@@ -1362,6 +1362,22 @@ signals = ["blinker (>=1.4.0)"]
 signedtoken = ["cryptography (>=3.0.0)", "pyjwt (>=2.0.0,<3)"]
 
 [[package]]
+name = "opentimestamps"
+version = "0.4.5"
+description = "Create and verify OpenTimestamps proofs"
+optional = false
+python-versions = "*"
+groups = ["main"]
+files = [
+    {file = "opentimestamps-0.4.5-py3-none-any.whl", hash = "sha256:a4912b3bd1b612a3ef5fac925b9137889e6c5cb91cc9e76c8202a2bf8abe26b5"},
+    {file = "opentimestamps-0.4.5.tar.gz", hash = "sha256:56726ccde97fb67f336a7f237ce36808e5593c3089d68d900b1c83d0ebf9dcfa"},
+]
+
+[package.dependencies]
+pycryptodomex = ">=3.3.1"
+python-bitcoinlib = ">=0.9.0,<0.13.0"
+
+[[package]]
 name = "oscrypto"
 version = "1.3.0"
 description = "TLS (SSL) sockets, key generation, encryption, decryption, signing, verification and KDFs using the OS crypto libraries. Does not require a compiler, and relies on the OS for patching. Works on Windows, OS X and Linux/BSD."
@@ -1833,6 +1849,18 @@ pytest = ">=6.2.5"
 
 [package.extras]
 dev = ["pre-commit", "pytest-asyncio", "tox"]
+
+[[package]]
+name = "python-bitcoinlib"
+version = "0.12.2"
+description = "The Swiss Army Knife of the Bitcoin protocol."
+optional = false
+python-versions = "*"
+groups = ["main"]
+files = [
+    {file = "python-bitcoinlib-0.12.2.tar.gz", hash = "sha256:c65ab61427c77c38d397bfc431f71d86fd355b453a536496ec3fcb41bd10087d"},
+    {file = "python_bitcoinlib-0.12.2-py3-none-any.whl", hash = "sha256:2f29a9f475f21c12169b3a6cc8820f34f11362d7ff1200a5703dce3e4e903a44"},
+]
 
 [[package]]
 name = "python-dateutil"
@@ -3185,4 +3213,4 @@ test = ["pytest (>=8.1,<9.0)", "pytest-rerunfailures (>=14.0,<15.0)"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10,<3.13"
-content-hash = "2d0a953383901fe12e97f6f56a76a9d8008788695425792eedbf739a18585188"
+content-hash = "e42f3bc122fe5d98deb6aa224ddf531b6f45a50b7c61213721ff5c8258e424e3"

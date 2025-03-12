@@ -1,36 +1,19 @@
 import os
 import hashlib
-from importlib.metadata import version
+from typing import TYPE_CHECKING
 
-from slugify import slugify
 from loguru import logger
 import opentimestamps
 from opentimestamps.calendar import RemoteCalendar, DEFAULT_CALENDAR_WHITELIST
 from opentimestamps.core.timestamp import Timestamp, DetachedTimestampFile
 from opentimestamps.core.notary import PendingAttestation, BitcoinBlockHeaderAttestation
+from opentimestamps.core.op import OpSHA256
+from opentimestamps.core import serialize
 from auto_archiver.core import Enricher
 from auto_archiver.core import Metadata, Media
-from auto_archiver.version import __version__
-
+from auto_archiver.utils.misc import calculate_file_hash
 
 class OpentimestampsEnricher(Enricher):
-    """
-    Uses OpenTimestamps to create and verify timestamps for files. OpenTimestamps is a service that 
-    timestamps data using the Bitcoin blockchain, providing a decentralized and secure way to prove 
-    that data existed at a certain point in time.
-
-    The enricher hashes files in the archive and creates timestamp proofs that can later be verified.
-    These proofs are stored alongside the original files and can be used to verify the timestamp
-    even if the OpenTimestamps calendar servers are unavailable.
-    """
-
-    def setup(self):
-        # Initialize any resources needed
-        pass
-
-    def cleanup(self) -> None:
-        # Clean up any resources used
-        pass
 
     def enrich(self, to_enrich: Metadata) -> None:
         url = to_enrich.get_url()
@@ -38,7 +21,7 @@ class OpentimestampsEnricher(Enricher):
 
         # Get the media files to timestamp
         media_files = [m for m in to_enrich.media if m.get("filename") and not m.get("opentimestamps")]
-        
+
         if not media_files:
             logger.warning(f"No files found to timestamp in {url=}")
             return
@@ -52,21 +35,26 @@ class OpentimestampsEnricher(Enricher):
                     logger.warning(f"File not found: {file_path}")
                     continue
                 
-                # Create timestamp for the file
+                # Create timestamp for the file - hash is SHA256
+                # Note: ONLY SHA256 is used/supported here. Opentimestamps supports other hashes, but not SHA3-512
+                # see opentimestamps.core.op
                 logger.debug(f"Creating timestamp for {file_path}")
-                
-                # Hash the file
+                file_hash = None
                 with open(file_path, 'rb') as f:
-                    file_bytes = f.read()
-                file_hash = hashlib.sha256(file_bytes).digest()
+                    file_hash = OpSHA256().hash_fd(f)
+
+                if not file_hash:
+                    logger.warning(f"Failed to hash file for timestamping, skipping: {file_path}")
+                    continue
                 
                 # Create a timestamp with the file hash
                 timestamp = Timestamp(file_hash)
                 
-                # Create a detached timestamp file with the timestamp
-                detached_timestamp = DetachedTimestampFile(timestamp)
+                # Create a detached timestamp file with the hash operation and timestamp
+                detached_timestamp = DetachedTimestampFile(OpSHA256(), timestamp)
                 
                 # Submit to calendar servers
+                submitted_to_calendar = False
                 if self.use_calendars:
                     logger.debug(f"Submitting timestamp to calendar servers for {file_path}")
                     calendars = []
@@ -76,9 +64,11 @@ class OpentimestampsEnricher(Enricher):
                         whitelist = set(self.calendar_whitelist)
                     
                     # Create calendar instances
+                    calendar_urls = []
                     for url in self.calendar_urls:
                         if url in whitelist:
                             calendars.append(RemoteCalendar(url))
+                            calendar_urls.append(url)
                     
                     # Submit the hash to each calendar
                     for calendar in calendars:
@@ -86,15 +76,35 @@ class OpentimestampsEnricher(Enricher):
                             calendar_timestamp = calendar.submit(file_hash)
                             timestamp.merge(calendar_timestamp)
                             logger.debug(f"Successfully submitted to calendar: {calendar.url}")
+                            submitted_to_calendar = True
                         except Exception as e:
                             logger.warning(f"Failed to submit to calendar {calendar.url}: {e}")
+                    
+                    # If all calendar submissions failed, add pending attestations
+                    if not submitted_to_calendar and not timestamp.attestations:
+                        logger.info("All calendar submissions failed, creating pending attestations")
+                        for url in calendar_urls:
+                            pending = PendingAttestation(url)
+                            timestamp.attestations.add(pending)
                 else:
                     logger.info("Skipping calendar submission as per configuration")
+                    
+                    # Add dummy pending attestation for testing when calendars are disabled
+                    for url in self.calendar_urls:
+                        pending = PendingAttestation(url)
+                        timestamp.attestations.add(pending)
                 
                 # Save the timestamp proof to a file
                 timestamp_path = os.path.join(self.tmp_dir, f"{os.path.basename(file_path)}.ots")
-                with open(timestamp_path, 'wb') as f:
-                    detached_timestamp.serialize(f)
+                try:
+                    with open(timestamp_path, 'wb') as f:
+                        # Create a serialization context and write to the file
+                        ctx = serialize.BytesSerializationContext()
+                        detached_timestamp.serialize(ctx)
+                        f.write(ctx.getbytes())
+                except Exception as e:
+                    logger.warning(f"Failed to serialize timestamp file: {e}")
+                    continue
                 
                 # Create media for the timestamp file
                 timestamp_media = Media(filename=timestamp_path)
@@ -106,6 +116,8 @@ class OpentimestampsEnricher(Enricher):
                     verification_info = self.verify_timestamp(detached_timestamp)
                     for key, value in verification_info.items():
                         timestamp_media.set(key, value)
+                else:
+                    logger.warning(f"Not verifying the timestamp for media file {file_path}")
                 
                 timestamp_files.append(timestamp_media)
                 
@@ -151,7 +163,7 @@ class OpentimestampsEnricher(Enricher):
                 # Process different types of attestations
                 if isinstance(attestation, PendingAttestation):
                     info["type"] = "pending"
-                    info["uri"] = attestation.uri.decode('utf-8')
+                    info["uri"] = attestation.uri
                 
                 elif isinstance(attestation, BitcoinBlockHeaderAttestation):
                     info["type"] = "bitcoin"

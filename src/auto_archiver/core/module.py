@@ -6,7 +6,7 @@ by handling user configuration, validating the steps properties, and implementin
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import List, TYPE_CHECKING
+from typing import List, TYPE_CHECKING, Type
 import shutil
 import ast
 import copy
@@ -57,7 +57,7 @@ class ModuleFactory:
 
         HAS_SETUP_PATHS = True
 
-    def get_module(self, module_name: str, config: dict) -> BaseModule:
+    def get_module(self, module_name: str, config: dict) -> Type[BaseModule]:
         """
         Gets and sets up a module using the provided config
         

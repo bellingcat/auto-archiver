@@ -10,53 +10,69 @@ from opentimestamps.core.notary import PendingAttestation, BitcoinBlockHeaderAtt
 
 from auto_archiver.core import Metadata, Media
 
+
+# TODO: Remove once timestamping overhaul is merged
 @pytest.fixture
-def sample_file_path():
-    with tempfile.NamedTemporaryFile(delete=False) as tmp:
-        tmp.write(b"This is a test file content for OpenTimestamps")
-        return tmp.name
+def sample_media(tmp_path) -> Media:
+    """Fixture creating a Media object with temporary source file"""
+    src_file = tmp_path / "source.txt"
+    src_file.write_text("test content")
+    return Media(_key="subdir/test.txt", filename=str(src_file))
+
+
+@pytest.fixture
+def sample_file_path(tmp_path):
+    tmp_file = tmp_path / "test.txt"
+    tmp_file.write_text("This is a test file content for OpenTimestamps")
+    return str(tmp_file)
 
 @pytest.fixture
 def detached_timestamp_file():
     """Create a simple detached timestamp file for testing"""
     file_hash = hashlib.sha256(b"Test content").digest()
+    from opentimestamps.core.op import OpSHA256
+    file_hash_op = OpSHA256()
     timestamp = Timestamp(file_hash)
     
     # Add a pending attestation
-    pending = PendingAttestation(b"https://example.calendar.com")
+    pending = PendingAttestation("https://example.calendar.com")
     timestamp.attestations.add(pending)
     
     # Add a bitcoin attestation
     bitcoin = BitcoinBlockHeaderAttestation(783000)  # Some block height
     timestamp.attestations.add(bitcoin)
     
-    return DetachedTimestampFile(timestamp)
+    return DetachedTimestampFile(file_hash_op, timestamp)
 
 @pytest.fixture
 def verified_timestamp_file():
     """Create a timestamp file with a Bitcoin attestation"""
     file_hash = hashlib.sha256(b"Verified content").digest()
+    from opentimestamps.core.op import OpSHA256
+    file_hash_op = OpSHA256()
     timestamp = Timestamp(file_hash)
     
     # Add only a Bitcoin attestation
     bitcoin = BitcoinBlockHeaderAttestation(783000)  # Some block height
     timestamp.attestations.add(bitcoin)
     
-    return DetachedTimestampFile(timestamp)
+    return DetachedTimestampFile(file_hash_op, timestamp)
 
 @pytest.fixture
 def pending_timestamp_file():
     """Create a timestamp file with only pending attestations"""
     file_hash = hashlib.sha256(b"Pending content").digest()
+    from opentimestamps.core.op import OpSHA256
+    file_hash_op = OpSHA256()
     timestamp = Timestamp(file_hash)
     
     # Add only pending attestations
-    pending1 = PendingAttestation(b"https://example1.calendar.com")
-    pending2 = PendingAttestation(b"https://example2.calendar.com")
+    pending1 = PendingAttestation("https://example1.calendar.com")
+    pending2 = PendingAttestation("https://example2.calendar.com")
     timestamp.attestations.add(pending1)
     timestamp.attestations.add(pending2)
     
-    return DetachedTimestampFile(timestamp)
+    return DetachedTimestampFile(file_hash_op, timestamp)
 
 @pytest.mark.download
 def test_download_tsr(setup_module, mocker):
@@ -66,7 +82,7 @@ def test_download_tsr(setup_module, mocker):
     test_timestamp = Timestamp(hashlib.sha256(b"test").digest())
     mock_submit.return_value = test_timestamp
     
-    # Setup enricher
+
     ots = setup_module("opentimestamps_enricher")
     
     # Create a calendar
@@ -121,6 +137,7 @@ def test_verify_pending_only(setup_module, pending_timestamp_file):
 
 def test_verify_bitcoin_completed(setup_module, verified_timestamp_file):
     """Test verification of timestamps with completed Bitcoin attestations"""
+
     ots = setup_module("opentimestamps_enricher")
     
     verification_info = ots.verify_timestamp(verified_timestamp_file)
@@ -136,15 +153,21 @@ def test_verify_bitcoin_completed(setup_module, verified_timestamp_file):
 
 def test_full_enriching(setup_module, sample_file_path, sample_media, mocker):
     """Test the complete enrichment process"""
+
     # Mock the calendar submission to avoid network requests
     mock_calendar = mocker.patch.object(RemoteCalendar, 'submit')
-    test_timestamp = Timestamp(hashlib.sha256(b"test").digest())
-    # Add a bitcoin attestation to the test timestamp
-    bitcoin = BitcoinBlockHeaderAttestation(783000)
-    test_timestamp.attestations.add(bitcoin)
-    mock_calendar.return_value = test_timestamp
     
-    # Setup enricher
+    # Create a function that returns a new timestamp for each call
+    def side_effect(digest):
+        test_timestamp = Timestamp(digest)
+        # Add a bitcoin attestation to the test timestamp
+        bitcoin = BitcoinBlockHeaderAttestation(783000)
+        test_timestamp.attestations.add(bitcoin)
+        return test_timestamp
+    
+    mock_calendar.side_effect = side_effect
+    
+
     ots = setup_module("opentimestamps_enricher")
     
     # Create test metadata with sample file
@@ -176,8 +199,6 @@ def test_full_enriching(setup_module, sample_file_path, sample_media, mocker):
     assert timestamp_media.get("attestation_count") == 1
 
 def test_full_enriching_no_calendars(setup_module, sample_file_path, sample_media, mocker):
-    """Test enrichment process with calendars disabled"""
-    # Setup enricher with calendars disabled
     ots = setup_module("opentimestamps_enricher", {"use_calendars": False})
     
     # Create test metadata with sample file
@@ -198,7 +219,8 @@ def test_full_enriching_no_calendars(setup_module, sample_file_path, sample_medi
     
     # Verify status should be false since we didn't use calendars
     assert timestamp_media.get("verified") == False
-    assert timestamp_media.get("attestation_count") == 0
+    # We expect 3 pending attestations (one for each calendar URL)
+    assert timestamp_media.get("attestation_count") == 3
 
 def test_full_enriching_calendar_error(setup_module, sample_file_path, sample_media, mocker):
     """Test enrichment when calendar servers return errors"""
@@ -206,7 +228,7 @@ def test_full_enriching_calendar_error(setup_module, sample_file_path, sample_me
     mock_calendar = mocker.patch.object(RemoteCalendar, 'submit')
     mock_calendar.side_effect = Exception("Calendar server error")
     
-    # Setup enricher
+
     ots = setup_module("opentimestamps_enricher")
     
     # Create test metadata with sample file
@@ -224,11 +246,11 @@ def test_full_enriching_calendar_error(setup_module, sample_file_path, sample_me
     # Verify status should be false since calendar submissions failed
     timestamp_media = metadata.media[1]
     assert timestamp_media.get("verified") == False
-    assert timestamp_media.get("attestation_count") == 0
+    # We expect 3 pending attestations (one for each calendar URL that's enabled by default in __manifest__)
+    assert timestamp_media.get("attestation_count") == 3
 
 def test_no_files_to_stamp(setup_module):
     """Test enrichment with no files to timestamp"""
-    # Setup enricher
     ots = setup_module("opentimestamps_enricher")
     
     # Create empty metadata

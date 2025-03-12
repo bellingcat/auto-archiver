@@ -30,7 +30,7 @@ class TimestampingEnricher(Enricher):
         if not len(hashes):
             logger.warning(f"No hashes found in {url=}")
             return
-        
+
         tmp_dir = self.tmp_dir
         hashes_fn = os.path.join(tmp_dir, "hashes.txt")
 
