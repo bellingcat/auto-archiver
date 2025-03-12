@@ -52,5 +52,12 @@ https://opentimestamps.org/#calendars",
     - Can work offline to create timestamp proofs that can be upgraded later
     - Verification checks if timestamps have been confirmed in the Bitcoin blockchain
     - Should run after files have been archived and hashed
+
+    ### Verifying Timestamps Later
+    If you wish to verify a timestamp (ots) file later, you can install the opentimestamps-client command line tool and use the `ots verify` command.
+    Example: `ots verify my_file.ots`
+
+    Note: if you're using local storage with a filename_generator set to 'static' (a hash) or random, the files will be renamed when they are saved to the
+    final location meaning you will need to specify the original filename when verifying the timestamp with `ots verify -f original_filename my_file.ots`.
     """
 }

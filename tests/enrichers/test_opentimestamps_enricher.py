@@ -172,7 +172,7 @@ def test_full_enriching(setup_module, sample_file_path, sample_media, mocker):
     
     # Create test metadata with sample file
     metadata = Metadata().set_url("https://example.com")
-    sample_media.set("filename", sample_file_path)
+    sample_media.filename = sample_file_path
     metadata.add_media(sample_media)
     
     # Run enrichment
@@ -182,16 +182,17 @@ def test_full_enriching(setup_module, sample_file_path, sample_media, mocker):
     assert metadata.get("opentimestamped") == True
     assert metadata.get("opentimestamps_count") == 1
     
-    # Check that we have two media items: the original and the timestamp
-    assert len(metadata.media) == 2
+    # Check that we have one parent media item: the original
+    assert len(metadata.media) == 1
     
     # Check that the original media was updated
     assert metadata.media[0].get("opentimestamps") == True
-    assert metadata.media[0].get("opentimestamp_file") is not None
     
-    # Check the timestamp file media
-    timestamp_media = metadata.media[1]
-    assert timestamp_media.get("source_file") == os.path.basename(sample_file_path)
+    # Check the timestamp file media is a child of the original
+    assert len(metadata.media[0].get("opentimestamp_files")) == 1
+
+    timestamp_media = metadata.media[0].get("opentimestamp_files")[0]
+
     assert timestamp_media.get("opentimestamps_version") is not None
     
     # Check verification results on the timestamp media
@@ -203,7 +204,7 @@ def test_full_enriching_no_calendars(setup_module, sample_file_path, sample_medi
     
     # Create test metadata with sample file
     metadata = Metadata().set_url("https://example.com")
-    sample_media.set("filename", sample_file_path)
+    sample_media.filename = sample_file_path
     metadata.add_media(sample_media)
     
     # Run enrichment
@@ -212,10 +213,8 @@ def test_full_enriching_no_calendars(setup_module, sample_file_path, sample_medi
     # Verify results
     assert metadata.get("opentimestamped") == True
     assert metadata.get("opentimestamps_count") == 1
-    
-    # Check the timestamp file media
-    timestamp_media = metadata.media[1]
-    assert timestamp_media.get("source_file") == os.path.basename(sample_file_path)
+
+    timestamp_media = metadata.media[0].get("opentimestamp_files")[0]
     
     # Verify status should be false since we didn't use calendars
     assert timestamp_media.get("verified") == False
@@ -233,7 +232,7 @@ def test_full_enriching_calendar_error(setup_module, sample_file_path, sample_me
     
     # Create test metadata with sample file
     metadata = Metadata().set_url("https://example.com")
-    sample_media.set("filename", sample_file_path)
+    sample_media.filename = sample_file_path
     metadata.add_media(sample_media)
     
     # Run enrichment (should complete despite calendar errors)
@@ -244,7 +243,7 @@ def test_full_enriching_calendar_error(setup_module, sample_file_path, sample_me
     assert metadata.get("opentimestamps_count") == 1
     
     # Verify status should be false since calendar submissions failed
-    timestamp_media = metadata.media[1]
+    timestamp_media = metadata.media[0].get("opentimestamp_files")[0]
     assert timestamp_media.get("verified") == False
     # We expect 3 pending attestations (one for each calendar URL that's enabled by default in __manifest__)
     assert timestamp_media.get("attestation_count") == 3

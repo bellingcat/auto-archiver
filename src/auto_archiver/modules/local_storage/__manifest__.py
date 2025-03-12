@@ -13,7 +13,7 @@
         },
         "filename_generator": {
             "default": "static",
-            "help": "how to name stored files: 'random' creates a random string; 'static' uses a replicable strategy such as a hash.",
+            "help": "how to name stored files: 'random' creates a random string; 'static' uses a hash, with the settings of the 'hash_enricher' module (defaults to SHA256 if not enabled)",
             "choices": ["random", "static"],
         },
         "save_to": {"default": "./local_archive", "help": "folder where to save archived content"},

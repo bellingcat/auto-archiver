@@ -20,8 +20,7 @@ class OpentimestampsEnricher(Enricher):
         logger.debug(f"OpenTimestamps timestamping files for {url=}")
 
         # Get the media files to timestamp
-        media_files = [m for m in to_enrich.media if m.get("filename") and not m.get("opentimestamps")]
-
+        media_files = [m for m in to_enrich.media if m.filename and not m.get("opentimestamps")]
         if not media_files:
             logger.warning(f"No files found to timestamp in {url=}")
             return
@@ -30,7 +29,7 @@ class OpentimestampsEnricher(Enricher):
         for media in media_files:
             try:
                 # Get the file path from the media
-                file_path = media.get("filename")
+                file_path = media.filename
                 if not os.path.exists(file_path):
                     logger.warning(f"File not found: {file_path}")
                     continue
@@ -108,7 +107,8 @@ class OpentimestampsEnricher(Enricher):
                 
                 # Create media for the timestamp file
                 timestamp_media = Media(filename=timestamp_path)
-                timestamp_media.set("source_file", os.path.basename(file_path))
+                # explicitly set the mimetype, normally .ots files are 'application/vnd.oasis.opendocument.spreadsheet-template'
+                media.mimetype = "application/vnd.opentimestamps"
                 timestamp_media.set("opentimestamps_version", opentimestamps.__version__)
                 
                 # Verify the timestamp if needed
@@ -119,20 +119,16 @@ class OpentimestampsEnricher(Enricher):
                 else:
                     logger.warning(f"Not verifying the timestamp for media file {file_path}")
                 
-                timestamp_files.append(timestamp_media)
-                
+                media.set("opentimestamp_files", [timestamp_media])
+                timestamp_files.append(timestamp_media.filename)
                 # Update the original media to indicate it's been timestamped
                 media.set("opentimestamps", True)
-                media.set("opentimestamp_file", timestamp_path)
                 
             except Exception as e:
-                logger.warning(f"Error while timestamping {media.get('filename')}: {e}")
+                logger.warning(f"Error while timestamping {media.filename}: {e}")
         
         # Add timestamp files to the metadata
         if timestamp_files:
-            for ts_media in timestamp_files:
-                to_enrich.add_media(ts_media)
-            
             to_enrich.set("opentimestamped", True)
             to_enrich.set("opentimestamps_count", len(timestamp_files))
             logger.success(f"{len(timestamp_files)} OpenTimestamps proofs created for {url=}")
@@ -162,7 +158,7 @@ class OpentimestampsEnricher(Enricher):
                 
                 # Process different types of attestations
                 if isinstance(attestation, PendingAttestation):
-                    info["type"] = "pending"
+                    info["type"] = f"pending (as of {attestation.date})"
                     info["uri"] = attestation.uri
                 
                 elif isinstance(attestation, BitcoinBlockHeaderAttestation):
