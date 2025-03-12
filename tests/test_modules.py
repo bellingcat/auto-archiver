@@ -9,10 +9,8 @@ def example_module():
     import auto_archiver
 
     module_factory = ModuleFactory()
-
-    previous_path = auto_archiver.modules.__path__
+    # previous_path = auto_archiver.modules.__path__
     auto_archiver.modules.__path__.append("tests/data/test_modules/")
-
     return module_factory.get_module_lazy("example_module")
 
 
@@ -84,6 +82,8 @@ def test_load_modules(module_name):
     # check that default settings are applied
     default_config = module.configs
     assert loaded_module.name in loaded_module.config.keys()
+    defaults = {k: v.get("default") for k, v in default_config.items()}
+    assert loaded_module.config[module_name] == defaults
 
 
 @pytest.mark.parametrize("module_name", ["local_storage", "generic_extractor", "html_formatter", "csv_db"])

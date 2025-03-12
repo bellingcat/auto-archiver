@@ -172,10 +172,10 @@ def test_should_process_sheet(setup_module, mocker):
             "block_worksheets": {"Sheet3"},
         },
     )
-    assert gdb.should_process_sheet("TestSheet") == True
-    assert gdb.should_process_sheet("Sheet3") == False
+    assert gdb.should_process_sheet("TestSheet") is True
+    assert gdb.should_process_sheet("Sheet3") is False
     # False if allow_worksheets is set
-    assert gdb.should_process_sheet("AnotherSheet") == False
+    assert gdb.should_process_sheet("AnotherSheet") is False
 
 
 @pytest.mark.skip(reason="Requires a real connection")

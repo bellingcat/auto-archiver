@@ -77,15 +77,15 @@ def test_merge_dicts():
 
 
 def test_check_types():
-    assert config.is_list_type([]) == True
-    assert config.is_list_type(()) == True
-    assert config.is_list_type(set()) == True
-    assert config.is_list_type({}) == False
-    assert config.is_list_type("") == False
-    assert config.is_dict_type({}) == True
-    assert config.is_dict_type(CommentedMap()) == True
-    assert config.is_dict_type([]) == False
-    assert config.is_dict_type("") == False
+    assert config.is_list_type([]) is True
+    assert config.is_list_type(()) is True
+    assert config.is_list_type(set()) is True
+    assert config.is_list_type({}) is False
+    assert config.is_list_type("") is False
+    assert config.is_dict_type({}) is True
+    assert config.is_dict_type(CommentedMap()) is True
+    assert config.is_dict_type([]) is False
+    assert config.is_dict_type("") is False
 
 
 def test_from_dot_notation():

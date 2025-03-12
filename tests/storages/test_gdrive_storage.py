@@ -9,9 +9,8 @@ from tests.storages.test_storage_base import TestStorageBase
 
 
 @pytest.fixture
-def gdrive_storage(setup_module, mocker):
+def gdrive_storage(setup_module, mocker) -> GDriveStorage:
     module_name: str = "gdrive_storage"
-    storage: GDriveStorage
     config: dict = {
         "path_generator": "url",
         "filename_generator": "static",

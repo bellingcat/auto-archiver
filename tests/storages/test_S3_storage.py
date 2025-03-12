@@ -61,7 +61,7 @@ class TestS3Storage:
         media = Media("test.txt")
         assert self.storage.is_upload_needed(media) is True
         self.storage.random_no_duplicate = True
-        mock_calc_hash = mocker.patch('auto_archiver.modules.s3_storage.s3_storage.calculate_file_hash', return_value='beepboop123beepboop123beepboop123')
+        mocker.patch('auto_archiver.modules.s3_storage.s3_storage.calculate_file_hash', return_value='beepboop123beepboop123beepboop123')
         mock_file_in_folder = mocker.patch.object(self.storage, 'file_in_folder', return_value='existing_key.txt')
         assert self.storage.is_upload_needed(media) is False
         assert media.key == 'existing_key.txt'
@@ -70,10 +70,10 @@ class TestS3Storage:
     def test_skips_upload_when_duplicate_exists(self, mocker):
         """Test that upload skips when file_in_folder finds existing object"""
         self.storage.random_no_duplicate = True
-        mock_file_in_folder = mocker.patch.object(S3Storage, 'file_in_folder', return_value="existing_folder/existing_file.txt")
+        mocker.patch.object(S3Storage, 'file_in_folder', return_value="existing_folder/existing_file.txt")
         media = Media("test.txt")
         media._key = "original_path.txt"
-        mock_calculate_hash = mocker.patch('auto_archiver.modules.s3_storage.s3_storage.calculate_file_hash', return_value="beepboop123beepboop123beepboop123")
+        mocker.patch('auto_archiver.modules.s3_storage.s3_storage.calculate_file_hash', return_value="beepboop123beepboop123beepboop123")
         assert self.storage.is_upload_needed(media) is False
         assert media.key == "existing_folder/existing_file.txt"
         assert media.get("previously archived") is True
@@ -101,5 +101,5 @@ class TestS3Storage:
         )
 
     def test_file_in_folder_exists(self, mocker):
-        mock_list_objects = mocker.patch.object(self.storage.s3, 'list_objects', return_value={'Contents': [{'Key': 'path/to/file.txt'}]})
+        mocker.patch.object(self.storage.s3, 'list_objects', return_value={'Contents': [{'Key': 'path/to/file.txt'}]})
         assert self.storage.file_in_folder('path/to/') == 'path/to/file.txt'

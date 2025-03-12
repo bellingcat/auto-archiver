@@ -94,7 +94,6 @@ def test_upload_not_uploaded(tmp_path, atlos_storage: AtlosStorage, metadata: Me
     call_args = post_mock.call_args[0]
     assert call_args[0] == expected_endpoint
     call_kwargs = post_mock.call_args[1]
-    expected_headers = {"Authorization": f"Bearer {atlos_storage.api_token}"}
     expected_params = {"title": media.properties}
     assert call_kwargs["params"] == expected_params
     file_tuple = call_kwargs["files"]["file"]

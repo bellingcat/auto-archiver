@@ -15,9 +15,9 @@ def mock_selenium_env(mocker):
     mock_which = mocker.patch("shutil.which")
     mock_driver_class = mocker.patch("auto_archiver.utils.webdriver.CookieSettingDriver")
     mock_binary_paths = mocker.patch("selenium.webdriver.common.selenium_manager.SeleniumManager.binary_paths")
-    mock_is_file = mocker.patch("pathlib.Path.is_file", return_value=True)
+    mocker.patch("pathlib.Path.is_file", return_value=True)
     mock_popen = mocker.patch("subprocess.Popen")
-    mock_is_connectable = mocker.patch("selenium.webdriver.common.service.Service.is_connectable", return_value=True)
+    mocker.patch("selenium.webdriver.common.service.Service.is_connectable", return_value=True)
     mock_firefox_options = mocker.patch("selenium.webdriver.FirefoxOptions")
 
     # Define side effect for `shutil.which`
@@ -157,13 +157,12 @@ def test_pdf_creation(mocker, screenshot_enricher, metadata_with_video, mock_sel
     # Mock the print_page method to return base64-encoded content
     mock_driver.print_page.return_value = base64.b64encode(b"fake_pdf_content").decode("utf-8")
     # Patch functions with mocker
-    mock_os_path_join = mocker.patch("os.path.join", side_effect=lambda *args: f"{args[-1]}")
-    mock_random_str = mocker.patch(
+    mocker.patch("os.path.join", side_effect=lambda *args: f"{args[-1]}")
+    mocker.patch(
         "auto_archiver.modules.screenshot_enricher.screenshot_enricher.random_str",
         return_value="fixed123",
     )
     mock_open = mocker.patch("builtins.open", new_callable=mocker.mock_open)
-    mock_log_error = mocker.patch("loguru.logger.error")
 
     screenshot_enricher.enrich(metadata_with_video)
     # Verify screenshot and PDF creation

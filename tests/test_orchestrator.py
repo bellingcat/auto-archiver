@@ -67,7 +67,7 @@ def test_version(basic_parser, capsys):
 
 def test_help(orchestrator, basic_parser, capsys):
     args = basic_parser.parse_args(["--help"])
-    assert args.help == True
+    assert args.help is True
 
     # test the show_help() on orchestrator
     with pytest.raises(SystemExit) as exit_error:
@@ -116,8 +116,8 @@ def test_check_required_values(orchestrator, caplog, test_args):
     # drop the example_module.required_field from the test_args
     test_args = test_args[:-2]
 
-    with pytest.raises(SystemExit) as exit_error:
-        config = orchestrator.setup_config(test_args)
+    with pytest.raises(SystemExit):
+        orchestrator.setup_config(test_args)
 
     assert caplog.records[1].message == "the following arguments are required: --example_module.required_field"
 
@@ -212,7 +212,7 @@ def test_multiple_orchestrator(test_args):
     ]
     o1 = ArchivingOrchestrator()
 
-    with pytest.raises(ValueError) as exit_error:
+    with pytest.raises(ValueError):
         # this should fail because the gsheet_feeder_db requires a sheet_id / sheet
         o1.setup(o1_args)
 

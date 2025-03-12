@@ -52,7 +52,7 @@ def generate_module_docs():
         for type in manifest["type"]:
             modules_by_type.setdefault(type, []).append(module)
 
-        description = "\n".join(l.lstrip() for l in manifest["description"].split("\n"))
+        description = "\n".join(line.lstrip() for line in manifest["description"].split("\n"))
         types = ", ".join(type_color[t] for t in manifest["type"])
         readme_str = f"""
 # {manifest["name"]}

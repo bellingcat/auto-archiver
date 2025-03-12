@@ -14,7 +14,7 @@ class TiktokTikwmExtractor(Extractor):
     """
     TIKWM_ENDPOINT = "https://www.tikwm.com/api/?url={url}"
 
-    def download(self, item: Metadata) -> Metadata:
+    def download(self, item: Metadata) -> bool | Metadata:
         url = item.get_url()
         
         if not re.match(TikTokIE._VALID_URL, url):

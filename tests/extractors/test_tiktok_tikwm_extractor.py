@@ -39,7 +39,7 @@ class TestTiktokTikwmExtractor(TestExtractorBase):
         mock_get, mock_logger = self.get_mockers(mocker)
         if valid_url:
             mock_get.return_value.status_code = 404
-        assert self.extractor.download(make_item(url)) == False
+        assert self.extractor.download(make_item(url)) is False
         assert mock_get.call_count == int(valid_url)
         assert mock_logger.error.call_count == int(valid_url)
 
@@ -47,7 +47,7 @@ class TestTiktokTikwmExtractor(TestExtractorBase):
         mock_get, mock_logger = self.get_mockers(mocker)
         mock_get.return_value.status_code = 200
         mock_get.return_value.json.side_effect = ValueError
-        assert self.extractor.download(make_item(self.VALID_EXAMPLE_URL)) == False
+        assert self.extractor.download(make_item(self.VALID_EXAMPLE_URL)) is False
         mock_get.assert_called_once()
         mock_get.return_value.json.assert_called_once()
         mock_logger.error.assert_called_once()
@@ -68,7 +68,7 @@ class TestTiktokTikwmExtractor(TestExtractorBase):
         mock_get, mock_logger = self.get_mockers(mocker)
         mock_get.return_value.status_code = 200
         mock_get.return_value.json.return_value = response
-        assert self.extractor.download(make_item(self.VALID_EXAMPLE_URL)) == False
+        assert self.extractor.download(make_item(self.VALID_EXAMPLE_URL)) is False
         mock_get.assert_called_once()
         mock_get.return_value.json.assert_called_once()
         mock_logger.error.assert_called_once()
@@ -86,7 +86,7 @@ class TestTiktokTikwmExtractor(TestExtractorBase):
 
         result = self.extractor.download(make_item(self.VALID_EXAMPLE_URL))
         if not has_vid:
-            assert result == False
+            assert result is False
         else:
             assert result.is_success()
             assert len(result.media) == 1
@@ -99,7 +99,7 @@ class TestTiktokTikwmExtractor(TestExtractorBase):
         else:
             mock_logger.error.assert_not_called()
 
-    def test_correct_extraction(self, mocker, make_item):
+    def test_correct_data_extracted(self, mocker, make_item):
         mock_get, _ = self.get_mockers(mocker)
         mock_get.return_value.status_code = 200
         mock_get.return_value.json.return_value = {"msg": "success", "data": {

@@ -51,6 +51,7 @@ The invocations below will run the auto-archiver Docker image using a configurat
 docker run --rm -v $PWD/secrets:/app/secrets -v $PWD/local_archive:/app/local_archive bellingcat/auto-archiver
 
 # uses the same configuration, but with the `gsheet_feeder`, a header on row 2 and with some different column names
+# Note this expects you to have followed the [Google Sheets setup](how_to/google_sheets.md) and added your service_account.json to the `secrets/` folder
 # notice that columns is a dictionary so you need to pass it as JSON and it will override only the values provided
 docker run --rm -v $PWD/secrets:/app/secrets -v $PWD/local_archive:/app/local_archive bellingcat/auto-archiver --feeders=gsheet_feeder --gsheet_feeder.sheet="use it on another sheets doc" --gsheet_feeder.header=2 --gsheet_feeder.columns='{"url": "link"}'
 # Runs auto-archiver for the first time, but in 'full' mode, enabling all modules to get a full settings file

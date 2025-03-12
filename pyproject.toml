@@ -96,7 +96,7 @@ markers = [
 #exclude = ["docs"]
 line-length = 120
 # Remove this for a more detailed lint report
-output-format = "concise"
+#output-format = "concise"
 
 
 [tool.ruff.lint]
@@ -104,7 +104,7 @@ output-format = "concise"
 # I : isort
 # UP : upgrade, e.g. use fstrings
 # ANN : annotations
-#extend-select = ["B"]
+extend-select = ["B"]
 
 # Ignore unused imports as some are currently required for lazy loading
 # This can be removed for a `lint check` run which is manually reviewed

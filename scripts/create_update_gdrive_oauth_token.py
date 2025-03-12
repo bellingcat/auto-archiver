@@ -1,5 +1,6 @@
 import os.path
-import click, json
+import click
+import json
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
