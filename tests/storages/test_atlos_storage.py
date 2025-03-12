@@ -90,7 +90,7 @@ def test_upload_not_uploaded(tmp_path, atlos_storage: AtlosStorage, metadata: Me
 
     get_mock.assert_called_once()
     post_mock.assert_called_once()
-    expected_endpoint = f"/api/v2/source_material/upload/202"
+    expected_endpoint = "/api/v2/source_material/upload/202"
     call_args = post_mock.call_args[0]
     assert call_args[0] == expected_endpoint
     call_kwargs = post_mock.call_args[1]

@@ -79,7 +79,7 @@ def test_enrich_handles_probe_failure(thumbnail_enricher, metadata_with_video, m
 
     thumbnail_enricher.enrich(metadata_with_video)
     # Ensure error was logged
-    mock_logger.assert_called_with(f"error getting duration of video video.mp4: Probe error")
+    mock_logger.assert_called_with("error getting duration of video video.mp4: Probe error")
     # Ensure no thumbnails were created
     thumbnails = metadata_with_video.media[0].get("thumbnails")
     assert thumbnails is None
