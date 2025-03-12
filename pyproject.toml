@@ -95,6 +95,9 @@ markers = [
 [tool.ruff]
 #exclude = ["docs"]
 line-length = 120
+# Remove this for a more detailed lint report
+output-format = "concise"
+
 
 [tool.ruff.lint]
 #add bugbear?
@@ -103,8 +106,9 @@ line-length = 120
 # ANN : annotations
 #extend-select = ["B"]
 
-# E701 - multiple statements on one line (I vote to keep this but I notice it's used quite a lot!)
-ignore = []
+# Ignore unused imports as some are currently required for lazy loading
+# This can be removed for a `lint check` run which is manually reviewed
+ignore = ["F401"]
 
 [tool.ruff.lint.per-file-ignores]
 # Ignore import violations in __init__.py files
