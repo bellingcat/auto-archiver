@@ -194,7 +194,7 @@ class LazyBaseModule:
             try:
                 manifest.update(ast.literal_eval(f.read()))
             except (ValueError, TypeError, SyntaxError, MemoryError, RecursionError) as e:
-                raise ValueError(f"Error loading manifest from file {self.path}/{MANIFEST_FILE}: {e}")
+                raise ValueError(f"Error loading manifest from file {self.path}/{MANIFEST_FILE}: {e}") from e
 
         self._manifest = manifest
         self._entry_point = manifest["entry_point"]

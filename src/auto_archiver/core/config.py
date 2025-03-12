@@ -65,7 +65,7 @@ class AuthenticationJsonParseAction(argparse.Action):
             auth_dict = json.loads(values)
             setattr(namespace, self.dest, auth_dict)
         except json.JSONDecodeError as e:
-            raise argparse.ArgumentTypeError(f"Invalid JSON input for argument '{self.dest}': {e}")
+            raise argparse.ArgumentTypeError(f"Invalid JSON input for argument '{self.dest}': {e}") from e
 
         def load_from_file(path):
             try:

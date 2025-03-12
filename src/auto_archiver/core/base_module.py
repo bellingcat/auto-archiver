@@ -59,7 +59,8 @@ class BaseModule(ABC):
             setattr(self, key, val)
 
     def setup(self):
-        # For any additional setup required by modules, e.g. autehntication
+        # For any additional setup required by modules outside of the configs in the manifesst,
+        # e.g. authentication
         pass
 
     def auth_for_site(self, site: str, extract_cookies=True) -> Mapping[str, Any]:
@@ -88,7 +89,7 @@ class BaseModule(ABC):
         # TODO: think about if/how we can deal with sites that have multiple domains (main one is x.com/twitter.com)
         # for now the user must enter them both, like "x.com,twitter.com" in their config. Maybe we just hard-code?
 
-        site = UrlUtil.domain_for_url(site).lstrip("www.")
+        site = UrlUtil.domain_for_url(site).removeprefix("www.")
         # add the 'www' version of the site to the list of sites to check
         authdict = {}
 
