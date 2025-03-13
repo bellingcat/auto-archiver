@@ -1,4 +1,3 @@
-import sys
 import pytest
 from auto_archiver.core.module import ModuleFactory, LazyBaseModule
 from auto_archiver.core.base_module import BaseModule

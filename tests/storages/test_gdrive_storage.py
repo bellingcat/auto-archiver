@@ -1,10 +1,8 @@
 from typing import Type
 import pytest
-from oauth2client import service_account
 
 from auto_archiver.core import Media
 from auto_archiver.modules.gdrive_storage import GDriveStorage
-from auto_archiver.core.metadata import Metadata
 from tests.storages.test_storage_base import TestStorageBase
 
 

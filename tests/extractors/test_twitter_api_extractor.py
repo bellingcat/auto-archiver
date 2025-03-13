@@ -1,6 +1,5 @@
 import os
 import datetime
-import hashlib
 import pytest
 
 from pytwitter.models.media import MediaVariant
@@ -10,7 +9,7 @@ from auto_archiver.modules.twitter_api_extractor import TwitterApiExtractor
 
 @pytest.mark.incremental
 class TestTwitterApiExtractor(TestExtractorBase):
-    extractor_module = "twitter_api_extractor"
+    extractor_module: TwitterApiExtractor = "twitter_api_extractor"
 
     config = {
         "bearer_tokens": [],

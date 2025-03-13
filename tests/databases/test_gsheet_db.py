@@ -54,7 +54,7 @@ def mock_media(mocker):
 
 
 @pytest.fixture
-def gsheets_db(mock_gworksheet, setup_module, mocker):
+def gsheets_db(mock_gworksheet, setup_module, mocker) -> GsheetsFeederDB:
     mocker.patch("gspread.service_account")
     config: dict = {
         "sheet": "testsheet",

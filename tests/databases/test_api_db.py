@@ -1,6 +1,5 @@
 import pytest
 
-from auto_archiver.core import Metadata
 from auto_archiver.modules.api_db import AAApiDb
 
 

@@ -486,7 +486,7 @@ Here's how that would look: \n\nsteps:\n  extractors:\n  - [your_extractor_name_
             self.setup(args)
             return self.feed()
         except Exception as e:
-            logger.error(e, exc_info=True)
+            logger.error(e)
             exit(1)
 
     def cleanup(self) -> None:

@@ -1,5 +1,4 @@
 import pytest
-import sys
 from argparse import ArgumentParser, ArgumentTypeError
 from auto_archiver.core.orchestrator import ArchivingOrchestrator
 from auto_archiver.version import __version__

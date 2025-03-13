@@ -98,6 +98,8 @@ markers = [
 line-length = 120
 # Remove this for a more detailed lint report
 output-format = "concise"
+# TODO: temp ignore rule for timestamping_enricher to allow for open PR
+exclude = ["src/auto_archiver/modules/timestamping_enricher/*"]
 
 
 [tool.ruff.lint]
@@ -105,15 +107,12 @@ output-format = "concise"
 # See documentation for more details: https://docs.astral.sh/ruff/rules/
 #extend-select = ["B"]
 
-# Ignore unused imports as some are currently required for lazy loading
-# This can be removed for a `ruff check` run which is manually reviewed
-#ignore = ["F401"]
-
 [tool.ruff.lint.per-file-ignores]
 # Ignore import violations in __init__.py files
 "__init__.py" = ["F401", "F403"]
 # Ignore 'useless expression' in manifest files.
 "__manifest__.py" = ["B018"]
+
 
 [tool.ruff.format]
 docstring-code-format = false

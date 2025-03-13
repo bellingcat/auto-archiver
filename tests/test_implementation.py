@@ -46,7 +46,6 @@ def autoarchiver(tmp_path, monkeypatch, request):
 def test_run_auto_archiver_no_args(caplog, autoarchiver):
     with pytest.raises(SystemExit):
         autoarchiver()
-
     assert "provide at least one URL via the command line, or set up an alternative feeder" in caplog.text
 
 
