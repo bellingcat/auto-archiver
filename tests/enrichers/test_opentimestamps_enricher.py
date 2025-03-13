@@ -109,12 +109,12 @@ def test_verify_timestamp(setup_module, detached_timestamp_file):
     assert len(verification_info["attestations"]) == 2
     
     # Check attestation types
-    assertion_types = [a["type"] for a in verification_info["attestations"]]
+    assertion_types = [a["status"] for a in verification_info["attestations"]]
     assert "pending" in assertion_types
-    assert "bitcoin" in assertion_types
+    assert "confirmed - bitcoin" in assertion_types
     
     # Check Bitcoin attestation details
-    bitcoin_attestation = next(a for a in verification_info["attestations"] if a["type"] == "bitcoin")
+    bitcoin_attestation = next(a for a in verification_info["attestations"] if a["status"] == "confirmed - bitcoin")
     assert bitcoin_attestation["block_height"] == 783000
 
 def test_verify_pending_only(setup_module, pending_timestamp_file):
@@ -125,10 +125,9 @@ def test_verify_pending_only(setup_module, pending_timestamp_file):
     
     assert verification_info["attestation_count"] == 2
     assert verification_info["verified"] == False
-    assert verification_info["pending"] == True
     
     # All attestations should be of type "pending"
-    assert all(a["type"] == "pending" for a in verification_info["attestations"])
+    assert all(a["status"] == "pending" for a in verification_info["attestations"])
     
     # Check URIs of pending attestations
     uris = [a["uri"] for a in verification_info["attestations"]]
@@ -148,7 +147,7 @@ def test_verify_bitcoin_completed(setup_module, verified_timestamp_file):
     
     # Check that the attestation is a Bitcoin attestation
     attestation = verification_info["attestations"][0]
-    assert attestation["type"] == "bitcoin"
+    assert attestation["status"] == "confirmed - bitcoin"
     assert attestation["block_height"] == 783000
 
 def test_full_enriching(setup_module, sample_file_path, sample_media, mocker):
@@ -199,28 +198,6 @@ def test_full_enriching(setup_module, sample_file_path, sample_media, mocker):
     assert timestamp_media.get("verified") == True
     assert timestamp_media.get("attestation_count") == 1
 
-def test_full_enriching_no_calendars(setup_module, sample_file_path, sample_media, mocker):
-    ots = setup_module("opentimestamps_enricher", {"use_calendars": False})
-    
-    # Create test metadata with sample file
-    metadata = Metadata().set_url("https://example.com")
-    sample_media.filename = sample_file_path
-    metadata.add_media(sample_media)
-    
-    # Run enrichment
-    ots.enrich(metadata)
-    
-    # Verify results
-    assert metadata.get("opentimestamped") == True
-    assert metadata.get("opentimestamps_count") == 1
-
-    timestamp_media = metadata.media[0].get("opentimestamp_files")[0]
-    
-    # Verify status should be false since we didn't use calendars
-    assert timestamp_media.get("verified") == False
-    # We expect 3 pending attestations (one for each calendar URL)
-    assert timestamp_media.get("attestation_count") == 3
-
 def test_full_enriching_calendar_error(setup_module, sample_file_path, sample_media, mocker):
     """Test enrichment when calendar servers return errors"""
     # Mock the calendar submission to raise an exception
@@ -239,14 +216,8 @@ def test_full_enriching_calendar_error(setup_module, sample_file_path, sample_me
     ots.enrich(metadata)
     
     # Verify results
-    assert metadata.get("opentimestamped") == True
-    assert metadata.get("opentimestamps_count") == 1
-    
-    # Verify status should be false since calendar submissions failed
-    timestamp_media = metadata.media[0].get("opentimestamp_files")[0]
-    assert timestamp_media.get("verified") == False
-    # We expect 3 pending attestations (one for each calendar URL that's enabled by default in __manifest__)
-    assert timestamp_media.get("attestation_count") == 3
+    assert metadata.get("opentimestamped") == False
+    assert metadata.get("opentimestamps_count") is None
 
 def test_no_files_to_stamp(setup_module):
     """Test enrichment with no files to timestamp"""

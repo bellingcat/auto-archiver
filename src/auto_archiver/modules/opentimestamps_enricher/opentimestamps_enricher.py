@@ -5,7 +5,7 @@ from loguru import logger
 import opentimestamps
 from opentimestamps.calendar import RemoteCalendar, DEFAULT_CALENDAR_WHITELIST
 from opentimestamps.core.timestamp import Timestamp, DetachedTimestampFile
-from opentimestamps.core.notary import PendingAttestation, BitcoinBlockHeaderAttestation
+from opentimestamps.core.notary import PendingAttestation, BitcoinBlockHeaderAttestation, LitecoinBlockHeaderAttestation
 from opentimestamps.core.op import OpSHA256
 from opentimestamps.core import serialize
 from auto_archiver.core import Enricher
@@ -53,44 +53,36 @@ class OpentimestampsEnricher(Enricher):
                 
                 # Submit to calendar servers
                 submitted_to_calendar = False
-                if self.use_calendars:
-                    logger.debug(f"Submitting timestamp to calendar servers for {file_path}")
-                    calendars = []
-                    whitelist = DEFAULT_CALENDAR_WHITELIST
-                    
-                    if self.calendar_whitelist:
-                        whitelist = set(self.calendar_whitelist)
-                    
-                    # Create calendar instances
-                    calendar_urls = []
-                    for url in self.calendar_urls:
-                        if url in whitelist:
-                            calendars.append(RemoteCalendar(url))
-                            calendar_urls.append(url)
-                    
-                    # Submit the hash to each calendar
-                    for calendar in calendars:
-                        try:
-                            calendar_timestamp = calendar.submit(file_hash)
-                            timestamp.merge(calendar_timestamp)
-                            logger.debug(f"Successfully submitted to calendar: {calendar.url}")
-                            submitted_to_calendar = True
-                        except Exception as e:
-                            logger.warning(f"Failed to submit to calendar {calendar.url}: {e}")
-                    
-                    # If all calendar submissions failed, add pending attestations
-                    if not submitted_to_calendar and not timestamp.attestations:
-                        logger.info("All calendar submissions failed, creating pending attestations")
-                        for url in calendar_urls:
-                            pending = PendingAttestation(url)
-                            timestamp.attestations.add(pending)
-                else:
-                    logger.info("Skipping calendar submission as per configuration")
-                    
-                    # Add dummy pending attestation for testing when calendars are disabled
-                    for url in self.calendar_urls:
-                        pending = PendingAttestation(url)
-                        timestamp.attestations.add(pending)
+
+                logger.debug(f"Submitting timestamp to calendar servers for {file_path}")
+                calendars = []
+                whitelist = DEFAULT_CALENDAR_WHITELIST
+                
+                if self.calendar_whitelist:
+                    whitelist = set(self.calendar_whitelist)
+                
+                # Create calendar instances
+                calendar_urls = []
+                for url in self.calendar_urls:
+                    if url in whitelist:
+                        calendars.append(RemoteCalendar(url))
+                        calendar_urls.append(url)
+                
+                # Submit the hash to each calendar
+                for calendar in calendars:
+                    try:
+                        calendar_timestamp = calendar.submit(file_hash)
+                        timestamp.merge(calendar_timestamp)
+                        logger.debug(f"Successfully submitted to calendar: {calendar.url}")
+                        submitted_to_calendar = True
+                    except Exception as e:
+                        logger.warning(f"Failed to submit to calendar {calendar.url}: {e}")
+                
+                # If all calendar submissions failed, add pending attestations
+                if not submitted_to_calendar and not timestamp.attestations:
+                    logger.error(f"Failed to submit to any calendar for {file_path}. **This file will not be timestamped.**")
+                    media.set("opentimestamps", False)
+                    continue
                 
                 # Save the timestamp proof to a file
                 timestamp_path = os.path.join(self.tmp_dir, f"{os.path.basename(file_path)}.ots")
@@ -110,13 +102,9 @@ class OpentimestampsEnricher(Enricher):
                 timestamp_media.mimetype = "application/vnd.opentimestamps"
                 timestamp_media.set("opentimestamps_version", opentimestamps.__version__)
                 
-                # Verify the timestamp if needed
-                if self.verify_timestamps:
-                    verification_info = self.verify_timestamp(detached_timestamp)
-                    for key, value in verification_info.items():
-                        timestamp_media.set(key, value)
-                else:
-                    logger.warning(f"Not verifying the timestamp for media file {file_path}")
+                verification_info = self.verify_timestamp(detached_timestamp)
+                for key, value in verification_info.items():
+                    timestamp_media.set(key, value)
                 
                 media.set("opentimestamp_files", [timestamp_media])
                 timestamp_files.append(timestamp_media.filename)
@@ -132,6 +120,7 @@ class OpentimestampsEnricher(Enricher):
             to_enrich.set("opentimestamps_count", len(timestamp_files))
             logger.success(f"{len(timestamp_files)} OpenTimestamps proofs created for {url=}")
         else:
+            to_enrich.set("opentimestamped", False)
             logger.warning(f"No successful timestamps created for {url=}")
     
     def verify_timestamp(self, detached_timestamp):
@@ -157,11 +146,14 @@ class OpentimestampsEnricher(Enricher):
                 
                 # Process different types of attestations
                 if isinstance(attestation, PendingAttestation):
-                    info["type"] = f"pending"
+                    info["status"] = "pending"
                     info["uri"] = attestation.uri
                 
                 elif isinstance(attestation, BitcoinBlockHeaderAttestation):
-                    info["type"] = "bitcoin"
+                    info["status"] = "confirmed - bitcoin"
+                    info["block_height"] = attestation.height
+                elif isinstance(attestation, LitecoinBlockHeaderAttestation):
+                    info["status"] = "confirmed - litecoin"
                     info["block_height"] = attestation.height
 
                 info["last_check"] = datetime.datetime.now().isoformat()[:-7]
@@ -171,14 +163,12 @@ class OpentimestampsEnricher(Enricher):
             result["attestations"] = attestation_info
             
             # For at least one confirmed attestation
-            if any(a.get("type") == "bitcoin" for a in attestation_info):
+            if any("confirmed" in a.get("status") for a in attestation_info):
                 result["verified"] = True
             else:
                 result["verified"] = False
-                result["pending"] = True
         else:
             result["verified"] = False
-            result["pending"] = False
         result["last_updated"] = datetime.datetime.now().isoformat()[:-7]
         
         return result
