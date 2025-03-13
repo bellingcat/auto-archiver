@@ -1,1 +1,0 @@
-from .tiktok_tikwm_extractor import TiktokTikwmExtractor
