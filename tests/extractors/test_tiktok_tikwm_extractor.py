@@ -56,8 +56,8 @@ class TestTiktokTikwmExtractor(TestExtractorBase):
         mock_logger.error.assert_called_once()
         assert mock_logger.error.call_args[0][0].startswith("failed to parse JSON response")
 
-        mock_get.return_value.json.side_effect = ValueError
-        with pytest.raises(ValueError):
+        mock_get.return_value.json.side_effect = Exception
+        with pytest.raises(Exception):
             self.extractor.download(make_item(self.VALID_EXAMPLE_URL))
         mock_get.assert_called()
         assert mock_get.call_count == 2
