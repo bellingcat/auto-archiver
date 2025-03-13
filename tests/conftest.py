@@ -22,7 +22,9 @@ TESTS_TO_RUN_LAST = ["test_twitter_api_archiver"]
 
 @pytest.fixture
 def setup_module(request):
-    def _setup_module(module_name, config={}):
+    def _setup_module(module_name, config=None):
+        if config is None:
+            config = {}
         module_factory = ModuleFactory()
 
         if isinstance(module_name, type):

@@ -12,11 +12,12 @@ class TiktokTikwmExtractor(Extractor):
     """
     Extractor for TikTok that uses an unofficial API and can capture content that requires a login, like sensitive content.
     """
+
     TIKWM_ENDPOINT = "https://www.tikwm.com/api/?url={url}"
 
     def download(self, item: Metadata) -> bool | Metadata:
         url = item.get_url()
-        
+
         if not re.match(TikTokIE._VALID_URL, url):
             return False
 
@@ -33,7 +34,7 @@ class TiktokTikwmExtractor(Extractor):
             logger.error(f"failed to parse JSON response from tikwm.com for {url=}")
             return False
 
-        if not json_response.get('msg') == 'success' or not (api_data := json_response.get('data', {})):
+        if not json_response.get("msg") == "success" or not (api_data := json_response.get("data", {})):
             logger.error(f"failed to get a valid response from tikwm.com for {url=}: {json_response}")
             return False
 
@@ -67,7 +68,7 @@ class TiktokTikwmExtractor(Extractor):
         if created_at := api_data.pop("create_time", None):
             result.set_timestamp(datetime.fromtimestamp(created_at, tz=timezone.utc))
 
-        if (author := api_data.pop("author", None)):
+        if author := api_data.pop("author", None):
             result.set("author", author)
 
         result.set("api_data", api_data)

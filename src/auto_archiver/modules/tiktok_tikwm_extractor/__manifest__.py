@@ -2,10 +2,7 @@
     "name": "Tiktok Tikwm Extractor",
     "type": ["extractor"],
     "requires_setup": False,
-    "dependencies": {
-        "python": ["loguru", "requests"],
-        "bin": []
-    },
+    "dependencies": {"python": ["loguru", "requests"], "bin": []},
     "description": """
     Uses an unofficial TikTok video download platform's API to download videos: https://tikwm.com/
 	
@@ -19,5 +16,5 @@
     - If tikwm.com is down, this extractor will not work.
 	- If tikwm.com changes their API, this extractor may break.
 	- If no video is found, this extractor will consider the extraction failed.
-    """
+    """,
 }
