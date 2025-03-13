@@ -35,7 +35,7 @@ https://opentimestamps.org/#calendars",
     the '.ots' extension.
 
     ### Features
-    - Creates cryptographic timestamp proofs that link files to the Bitcoin or Litecoin blockchain
+    - Creates cryptographic timestamp proofs that link files to the Bitcoin
     - Verifies timestamp proofs have been submitted to the blockchain (note: does not confirm they have been *added*)
     - Can use multiple calendar servers to ensure reliability and redundancy
     - Stores timestamp proofs alongside original files for future verification
@@ -48,7 +48,7 @@ https://opentimestamps.org/#calendars",
 
     There are two possible statuses for a timestamp:
     - `Pending`: The timestamp has been submitted to the calendar server but has not yet been confirmed in the Bitcoin blockchain.
-    - `Confirmed`: The timestamp has been confirmed in the Bitcoin or Litecoin blockchain.
+    - `Confirmed`: The timestamp has been confirmed in the Bitcoin blockchain.
 
     ### Upgrading Timestamps
     To upgrade a timestamp from 'pending' to 'confirmed', you can use the `ots upgrade` command from the opentimestamps-client package

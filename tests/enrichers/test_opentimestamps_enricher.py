@@ -111,10 +111,10 @@ def test_verify_timestamp(setup_module, detached_timestamp_file):
     # Check attestation types
     assertion_types = [a["status"] for a in verification_info["attestations"]]
     assert "pending" in assertion_types
-    assert "confirmed - bitcoin" in assertion_types
+    assert "confirmed" in assertion_types
     
     # Check Bitcoin attestation details
-    bitcoin_attestation = next(a for a in verification_info["attestations"] if a["status"] == "confirmed - bitcoin")
+    bitcoin_attestation = next(a for a in verification_info["attestations"] if a["status"] == "confirmed")
     assert bitcoin_attestation["block_height"] == 783000
 
 def test_verify_pending_only(setup_module, pending_timestamp_file):
@@ -147,7 +147,7 @@ def test_verify_bitcoin_completed(setup_module, verified_timestamp_file):
     
     # Check that the attestation is a Bitcoin attestation
     attestation = verification_info["attestations"][0]
-    assert attestation["status"] == "confirmed - bitcoin"
+    assert attestation["status"] == "confirmed"
     assert attestation["block_height"] == 783000
 
 def test_full_enriching(setup_module, sample_file_path, sample_media, mocker):

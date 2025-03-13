@@ -1,16 +1,15 @@
 import os
-import datetime
 
 from loguru import logger
 import opentimestamps
 from opentimestamps.calendar import RemoteCalendar, DEFAULT_CALENDAR_WHITELIST
 from opentimestamps.core.timestamp import Timestamp, DetachedTimestampFile
-from opentimestamps.core.notary import PendingAttestation, BitcoinBlockHeaderAttestation, LitecoinBlockHeaderAttestation
+from opentimestamps.core.notary import PendingAttestation, BitcoinBlockHeaderAttestation
 from opentimestamps.core.op import OpSHA256
 from opentimestamps.core import serialize
 from auto_archiver.core import Enricher
 from auto_archiver.core import Metadata, Media
-from auto_archiver.utils.misc import calculate_file_hash
+from auto_archiver.utils.misc import get_current_timestamp
 
 class OpentimestampsEnricher(Enricher):
 
@@ -34,8 +33,8 @@ class OpentimestampsEnricher(Enricher):
                     continue
                 
                 # Create timestamp for the file - hash is SHA256
-                # Note: ONLY SHA256 is used/supported here. Opentimestamps supports other hashes, but not SHA3-512
-                # see opentimestamps.core.op
+                # Note: hash is hard-coded to SHA256 and does not use hash_enricher to set it.
+                # SHA256 is the recommended hash, ref: https://github.com/bellingcat/auto-archiver/pull/247#discussion_r1992433181
                 logger.debug(f"Creating timestamp for {file_path}")
                 file_hash = None
                 with open(file_path, 'rb') as f:
@@ -150,13 +149,10 @@ class OpentimestampsEnricher(Enricher):
                     info["uri"] = attestation.uri
                 
                 elif isinstance(attestation, BitcoinBlockHeaderAttestation):
-                    info["status"] = "confirmed - bitcoin"
-                    info["block_height"] = attestation.height
-                elif isinstance(attestation, LitecoinBlockHeaderAttestation):
-                    info["status"] = "confirmed - litecoin"
+                    info["status"] = "confirmed"
                     info["block_height"] = attestation.height
 
-                info["last_check"] = datetime.datetime.now().isoformat()[:-7]
+                info["last_check"] = get_current_timestamp()
                 
                 attestation_info.append(info)
             
@@ -169,6 +165,6 @@ class OpentimestampsEnricher(Enricher):
                 result["verified"] = False
         else:
             result["verified"] = False
-        result["last_updated"] = datetime.datetime.now().isoformat()[:-7]
+        result["last_updated"] = get_current_timestamp()
         
         return result
