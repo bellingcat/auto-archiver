@@ -165,7 +165,6 @@ def test_full_enriching(setup_module, sample_file_path, sample_media, mocker):
         return test_timestamp
     
     mock_calendar.side_effect = side_effect
-    
 
     ots = setup_module("opentimestamps_enricher")
     
@@ -197,6 +196,32 @@ def test_full_enriching(setup_module, sample_file_path, sample_media, mocker):
     # Check verification results on the timestamp media
     assert timestamp_media.get("verified") == True
     assert timestamp_media.get("attestation_count") == 1
+
+def test_full_enriching_one_calendar_error(setup_module, sample_file_path, sample_media, mocker, pending_timestamp_file):
+    """Test enrichment when one calendar server returns an error"""
+    # Mock the calendar submission to raise an exception
+    mock_calendar = mocker.patch.object(RemoteCalendar, 'submit')
+    
+    test_timestamp = Timestamp(bytes.fromhex("583988e03646c26fa290c5c2408540a2f4e2aa9be087aa4546aefb531385b935"))
+        # Add a bitcoin attestation to the test timestamp
+    bitcoin = BitcoinBlockHeaderAttestation(783000)
+    test_timestamp.attestations.add(bitcoin)
+
+    mock_calendar.side_effect = [test_timestamp, Exception("Calendar server error")]
+
+    ots = setup_module("opentimestamps_enricher", {"calendar_urls": ["https://alice.btc.calendar.opentimestamps.org", "https://bob.btc.calendar.opentimestamps.org"]})
+    
+    # Create test metadata with sample file
+    metadata = Metadata().set_url("https://example.com")
+    sample_media.filename = sample_file_path
+    metadata.add_media(sample_media)
+    
+    # Run enrichment (should complete despite calendar errors)
+    ots.enrich(metadata)
+    
+    # Verify results
+    assert metadata.get("opentimestamped") == True
+    assert metadata.get("opentimestamps_count") == 1 # only alice worked, not bob
 
 def test_full_enriching_calendar_error(setup_module, sample_file_path, sample_media, mocker):
     """Test enrichment when calendar servers return errors"""
