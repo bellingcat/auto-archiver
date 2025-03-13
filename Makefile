@@ -13,7 +13,9 @@ help:
 	@echo "  make ruff-clean   - Auto-fix Ruff linting and formatting issues"
 	@echo "  make docs         - Generate documentation (same as 'make html')"
 	@echo "  make clean-docs   - Remove generated docs"
-	@echo "  make docker-run   - Run the Docker container"
+	@echo "  make docker-build - Build the Auto Archiver Docker image"
+	@echo "  make docker-compose - Run Auto Archiver with Docker Compose"
+	@echo "  make docker-compose-rebuild - Rebuild and run Auto Archiver with Docker Compose"
 	@echo "  make show-docs    - Build and open the documentation in a browser"
 
 
@@ -56,12 +58,20 @@ show-docs:
 	@echo "Opening documentation in browser..."
 	@open "$(BUILDDIR)/html/index.html"
 
+.PHONY: docker-build
+docker-build:
+	@echo "Building local Auto Archiver Docker image..."
+	@docker compose build  # Uses the same build context as docker-compose.yml
 
-# Run Docker with default settings
-.PHONY: docker-run
-docker-run:
-	@echo "Running Auto Archiver Docker container..."
-	@docker run --rm -v $PWD/secrets:/app/secrets -v $PWD/local_archive:/app/local_archive bellingcat/auto-archiver
+.PHONY: docker-compose
+docker-compose:
+	@echo "Running Auto Archiver with Docker Compose..."
+	@docker compose up
+
+.PHONY: docker-compose-rebuild
+docker-compose-rebuild:
+	@echo "Rebuilding and running Auto Archiver with Docker Compose..."
+	@docker compose up --build
 
 # Catch-all for Sphinx commands
 .PHONY: Makefile
