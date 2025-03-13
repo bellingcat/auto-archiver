@@ -14,7 +14,7 @@ class Tiktok(GenericDropin):
 
     def extract_post(self, url: str, ie_instance):
 
-        logger.debug("Using Tikwm API to attempt to download tiktok video from {url=}")
+        logger.debug(f"Using Tikwm API to attempt to download tiktok video from {url=}")
 
         endpoint = self.TIKWM_ENDPOINT.format(url=url)
 
