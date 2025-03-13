@@ -7,6 +7,12 @@ from auto_archiver.modules.whisper_enricher import WhisperEnricher
 TEST_S3_URL = "http://cdn.example.com/test.mp4"
 
 
+@pytest.fixture(autouse=True)
+def mock_sleep(mocker):
+    """Mock time.sleep to avoid delays."""
+    return mocker.patch("time.sleep")
+
+
 @pytest.fixture
 def enricher(mocker):
     """Fixture with mocked S3 and API dependencies"""

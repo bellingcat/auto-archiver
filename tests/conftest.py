@@ -145,9 +145,9 @@ def sample_datetime():
     return datetime(2023, 1, 1, 12, 0, tzinfo=timezone.utc)
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture
 def mock_sleep(mocker):
-    """Globally mock time.sleep to avoid delays."""
+    """Mock time.sleep to avoid delays."""
     return mocker.patch("time.sleep")
 
 

@@ -6,6 +6,12 @@ from auto_archiver.modules.gdrive_storage import GDriveStorage
 from tests.storages.test_storage_base import TestStorageBase
 
 
+@pytest.fixture(autouse=True)
+def mock_sleep(mocker):
+    """Mock time.sleep to avoid delays."""
+    return mocker.patch("time.sleep")
+
+
 @pytest.fixture
 def gdrive_storage(setup_module, mocker) -> GDriveStorage:
     module_name: str = "gdrive_storage"

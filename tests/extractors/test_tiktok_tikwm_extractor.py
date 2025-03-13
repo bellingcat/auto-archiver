@@ -151,14 +151,10 @@ class TestTiktokTikwmExtractor(TestExtractorBase):
         assert result.get("timestamp") == datetime.fromtimestamp(1741122000, tz=timezone.utc)
 
     @pytest.mark.download
-    def test_download_sensitive_video(self, make_item, mock_sleep):
-        # sleep is needed because of the rate limit
-        mock_sleep.stop()
-        time.sleep(1.1)
-        mock_sleep.start()
-
+    def test_download_sensitive_video(self, make_item):
         url = "https://www.tiktok.com/@ggs68taiwan.official/video/7441821351142362375"
-
+        # Required for rate limiting
+        time.sleep(1.1)
         result = self.extractor.download(make_item(url))
         assert result.is_success()
         assert len(result.media) == 2

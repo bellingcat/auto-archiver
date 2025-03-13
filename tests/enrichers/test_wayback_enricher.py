@@ -5,6 +5,12 @@ from auto_archiver.modules.wayback_extractor_enricher import WaybackExtractorEnr
 from auto_archiver.core import Metadata
 
 
+@pytest.fixture(autouse=True)
+def mock_sleep(mocker):
+    """Mock time.sleep to avoid delays."""
+    return mocker.patch("time.sleep")
+
+
 @pytest.fixture
 def mock_is_auth_wall(mocker):
     """Fixture to mock is_auth_wall behavior."""

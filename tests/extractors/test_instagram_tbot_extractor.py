@@ -7,6 +7,12 @@ from auto_archiver.modules.instagram_tbot_extractor import InstagramTbotExtracto
 from tests.extractors.test_extractor_base import TestExtractorBase
 
 
+@pytest.fixture(autouse=True)
+def mock_sleep(mocker):
+    """Mock time.sleep to avoid delays."""
+    return mocker.patch("time.sleep")
+
+
 @pytest.fixture
 def patch_extractor_methods(request, setup_module, mocker):
     mocker.patch.object(InstagramTbotExtractor, "_prepare_session_file", return_value=None)
