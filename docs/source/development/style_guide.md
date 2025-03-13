@@ -1,11 +1,11 @@
 # Style Guide
 
 
-## Ruff
-The project uses [ruff](https://docs.astral.sh/ruff/) for linting and  formatting.
-Our style configurations are set in the `pyproject.toml` file, and can be modified from there.
+The project uses [Ruff](https://docs.astral.sh/ruff/) for linting and  formatting.
+Our style configurations are set in the `pyproject.toml` file. If needed, you can modify them there.
 
-### Formatting
+
+### **Formatting (Auto-Run Before Commit) 🛠️**  
 
 We have a pre-commit hook to run the formatter before you commit.
 This requires you to set it up once locally, then it will run automatically when you commit changes.
@@ -14,20 +14,24 @@ This requires you to set it up once locally, then it will run automatically when
 poetry run pre-commit install
 ```
 
-Ruff can also be [integrated with most editors](https://docs.astral.sh/ruff/editors/setup/) to run automatically.
+Ruff can also be to run automatically.
+Alternative: Ruff can also be [integrated with most editors](https://docs.astral.sh/ruff/editors/setup/)  for real-time formatting.
 
-### Linting
+### **Linting (Check Before Pushing) 🔍**
 
 We recommend you also run the linter before pushing code. 
 
-We have Makefile commands to run common tasks (Note if you're on Windows you might need to install `make` first, or alternatively you can use ruff commands directly):
+We have [Makefile](../../../Makefile) commands to run common tasks. 
 
-This outputs a report of any issues found:
+Tip: if you're on Windows you might need to install `make` first, or alternatively you can use ruff commands directly.
+
+
+**Lint Check:** This outputs a report of any issues found, without attempting to fix them: 
 ```shell
 make ruff-check
 ```
 
-To see a more detailed linting report, you can remove the following line from the `pyproject.toml` file:
+Tip: To see a more detailed linting report, you can remove the following line from the `pyproject.toml` file:
 ```toml
 [tool.ruff]
 
@@ -35,27 +39,22 @@ To see a more detailed linting report, you can remove the following line from th
 output-format = "concise"
 ```
 
-**Lint Fix**
+**Lint Fix:** This command will attempt to fix some of the issues it picked up with the lint check.
 
-This command will attempt to fix any issues it can:
+Note not all warnings can be fixed automatically.
 
 ⚠️ Warning: This can cause breaking changes. ⚠️
 
-Ensure you check any modifications by this before committing them.
+Most fixes are safe, but some non-standard practices such as dynamic loading are not picked up by linters. Ensure you check any modifications by this before committing them.
 ```shell
 make ruff-fix
 ```
 
-**Note:** If you're on Windows you might not have `make` installed by default.
-This is included with [Git for Windows](https://gitforwindows.org/) or you can install make via [Chocolatey](https://chocolatey.org/):
-```shell
-choco install make
-```
+**Changing Configurations ⚙️**
 
-**Changing the configs**
 
-Our rules are quite lenient for general usage, but if you want to explore more rigorous checks you can check out the [ruff documentation](https://docs.astral.sh/ruff/configuration/).
-You can then run checks with additional rules to see more nuanced errors which you can review manually.
+Our rules are quite lenient for general usage, but if you want to run more rigorous checks you can then run checks with additional rules to see more nuanced errors which you can review manually.
+Check out the [ruff documentation](https://docs.astral.sh/ruff/configuration/) for the full list of rules.
 One example is to extend the selected rules for linting the `pyproject.toml` file:
 
 ```toml 
