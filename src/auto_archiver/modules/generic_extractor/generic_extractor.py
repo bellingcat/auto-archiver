@@ -346,9 +346,10 @@ class GenericExtractor(Extractor):
                 ydl_options.extend(('--cookies', auth['cookies_file']))
 
         if self.ytdlp_args:
+            logger.debug("Adding additional ytdlp arguments: {self.ytdlp_args}")
             ydl_options += self.ytdlp_args.split(" ")
 
-        _, _, _, validated_options = yt_dlp.parse_options(ydl_options)
+        *_, validated_options = yt_dlp.parse_options(ydl_options)
         ydl = yt_dlp.YoutubeDL(validated_options) # allsubtitles and subtitleslangs not working as expected, so default lang is always "en"
 
         for info_extractor in self.suitable_extractors(url):
