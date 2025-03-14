@@ -1,16 +1,21 @@
 {
     "name": "Instagram Telegram Bot Extractor",
     "type": ["extractor"],
-    "dependencies": {"python": ["loguru", "telethon",],
-                              },
+    "dependencies": {
+        "python": [
+            "loguru",
+            "telethon",
+        ],
+    },
     "requires_setup": True,
     "configs": {
-            "api_id": {"default": None, "help": "telegram API_ID value, go to https://my.telegram.org/apps"},
-            "api_hash": {"default": None, "help": "telegram API_HASH value, go to https://my.telegram.org/apps"},
-            "session_file": {"default": "secrets/anon-insta", "help": "optional, records the telegram login session for future usage, '.session' will be appended to the provided value."},
-            "timeout": {"default": 45,
-                        "type": "int",
-                        "help": "timeout to fetch the instagram content in seconds."},
+        "api_id": {"default": None, "help": "telegram API_ID value, go to https://my.telegram.org/apps"},
+        "api_hash": {"default": None, "help": "telegram API_HASH value, go to https://my.telegram.org/apps"},
+        "session_file": {
+            "default": "secrets/anon-insta",
+            "help": "optional, records the telegram login session for future usage, '.session' will be appended to the provided value.",
+        },
+        "timeout": {"default": 45, "type": "int", "help": "timeout to fetch the instagram content in seconds."},
     },
     "description": """
 The `InstagramTbotExtractor` module uses a Telegram bot (`instagram_load_bot`) to fetch and archive Instagram content,

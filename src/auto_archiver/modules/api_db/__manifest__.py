@@ -11,8 +11,7 @@
             "required": True,
             "help": "API endpoint where calls are made to",
         },
-        "api_token": {"default": None,
-                      "help": "API Bearer token."},
+        "api_token": {"default": None, "help": "API Bearer token."},
         "public": {
             "default": False,
             "type": "bool",

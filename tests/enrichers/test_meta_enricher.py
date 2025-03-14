@@ -1,4 +1,3 @@
-import datetime
 from datetime import datetime, timedelta, timezone
 
 import pytest
@@ -15,6 +14,7 @@ def mock_metadata(mocker):
     mock.is_empty.return_value = False  # Default to not empty
     mock.get_all_media.return_value = []
     return mock
+
 
 @pytest.fixture
 def mock_media(mocker):
@@ -59,6 +59,7 @@ def test_enrich_file_sizes(meta_enricher, metadata, tmp_path):
     assert metadata.get("total_bytes") == 3000
     assert metadata.get("total_size") == "2.9 KB"
 
+
 @pytest.mark.parametrize(
     "size, expected",
     [
@@ -73,6 +74,7 @@ def test_human_readable_bytes(size, expected):
     """Test that human_readable_bytes() converts sizes correctly."""
     enricher = MetaEnricher()
     assert enricher.human_readable_bytes(size) == expected
+
 
 def test_enrich_file_sizes_no_media(meta_enricher, metadata):
     """Test that enrich_file_sizes() handles empty media list gracefully."""

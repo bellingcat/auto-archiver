@@ -1,0 +1,10 @@
+# Run Ruff formatter on commits.
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.9.10
+    hooks:
+      - id: ruff-format
+
+      # Runs Ruff linting - just checks without fixing, but blocks commit if errors are found.
+#      - id: ruff
+#        args: ["--output-format=concise"]

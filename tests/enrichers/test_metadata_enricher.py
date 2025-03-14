@@ -1,4 +1,3 @@
-
 import pytest
 
 from auto_archiver.core import Media
@@ -33,9 +32,7 @@ def test_get_metadata(enricher, output, expected, mocker):
 
     result = enricher.get_metadata("test.jpg")
     assert result == expected
-    mock_run.assert_called_once_with(
-        ["exiftool", "test.jpg"], capture_output=True, text=True
-    )
+    mock_run.assert_called_once_with(["exiftool", "test.jpg"], capture_output=True, text=True)
 
 
 def test_get_metadata_exiftool_not_found(enricher, mocker):
@@ -85,4 +82,3 @@ def test_metadata_pickle(enricher, unpickle, mocker):
     actual_media = metadata.media
     assert len(expected_media) == len(actual_media)
     assert actual_media[0].properties.get("metadata") == expected_media[0].properties.get("metadata")
-

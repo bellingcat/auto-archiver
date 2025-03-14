@@ -23,7 +23,6 @@ from __future__ import annotations
 from abc import abstractmethod
 from typing import IO
 import os
-import platform
 
 from loguru import logger
 from slugify import slugify
@@ -33,16 +32,16 @@ from auto_archiver.utils.misc import random_str
 from auto_archiver.core import Media, BaseModule, Metadata
 from auto_archiver.modules.hash_enricher.hash_enricher import HashEnricher
 
+
 class Storage(BaseModule):
-    
     """
     Base class for implementing storage modules in the media archiving framework.
 
     Subclasses must implement the `get_cdn_url` and `uploadf` methods to define their behavior.
     """
 
-    def store(self, media: Media, url: str, metadata: Metadata=None) -> None:
-        if media.is_stored(in_storage=self): 
+    def store(self, media: Media, url: str, metadata: Metadata = None) -> None:
+        if media.is_stored(in_storage=self):
             logger.debug(f"{media.key} already stored, skipping")
             return
 
@@ -74,18 +73,18 @@ class Storage(BaseModule):
         This method should not be called directly, but instead be called through the 'store' method,
         which sets up the media for storage.
         """
-        logger.debug(f'[{self.__class__.__name__}] storing file {media.filename} with key {media.key}')
-        with open(media.filename, 'rb') as f:
+        logger.debug(f"[{self.__class__.__name__}] storing file {media.filename} with key {media.key}")
+        with open(media.filename, "rb") as f:
             return self.uploadf(f, media, **kwargs)
 
     def set_key(self, media: Media, url: str, metadata: Metadata) -> None:
         """takes the media and optionally item info and generates a key"""
-        
+
         if media.key is not None and len(media.key) > 0:
             # media key is already set
             return
 
-        folder = metadata.get_context('folder', '')
+        folder = metadata.get_context("folder", "")
         filename, ext = os.path.splitext(media.filename)
 
         # Handle path_generator logic
@@ -105,12 +104,11 @@ class Storage(BaseModule):
             filename = random_str(24)
         elif filename_generator == "static":
             # load the hash_enricher module
-            he = self.module_factory.get_module("hash_enricher", self.config)
+            he: HashEnricher = self.module_factory.get_module("hash_enricher", self.config)
             hd = he.calculate_hash(media.filename)
             filename = hd[:24]
         else:
             raise ValueError(f"Invalid filename_generator: {filename_generator}")
-        
-        key = os.path.join(folder, path, f"{filename}{ext}")
 
+        key = os.path.join(folder, path, f"{filename}{ext}")
         media._key = key
