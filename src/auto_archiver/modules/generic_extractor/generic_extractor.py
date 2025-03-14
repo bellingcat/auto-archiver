@@ -398,7 +398,7 @@ class GenericExtractor(Extractor):
 
         ydl_options = [
             "-o",
-            os.path.join(self.tmp_dir, f"%(id)s.%(ext)s"),
+            os.path.join(self.tmp_dir, "%(id)s.%(ext)s"),
             "--quiet",
             "--no-playlist" if not self.allow_playlist else "--yes-playlist",
             "--write-subs" if self.subtitles else "--no-write-subs",

@@ -4,7 +4,7 @@ repos:
     rev: v0.9.10
     hooks:
         - id: ruff
-          args: [ --fix ]
+          args: [ --fix, --output-format=github]
         - id: ruff-format
 
 
