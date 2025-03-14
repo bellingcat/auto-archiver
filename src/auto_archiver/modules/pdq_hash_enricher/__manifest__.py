@@ -17,5 +17,5 @@
     ### Notes
     - Best used after enrichers like `thumbnail_enricher` or `screenshot_enricher` to ensure images are available.
     - Uses the `pdqhash` library to compute 256-bit perceptual hashes, which are stored as hexadecimal strings.
-    """
+    """,
 }

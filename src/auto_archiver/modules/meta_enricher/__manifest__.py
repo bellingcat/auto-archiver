@@ -3,7 +3,7 @@
     "type": ["enricher"],
     "requires_setup": False,
     "dependencies": {
-                          "python": ["loguru"],
+        "python": ["loguru"],
     },
     "description": """ 
     Adds metadata information about the archive operations, Adds metadata about archive operations, including file sizes and archive duration./

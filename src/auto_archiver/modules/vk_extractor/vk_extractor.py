@@ -7,7 +7,7 @@ from auto_archiver.core import Metadata, Media
 
 
 class VkExtractor(Extractor):
-    """"
+    """ "
     VK videos are handled by YTDownloader, this archiver gets posts text and images.
     Currently only works for /wall posts
     """
@@ -18,11 +18,13 @@ class VkExtractor(Extractor):
     def download(self, item: Metadata) -> Metadata:
         url = item.get_url()
 
-        if "vk.com" not in item.netloc: return False
+        if "vk.com" not in item.netloc:
+            return False
 
         # some urls can contain multiple wall/photo/... parts and all will be fetched
         vk_scrapes = self.vks.scrape(url)
-        if not len(vk_scrapes): return False
+        if not len(vk_scrapes):
+            return False
         logger.debug(f"VK: got {len(vk_scrapes)} scraped instances")
 
         result = Metadata()

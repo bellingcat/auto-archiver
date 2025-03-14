@@ -3,21 +3,28 @@
     "type": ["extractor"],
     "requires_setup": True,
     "dependencies": {
-        "python": ["requests",
-                   "loguru",
-                   "pytwitter",
-                   "slugify",],
-        "bin": [""]
+        "python": [
+            "requests",
+            "loguru",
+            "pytwitter",
+            "slugify",
+        ],
+        "bin": [""],
     },
     "configs": {
-            "bearer_token": {"default": None, "help": "[deprecated: see bearer_tokens] twitter API bearer_token which is enough for archiving, if not provided you will need consumer_key, consumer_secret, access_token, access_secret"},
-            "bearer_tokens": {"default": [], "help": " a list of twitter API bearer_token which is enough for archiving, if not provided you will need consumer_key, consumer_secret, access_token, access_secret, if provided you can still add those for better rate limits. CSV of bearer tokens if provided via the command line",
-                              },
-            "consumer_key": {"default": None, "help": "twitter API consumer_key"},
-            "consumer_secret": {"default": None, "help": "twitter API consumer_secret"},
-            "access_token": {"default": None, "help": "twitter API access_token"},
-            "access_secret": {"default": None, "help": "twitter API access_secret"},
+        "bearer_token": {
+            "default": None,
+            "help": "[deprecated: see bearer_tokens] twitter API bearer_token which is enough for archiving, if not provided you will need consumer_key, consumer_secret, access_token, access_secret",
         },
+        "bearer_tokens": {
+            "default": [],
+            "help": " a list of twitter API bearer_token which is enough for archiving, if not provided you will need consumer_key, consumer_secret, access_token, access_secret, if provided you can still add those for better rate limits. CSV of bearer tokens if provided via the command line",
+        },
+        "consumer_key": {"default": None, "help": "twitter API consumer_key"},
+        "consumer_secret": {"default": None, "help": "twitter API consumer_secret"},
+        "access_token": {"default": None, "help": "twitter API access_token"},
+        "access_secret": {"default": None, "help": "twitter API access_secret"},
+    },
     "description": """
         The `TwitterApiExtractor` fetches tweets and associated media using the Twitter API. 
         It supports multiple API configurations for extended rate limits and reliable access. 
@@ -39,6 +46,5 @@
         - **Access Token and Secret**: Complements the consumer key for enhanced API capabilities.
         
         Credentials can be obtained by creating a Twitter developer account at [Twitter Developer Platform](https://developer.twitter.com/en).
-        """
-,
+        """,
 }

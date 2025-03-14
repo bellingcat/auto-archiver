@@ -1,5 +1,7 @@
 from __future__ import annotations
-import mimetypes, os, pathlib
+import mimetypes
+import os
+import pathlib
 from jinja2 import Environment, FileSystemLoader
 from urllib.parse import quote
 from loguru import logger
@@ -11,6 +13,7 @@ from auto_archiver.core import Metadata, Media
 from auto_archiver.core import Formatter
 from auto_archiver.utils.misc import random_str
 
+
 class HtmlFormatter(Formatter):
     environment: Environment = None
     template: any = None
@@ -21,9 +24,9 @@ class HtmlFormatter(Formatter):
         self.environment = Environment(loader=FileSystemLoader(template_dir), autoescape=True)
 
         # JinjaHelper class static methods are added as filters
-        self.environment.filters.update({
-            k: v.__func__ for k, v in JinjaHelpers.__dict__.items() if isinstance(v, staticmethod)
-        })
+        self.environment.filters.update(
+            {k: v.__func__ for k, v in JinjaHelpers.__dict__.items() if isinstance(v, staticmethod)}
+        )
 
         # Load a specific template or default to "html_template.html"
         template_name = self.config.get("template_name", "html_template.html")
@@ -36,11 +39,7 @@ class HtmlFormatter(Formatter):
             return
 
         content = self.template.render(
-            url=url,
-            title=item.get_title(),
-            media=item.media,
-            metadata=item.metadata,
-            version=__version__
+            url=url, title=item.get_title(), media=item.media, metadata=item.metadata, version=__version__
         )
 
         html_path = os.path.join(self.tmp_dir, f"formatted{random_str(24)}.html")
@@ -49,7 +48,7 @@ class HtmlFormatter(Formatter):
         final_media = Media(filename=html_path, _mimetype="text/html")
 
         # get the already instantiated hash_enricher module
-        he = self.module_factory.get_module('hash_enricher', self.config)
+        he = self.module_factory.get_module("hash_enricher", self.config)
         if len(hd := he.calculate_hash(final_media.filename)):
             final_media.set("hash", f"{he.algorithm}:{hd}")
 

@@ -9,6 +9,7 @@ def mock_vk_scraper(mocker):
     """Fixture to mock VkScraper."""
     return mocker.patch("auto_archiver.modules.vk_extractor.vk_extractor.VkScraper")
 
+
 @pytest.fixture
 def vk_extractor(setup_module, mock_vk_scraper) -> VkExtractor:
     """Fixture to initialize VkExtractor with mocked VkScraper."""
@@ -39,7 +40,7 @@ def test_vk_url_but_scrape_returns_empty(vk_extractor, metadata):
 def test_successful_scrape_and_download(vk_extractor, metadata, mocker):
     mock_scrapes = [
         {"text": "Post Title", "datetime": "2023-01-01T00:00:00", "id": 1},
-        {"text": "Another Post", "datetime": "2023-01-02T00:00:00", "id": 2}
+        {"text": "Another Post", "datetime": "2023-01-02T00:00:00", "id": 2},
     ]
     mock_filenames = ["image1.jpg", "image2.png"]
     vk_extractor.vks.scrape.return_value = mock_scrapes
@@ -56,16 +57,16 @@ def test_successful_scrape_and_download(vk_extractor, metadata, mocker):
     assert len(result.media) == 2
     assert result.media[0].filename == "image1.jpg"
     assert result.media[1].filename == "image2.png"
-    vk_extractor.vks.download_media.assert_called_once_with(
-        mock_scrapes, vk_extractor.tmp_dir
-    )
+    vk_extractor.vks.download_media.assert_called_once_with(mock_scrapes, vk_extractor.tmp_dir)
 
 
 def test_adds_first_title_and_timestamp(vk_extractor):
     metadata = Metadata().set_url("https://vk.com/no-metadata")
     metadata.set_url("https://vk.com/no-metadata")
-    mock_scrapes = [{"text": "value", "datetime": "2023-01-01T00:00:00"},
-                    {"text": "value2", "datetime": "2023-01-02T00:00:00"}]
+    mock_scrapes = [
+        {"text": "value", "datetime": "2023-01-01T00:00:00"},
+        {"text": "value2", "datetime": "2023-01-02T00:00:00"},
+    ]
     vk_extractor.vks.scrape.return_value = mock_scrapes
     vk_extractor.vks.download_media.return_value = []
     result = vk_extractor.download(metadata)

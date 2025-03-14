@@ -8,6 +8,7 @@ The filtered rows are processed into `Metadata` objects.
 - validates the sheet's structure and filters rows based on input configurations.
 - Ensures only rows with valid URLs and unprocessed statuses are included.
 """
+
 import os
 from typing import Tuple, Union
 from urllib.parse import quote
@@ -19,11 +20,10 @@ from slugify import slugify
 from auto_archiver.core import Feeder, Database, Media
 from auto_archiver.core import Metadata
 from auto_archiver.modules.gsheet_feeder_db import GWorksheet
-from auto_archiver.utils.misc import calculate_file_hash, get_current_timestamp
+from auto_archiver.utils.misc import get_current_timestamp
 
 
 class GsheetsFeederDB(Feeder, Database):
-
     def setup(self) -> None:
         self.gsheets_client = gspread.service_account(filename=self.service_account)
         # TODO mv to validators
@@ -42,24 +42,28 @@ class GsheetsFeederDB(Feeder, Database):
             if not self.should_process_sheet(worksheet.title):
                 logger.debug(f"SKIPPED worksheet '{worksheet.title}' due to allow/block rules")
                 continue
-            logger.info(f'Opening worksheet {ii=}: {worksheet.title=} header={self.header}')
+            logger.info(f"Opening worksheet {ii=}: {worksheet.title=} header={self.header}")
             gw = GWorksheet(worksheet, header_row=self.header, columns=self.columns)
             if len(missing_cols := self.missing_required_columns(gw)):
-                logger.warning(f"SKIPPED worksheet '{worksheet.title}' due to missing required column(s) for {missing_cols}")
+                logger.warning(
+                    f"SKIPPED worksheet '{worksheet.title}' due to missing required column(s) for {missing_cols}"
+                )
                 continue
 
             # process and yield metadata here:
             yield from self._process_rows(gw)
-            logger.success(f'Finished worksheet {worksheet.title}')
+            logger.success(f"Finished worksheet {worksheet.title}")
 
     def _process_rows(self, gw: GWorksheet):
         for row in range(1 + self.header, gw.count_rows() + 1):
-            url = gw.get_cell(row, 'url').strip()
-            if not len(url): continue
-            original_status = gw.get_cell(row, 'status')
-            status = gw.get_cell(row, 'status', fresh=original_status in ['', None])
+            url = gw.get_cell(row, "url").strip()
+            if not len(url):
+                continue
+            original_status = gw.get_cell(row, "status")
+            status = gw.get_cell(row, "status", fresh=original_status in ["", None])
             # TODO: custom status parser(?) aka should_retry_from_status
-            if status not in ['', None]: continue
+            if status not in ["", None]:
+                continue
 
             # All checks done - archival process starts here
             m = Metadata().set_url(url)
@@ -70,10 +74,10 @@ class GsheetsFeederDB(Feeder, Database):
         # TODO: Check folder value not being recognised
         m.set_context("gsheet", {"row": row, "worksheet": gw})
 
-        if gw.get_cell_or_default(row, 'folder', "") is None:
-            folder = ''
+        if gw.get_cell_or_default(row, "folder", "") is None:
+            folder = ""
         else:
-            folder = slugify(gw.get_cell_or_default(row, 'folder', "").strip())
+            folder = slugify(gw.get_cell_or_default(row, "folder", "").strip())
         if len(folder):
             if self.use_sheet_names_in_stored_paths:
                 m.set_context("folder", os.path.join(folder, slugify(self.sheet), slugify(gw.wks.title)))
@@ -91,11 +95,10 @@ class GsheetsFeederDB(Feeder, Database):
 
     def missing_required_columns(self, gw: GWorksheet) -> list:
         missing = []
-        for required_col in ['url', 'status']:
+        for required_col in ["url", "status"]:
             if not gw.col_exists(required_col):
                 missing.append(required_col)
         return missing
-
 
     def started(self, item: Metadata) -> None:
         logger.warning(f"STARTED {item}")
@@ -155,9 +158,7 @@ class GsheetsFeederDB(Feeder, Database):
         if len(pdq_hashes):
             batch_if_valid("pdq_hash", ",".join(pdq_hashes))
 
-        if (screenshot := item.get_media_by_id("screenshot")) and hasattr(
-            screenshot, "urls"
-        ):
+        if (screenshot := item.get_media_by_id("screenshot")) and hasattr(screenshot, "urls"):
             batch_if_valid("screenshot", "\n".join(screenshot.urls))
 
         if thumbnail := item.get_first_image("thumbnail"):
@@ -186,11 +187,12 @@ class GsheetsFeederDB(Feeder, Database):
             logger.debug(f"Unable to update sheet: {e}")
 
     def _retrieve_gsheet(self, item: Metadata) -> Tuple[GWorksheet, int]:
-
         if gsheet := item.get_context("gsheet"):
             gw: GWorksheet = gsheet.get("worksheet")
             row: int = gsheet.get("row")
         elif self.sheet_id:
-            logger.error(f"Unable to retrieve Gsheet for {item.get_url()}, GsheetDB must be used alongside GsheetFeeder.")
+            logger.error(
+                f"Unable to retrieve Gsheet for {item.get_url()}, GsheetDB must be used alongside GsheetFeeder."
+            )
 
         return gw, row

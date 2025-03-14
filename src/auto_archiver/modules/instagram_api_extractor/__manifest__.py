@@ -2,18 +2,18 @@
     "name": "Instagram API Extractor",
     "type": ["extractor"],
     "entry_point": "instagram_api_extractor::InstagramAPIExtractor",
-    "dependencies":
-        {"python": ["requests",
-                    "loguru",
-                    "retrying",
-                    "tqdm",],
-         },
+    "dependencies": {
+        "python": [
+            "requests",
+            "loguru",
+            "retrying",
+            "tqdm",
+        ],
+    },
     "requires_setup": True,
     "configs": {
-        "access_token": {"default": None,
-                         "help": "a valid instagrapi-api token"},
-        "api_endpoint": {"required": True,
-                         "help": "API endpoint to use"},
+        "access_token": {"default": None, "help": "a valid instagrapi-api token"},
+        "api_endpoint": {"required": True, "help": "API endpoint to use"},
         "full_profile": {
             "default": False,
             "type": "bool",

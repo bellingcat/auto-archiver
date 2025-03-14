@@ -1,5 +1,6 @@
 from loguru import logger
-import time, os
+import time
+import os
 import base64
 
 from selenium.common.exceptions import TimeoutException
@@ -9,8 +10,8 @@ from auto_archiver.core import Enricher
 from auto_archiver.utils import Webdriver, url as UrlUtil, random_str
 from auto_archiver.core import Media, Metadata
 
-class ScreenshotEnricher(Enricher):
 
+class ScreenshotEnricher(Enricher):
     def __init__(self, webdriver_factory=None):
         super().__init__()
         self.webdriver_factory = webdriver_factory or Webdriver
@@ -25,8 +26,14 @@ class ScreenshotEnricher(Enricher):
         logger.debug(f"Enriching screenshot for {url=}")
         auth = self.auth_for_site(url)
         with self.webdriver_factory(
-                self.width, self.height, self.timeout, facebook_accept_cookies='facebook.com' in url,
-                       http_proxy=self.http_proxy, print_options=self.print_options, auth=auth) as driver:
+            self.width,
+            self.height,
+            self.timeout,
+            facebook_accept_cookies="facebook.com" in url,
+            http_proxy=self.http_proxy,
+            print_options=self.print_options,
+            auth=auth,
+        ) as driver:
             try:
                 driver.get(url)
                 time.sleep(int(self.sleep_before_screenshot))
@@ -43,4 +50,3 @@ class ScreenshotEnricher(Enricher):
                 logger.info("TimeoutException loading page for screenshot")
             except Exception as e:
                 logger.error(f"Got error while loading webdriver for screenshot enricher: {e}")
-

@@ -12,7 +12,7 @@ from auto_archiver.core import Metadata, Media, BaseModule
 class Formatter(BaseModule):
     """
     Base class for implementing formatters in the media archiving framework.
-    
+
     Subclasses must implement the `format` method to define their behavior.
     """
 
