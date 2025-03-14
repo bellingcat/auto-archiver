@@ -18,12 +18,12 @@
             ],
             "help": "List of OpenTimestamps calendar servers to use for timestamping. See here for a list of calendars maintained by opentimestamps:\
 https://opentimestamps.org/#calendars",
-            "type": "list"
+            "type": "list",
         },
         "calendar_whitelist": {
             "default": [],
             "help": "Optional whitelist of calendar servers. Override this if you are using your own calendar servers. e.g. ['https://mycalendar.com']",
-            "type": "list"
+            "type": "list",
         },
     },
     "description": """
@@ -96,5 +96,5 @@ Calendar https://alice.btc.calendar.opentimestamps.org: Timestamped by transacti
     if you want to use your own calendars, then you can override this setting in the `calendar_whitelist` configuration option.
 
    
-    """
+    """,
 }
