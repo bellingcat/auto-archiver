@@ -1,151 +1,25 @@
 {
     "modules": {
-        "gsheet_feeder": {
-            "name": "gsheet_feeder",
-            "display_name": "Google Sheets Feeder",
+        "atlos_feeder_db_storage": {
+            "name": "atlos_feeder_db_storage",
+            "display_name": "Atlos Feeder Database Storage",
             "manifest": {
-                "name": "Google Sheets Feeder",
+                "name": "Atlos Feeder Database Storage",
                 "author": "Bellingcat",
                 "type": [
-                    "feeder"
+                    "feeder",
+                    "database",
+                    "storage"
                 ],
                 "requires_setup": true,
-                "description": "\n    GsheetsFeeder \n    A Google Sheets-based feeder for the Auto Archiver.\n\n    This reads data from Google Sheets and filters rows based on user-defined rules.\n    The filtered rows are processed into `Metadata` objects.\n\n    ### Features\n    - Validates the sheet structure and filters rows based on input configurations.\n    - Processes only worksheets allowed by the `allow_worksheets` and `block_worksheets` configurations.\n    - Ensures only rows with valid URLs and unprocessed statuses are included for archival.\n    - Supports organizing stored files into folder paths based on sheet and worksheet names.\n\n    ### Setup\n    - Requires a Google Service Account JSON file for authentication, which should be stored in `secrets/gsheets_service_account.json`.\n    To set up a service account, follow the instructions [here](https://gspread.readthedocs.io/en/latest/oauth2.html).\n    - Define the `sheet` or `sheet_id` configuration to specify the sheet to archive.\n    - Customize the column names in your Google sheet using the `columns` configuration.\n    ",
-                "dependencies": {
-                    "python": [
-                        "loguru",
-                        "gspread",
-                        "slugify"
-                    ]
-                },
-                "entry_point": "gsheet_feeder::GsheetsFeeder",
-                "version": "1.0",
-                "configs": {
-                    "sheet": {
-                        "default": null,
-                        "help": "name of the sheet to archive"
-                    },
-                    "sheet_id": {
-                        "default": null,
-                        "help": "the id of the sheet to archive (alternative to 'sheet' config)"
-                    },
-                    "header": {
-                        "default": 1,
-                        "type": "int",
-                        "help": "index of the header row (starts at 1)"
-                    },
-                    "service_account": {
-                        "default": "secrets/service_account.json",
-                        "help": "service account JSON file path. Learn how to create one: https://gspread.readthedocs.io/en/latest/oauth2.html",
-                        "required": true
-                    },
-                    "columns": {
-                        "default": {
-                            "url": "link",
-                            "status": "archive status",
-                            "folder": "destination folder",
-                            "archive": "archive location",
-                            "date": "archive date",
-                            "thumbnail": "thumbnail",
-                            "timestamp": "upload timestamp",
-                            "title": "upload title",
-                            "text": "text content",
-                            "screenshot": "screenshot",
-                            "hash": "hash",
-                            "pdq_hash": "perceptual hashes",
-                            "wacz": "wacz",
-                            "replaywebpage": "replaywebpage"
-                        },
-                        "help": "Custom names for the columns in your Google sheet. If you don't want to use the default column names, change them with this setting",
-                        "type": "json_loader"
-                    },
-                    "allow_worksheets": {
-                        "default": [],
-                        "help": "A list of worksheet names that should be processed (overrides worksheet_block), leave empty so all are allowed"
-                    },
-                    "block_worksheets": {
-                        "default": [],
-                        "help": "A list of worksheet names for worksheets that should be explicitly blocked from being processed"
-                    },
-                    "use_sheet_names_in_stored_paths": {
-                        "default": true,
-                        "help": "if True the stored files path will include 'workbook_name/worksheet_name/...'",
-                        "type": "bool"
-                    }
-                }
-            },
-            "configs": {
-                "sheet": {
-                    "default": null,
-                    "help": "name of the sheet to archive"
-                },
-                "sheet_id": {
-                    "default": null,
-                    "help": "the id of the sheet to archive (alternative to 'sheet' config)"
-                },
-                "header": {
-                    "default": 1,
-                    "type": "int",
-                    "help": "index of the header row (starts at 1)"
-                },
-                "service_account": {
-                    "default": "secrets/service_account.json",
-                    "help": "service account JSON file path. Learn how to create one: https://gspread.readthedocs.io/en/latest/oauth2.html",
-                    "required": true
-                },
-                "columns": {
-                    "default": {
-                        "url": "link",
-                        "status": "archive status",
-                        "folder": "destination folder",
-                        "archive": "archive location",
-                        "date": "archive date",
-                        "thumbnail": "thumbnail",
-                        "timestamp": "upload timestamp",
-                        "title": "upload title",
-                        "text": "text content",
-                        "screenshot": "screenshot",
-                        "hash": "hash",
-                        "pdq_hash": "perceptual hashes",
-                        "wacz": "wacz",
-                        "replaywebpage": "replaywebpage"
-                    },
-                    "help": "Custom names for the columns in your Google sheet. If you don't want to use the default column names, change them with this setting",
-                    "type": "json_loader"
-                },
-                "allow_worksheets": {
-                    "default": [],
-                    "help": "A list of worksheet names that should be processed (overrides worksheet_block), leave empty so all are allowed"
-                },
-                "block_worksheets": {
-                    "default": [],
-                    "help": "A list of worksheet names for worksheets that should be explicitly blocked from being processed"
-                },
-                "use_sheet_names_in_stored_paths": {
-                    "default": true,
-                    "help": "if True the stored files path will include 'workbook_name/worksheet_name/...'",
-                    "type": "bool"
-                }
-            }
-        },
-        "atlos_feeder": {
-            "name": "atlos_feeder",
-            "display_name": "Atlos Feeder",
-            "manifest": {
-                "name": "Atlos Feeder",
-                "author": "Bellingcat",
-                "type": [
-                    "feeder"
-                ],
-                "requires_setup": true,
-                "description": "\n    AtlosFeeder: A feeder module that integrates with the Atlos API to fetch source material URLs for archival.\n\n    ### Features\n    - Connects to the Atlos API to retrieve a list of source material URLs.\n    - Filters source materials based on visibility, processing status, and metadata.\n    - Converts filtered source materials into `Metadata` objects with the relevant `atlos_id` and URL.\n    - Iterates through paginated results using a cursor for efficient API interaction.\n\n    ### Notes\n    - Requires an Atlos API endpoint and a valid API token for authentication.\n    - Ensures only unprocessed, visible, and ready-to-archive URLs are returned.\n    - Handles pagination transparently when retrieving data from the Atlos API.\n    ",
+                "description": "\n    A module that integrates with the Atlos API to fetch source material URLs for archival, uplaod extracted media,\n    \n    [Atlos](https://www.atlos.org/) is a visual investigation and archiving platform designed for investigative research, journalism, and open-source intelligence (OSINT). \n    It helps users organize, analyze, and store media from various sources, making it easier to track and investigate digital evidence.\n    \n    To get started create a new project and obtain an API token from the settings page. You can group event's into Atlos's 'incidents'.\n    Here you can add 'source material' by URLn and the Atlos feeder will fetch these URLs for archival.\n    \n    You can use Atlos only as a 'feeder', however you can also implement the 'database' and 'storage' features to store the media files in Atlos which is recommended.\n    The Auto Archiver will retain the Atlos ID for each item, ensuring that the media and database outputs are uplaoded back into the relevant media item.\n    \n    \n    ### Features\n    - Connects to the Atlos API to retrieve a list of source material URLs.\n    - Iterates through the URLs from all source material items which are unprocessed, visible, and ready to archive.\n    - If the storage option is selected, it will store the media files alongside the original source material item in Atlos.\n    - Is the database option is selected it will output the results to the media item, as well as updating failure status with error details when archiving fails.\n    - Skips Storege/ database upload for items without an Atlos ID - restricting that you must use the Atlos feeder so that it has the Atlos ID to store the results with.\n\n    ### Notes\n    - Requires an Atlos account with a project and a valid API token for authentication.\n    - Ensures only unprocessed, visible, and ready-to-archive URLs are returned.\n    - Feches any media items within an Atlos project, regardless of separation into incidents.\n    ",
                 "dependencies": {
                     "python": [
                         "loguru",
                         "requests"
                     ]
                 },
-                "entry_point": "",
+                "entry_point": "atlos_feeder_db_storage::AtlosFeederDbStorage",
                 "version": "1.0",
                 "configs": {
                     "api_token": {
@@ -219,6 +93,135 @@
                 "column": {
                     "default": null,
                     "help": "Column number or name to read the URLs from, 0-indexed"
+                }
+            }
+        },
+        "gsheet_feeder_db": {
+            "name": "gsheet_feeder_db",
+            "display_name": "Google Sheets Feeder Database",
+            "manifest": {
+                "name": "Google Sheets Feeder Database",
+                "author": "Bellingcat",
+                "type": [
+                    "feeder",
+                    "database"
+                ],
+                "requires_setup": true,
+                "description": "\n    GsheetsFeederDatabase\n    A Google Sheets-based feeder and optional database for the Auto Archiver.\n\n    This reads data from Google Sheets and filters rows based on user-defined rules.\n    The filtered rows are processed into `Metadata` objects.\n\n    ### Features\n    - Validates the sheet structure and filters rows based on input configurations.\n    - Processes only worksheets allowed by the `allow_worksheets` and `block_worksheets` configurations.\n    - Ensures only rows with valid URLs and unprocessed statuses are included for archival.\n    - Supports organizing stored files into folder paths based on sheet and worksheet names.\n    - If the database is enabled, this updates the Google Sheet with the status of the archived URLs, including in progress, success or failure, and method used.\n    - Saves metadata such as title, text, timestamp, hashes, screenshots, and media URLs to designated columns.\n    - Formats media-specific metadata, such as thumbnails and PDQ hashes for the sheet.\n    - Skips redundant updates for empty or invalid data fields.\n\n    ### Setup\n    - Requires a Google Service Account JSON file for authentication, which should be stored in `secrets/gsheets_service_account.json`.\n    To set up a service account, follow the instructions [here](https://gspread.readthedocs.io/en/latest/oauth2.html).\n    - Define the `sheet` or `sheet_id` configuration to specify the sheet to archive.\n    - Customize the column names in your Google sheet using the `columns` configuration.\n    - The Google Sheet can be used soley as a feeder or as a feeder and database, but note you can't currently feed into the database from an alternate feeder.\n    ",
+                "dependencies": {
+                    "python": [
+                        "loguru",
+                        "gspread",
+                        "slugify"
+                    ]
+                },
+                "entry_point": "gsheet_feeder_db::GsheetsFeederDB",
+                "version": "1.0",
+                "configs": {
+                    "sheet": {
+                        "default": null,
+                        "help": "name of the sheet to archive"
+                    },
+                    "sheet_id": {
+                        "default": null,
+                        "help": "the id of the sheet to archive (alternative to 'sheet' config)"
+                    },
+                    "header": {
+                        "default": 1,
+                        "type": "int",
+                        "help": "index of the header row (starts at 1)"
+                    },
+                    "service_account": {
+                        "default": "secrets/service_account.json",
+                        "help": "service account JSON file path. Learn how to create one: https://gspread.readthedocs.io/en/latest/oauth2.html",
+                        "required": true
+                    },
+                    "columns": {
+                        "default": {
+                            "url": "link",
+                            "status": "archive status",
+                            "folder": "destination folder",
+                            "archive": "archive location",
+                            "date": "archive date",
+                            "thumbnail": "thumbnail",
+                            "timestamp": "upload timestamp",
+                            "title": "upload title",
+                            "text": "text content",
+                            "screenshot": "screenshot",
+                            "hash": "hash",
+                            "pdq_hash": "perceptual hashes",
+                            "wacz": "wacz",
+                            "replaywebpage": "replaywebpage"
+                        },
+                        "help": "Custom names for the columns in your Google sheet. If you don't want to use the default column names, change them with this setting",
+                        "type": "json_loader"
+                    },
+                    "allow_worksheets": {
+                        "default": [],
+                        "help": "(CSV) only worksheets whose name is included in allow are included (overrides worksheet_block), leave empty so all are allowed"
+                    },
+                    "block_worksheets": {
+                        "default": [],
+                        "help": "(CSV) explicitly block some worksheets from being processed"
+                    },
+                    "use_sheet_names_in_stored_paths": {
+                        "default": true,
+                        "type": "bool",
+                        "help": "if True the stored files path will include 'workbook_name/worksheet_name/...'"
+                    }
+                }
+            },
+            "configs": {
+                "sheet": {
+                    "default": null,
+                    "help": "name of the sheet to archive"
+                },
+                "sheet_id": {
+                    "default": null,
+                    "help": "the id of the sheet to archive (alternative to 'sheet' config)"
+                },
+                "header": {
+                    "default": 1,
+                    "type": "int",
+                    "help": "index of the header row (starts at 1)"
+                },
+                "service_account": {
+                    "default": "secrets/service_account.json",
+                    "help": "service account JSON file path. Learn how to create one: https://gspread.readthedocs.io/en/latest/oauth2.html",
+                    "required": true
+                },
+                "columns": {
+                    "default": {
+                        "url": "link",
+                        "status": "archive status",
+                        "folder": "destination folder",
+                        "archive": "archive location",
+                        "date": "archive date",
+                        "thumbnail": "thumbnail",
+                        "timestamp": "upload timestamp",
+                        "title": "upload title",
+                        "text": "text content",
+                        "screenshot": "screenshot",
+                        "hash": "hash",
+                        "pdq_hash": "perceptual hashes",
+                        "wacz": "wacz",
+                        "replaywebpage": "replaywebpage"
+                    },
+                    "help": "Custom names for the columns in your Google sheet. If you don't want to use the default column names, change them with this setting",
+                    "type": "json_loader"
+                },
+                "allow_worksheets": {
+                    "default": [],
+                    "help": "(CSV) only worksheets whose name is included in allow are included (overrides worksheet_block), leave empty so all are allowed"
+                },
+                "block_worksheets": {
+                    "default": [],
+                    "help": "(CSV) explicitly block some worksheets from being processed"
+                },
+                "use_sheet_names_in_stored_paths": {
+                    "default": true,
+                    "type": "bool",
+                    "help": "if True the stored files path will include 'workbook_name/worksheet_name/...'"
                 }
             }
         },
@@ -470,7 +473,7 @@
                     "extractor"
                 ],
                 "requires_setup": true,
-                "description": "\n    Uses the [Instaloader library](https://instaloader.github.io/as-module.html) to download content from Instagram. This class handles both individual posts\n    and user profiles, downloading as much information as possible, including images, videos, text, stories,\n    highlights, and tagged posts. \n    Authentication is required via username/password or a session file.\n                    \n                    ",
+                "description": "\n    Uses the [Instaloader library](https://instaloader.github.io/as-module.html) to download content from Instagram. \n    \n      > \u26a0\ufe0f **Warning**  \n      > This module is not actively maintained due to known issues with blocking.  \n      > Prioritise usage of the [Instagram Tbot Extractor](./instagram_tbot_extractor.md) and [Instagram API Extractor](./instagram_api_extractor.md)\n  \n    This class handles both individual posts and user profiles, downloading as much information as possible, including images, videos, text, stories,\n    highlights, and tagged posts. \n    Authentication is required via username/password or a session file.\n                    \n                    ",
                 "dependencies": {
                     "python": [
                         "instaloader",
@@ -482,38 +485,38 @@
                 "configs": {
                     "username": {
                         "required": true,
-                        "help": "a valid Instagram username"
+                        "help": "A valid Instagram username."
                     },
                     "password": {
                         "required": true,
-                        "help": "the corresponding Instagram account password"
+                        "help": "The corresponding Instagram account password."
                     },
                     "download_folder": {
                         "default": "instaloader",
-                        "help": "name of a folder to temporarily download content to"
+                        "help": "Name of a folder to temporarily download content to."
                     },
                     "session_file": {
                         "default": "secrets/instaloader.session",
-                        "help": "path to the instagram session which saves session credentials"
+                        "help": "Path to the instagram session file which saves session credentials. If one doesn't exist this gives the path to store a new one."
                     }
                 }
             },
             "configs": {
                 "username": {
                     "required": true,
-                    "help": "a valid Instagram username"
+                    "help": "A valid Instagram username."
                 },
                 "password": {
                     "required": true,
-                    "help": "the corresponding Instagram account password"
+                    "help": "The corresponding Instagram account password."
                 },
                 "download_folder": {
                     "default": "instaloader",
-                    "help": "name of a folder to temporarily download content to"
+                    "help": "Name of a folder to temporarily download content to."
                 },
                 "session_file": {
                     "default": "secrets/instaloader.session",
-                    "help": "path to the instagram session which saves session credentials"
+                    "help": "Path to the instagram session file which saves session credentials. If one doesn't exist this gives the path to store a new one."
                 }
             }
         },
@@ -661,7 +664,7 @@
                     "extractor"
                 ],
                 "requires_setup": false,
-                "description": "\nThis is the generic extractor used by auto-archiver, which uses `yt-dlp` under the hood.\n\nThis module is responsible for downloading and processing media content from platforms\nsupported by `yt-dlp`, such as YouTube, Facebook, and others. It provides functionality\nfor retrieving videos, subtitles, comments, and other metadata, and it integrates with\nthe broader archiving framework.\n\n### Features\n- Supports downloading videos and playlists.\n- Retrieves metadata like titles, descriptions, upload dates, and durations.\n- Downloads subtitles and comments when enabled.\n- Configurable options for handling live streams, proxies, and more.\n- Supports authentication of websites using the 'authentication' settings from your orchestration.\n\n### Dropins\n- For websites supported by `yt-dlp` that also contain posts in addition to videos\n (e.g. Facebook, Twitter, Bluesky), dropins can be created to extract post data and create \n metadata objects. Some dropins are included in this generic_archiver by default, but\ncustom dropins can be created to handle additional websites and passed to the archiver\nvia the command line using the `--dropins` option (TODO!).\n",
+                "description": "\nThis is the generic extractor used by auto-archiver, which uses `yt-dlp` under the hood.\n\nThis module is responsible for downloading and processing media content from platforms\nsupported by `yt-dlp`, such as YouTube, Facebook, and others. It provides functionality\nfor retrieving videos, subtitles, comments, and other metadata, and it integrates with\nthe broader archiving framework.\n\n### Features\n- Supports downloading videos and playlists.\n- Retrieves metadata like titles, descriptions, upload dates, and durations.\n- Downloads subtitles and comments when enabled.\n- Configurable options for handling live streams, proxies, and more.\n- Supports authentication of websites using the 'authentication' settings from your orchestration.\n\n### Dropins\n- For websites supported by `yt-dlp` that also contain posts in addition to videos\n (e.g. Facebook, Twitter, Bluesky), dropins can be created to extract post data and create \n metadata objects. Some dropins are included in this generic_archiver by default, but\ncustom dropins can be created to handle additional websites and passed to the archiver\nvia the command line using the `--dropins` option (TODO!).\n\n### Auto-Updates\n\nThe Generic Extractor will also automatically check for updates to `yt-dlp` (every 5 days by default).\nThis can be configured using the `ytdlp_update_interval` setting (or disabled by setting it to -1).\nIf you are having issues with the extractor, you can review the version of `yt-dlp` being used with `yt-dlp --version`.\n\n",
                 "dependencies": {
                     "python": [
                         "yt_dlp",
@@ -710,6 +713,11 @@
                     "max_downloads": {
                         "default": "inf",
                         "help": "Use to limit the number of videos to download when a channel or long page is being extracted. 'inf' means no limit."
+                    },
+                    "ytdlp_update_interval": {
+                        "default": 5,
+                        "help": "How often to check for yt-dlp updates (days). If positive, will check and update yt-dlp every [num] days. Set it to -1 to disable, or 0 to always update on every run.",
+                        "type": "int"
                     }
                 }
             },
@@ -751,8 +759,37 @@
                 "max_downloads": {
                     "default": "inf",
                     "help": "Use to limit the number of videos to download when a channel or long page is being extracted. 'inf' means no limit."
+                },
+                "ytdlp_update_interval": {
+                    "default": 5,
+                    "help": "How often to check for yt-dlp updates (days). If positive, will check and update yt-dlp every [num] days. Set it to -1 to disable, or 0 to always update on every run.",
+                    "type": "int"
                 }
             }
+        },
+        "tiktok_tikwm_extractor": {
+            "name": "tiktok_tikwm_extractor",
+            "display_name": "Tiktok Tikwm Extractor",
+            "manifest": {
+                "name": "Tiktok Tikwm Extractor",
+                "author": "Bellingcat",
+                "type": [
+                    "extractor"
+                ],
+                "requires_setup": false,
+                "description": "\n    Uses an unofficial TikTok video download platform's API to download videos: https://tikwm.com/\n\t\n\tThis extractor complements the generic_extractor which can already get TikTok videos, but this one can extract special videos like those marked as sensitive.\n\n    ### Features\n    - Downloads the video and, if possible, also the video cover.\n\t- Stores extra metadata about the post like author information, and more as returned by tikwm.com. \n\n    ### Notes\n    - If tikwm.com is down, this extractor will not work.\n\t- If tikwm.com changes their API, this extractor may break.\n\t- If no video is found, this extractor will consider the extraction failed.\n    ",
+                "dependencies": {
+                    "python": [
+                        "loguru",
+                        "requests"
+                    ],
+                    "bin": []
+                },
+                "entry_point": "",
+                "version": "1.0",
+                "configs": {}
+            },
+            "configs": null
         },
         "telegram_extractor": {
             "name": "telegram_extractor",
@@ -1054,7 +1091,7 @@
                         "help": "width of the screenshots"
                     },
                     "height": {
-                        "default": 720,
+                        "default": 1024,
                         "type": "int",
                         "help": "height of the screenshots"
                     },
@@ -1091,7 +1128,7 @@
                     "help": "width of the screenshots"
                 },
                 "height": {
-                    "default": 720,
+                    "default": 1024,
                     "type": "int",
                     "help": "height of the screenshots"
                 },
@@ -1198,6 +1235,79 @@
                         "translate",
                         "language_detection"
                     ]
+                }
+            }
+        },
+        "opentimestamps_enricher": {
+            "name": "opentimestamps_enricher",
+            "display_name": "OpenTimestamps Enricher",
+            "manifest": {
+                "name": "OpenTimestamps Enricher",
+                "author": "Bellingcat",
+                "type": [
+                    "enricher"
+                ],
+                "requires_setup": true,
+                "description": "\n    Creates OpenTimestamps proofs for archived files, providing blockchain-backed evidence of file existence at a specific time.\n\n    Uses OpenTimestamps \u2013 a service that timestamps data using the Bitcoin blockchain, providing a decentralized \n    and secure way to prove that data existed at a certain point in time.\n\n    ### Features\n    - Creates cryptographic timestamp proofs that link files to the Bitcoin blockchain\n    - Verifies existing timestamp proofs to confirm the time a file existed\n    - Uses multiple calendar servers to ensure reliability and redundancy\n    - Stores timestamp proofs alongside original files for future verification\n\n    ### Notes\n    - Can work offline to create timestamp proofs that can be upgraded later\n    - Verification checks if timestamps have been confirmed in the Bitcoin blockchain\n    - Should run after files have been archived and hashed\n\n    ### Verifying Timestamps Later\n    If you wish to verify a timestamp (ots) file later, you can install the opentimestamps-client command line tool and use the `ots verify` command.\n    Example: `ots verify my_file.ots`\n\n    Note: if you're using local storage with a filename_generator set to 'static' (a hash) or random, the files will be renamed when they are saved to the\n    final location meaning you will need to specify the original filename when verifying the timestamp with `ots verify -f original_filename my_file.ots`.\n    ",
+                "dependencies": {
+                    "python": [
+                        "loguru",
+                        "opentimestamps"
+                    ]
+                },
+                "entry_point": "",
+                "version": "1.0",
+                "configs": {
+                    "use_calendars": {
+                        "default": true,
+                        "help": "Whether to connect to OpenTimestamps calendar servers to create timestamps. If false, creates local timestamp proofs only.",
+                        "type": "bool"
+                    },
+                    "calendar_urls": {
+                        "default": [
+                            "https://alice.btc.calendar.opentimestamps.org",
+                            "https://bob.btc.calendar.opentimestamps.org",
+                            "https://finney.calendar.eternitywall.com"
+                        ],
+                        "help": "List of OpenTimestamps calendar servers to use for timestamping. See here for a list of calendars maintained by opentimestamps:https://opentimestamps.org/#calendars",
+                        "type": "list"
+                    },
+                    "calendar_whitelist": {
+                        "default": [],
+                        "help": "Optional whitelist of calendar servers. Override this if you are using your own calendar servers. e.g. ['https://mycalendar.com']",
+                        "type": "list"
+                    },
+                    "verify_timestamps": {
+                        "default": true,
+                        "help": "Whether to verify timestamps after creating them.",
+                        "type": "bool"
+                    }
+                }
+            },
+            "configs": {
+                "use_calendars": {
+                    "default": true,
+                    "help": "Whether to connect to OpenTimestamps calendar servers to create timestamps. If false, creates local timestamp proofs only.",
+                    "type": "bool"
+                },
+                "calendar_urls": {
+                    "default": [
+                        "https://alice.btc.calendar.opentimestamps.org",
+                        "https://bob.btc.calendar.opentimestamps.org",
+                        "https://finney.calendar.eternitywall.com"
+                    ],
+                    "help": "List of OpenTimestamps calendar servers to use for timestamping. See here for a list of calendars maintained by opentimestamps:https://opentimestamps.org/#calendars",
+                    "type": "list"
+                },
+                "calendar_whitelist": {
+                    "default": [],
+                    "help": "Optional whitelist of calendar servers. Override this if you are using your own calendar servers. e.g. ['https://mycalendar.com']",
+                    "type": "list"
+                },
+                "verify_timestamps": {
+                    "default": true,
+                    "help": "Whether to verify timestamps after creating them.",
+                    "type": "bool"
                 }
             }
         },
@@ -1381,56 +1491,6 @@
                 }
             }
         },
-        "atlos_db": {
-            "name": "atlos_db",
-            "display_name": "Atlos Database",
-            "manifest": {
-                "name": "Atlos Database",
-                "author": "Bellingcat",
-                "type": [
-                    "database"
-                ],
-                "requires_setup": true,
-                "description": "\nHandles integration with the Atlos platform for managing archival results.\n\n### Features\n- Outputs archival results to the Atlos API for storage and tracking.\n- Updates failure status with error details when archiving fails.\n- Processes and formats metadata, including ISO formatting for datetime fields.\n- Skips processing for items without an Atlos ID.\n\n### Setup\nRequired configs:\n- atlos_url: Base URL for the Atlos API.\n- api_token: Authentication token for API access.\n",
-                "dependencies": {
-                    "python": [
-                        "loguru",
-                        ""
-                    ],
-                    "bin": [
-                        ""
-                    ]
-                },
-                "entry_point": "atlos_db::AtlosDb",
-                "version": "1.0",
-                "configs": {
-                    "api_token": {
-                        "default": null,
-                        "help": "An Atlos API token. For more information, see https://docs.atlos.org/technical/api/",
-                        "required": true,
-                        "type": "str"
-                    },
-                    "atlos_url": {
-                        "default": "https://platform.atlos.org",
-                        "help": "The URL of your Atlos instance (e.g., https://platform.atlos.org), without a trailing slash.",
-                        "type": "str"
-                    }
-                }
-            },
-            "configs": {
-                "api_token": {
-                    "default": null,
-                    "help": "An Atlos API token. For more information, see https://docs.atlos.org/technical/api/",
-                    "required": true,
-                    "type": "str"
-                },
-                "atlos_url": {
-                    "default": "https://platform.atlos.org",
-                    "help": "The URL of your Atlos instance (e.g., https://platform.atlos.org), without a trailing slash.",
-                    "type": "str"
-                }
-            }
-        },
         "api_db": {
             "name": "api_db",
             "display_name": "Auto Archiver API Database",
@@ -1473,9 +1533,9 @@
                         "help": "which group of users have access to the archive in case public=false as author"
                     },
                     "use_api_cache": {
-                        "default": true,
+                        "default": false,
                         "type": "bool",
-                        "help": "if False then the API database will be queried prior to any archiving operations and stop if the link has already been archived"
+                        "help": "if True then the API database will be queried prior to any archiving operations and stop if the link has already been archived"
                     },
                     "store_results": {
                         "default": true,
@@ -1511,9 +1571,9 @@
                     "help": "which group of users have access to the archive in case public=false as author"
                 },
                 "use_api_cache": {
-                    "default": true,
+                    "default": false,
                     "type": "bool",
-                    "help": "if False then the API database will be queried prior to any archiving operations and stop if the link has already been archived"
+                    "help": "if True then the API database will be queried prior to any archiving operations and stop if the link has already been archived"
                 },
                 "store_results": {
                     "default": true,
@@ -1523,58 +1583,6 @@
                 "tags": {
                     "default": [],
                     "help": "what tags to add to the archived URL"
-                }
-            }
-        },
-        "gsheet_db": {
-            "name": "gsheet_db",
-            "display_name": "Google Sheets Database",
-            "manifest": {
-                "name": "Google Sheets Database",
-                "author": "Bellingcat",
-                "type": [
-                    "database"
-                ],
-                "requires_setup": true,
-                "description": "\n    GsheetsDatabase:\n    Handles integration with Google Sheets for tracking archival tasks.\n\n### Features\n- Updates a Google Sheet with the status of the archived URLs, including in progress, success or failure, and method used.\n- Saves metadata such as title, text, timestamp, hashes, screenshots, and media URLs to designated columns.\n- Formats media-specific metadata, such as thumbnails and PDQ hashes for the sheet.\n- Skips redundant updates for empty or invalid data fields.\n\n### Notes\n- Currently works only with metadata provided by GsheetFeeder. \n- Requires configuration of a linked Google Sheet and appropriate API credentials.\n    ",
-                "dependencies": {
-                    "python": [
-                        "loguru",
-                        "gspread",
-                        "slugify"
-                    ]
-                },
-                "entry_point": "gsheet_db::GsheetsDb",
-                "version": "1.0",
-                "configs": {
-                    "allow_worksheets": {
-                        "default": [],
-                        "help": "(CSV) only worksheets whose name is included in allow are included (overrides worksheet_block), leave empty so all are allowed"
-                    },
-                    "block_worksheets": {
-                        "default": [],
-                        "help": "(CSV) explicitly block some worksheets from being processed"
-                    },
-                    "use_sheet_names_in_stored_paths": {
-                        "default": true,
-                        "type": "bool",
-                        "help": "if True the stored files path will include 'workbook_name/worksheet_name/...'"
-                    }
-                }
-            },
-            "configs": {
-                "allow_worksheets": {
-                    "default": [],
-                    "help": "(CSV) only worksheets whose name is included in allow are included (overrides worksheet_block), leave empty so all are allowed"
-                },
-                "block_worksheets": {
-                    "default": [],
-                    "help": "(CSV) explicitly block some worksheets from being processed"
-                },
-                "use_sheet_names_in_stored_paths": {
-                    "default": true,
-                    "type": "bool",
-                    "help": "if True the stored files path will include 'workbook_name/worksheet_name/...'"
                 }
             }
         },
@@ -1664,7 +1672,7 @@
                     },
                     "filename_generator": {
                         "default": "static",
-                        "help": "how to name stored files: 'random' creates a random string; 'static' uses a replicable strategy such as a hash.",
+                        "help": "how to name stored files: 'random' creates a random string; 'static' uses a hash, with the settings of the 'hash_enricher' module (defaults to SHA256 if not enabled).",
                         "choices": [
                             "random",
                             "static"
@@ -1696,7 +1704,7 @@
                 },
                 "filename_generator": {
                     "default": "static",
-                    "help": "how to name stored files: 'random' creates a random string; 'static' uses a replicable strategy such as a hash.",
+                    "help": "how to name stored files: 'random' creates a random string; 'static' uses a hash, with the settings of the 'hash_enricher' module (defaults to SHA256 if not enabled).",
                     "choices": [
                         "random",
                         "static"
@@ -1713,54 +1721,6 @@
                 "service_account": {
                     "default": "secrets/service_account.json",
                     "help": "service account JSON file path, same as used for Google Sheets. NOTE: storage used will count towards the developer account."
-                }
-            }
-        },
-        "atlos_storage": {
-            "name": "atlos_storage",
-            "display_name": "Atlos Storage",
-            "manifest": {
-                "name": "Atlos Storage",
-                "author": "Bellingcat",
-                "type": [
-                    "storage"
-                ],
-                "requires_setup": true,
-                "description": "\n    Stores media files in a [Atlos](https://www.atlos.org/).\n\n    ### Features\n    - Saves media files to Atlos, organizing them into folders based on the provided path structure.\n\n    ### Notes\n    - Requires setup with Atlos credentials.\n    - Files are uploaded to the specified `root_folder_id` and organized by the `media.key` structure.\n    ",
-                "dependencies": {
-                    "python": [
-                        "loguru",
-                        "boto3"
-                    ],
-                    "bin": []
-                },
-                "entry_point": "",
-                "version": "1.0",
-                "configs": {
-                    "api_token": {
-                        "default": null,
-                        "help": "An Atlos API token. For more information, see https://docs.atlos.org/technical/api/",
-                        "required": true,
-                        "type": "str"
-                    },
-                    "atlos_url": {
-                        "default": "https://platform.atlos.org",
-                        "help": "The URL of your Atlos instance (e.g., https://platform.atlos.org), without a trailing slash.",
-                        "type": "str"
-                    }
-                }
-            },
-            "configs": {
-                "api_token": {
-                    "default": null,
-                    "help": "An Atlos API token. For more information, see https://docs.atlos.org/technical/api/",
-                    "required": true,
-                    "type": "str"
-                },
-                "atlos_url": {
-                    "default": "https://platform.atlos.org",
-                    "help": "The URL of your Atlos instance (e.g., https://platform.atlos.org), without a trailing slash.",
-                    "type": "str"
                 }
             }
         },
@@ -1796,7 +1756,7 @@
                     },
                     "filename_generator": {
                         "default": "static",
-                        "help": "how to name stored files: 'random' creates a random string; 'static' uses a replicable strategy such as a hash.",
+                        "help": "how to name stored files: 'random' creates a random string; 'static' uses a hash, with the settings of the 'hash_enricher' module (defaults to SHA256 if not enabled).",
                         "choices": [
                             "random",
                             "static"
@@ -1850,7 +1810,7 @@
                 },
                 "filename_generator": {
                     "default": "static",
-                    "help": "how to name stored files: 'random' creates a random string; 'static' uses a replicable strategy such as a hash.",
+                    "help": "how to name stored files: 'random' creates a random string; 'static' uses a hash, with the settings of the 'hash_enricher' module (defaults to SHA256 if not enabled).",
                     "choices": [
                         "random",
                         "static"
@@ -1922,7 +1882,7 @@
                     },
                     "filename_generator": {
                         "default": "static",
-                        "help": "how to name stored files: 'random' creates a random string; 'static' uses a replicable strategy such as a hash.",
+                        "help": "how to name stored files: 'random' creates a random string; 'static' uses a hash, with the settings of the 'hash_enricher' module (defaults to SHA256 if not enabled)",
                         "choices": [
                             "random",
                             "static"
@@ -1951,7 +1911,7 @@
                 },
                 "filename_generator": {
                     "default": "static",
-                    "help": "how to name stored files: 'random' creates a random string; 'static' uses a replicable strategy such as a hash.",
+                    "help": "how to name stored files: 'random' creates a random string; 'static' uses a hash, with the settings of the 'hash_enricher' module (defaults to SHA256 if not enabled)",
                     "choices": [
                         "random",
                         "static"
@@ -2029,9 +1989,9 @@
     "steps": {
         "feeders": [
             "cli_feeder",
-            "gsheet_feeder",
-            "atlos_feeder",
-            "csv_feeder"
+            "atlos_feeder_db_storage",
+            "csv_feeder",
+            "gsheet_feeder_db"
         ],
         "extractors": [
             "wayback_extractor_enricher",
@@ -2039,6 +1999,7 @@
             "instagram_api_extractor",
             "instagram_tbot_extractor",
             "generic_extractor",
+            "tiktok_tikwm_extractor",
             "twitter_api_extractor",
             "instagram_extractor",
             "telethon_extractor",
@@ -2055,20 +2016,21 @@
             "meta_enricher",
             "pdq_hash_enricher",
             "whisper_enricher",
+            "opentimestamps_enricher",
             "ssl_enricher",
             "hash_enricher"
         ],
         "databases": [
             "console_db",
-            "atlos_db",
             "api_db",
             "csv_db",
-            "gsheet_db"
+            "atlos_feeder_db_storage",
+            "gsheet_feeder_db"
         ],
         "storages": [
             "local_storage",
             "gdrive_storage",
-            "atlos_storage",
+            "atlos_feeder_db_storage",
             "s3_storage"
         ],
         "formatters": [
@@ -2077,9 +2039,9 @@
         ]
     },
     "configs": [
-        "gsheet_feeder",
-        "atlos_feeder",
+        "atlos_feeder_db_storage",
         "csv_feeder",
+        "gsheet_feeder_db",
         "cli_feeder",
         "instagram_api_extractor",
         "instagram_tbot_extractor",
@@ -2093,15 +2055,13 @@
         "timestamping_enricher",
         "screenshot_enricher",
         "whisper_enricher",
+        "opentimestamps_enricher",
         "thumbnail_enricher",
         "ssl_enricher",
         "hash_enricher",
-        "atlos_db",
         "api_db",
-        "gsheet_db",
         "csv_db",
         "gdrive_storage",
-        "atlos_storage",
         "s3_storage",
         "local_storage",
         "html_formatter"

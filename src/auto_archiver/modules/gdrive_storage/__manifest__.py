@@ -19,7 +19,7 @@
         },
         "filename_generator": {
             "default": "static",
-            "help": "how to name stored files: 'random' creates a random string; 'static' uses a replicable strategy such as a hash.",
+            "help": "how to name stored files: 'random' creates a random string; 'static' uses a hash, with the settings of the 'hash_enricher' module (defaults to SHA256 if not enabled).",
             "choices": ["random", "static"],
         },
         "root_folder_id": {
