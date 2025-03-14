@@ -17,6 +17,9 @@ poetry run pre-commit install
 Ruff can also be to run automatically.
 Alternative: Ruff can also be [integrated with most editors](https://docs.astral.sh/ruff/editors/setup/)  for real-time formatting.
 
+If you wish to disable the pre-commit hook (for example, if you want to commit some WIP code) you can use the `--no-verify` flag when you commit.
+For example: `git commit -m "WIP Code" --no-verify`
+
 ### **Linting (Check Before Pushing) 🔍**
 
 We recommend you also run the linter before pushing code. 
