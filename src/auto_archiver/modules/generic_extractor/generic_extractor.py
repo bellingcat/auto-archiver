@@ -14,6 +14,10 @@ from auto_archiver.core.extractor import Extractor
 from auto_archiver.core import Metadata, Media
 
 
+class SkipYtdlp(Exception):
+    pass
+
+
 class GenericExtractor(Extractor):
     _dropins = {}
 
@@ -336,7 +340,8 @@ class GenericExtractor(Extractor):
 
         try:
             if dropin_submodule and dropin_submodule.skip_ytdlp_download(info_extractor, url):
-                raise Exception(f"Skipping using ytdlp to download files for {info_extractor.ie_key()}")
+                logger.debug(f"Skipping using ytdlp to download files for {info_extractor.ie_key()}")
+                raise SkipYtdlp()
 
             # don't download since it can be a live stream
             data = ydl.extract_info(url, ie_key=info_extractor.ie_key(), download=False)
@@ -351,17 +356,21 @@ class GenericExtractor(Extractor):
                 # don't clutter the logs with issues about the 'generic' extractor not having a dropin
                 return False
 
-            logger.debug(
-                f'Issue using "{info_extractor.IE_NAME}" extractor to download video (error: {repr(e)}), attempting to use extractor to get post data instead'
-            )
+            if not isinstance(e, SkipYtdlp):
+                logger.debug(
+                    f'Issue using "{info_extractor.IE_NAME}" extractor to download video (error: {repr(e)}), attempting to use extractor to get post data instead'
+                )
+
             try:
                 result = self.get_metadata_for_post(info_extractor, url, ydl)
             except (yt_dlp.utils.DownloadError, yt_dlp.utils.ExtractorError) as post_e:
-                logger.error(f"Error downloading metadata for post: {post_e}")
+                logger.error("Error downloading metadata for post: {error}", error=str(post_e))
                 return False
             except Exception as generic_e:
                 logger.debug(
-                    f'Attempt to extract using ytdlp extractor "{info_extractor.IE_NAME}" failed:  \n  {repr(generic_e)}',
+                    'Attempt to extract using ytdlp extractor "{name}" failed:  \n  {error}',
+                    name=info_extractor.IE_NAME,
+                    error=str(generic_e),
                     exc_info=True,
                 )
                 return False
@@ -387,7 +396,7 @@ class GenericExtractor(Extractor):
             item.set("replaced_url", url)
 
         ydl_options = {
-            "outtmpl": os.path.join(self.tmp_dir, "%(id)s.%(ext)s"),
+            "outtmpl": os.path.join(self.tmp_dir, f"%(id)s.%(ext)s"),
             "quiet": False,
             "noplaylist": not self.allow_playlist,
             "writesubtitles": self.subtitles,
