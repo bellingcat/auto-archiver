@@ -90,18 +90,19 @@ def test_upload_not_uploaded(tmp_path, atlos_storage: AtlosStorage, metadata: Me
 
     get_mock.assert_called_once()
     post_mock.assert_called_once()
-    expected_endpoint = f"/api/v2/source_material/upload/202"
+    expected_endpoint = "/api/v2/source_material/upload/202"
     call_args = post_mock.call_args[0]
     assert call_args[0] == expected_endpoint
     call_kwargs = post_mock.call_args[1]
-    expected_headers = {"Authorization": f"Bearer {atlos_storage.api_token}"}
     expected_params = {"title": media.properties}
     assert call_kwargs["params"] == expected_params
     file_tuple = call_kwargs["files"]["file"]
     assert file_tuple[0] == os.path.basename(media.filename)
 
 
-def test_upload_post_http_error(tmp_path, atlos_storage: AtlosStorage, metadata: Metadata, media: Media, mocker) -> None:
+def test_upload_post_http_error(
+    tmp_path, atlos_storage: AtlosStorage, metadata: Metadata, media: Media, mocker
+) -> None:
     """Test upload() propagates HTTP error during POST."""
     metadata.set("atlos_id", 303)
     fake_get_response = {"result": {"artifacts": []}}
@@ -109,4 +110,3 @@ def test_upload_post_http_error(tmp_path, atlos_storage: AtlosStorage, metadata:
     mocker.patch.object(atlos_storage, "_post", side_effect=Exception("HTTP error"))
     with pytest.raises(Exception, match="HTTP error"):
         atlos_storage.upload(media, metadata)
-

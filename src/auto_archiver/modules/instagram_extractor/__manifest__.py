@@ -9,8 +9,7 @@
     },
     "requires_setup": True,
     "configs": {
-        "username": {"required": True,
-                     "help": "A valid Instagram username."},
+        "username": {"required": True, "help": "A valid Instagram username."},
         "password": {
             "required": True,
             "help": "The corresponding Instagram account password.",

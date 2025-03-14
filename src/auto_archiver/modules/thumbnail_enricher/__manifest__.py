@@ -2,18 +2,19 @@
     "name": "Thumbnail Enricher",
     "type": ["enricher"],
     "requires_setup": False,
-    "dependencies": {
-        "python": ["loguru", "ffmpeg"],
-        "bin": ["ffmpeg"]
-    },
+    "dependencies": {"python": ["loguru", "ffmpeg"], "bin": ["ffmpeg"]},
     "configs": {
-            "thumbnails_per_minute": {"default": 60,
-                                      "type": "int",
-                                      "help": "how many thumbnails to generate per minute of video, can be limited by max_thumbnails"},
-            "max_thumbnails": {"default": 16,
-                               "type": "int",
-                               "help": "limit the number of thumbnails to generate per video, 0 means no limit"},
+        "thumbnails_per_minute": {
+            "default": 60,
+            "type": "int",
+            "help": "how many thumbnails to generate per minute of video, can be limited by max_thumbnails",
         },
+        "max_thumbnails": {
+            "default": 16,
+            "type": "int",
+            "help": "limit the number of thumbnails to generate per video, 0 means no limit",
+        },
+    },
     "description": """
     Generates thumbnails for video files to provide visual previews.
 
@@ -27,5 +28,5 @@
     - Requires `ffmpeg` to be installed and accessible via the system's PATH.
     - Handles videos without pre-existing duration metadata by probing with `ffmpeg`.
     - Skips enrichment for non-video media files.
-    """
+    """,
 }

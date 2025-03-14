@@ -7,10 +7,16 @@ from auto_archiver.modules.instagram_tbot_extractor import InstagramTbotExtracto
 from tests.extractors.test_extractor_base import TestExtractorBase
 
 
+@pytest.fixture(autouse=True)
+def mock_sleep(mocker):
+    """Mock time.sleep to avoid delays."""
+    return mocker.patch("time.sleep")
+
+
 @pytest.fixture
 def patch_extractor_methods(request, setup_module, mocker):
-    mocker.patch.object(InstagramTbotExtractor, '_prepare_session_file', return_value=None)
-    mocker.patch.object(InstagramTbotExtractor, '_initialize_telegram_client', return_value=None)
+    mocker.patch.object(InstagramTbotExtractor, "_prepare_session_file", return_value=None)
+    mocker.patch.object(InstagramTbotExtractor, "_initialize_telegram_client", return_value=None)
     yield
 
 
@@ -35,12 +41,7 @@ def mock_telegram_client(mocker):
 @pytest.fixture
 def extractor(setup_module, patch_extractor_methods, mocker):
     extractor_module = "instagram_tbot_extractor"
-    config = {
-        "api_id": 12345,
-        "api_hash": "test_api_hash",
-        "session_file": "test_session",
-        "timeout": 4
-    }
+    config = {"api_id": 12345, "api_hash": "test_api_hash", "session_file": "test_session", "timeout": 4}
     extractor = setup_module(extractor_module, config)
     extractor.client = mocker.MagicMock()
     extractor.session_file = "test_session"
@@ -79,21 +80,30 @@ class TestInstagramTbotExtractorReal(TestExtractorBase):
         "session_file": "secrets/anon-insta",
     }
 
-    @pytest.mark.parametrize("url, expected_status, message, len_media", [
-        ("https://www.instagram.com/p/C4QgLbrIKXG", "insta-via-bot: success",
-         "Are you new to Bellingcat? - The way we share our investigations is different. 💭\nWe want you to read our story but also learn ou",
-         6),
-        ("https://www.instagram.com/reel/DEVLK8qoIbg/", "insta-via-bot: success",
-         "Our volunteer community is at the centre of many incredible Bellingcat investigations and tools. Stephanie Ladel is one such vol",
-         3),
-        # instagram tbot not working (potentially intermittently?) for stories - replace with a live story to retest
-        # ("https://www.instagram.com/stories/bellingcatofficial/3556336382743057476/", False, "Media not found or unavailable"),
-        # Seems to be working intermittently for highlights
-        # ("https://www.instagram.com/stories/highlights/17868810693068139/", "insta-via-bot: success", None, 50),
-        # Marking invalid url as success
-        ("https://www.instagram.com/p/INVALID", "insta-via-bot: success", "Media not found or unavailable", 0),
-        ("https://www.youtube.com/watch?v=ymCMy8OffHM", False, None, 0),
-    ])
+    @pytest.mark.parametrize(
+        "url, expected_status, message, len_media",
+        [
+            (
+                "https://www.instagram.com/p/C4QgLbrIKXG",
+                "insta-via-bot: success",
+                "Are you new to Bellingcat? - The way we share our investigations is different. 💭\nWe want you to read our story but also learn ou",
+                6,
+            ),
+            (
+                "https://www.instagram.com/reel/DEVLK8qoIbg/",
+                "insta-via-bot: success",
+                "Our volunteer community is at the centre of many incredible Bellingcat investigations and tools. Stephanie Ladel is one such vol",
+                3,
+            ),
+            # instagram tbot not working (potentially intermittently?) for stories - replace with a live story to retest
+            # ("https://www.instagram.com/stories/bellingcatofficial/3556336382743057476/", False, "Media not found or unavailable"),
+            # Seems to be working intermittently for highlights
+            # ("https://www.instagram.com/stories/highlights/17868810693068139/", "insta-via-bot: success", None, 50),
+            # Marking invalid url as success
+            ("https://www.instagram.com/p/INVALID", "insta-via-bot: success", "Media not found or unavailable", 0),
+            ("https://www.youtube.com/watch?v=ymCMy8OffHM", False, None, 0),
+        ],
+    )
     def test_download(self, url, expected_status, message, len_media, metadata_sample):
         """Test the `download()` method with various Instagram URLs."""
         metadata_sample.set_url(url)

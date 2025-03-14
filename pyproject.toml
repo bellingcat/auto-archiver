@@ -64,6 +64,8 @@ pytest = "^8.3.4"
 autopep8 = "^2.3.1"
 pytest-loguru = "^0.4.0"
 pytest-mock = "^3.14.0"
+ruff = "^0.9.10"
+pre-commit = "^4.1.0"
 
 [tool.poetry.group.docs.dependencies]
 sphinx = "^8.1.3"
@@ -90,3 +92,28 @@ markers = [
     "download: marks tests that download content from the network",
     "incremental: marks a class to run tests incrementally. If a test fails in the class, the remaining tests will be skipped",
 ]
+
+[tool.ruff]
+#exclude = ["docs"]
+line-length = 120
+# Remove this for a more detailed lint report
+output-format = "concise"
+# TODO: temp ignore rule for timestamping_enricher to allow for open PR
+exclude = ["src/auto_archiver/modules/timestamping_enricher/*"]
+
+
+[tool.ruff.lint]
+# Extend the rules to check for by adding them to this option:
+# See documentation for more details: https://docs.astral.sh/ruff/rules/
+#extend-select = ["B"]
+
+[tool.ruff.lint.per-file-ignores]
+# Ignore import violations in __init__.py files
+"__init__.py" = ["F401", "F403"]
+# Ignore 'useless expression' in manifest files.
+"__manifest__.py" = ["B018"]
+
+
+[tool.ruff.format]
+docstring-code-format = false
+

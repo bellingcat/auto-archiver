@@ -11,7 +11,6 @@ class MetadataEnricher(Enricher):
     Extracts metadata information from files using exiftool.
     """
 
-
     def enrich(self, to_enrich: Metadata) -> None:
         url = to_enrich.get_url()
         logger.debug(f"extracting EXIF metadata for {url=}")
@@ -23,13 +22,13 @@ class MetadataEnricher(Enricher):
     def get_metadata(self, filename: str) -> dict:
         try:
             # Run ExifTool command to extract metadata from the file
-            cmd = ['exiftool', filename]
+            cmd = ["exiftool", filename]
             result = subprocess.run(cmd, capture_output=True, text=True)
 
             # Process the output to extract individual metadata fields
             metadata = {}
             for line in result.stdout.splitlines():
-                field, value = line.strip().split(':', 1)
+                field, value = line.strip().split(":", 1)
                 metadata[field.strip()] = value.strip()
             return metadata
         except FileNotFoundError:

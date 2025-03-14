@@ -2,10 +2,7 @@
     "name": "Media Metadata Enricher",
     "type": ["enricher"],
     "requires_setup": True,
-    "dependencies": {
-        "python": ["loguru"], 
-        "bin": ["exiftool"]
-    },
+    "dependencies": {"python": ["loguru"], "bin": ["exiftool"]},
     "description": """
     Extracts metadata information from files using ExifTool.
 
@@ -17,5 +14,5 @@
     ### Notes
     - Requires ExifTool to be installed and accessible via the system's PATH.
     - Skips enrichment for files where metadata extraction fails.
-    """
+    """,
 }

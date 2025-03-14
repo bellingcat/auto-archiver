@@ -11,6 +11,7 @@ import certifi
 from auto_archiver.core import Enricher
 from auto_archiver.core import Metadata, Media
 
+
 class TimestampingEnricher(Enricher):
     """
     Uses several RFC3161 Time Stamp Authorities to generate a timestamp token that will be preserved. This can be used to prove that a certain file existed at a certain time, useful for legal purposes, for example, to prove that a certain file was not tampered with after a certain date.
@@ -25,27 +26,30 @@ class TimestampingEnricher(Enricher):
         logger.debug(f"RFC3161 timestamping existing files for {url=}")
 
         # create a new text file with the existing media hashes
-        hashes = [m.get("hash").replace("SHA-256:", "").replace("SHA3-512:", "") for m in to_enrich.media if m.get("hash")]
+        hashes = [
+            m.get("hash").replace("SHA-256:", "").replace("SHA3-512:", "") for m in to_enrich.media if m.get("hash")
+        ]
 
         if not len(hashes):
             logger.warning(f"No hashes found in {url=}")
             return
-        
+
         tmp_dir = self.tmp_dir
         hashes_fn = os.path.join(tmp_dir, "hashes.txt")
 
         data_to_sign = "\n".join(hashes)
-        with open(hashes_fn, "w") as f: 
+        with open(hashes_fn, "w") as f:
             f.write(data_to_sign)
         hashes_media = Media(filename=hashes_fn)
 
         timestamp_tokens = []
         from slugify import slugify
+
         for tsa_url in self.tsa_urls:
             try:
                 signing_settings = SigningSettings(tsp_server=tsa_url, digest_algorithm=DigestAlgorithm.SHA256)
                 signer = TSPSigner()
-                message = bytes(data_to_sign, encoding='utf8')
+                message = bytes(data_to_sign, encoding="utf8")
                 # send TSQ and get TSR from the TSA server
                 signed = signer.sign(message=message, signing_settings=signing_settings)
                 # fail if there's any issue with the certificates, uses certifi list of trusted CAs
@@ -54,7 +58,8 @@ class TimestampingEnricher(Enricher):
                 cert_chain = self.download_and_verify_certificate(signed)
                 # continue with saving the timestamp token
                 tst_fn = os.path.join(tmp_dir, f"timestamp_token_{slugify(tsa_url)}")
-                with open(tst_fn, "wb") as f: f.write(signed)
+                with open(tst_fn, "wb") as f:
+                    f.write(signed)
                 timestamp_tokens.append(Media(filename=tst_fn).set("tsa", tsa_url).set("cert_chain", cert_chain))
             except Exception as e:
                 logger.warning(f"Error while timestamping {url=} with {tsa_url=}: {e}")
@@ -75,7 +80,7 @@ class TimestampingEnricher(Enricher):
         tst = ContentInfo.load(signed)
 
         trust_roots = []
-        with open(certifi.where(), 'rb') as f:
+        with open(certifi.where(), "rb") as f:
             for _, _, der_bytes in pem.unarmor(f.read(), multiple=True):
                 trust_roots.append(der_bytes)
         context = ValidationContext(trust_roots=trust_roots)
@@ -83,11 +88,11 @@ class TimestampingEnricher(Enricher):
         certificates = tst["content"]["certificates"]
         first_cert = certificates[0].dump()
         intermediate_certs = []
-        for i in range(1, len(certificates)): # cannot use list comprehension [1:]
+        for i in range(1, len(certificates)):  # cannot use list comprehension [1:]
             intermediate_certs.append(certificates[i].dump())
 
         validator = CertificateValidator(first_cert, intermediate_certs=intermediate_certs, validation_context=context)
-        path = validator.validate_usage({'digital_signature'}, extended_key_usage={'time_stamping'})
+        path = validator.validate_usage({"digital_signature"}, extended_key_usage={"time_stamping"})
 
         cert_chain = []
         for cert in path:

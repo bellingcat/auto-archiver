@@ -5,5 +5,5 @@ from auto_archiver.core import Formatter
 
 
 class MuteFormatter(Formatter):
-
-    def format(self, item: Metadata) -> Media: return None
+    def format(self, item: Metadata) -> Media:
+        return None

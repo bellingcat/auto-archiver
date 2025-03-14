@@ -57,7 +57,7 @@ def test_enrich_handles_corrupted_image(metadata_with_images, mocker):
         ("screenshot", False),
         ("warc-file-123", False),
         ("regular-image", True),
-    ]
+    ],
 )
 def test_enrich_excludes_by_filetype(media_id, should_have_hash, mocker):
     metadata = Metadata()
@@ -73,4 +73,3 @@ def test_enrich_excludes_by_filetype(media_id, should_have_hash, mocker):
 
     media_item = metadata.media[0]
     assert (media_item.get("pdq_hash") is not None) == should_have_hash
-
