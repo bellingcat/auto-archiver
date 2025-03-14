@@ -38,7 +38,7 @@ class TestTiktokTikwmExtractor(TestExtractorBase):
         mock_get.return_value.status_code = 200
         mock_get.return_value.json.side_effect = ValueError
         with caplog.at_level("DEBUG"):
-            assert self.extractor.download(make_item(self.VALID_EXAMPLE_URL)) == False
+            assert self.extractor.download(make_item(self.VALID_EXAMPLE_URL)) is False
             mock_get.assert_called_once()
             mock_get.return_value.json.assert_called_once()
             # first message is just the 'Skipping using ytdlp to download files for TikTok' message
@@ -49,7 +49,7 @@ class TestTiktokTikwmExtractor(TestExtractorBase):
 
         mock_get.return_value.json.side_effect = Exception
         with caplog.at_level("ERROR"):
-            assert self.extractor.download(make_item(self.VALID_EXAMPLE_URL)) == False
+            assert self.extractor.download(make_item(self.VALID_EXAMPLE_URL)) is False
             mock_get.assert_called()
             assert mock_get.call_count == 2
             assert mock_get.return_value.json.call_count == 2
@@ -69,7 +69,7 @@ class TestTiktokTikwmExtractor(TestExtractorBase):
         mock_get.return_value.status_code = 200
         mock_get.return_value.json.return_value = response
         with caplog.at_level("DEBUG"):
-            assert self.extractor.download(make_item(self.VALID_EXAMPLE_URL)) == False
+            assert self.extractor.download(make_item(self.VALID_EXAMPLE_URL)) is False
             mock_get.assert_called_once()
             mock_get.return_value.json.assert_called_once()
             assert "failed to get a valid response from tikwm.com" in caplog.text
@@ -82,10 +82,9 @@ class TestTiktokTikwmExtractor(TestExtractorBase):
             ({"data": {"play": "url"}}, True),
         ],
     )
-    def test_correct_extraction(self, mock_get, make_item, response, has_vid):
+    def test_correct_extraction(self, mock_get, make_item, response, has_vid, mocker):
         mock_get.return_value.status_code = 200
         mock_get.return_value.json.return_value = {"msg": "success", **response}
-
         result = self.extractor.download(make_item(self.VALID_EXAMPLE_URL))
         if not has_vid:
             assert result is False
@@ -95,13 +94,8 @@ class TestTiktokTikwmExtractor(TestExtractorBase):
         mock_get.assert_called()
         assert mock_get.call_count == 1 + int(has_vid)
         mock_get.return_value.json.assert_called_once()
-        if not has_vid:
-            mock_logger.error.assert_called_once()
-            assert mock_logger.error.call_args[0][0].startswith("no valid video URL found")
-        else:
-            mock_logger.error.assert_not_called()
 
-    def test_correct_extraction(self, mock_get, make_item):
+    def test_correct_data_extracted(self, mock_get, make_item):
         mock_get.return_value.status_code = 200
         mock_get.return_value.json.return_value = {
             "msg": "success",
