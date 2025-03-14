@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import time
+import re
 
 # import domain_for_url
 from urllib.parse import urlparse, urlunparse
@@ -47,9 +48,10 @@ class CookieSettingDriver(webdriver.Firefox):
                     for name, value in cookie.split("="):
                         self.driver.add_cookie({"name": name, "value": value})
             elif self.cookiejar:
-                domain = urlparse(url).netloc.lstrip("www.")
+                domain = urlparse(url).netloc
+                regex = re.compile(f"(www)?\.?{domain}$")
                 for cookie in self.cookiejar:
-                    if domain in cookie.domain:
+                    if regex.match(cookie.domain):
                         try:
                             self.add_cookie(
                                 {
@@ -62,27 +64,33 @@ class CookieSettingDriver(webdriver.Firefox):
                                 }
                             )
                         except Exception as e:
-                            logger.warning(f"Failed to add cookie to webdriver: {e}")
+                            logger.warning(f"Failed to add cookie ({cookie.domain}) to webdriver for url {domain}: {e}")
 
-        if self.facebook_accept_cookies:
+        super(CookieSettingDriver, self).get(url)
+        time.sleep(2)
+
+        # Try and use some common button text to reject/accept cookies
+        for text in [
+            "Refuse non-essential cookies",
+            "Decline optional cookies",
+            "Reject additional cookies",
+            "Reject all",
+            "Accept all cookies",
+        ]:
             try:
-                logger.debug("Trying fb click accept cookie popup.")
-                super(CookieSettingDriver, self).get("http://www.facebook.com")
-                essential_only = self.find_element(By.XPATH, "//span[contains(text(), 'Decline optional cookies')]")
-                essential_only.click()
-                logger.debug("fb click worked")
-                # linux server needs a sleep otherwise facebook cookie won't have worked and we'll get a popup on next page
+                xpath = f"//*[contains(translate(text(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), '{text.lower()}')]"
+                self.find_element(By.XPATH, xpath).click()
                 time.sleep(2)
-            except Exception as e:
-                logger.warning("Failed on fb accept cookies.", e)
+            except selenium_exceptions.NoSuchElementException:
+                pass
 
         # now get the actual URL
-        super(CookieSettingDriver, self).get(url)
         if self.facebook_accept_cookies:
             # try and click the 'close' button on the 'login' window to close it
             try:
                 xpath = "//div[@role='dialog']//div[@aria-label='Close']"
-                WebDriverWait(self, 5).until(EC.element_to_be_clickable((By.XPATH, xpath))).click()
+                self.find_element(By.XPATH, xpath).click()
+                time.sleep(2)
             except selenium_exceptions.NoSuchElementException:
                 logger.warning("Unable to find the 'close' button on the facebook login window")
                 pass
