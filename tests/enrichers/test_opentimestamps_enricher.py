@@ -86,8 +86,6 @@ def test_download_tsr(setup_module, mocker):
     test_timestamp = Timestamp(hashlib.sha256(b"test").digest())
     mock_submit.return_value = test_timestamp
 
-    ots = setup_module("opentimestamps_enricher")
-
     # Create a calendar
     calendar = RemoteCalendar("https://alice.btc.calendar.opentimestamps.org")
 
@@ -109,7 +107,7 @@ def test_verify_timestamp(setup_module, detached_timestamp_file):
 
     # Check verification results
     assert verification_info["attestation_count"] == 2
-    assert verification_info["verified"] == True
+    assert verification_info["verified"] is True
     assert len(verification_info["attestations"]) == 2
 
     # Check attestation types
@@ -129,7 +127,7 @@ def test_verify_pending_only(setup_module, pending_timestamp_file):
     verification_info = ots.verify_timestamp(pending_timestamp_file)
 
     assert verification_info["attestation_count"] == 2
-    assert verification_info["verified"] == False
+    assert verification_info["verified"] is False
 
     # All attestations should be of type "pending"
     assert all(a["status"] == "pending" for a in verification_info["attestations"])
@@ -148,7 +146,7 @@ def test_verify_bitcoin_completed(setup_module, verified_timestamp_file):
     verification_info = ots.verify_timestamp(verified_timestamp_file)
 
     assert verification_info["attestation_count"] == 1
-    assert verification_info["verified"] == True
+    assert verification_info["verified"] is True
     assert "pending" not in verification_info
 
     # Check that the attestation is a Bitcoin attestation
@@ -184,14 +182,14 @@ def test_full_enriching(setup_module, sample_file_path, sample_media, mocker):
     ots.enrich(metadata)
 
     # Verify results
-    assert metadata.get("opentimestamped") == True
+    assert metadata.get("opentimestamped") is True
     assert metadata.get("opentimestamps_count") == 1
 
     # Check that we have one parent media item: the original
     assert len(metadata.media) == 1
 
     # Check that the original media was updated
-    assert metadata.media[0].get("opentimestamps") == True
+    assert metadata.media[0].get("opentimestamps") is True
 
     # Check the timestamp file media is a child of the original
     assert len(metadata.media[0].get("opentimestamp_files")) == 1
@@ -201,7 +199,7 @@ def test_full_enriching(setup_module, sample_file_path, sample_media, mocker):
     assert timestamp_media.get("opentimestamps_version") is not None
 
     # Check verification results on the timestamp media
-    assert timestamp_media.get("verified") == True
+    assert timestamp_media.get("verified") is True
     assert timestamp_media.get("attestation_count") == 1
 
 
@@ -238,7 +236,7 @@ def test_full_enriching_one_calendar_error(
     ots.enrich(metadata)
 
     # Verify results
-    assert metadata.get("opentimestamped") == True
+    assert metadata.get("opentimestamped") is True
     assert metadata.get("opentimestamps_count") == 1  # only alice worked, not bob
 
 
@@ -259,7 +257,7 @@ def test_full_enriching_calendar_error(setup_module, sample_file_path, sample_me
     ots.enrich(metadata)
 
     # Verify results
-    assert metadata.get("opentimestamped") == False
+    assert metadata.get("opentimestamped") is False
     assert metadata.get("opentimestamps_count") is None
 
 
