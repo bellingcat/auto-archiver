@@ -59,4 +59,5 @@ output_schema = {
 current_file_dir = os.path.dirname(os.path.abspath(__file__))
 output_file = os.path.join(current_file_dir, "settings/src/schema.json")
 with open(output_file, "w") as file:
+    print(f"Writing schema to {output_file}")
     json.dump(output_schema, file, indent=4, cls=SchemaEncoder)
