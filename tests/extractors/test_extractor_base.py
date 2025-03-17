@@ -7,7 +7,6 @@ from auto_archiver.core.extractor import Extractor
 
 
 class TestExtractorBase(object):
-
     extractor_module: str = None
     config: dict = None
 
@@ -17,7 +16,7 @@ class TestExtractorBase(object):
         assert self.config is not None, "self.config must be a dict set on the subclass"
 
         self.extractor: Type[Extractor] = setup_module(self.extractor_module, self.config)
-    
+
     def assertValidResponseMetadata(self, test_response: Metadata, title: str, timestamp: str, status: str = ""):
         assert test_response is not False
 

@@ -51,4 +51,3 @@ def test_ssl_error_handling(enricher, metadata, mocker):
     mocker.patch("ssl.get_server_certificate", side_effect=ssl.SSLError("SSL error"))
     with pytest.raises(ssl.SSLError, match="SSL error"):
         enricher.enrich(metadata)
-

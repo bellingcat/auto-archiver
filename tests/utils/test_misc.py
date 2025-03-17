@@ -14,7 +14,7 @@ from auto_archiver.utils.misc import (
     update_nested_dict,
     calculate_file_hash,
     random_str,
-    get_timestamp
+    get_timestamp,
 )
 
 
@@ -38,39 +38,45 @@ class TestDirectoryUtils:
         mkdir_if_not_exists(existing_dir)
         assert existing_dir.exists()
 
+
 class TestURLExpansion:
-    @pytest.mark.parametrize("input_url,expected", [
-        ("https://example.com", "https://example.com"),
-        ("https://t.co/test", "https://expanded.url")
-    ])
+    @pytest.mark.parametrize(
+        "input_url,expected",
+        [("https://example.com", "https://example.com"), ("https://t.co/test", "https://expanded.url")],
+    )
     def test_expand_url(self, input_url, expected, mocker):
         mock_response = mocker.Mock()
         mock_response.url = "https://expanded.url"
-        mocker.patch('requests.get', return_value=mock_response)
+        mocker.patch("requests.get", return_value=mock_response)
         result = expand_url(input_url)
         assert result == expected
 
     def test_expand_url_handles_errors(self, caplog, mocker):
-        mocker.patch('requests.get', side_effect=Exception("Connection error"))
+        mocker.patch("requests.get", side_effect=Exception("Connection error"))
         url = "https://t.co/error"
         result = expand_url(url)
         assert result == url
         assert f"Failed to expand url {url}" in caplog.text
+
 
 class TestAttributeHandling:
     class Sample:
         exists = "value"
         none = None
 
-    @pytest.mark.parametrize("obj,attr,default,expected", [
-        (Sample(), "exists", "default", "value"),
-        (Sample(), "none", "default", "default"),
-        (Sample(), "missing", "default", "default"),
-        (None, "anything", "fallback", "fallback"),
-    ])
+    @pytest.mark.parametrize(
+        "obj,attr,default,expected",
+        [
+            (Sample(), "exists", "default", "value"),
+            (Sample(), "none", "default", "default"),
+            (Sample(), "missing", "default", "default"),
+            (None, "anything", "fallback", "fallback"),
+        ],
+    )
     def test_getattr_or(self, obj, attr, default, expected):
         # Test gets attribute or returns a default value
         assert getattr_or(obj, attr, default) == expected
+
 
 class TestDateTimeHandling:
     def test_datetime_encoder(self, sample_datetime):
@@ -83,11 +89,14 @@ class TestDateTimeHandling:
         result = dump_payload(payload)
         assert str(sample_datetime) in result
 
-    @pytest.mark.parametrize("dt_str,fmt,expected", [
-        ("2023-01-01 12:00:00+00:00", None, datetime(2023, 1, 1, 12, 0, tzinfo=timezone.utc)),
-        ("20230101 120000", "%Y%m%d %H%M%S", datetime(2023, 1, 1, 12, 0)),
-        ("invalid", None, None),
-    ])
+    @pytest.mark.parametrize(
+        "dt_str,fmt,expected",
+        [
+            ("2023-01-01 12:00:00+00:00", None, datetime(2023, 1, 1, 12, 0, tzinfo=timezone.utc)),
+            ("20230101 120000", "%Y%m%d %H%M%S", datetime(2023, 1, 1, 12, 0)),
+            ("invalid", None, None),
+        ],
+    )
     def test_datetime_from_string(self, dt_str, fmt, expected):
         result = get_datetime_from_str(dt_str, fmt)
         if expected is None:
@@ -95,15 +104,20 @@ class TestDateTimeHandling:
         else:
             assert result == expected.replace(tzinfo=result.tzinfo)
 
+
 class TestDictUtils:
-    @pytest.mark.parametrize("original,update,expected", [
-        ({"a": 1}, {"b": 2}, {"a": 1, "b": 2}),
-        ({"nested": {"a": 1}}, {"nested": {"b": 2}}, {"nested": {"a": 1, "b": 2}}),
-        ({"a": {"b": {"c": 1}}}, {"a": {"b": {"c": 2}}}, {"a": {"b": {"c": 2}}}),
-    ])
+    @pytest.mark.parametrize(
+        "original,update,expected",
+        [
+            ({"a": 1}, {"b": 2}, {"a": 1, "b": 2}),
+            ({"nested": {"a": 1}}, {"nested": {"b": 2}}, {"nested": {"a": 1, "b": 2}}),
+            ({"a": {"b": {"c": 1}}}, {"a": {"b": {"c": 2}}}, {"a": {"b": {"c": 2}}}),
+        ],
+    )
     def test_update_nested_dict(self, original, update, expected):
         update_nested_dict(original, update)
         assert original == expected
+
 
 class TestHashingUtils:
     def test_file_hashing(self, sample_file):
@@ -118,6 +132,7 @@ class TestHashingUtils:
         expected = hashlib.sha256(content).hexdigest()
         assert calculate_file_hash(str(file_path)) == expected
 
+
 class TestMiscUtils:
     def test_random_str_length(self):
         for length in [8, 16, 32]:
@@ -131,11 +146,14 @@ class TestMiscUtils:
     def test_random_str_uniqueness(self):
         assert random_str() != random_str()
 
-    @pytest.mark.parametrize("ts_input,utc,iso,expected_type", [
-        (datetime.now(), True, True, str),
-        ("2023-01-01T12:00:00+00:00", False, False, datetime),
-        (1672574400, True, True, str),
-    ])
+    @pytest.mark.parametrize(
+        "ts_input,utc,iso,expected_type",
+        [
+            (datetime.now(), True, True, str),
+            ("2023-01-01T12:00:00+00:00", False, False, datetime),
+            (1672574400, True, True, str),
+        ],
+    )
     def test_timestamp_parsing(self, ts_input, utc, iso, expected_type):
         result = get_timestamp(ts_input, utc=utc, iso=iso)
         assert isinstance(result, expected_type)

@@ -5,10 +5,9 @@ from auto_archiver.core import Feeder
 from auto_archiver.core import Metadata
 from auto_archiver.utils import url_or_none
 
+
 class CSVFeeder(Feeder):
-
     column = None
-
 
     def __iter__(self) -> Metadata:
         for file in self.files:
@@ -20,9 +19,11 @@ class CSVFeeder(Feeder):
                     try:
                         url_column = first_row.index(url_column)
                     except ValueError:
-                        logger.error(f"Column {url_column} not found in header row: {first_row}. Did you set the 'column' config correctly?")
+                        logger.error(
+                            f"Column {url_column} not found in header row: {first_row}. Did you set the 'column' config correctly?"
+                        )
                         return
-                elif not(url_or_none(first_row[url_column])):
+                elif not (url_or_none(first_row[url_column])):
                     # it's a header row, but we've been given a column number already
                     logger.debug(f"Skipping header row: {first_row}")
                 else:

@@ -23,7 +23,9 @@ class MetaEnricher(Enricher):
         self.enrich_archive_duration(to_enrich)
 
     def enrich_file_sizes(self, to_enrich: Metadata):
-        logger.debug(f"calculating archive file sizes for url={to_enrich.get_url()} ({len(to_enrich.media)} media files)")
+        logger.debug(
+            f"calculating archive file sizes for url={to_enrich.get_url()} ({len(to_enrich.media)} media files)"
+        )
         total_size = 0
         for media in to_enrich.get_all_media():
             file_stats = os.stat(media.filename)
@@ -33,7 +35,6 @@ class MetaEnricher(Enricher):
 
         to_enrich.set("total_bytes", total_size)
         to_enrich.set("total_size", self.human_readable_bytes(total_size))
-
 
     def human_readable_bytes(self, size: int) -> str:
         # receives number of bytes and returns human readble size

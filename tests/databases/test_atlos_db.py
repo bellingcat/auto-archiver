@@ -49,10 +49,8 @@ def test_failed_with_atlos_id(atlos_db, metadata, mocker):
     fake_resp = FakeAPIResponse({}, raise_error=False)
     post_mock = mocker.patch.object(atlos_db, "_post", return_value=fake_resp)
     atlos_db.failed(metadata, "failure reason")
-    expected_endpoint = f"/api/v2/source_material/metadata/42/auto_archiver"
-    expected_json = {
-        "metadata": {"processed": True, "status": "error", "error": "failure reason"}
-    }
+    expected_endpoint = "/api/v2/source_material/metadata/42/auto_archiver"
+    expected_json = {"metadata": {"processed": True, "status": "error", "error": "failure reason"}}
     post_mock.assert_called_once_with(expected_endpoint, json=expected_json)
 
 
@@ -87,7 +85,7 @@ def test_done_with_atlos_id(atlos_db, metadata, mocker):
     fake_resp = FakeAPIResponse({}, raise_error=False)
     post_mock = mocker.patch.object(atlos_db, "_post", return_value=fake_resp)
     atlos_db.done(metadata)
-    expected_endpoint = f"/api/v2/source_material/metadata/99/auto_archiver"
+    expected_endpoint = "/api/v2/source_material/metadata/99/auto_archiver"
     expected_results = metadata.metadata.copy()
     expected_results["timestamp"] = now.isoformat()
     expected_json = {

@@ -14,8 +14,8 @@ def enricher(setup_module):
 def metadata_with_images():
     m = Metadata()
     m.set_url("https://example.com")
-    m.add_media(Media(filename="image1.jpg", key="image1"))
-    m.add_media(Media(filename="image2.jpg", key="image2"))
+    m.add_media(Media(filename="image1.jpg", _key="image1"))
+    m.add_media(Media(filename="image2.jpg", _key="image2"))
     return m
 
 
@@ -57,7 +57,7 @@ def test_enrich_handles_corrupted_image(metadata_with_images, mocker):
         ("screenshot", False),
         ("warc-file-123", False),
         ("regular-image", True),
-    ]
+    ],
 )
 def test_enrich_excludes_by_filetype(media_id, should_have_hash, mocker):
     metadata = Metadata()
@@ -73,4 +73,3 @@ def test_enrich_excludes_by_filetype(media_id, should_have_hash, mocker):
 
     media_item = metadata.media[0]
     assert (media_item.get("pdq_hash") is not None) == should_have_hash
-

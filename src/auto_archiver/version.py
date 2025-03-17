@@ -1,7 +1,8 @@
-""" Version information for the auto_archiver package.
-    TODO: This is a placeholder to replicate previous versioning.
+"""Version information for the auto_archiver package.
+TODO: This is a placeholder to replicate previous versioning.
 
 """
+
 from importlib.metadata import version as get_version
 
 VERSION_SHORT = get_version("auto_archiver")

@@ -10,6 +10,7 @@ This enricher is typically used after thumbnail or screenshot enrichers
 to ensure images are available for hashing.
 
 """
+
 import traceback
 import pdqhash
 import numpy as np
@@ -34,7 +35,12 @@ class PdqHashEnricher(Enricher):
         for m in to_enrich.media:
             for media in m.all_inner_media(True):
                 media_id = media.get("id", "")
-                if media.is_image() and "screenshot" not in media_id and "warc-file-" not in media_id and len(hd := self.calculate_pdq_hash(media.filename)):
+                if (
+                    media.is_image()
+                    and "screenshot" not in media_id
+                    and "warc-file-" not in media_id
+                    and len(hd := self.calculate_pdq_hash(media.filename))
+                ):
                     media.set("pdq_hash", hd)
                     media_with_hashes.append(media.filename)
 
@@ -51,5 +57,7 @@ class PdqHashEnricher(Enricher):
                 hash = "".join(str(b) for b in hash_array)
                 return hex(int(hash, 2))[2:]
         except UnidentifiedImageError as e:
-            logger.error(f"Image {filename=} is likely corrupted or in unsupported format {e}: {traceback.format_exc()}")
+            logger.error(
+                f"Image {filename=} is likely corrupted or in unsupported format {e}: {traceback.format_exc()}"
+            )
         return ""

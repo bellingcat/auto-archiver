@@ -1,16 +1,15 @@
 {
-    'name': 'Command Line Feeder',
-    'type': ['feeder'],
-    'entry_point': 'cli_feeder::CLIFeeder',
-    'requires_setup': False,
-    'description': 'Feeds URLs to orchestrator from the command line',
-    'configs': {
-        'urls': {
-            'default': None,
-            'help': 'URL(s) to archive, either a single URL or a list of urls, should not come from config.yaml',
+    "name": "Command Line Feeder",
+    "type": ["feeder"],
+    "entry_point": "cli_feeder::CLIFeeder",
+    "requires_setup": False,
+    "configs": {
+        "urls": {
+            "default": None,
+            "help": "URL(s) to archive, either a single URL or a list of urls, should not come from config.yaml",
         },
     },
-    'description': """
+    "description": """
 The Command Line Feeder is the default enabled feeder for the Auto Archiver. It allows you to pass URLs directly to the orchestrator from the command line 
 without the need to specify any additional configuration or command line arguments:
 

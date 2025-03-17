@@ -1,5 +1,6 @@
 import os.path
-import click, json
+import click
+import json
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -70,11 +71,7 @@ def main(credentials, token):
         print(emailAddress)
 
         # Call the Drive v3 API and return some files
-        results = (
-            service.files()
-            .list(pageSize=10, fields="nextPageToken, files(id, name)")
-            .execute()
-        )
+        results = service.files().list(pageSize=10, fields="nextPageToken, files(id, name)").execute()
         items = results.get("files", [])
 
         if not items:

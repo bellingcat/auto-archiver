@@ -1,7 +1,7 @@
 {
     "name": "Atlos Feeder Database Storage",
     "type": ["feeder", "database", "storage"],
-"entry_point": "atlos_feeder_db_storage::AtlosFeederDbStorage",
+    "entry_point": "atlos_feeder_db_storage::AtlosFeederDbStorage",
     "requires_setup": True,
     "dependencies": {
         "python": ["loguru", "requests"],
@@ -15,7 +15,7 @@
         "atlos_url": {
             "default": "https://platform.atlos.org",
             "help": "The URL of your Atlos instance (e.g., https://platform.atlos.org), without a trailing slash.",
-            "type": "str"
+            "type": "str",
         },
     },
     "description": """
@@ -42,5 +42,5 @@
     - Requires an Atlos account with a project and a valid API token for authentication.
     - Ensures only unprocessed, visible, and ready-to-archive URLs are returned.
     - Feches any media items within an Atlos project, regardless of separation into incidents.
-    """
+    """,
 }
