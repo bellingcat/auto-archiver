@@ -1,7 +1,6 @@
 # Getting Started
 
 ```{toctree}
-:maxdepth: 1
 :hidden:
 
 installation.md
@@ -9,6 +8,7 @@ configurations.md
 config_editor.md
 authentication.md
 requirements.md
+faq.md
 config_cheatsheet.md
 ```
 
