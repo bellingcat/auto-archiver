@@ -72,7 +72,9 @@ class GenericExtractor(Extractor):
         """Setup PO Token provider https://github.com/Brainicism/bgutil-ytdlp-pot-provider."""
 
         # Determine the default location for the transpiled PO token script.
-        default_script = os.path.expanduser("~/bgutil-ytdlp-pot-provider/server/build/generate_once.js")
+        default_script = os.path.join(
+            "scripts", "potoken_provider", "bgutil-ytdlp-pot-provider", "server", "build", "generate_once.js"
+        )
         # Check if the PO token script exists. if not, trigger the script generation.
         if not os.path.exists(default_script):
             logger.info("PO Token script not found. Running setup...")
@@ -82,8 +84,8 @@ class GenericExtractor(Extractor):
                 logger.error(f"Failed to setup PO Token script: {e}")
                 return
 
-        # Set the extractor_args to point to the default script, if not already provided.
-        # self.extractor_args.setdefault("youtube", {})["getpot_bgutil_script"] = default_script
+        # Use the PO Token script in yt-dlp to fetch tokens on demand.
+        self.extractor_args.setdefault("youtube", {})["getpot_bgutil_script"] = default_script
         logger.info(f"Using PO Token script at: {default_script}")
 
     def suitable_extractors(self, url: str) -> Generator[str, None, None]:
@@ -443,9 +445,6 @@ class GenericExtractor(Extractor):
             "--write-subs" if self.subtitles else "--no-write-subs",
             "--write-auto-subs" if self.subtitles else "--no-write-auto-subs",
             "--live-from-start" if self.live_from_start else "--no-live-from-start",
-            # TODO: Move this to documentation
-            # Note: add the --verbose flag for debugging
-            "--verbose",
         ]
 
         # proxy handling
