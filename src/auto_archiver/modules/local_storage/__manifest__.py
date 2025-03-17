@@ -20,7 +20,7 @@
         "save_absolute": {
             "default": False,
             "type": "bool",
-            "help": "whether the path to the stored file is absolute or relative in the output result inc. formatters (WARN: leaks the file structure)",
+            "help": "whether the path to the stored file is absolute or relative in the output result inc. formatters (Warning: saving an absolute path will show your computer's file structure)",
         },
     },
     "description": """

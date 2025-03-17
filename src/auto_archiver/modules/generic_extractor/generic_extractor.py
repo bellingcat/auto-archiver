@@ -67,8 +67,18 @@ class GenericExtractor(Extractor):
         """
         Returns a list of valid extractors for the given URL"""
         for info_extractor in yt_dlp.YoutubeDL()._ies.values():
-            if info_extractor.suitable(url) and info_extractor.working():
+            if not info_extractor.working():
+                continue
+
+            # check if there's a dropin and see if that declares whether it's suitable
+            dropin = self.dropin_for_name(info_extractor.ie_key())
+            if dropin and dropin.is_suitable(url, info_extractor):
                 yield info_extractor
+                continue
+
+            if info_extractor.suitable(url):
+                yield info_extractor
+                continue
 
     def suitable(self, url: str) -> bool:
         """
@@ -188,9 +198,13 @@ class GenericExtractor(Extractor):
         result = self.download_additional_media(video_data, info_extractor, result)
 
         # keep both 'title' and 'fulltitle', but prefer 'title', falling back to 'fulltitle' if it doesn't exist
-        result.set_title(video_data.pop("title", video_data.pop("fulltitle", "")))
-        result.set_url(url)
-        if "description" in video_data:
+        if not result.get_title():
+            result.set_title(video_data.pop("title", video_data.pop("fulltitle", "")))
+
+        if not result.get("url"):
+            result.set_url(url)
+
+        if "description" in video_data and not result.get_content():
             result.set_content(video_data["description"])
         # extract comments if enabled
         if self.comments:
@@ -207,10 +221,10 @@ class GenericExtractor(Extractor):
             )
 
         # then add the common metadata
-        if timestamp := video_data.pop("timestamp", None):
+        if timestamp := video_data.pop("timestamp", None) and not result.get("timestamp"):
             timestamp = datetime.datetime.fromtimestamp(timestamp, tz=datetime.timezone.utc).isoformat()
             result.set_timestamp(timestamp)
-        if upload_date := video_data.pop("upload_date", None):
+        if upload_date := video_data.pop("upload_date", None) and not result.get("upload_date"):
             upload_date = datetime.datetime.strptime(upload_date, "%Y%m%d").replace(tzinfo=datetime.timezone.utc)
             result.set("upload_date", upload_date)
 
@@ -240,7 +254,8 @@ class GenericExtractor(Extractor):
             return False
 
         post_data = dropin.extract_post(url, ie_instance)
-        return dropin.create_metadata(post_data, ie_instance, self, url)
+        result = dropin.create_metadata(post_data, ie_instance, self, url)
+        return self.add_metadata(post_data, info_extractor, url, result)
 
     def get_metadata_for_video(
         self, data: dict, info_extractor: Type[InfoExtractor], url: str, ydl: yt_dlp.YoutubeDL
@@ -296,6 +311,7 @@ class GenericExtractor(Extractor):
 
         def _load_dropin(dropin):
             dropin_class = getattr(dropin, dropin_class_name)()
+            dropin.extractor = self
             return self._dropins.setdefault(dropin_name, dropin_class)
 
         try:
@@ -340,7 +356,7 @@ class GenericExtractor(Extractor):
         dropin_submodule = self.dropin_for_name(info_extractor.ie_key())
 
         try:
-            if dropin_submodule and dropin_submodule.skip_ytdlp_download(info_extractor, url):
+            if dropin_submodule and dropin_submodule.skip_ytdlp_download(url, info_extractor):
                 logger.debug(f"Skipping using ytdlp to download files for {info_extractor.ie_key()}")
                 raise SkipYtdlp()
 
@@ -359,7 +375,7 @@ class GenericExtractor(Extractor):
 
             if not isinstance(e, SkipYtdlp):
                 logger.debug(
-                    f'Issue using "{info_extractor.IE_NAME}" extractor to download video (error: {repr(e)}), attempting to use extractor to get post data instead'
+                    f'Issue using "{info_extractor.IE_NAME}" extractor to download video (error: {repr(e)}), attempting to use dropin to get post data instead'
                 )
 
             try:

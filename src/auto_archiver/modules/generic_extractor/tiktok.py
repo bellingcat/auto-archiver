@@ -38,6 +38,9 @@ class Tiktok(GenericDropin):
         api_data["video_url"] = video_url
         return api_data
 
+    def keys_to_clean(self, video_data: dict, info_extractor):
+        return ["video_url", "title", "create_time", "author", "cover", "origin_cover", "ai_dynamic_cover", "duration"]
+
     def create_metadata(self, post: dict, ie_instance, archiver, url):
         # prepare result, start by downloading video
         result = Metadata()
@@ -54,17 +57,17 @@ class Tiktok(GenericDropin):
             logger.error(f"failed to download video from {video_url}")
             return False
         video_media = Media(video_downloaded)
-        if duration := post.pop("duration", None):
+        if duration := post.get("duration", None):
             video_media.set("duration", duration)
         result.add_media(video_media)
 
         # add remaining metadata
-        result.set_title(post.pop("title", ""))
+        result.set_title(post.get("title", ""))
 
-        if created_at := post.pop("create_time", None):
+        if created_at := post.get("create_time", None):
             result.set_timestamp(datetime.fromtimestamp(created_at, tz=timezone.utc))
 
-        if author := post.pop("author", None):
+        if author := post.get("author", None):
             result.set("author", author)
 
         result.set("api_data", post)
