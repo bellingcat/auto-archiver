@@ -404,11 +404,19 @@ class GenericExtractor(Extractor):
             "--write-subs" if self.subtitles else "--no-write-subs",
             "--write-auto-subs" if self.subtitles else "--no-write-auto-subs",
             "--live-from-start" if self.live_from_start else "--no-live-from-start",
-            "--proxy",
-            self.proxy if self.proxy else "",
-            f"--max-downloads {self.max_downloads}" if self.max_downloads != "inf" else "",
-            f"--playlist-end {self.max_downloads}" if self.max_downloads != "inf" else "",
+            # TODO: Move this to documentation
+            # Note: add the --verbose flag for debugging
+            "--verbose",
         ]
+
+        # proxy handling
+        if self.proxy:
+            ydl_options.extend(["--proxy", self.proxy])
+
+        # max_downloads handling
+        if self.max_downloads != "inf":
+            ydl_options.extend(["--max-downloads", str(self.max_downloads)])
+            ydl_options.extend(["--playlist-end", str(self.max_downloads)])
 
         # set up auth
         auth = self.auth_for_site(url, extract_cookies=False)
@@ -428,22 +436,15 @@ class GenericExtractor(Extractor):
                 logger.debug(f"Using cookies from file {auth['cookies_file']} for {url}")
                 ydl_options.extend(("--cookies", auth["cookies_file"]))
 
-
         # Applying user-defined extractor_args
         if self.extractor_args:
-            logger.info(f"Applying user-defined extractor_args")
-            ydl_options.setdefault('extractor_args', {})
-
-        for key, args in self.extractor_args.items():
-            logger.debug(f"Setting extractor_args: {key}")
-            if isinstance(args, dict):
-                # Site specific arguments (e.g., youtube: somekey=value)
-                ydl_options['extractor_args'].setdefault(key, {}).update(args)
-            else:
-                # General extractor_args (e.g., somekey=value)
-                ydl_options['extractor_args'][key] = args
-
-
+            for key, args in self.extractor_args.items():
+                logger.debug(f"Setting extractor_args: {key}")
+                if isinstance(args, dict):
+                    arg_str = ";".join(f"{k}={v}" for k, v in args.items())
+                else:
+                    arg_str = str(args)
+                ydl_options.extend(["--extractor-args", f"{key}:{arg_str}"])
 
         if self.ytdlp_args:
             logger.debug("Adding additional ytdlp arguments: {self.ytdlp_args}")
