@@ -1,9 +1,11 @@
-import os
+import hashlib
 import json
+import os
 import uuid
 from datetime import datetime, timezone
+from dateutil.parser import parse as parse_dt
+
 import requests
-import hashlib
 from loguru import logger
 
 
@@ -14,22 +16,23 @@ def mkdir_if_not_exists(folder):
 
 def expand_url(url):
     # expand short URL links
-    if 'https://t.co/' in url:
+    if "https://t.co/" in url:
         try:
             r = requests.get(url)
-            logger.debug(f'Expanded url {url} to {r.url}')
+            logger.debug(f"Expanded url {url} to {r.url}")
             return r.url
-        except:
-            logger.error(f'Failed to expand url {url}')
+        except Exception:
+            logger.error(f"Failed to expand url {url}")
     return url
 
 
 def getattr_or(o: object, prop: str, default=None):
     try:
         res = getattr(o, prop)
-        if res is None: raise
+        if res is None:
+            raise
         return res
-    except:
+    except Exception:
         return default
 
 
@@ -59,46 +62,57 @@ def random_str(length: int = 32) -> str:
     return str(uuid.uuid4()).replace("-", "")[:length]
 
 
-def json_loader(cli_val):
-    return json.loads(cli_val)
-
-
-def calculate_file_hash(filename: str, hash_algo = hashlib.sha256, chunksize: int = 16000000) -> str:
+def calculate_file_hash(filename: str, hash_algo=hashlib.sha256, chunksize: int = 16000000) -> str:
     hash = hash_algo()
     with open(filename, "rb") as f:
         while True:
             buf = f.read(chunksize)
-            if not buf: break
+            if not buf:
+                break
             hash.update(buf)
     return hash.hexdigest()
 
-def get_current_datetime_iso() -> str:
-    return datetime.now(timezone.utc).replace(tzinfo=timezone.utc).isoformat()
 
+def get_datetime_from_str(dt_str: str, fmt: str | None = None, dayfirst=True) -> datetime | None:
+    """parse a datetime string with option of passing a specific format
 
-def get_datetime_from_str(dt_str: str, fmt: str | None = None) -> datetime | None:
-    # parse a datetime string with option of passing a specific format
+    Args:
+        dt_str: the datetime string to parse
+        fmt: the python date format of the datetime string, if None, dateutil.parser.parse is used
+        dayfirst: Use this to signify between date formats which put the day first, vs the month first:
+                    e.g. DD/MM/YYYY vs MM/DD/YYYY
+    """
     try:
-        return datetime.strptime(dt_str, fmt) if fmt else datetime.fromisoformat(dt_str)
+        return datetime.strptime(dt_str, fmt) if fmt else parse_dt(dt_str, dayfirst=dayfirst)
     except ValueError as e:
         logger.error(f"Unable to parse datestring {dt_str}: {e}")
         return None
 
 
-def get_timestamp(ts, utc=True, iso=True) -> str | datetime | None:
-    # Consistent parsing of timestamps
-    # If utc=True, the timezone is set to UTC,
-    # if iso=True, the output is an iso string
-    if not ts: return
+def get_timestamp(ts, utc=True, iso=True, dayfirst=True) -> str | datetime | None:
+    """Consistent parsing of timestamps.
+    Args:
+         If utc=True, the timezone is set to UTC,
+         if iso=True, the output is an iso string
+         Use dayfirst to signify between date formats which put the date vs month first:
+         e.g. DD/MM/YYYY vs MM/DD/YYYY
+    """
+    if not ts:
+        return
     try:
-        if isinstance(ts, str): ts = datetime.fromisoformat(ts)
-        if isinstance(ts, (int, float)): ts = datetime.fromtimestamp(ts)
-        if utc: ts = ts.replace(tzinfo=timezone.utc)
-        if iso: return ts.isoformat()
+        if isinstance(ts, str):
+            ts = parse_dt(ts, dayfirst=dayfirst)
+        if isinstance(ts, (int, float)):
+            ts = datetime.fromtimestamp(ts)
+        if utc:
+            ts = ts.replace(tzinfo=timezone.utc)
+        if iso:
+            return ts.isoformat()
         return ts
     except Exception as e:
         logger.error(f"Unable to parse timestamp {ts}: {e}")
         return None
+
 
 def get_current_timestamp() -> str:
     return get_timestamp(datetime.now())

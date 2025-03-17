@@ -10,7 +10,7 @@
 
 
 
-Auto Archiver is a Python tool to automatically archive content on the web in a secure and verifiable way. It takes URLs from different sources (e.g. a CSV file, Google Sheets, command line etc.) and archives the content of each one. It can archive social media posts, videos, images and webpages. Content can enriched, then saved either locally or remotely (S3 bucket, Google Drive). The status of the archiving process can be appended to a CSV report, or if using Google Sheets – back to the original sheet.
+Auto Archiver is a Python tool to automatically archive content on the web in a secure and verifiable way. It takes URLs from different sources (e.g. a CSV file, Google Sheets, command line etc.) and archives the content of each one. It can archive social media posts, videos, images and webpages. Content can be enriched, then saved either locally or remotely (S3 bucket, Google Drive). The status of the archiving process can be appended to a CSV report, or if using Google Sheets – back to the original sheet.
 
 <div class="hidden_rtd">
   
@@ -23,11 +23,13 @@ Read the [article about Auto Archiver on bellingcat.com](https://www.bellingcat.
 
 ## Installation
 
-View the [Installation Guide](installation/installation.md) for full instructions
+View the [Installation Guide](https://auto-archiver.readthedocs.io/en/latest/installation/installation.html) for full instructions
+
+**Advanced:**
 
 To get started quickly using Docker:
 
-`docker pull bellingcat/auto-archiver && docker run`
+`docker pull bellingcat/auto-archiver && docker run --rm -v secrets:/app/secrets bellingcat/auto-archiver --config secrets/orchestration.yaml`
 
 Or pip:
 

@@ -3,10 +3,11 @@ Defines the Step abstract base class, which acts as a blueprint for steps in the
 by handling user configuration, validating the steps properties, and implementing dynamic instantiation.
 
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import List, TYPE_CHECKING
+from typing import List, TYPE_CHECKING, Type
 import shutil
 import ast
 import copy
@@ -24,17 +25,17 @@ if TYPE_CHECKING:
 
 HAS_SETUP_PATHS = False
 
-class ModuleFactory:
 
+class ModuleFactory:
     def __init__(self):
         self._lazy_modules = {}
 
     def setup_paths(self, paths: list[str]) -> None:
         """
         Sets up the paths for the modules to be loaded from
-        
+
         This is necessary for the modules to be imported correctly
-        
+
         """
         global HAS_SETUP_PATHS
 
@@ -46,45 +47,51 @@ class ModuleFactory:
 
             # see odoo/module/module.py -> initialize_sys_path
             if path not in auto_archiver.modules.__path__:
-                    if HAS_SETUP_PATHS == True:
-                        logger.warning(f"You are attempting to re-initialise the module paths with: '{path}' for a 2nd time. \
+                if HAS_SETUP_PATHS:
+                    logger.warning(
+                        f"You are attempting to re-initialise the module paths with: '{path}' for a 2nd time. \
                                        This could lead to unexpected behaviour. It is recommended to only use a single modules path. \
-                                       If you wish to load modules from different paths then load a 2nd python interpreter (e.g. using multiprocessing).")
-                    auto_archiver.modules.__path__.append(path)
+                                       If you wish to load modules from different paths then load a 2nd python interpreter (e.g. using multiprocessing)."
+                    )
+                auto_archiver.modules.__path__.append(path)
 
         # sort based on the length of the path, so that the longest path is last in the list
         auto_archiver.modules.__path__ = sorted(auto_archiver.modules.__path__, key=len, reverse=True)
 
         HAS_SETUP_PATHS = True
 
-    def get_module(self, module_name: str, config: dict) -> BaseModule:
+    def get_module(self, module_name: str, config: dict) -> Type[BaseModule]:
         """
         Gets and sets up a module using the provided config
-        
+
         This will actually load and instantiate the module, and load all its dependencies (i.e. not lazy)
-        
+
         """
         return self.get_module_lazy(module_name).load(config)
 
     def get_module_lazy(self, module_name: str, suppress_warnings: bool = False) -> LazyBaseModule:
         """
         Lazily loads a module, returning a LazyBaseModule
-        
+
         This has all the information about the module, but does not load the module itself or its dependencies
-        
+
         To load an actual module, call .setup() on a lazy module
-        
+
         """
         if module_name in self._lazy_modules:
             return self._lazy_modules[module_name]
 
         available = self.available_modules(limit_to_modules=[module_name], suppress_warnings=suppress_warnings)
         if not available:
-            raise IndexError(f"Module '{module_name}' not found. Are you sure it's installed/exists?")
+            message = f"Module '{module_name}' not found. Are you sure it's installed/exists?"
+            if "archiver" in module_name:
+                message += f" Did you mean {module_name.replace('archiver', 'extractor')}?"
+            raise IndexError(message)
         return available[0]
 
-    def available_modules(self, limit_to_modules: List[str]= [], suppress_warnings: bool = False) -> List[LazyBaseModule]:
-        
+    def available_modules(
+        self, limit_to_modules: List[str] = [], suppress_warnings: bool = False
+    ) -> List[LazyBaseModule]:
         # search through all valid 'modules' paths. Default is 'modules' in the current directory
 
         # see odoo/modules/module.py -> get_modules
@@ -116,7 +123,7 @@ class ModuleFactory:
                 self._lazy_modules[possible_module] = lazy_module
 
                 all_modules.append(lazy_module)
-        
+
         if not suppress_warnings:
             for module in limit_to_modules:
                 if not any(module == m.name for m in all_modules):
@@ -124,17 +131,17 @@ class ModuleFactory:
 
         return all_modules
 
+
 @dataclass
 class LazyBaseModule:
-
     """
     A lazy module class, which only loads the manifest and does not load the module itself.
 
     This is useful for getting information about a module without actually loading it.
 
     """
+
     name: str
-    type: list
     description: str
     path: str
     module_factory: ModuleFactory
@@ -149,27 +156,31 @@ class LazyBaseModule:
         self.module_factory = factory
 
     @property
+    def type(self):
+        return self.manifest["type"]
+
+    @property
     def entry_point(self):
-        if not self._entry_point and not self.manifest['entry_point']:
+        if not self._entry_point and not self.manifest["entry_point"]:
             # try to create the entry point from the module name
             self._entry_point = f"{self.name}::{self.name.replace('_', ' ').title().replace(' ', '')}"
         return self._entry_point
 
     @property
     def dependencies(self) -> dict:
-        return self.manifest['dependencies']
-    
+        return self.manifest["dependencies"]
+
     @property
     def configs(self) -> dict:
-        return self.manifest['configs']
-    
+        return self.manifest["configs"]
+
     @property
     def requires_setup(self) -> bool:
-        return self.manifest['requires_setup']
-    
+        return self.manifest["requires_setup"]
+
     @property
     def display_name(self) -> str:
-        return self.manifest['name']
+        return self.manifest["name"]
 
     @property
     def manifest(self) -> dict:
@@ -183,18 +194,16 @@ class LazyBaseModule:
             try:
                 manifest.update(ast.literal_eval(f.read()))
             except (ValueError, TypeError, SyntaxError, MemoryError, RecursionError) as e:
-                logger.error(f"Error loading manifest from file {self.path}/{MANIFEST_FILE}: {e}")
-            
+                raise ValueError(f"Error loading manifest from file {self.path}/{MANIFEST_FILE}: {e}") from e
+
         self._manifest = manifest
-        self.type = manifest['type']
-        self._entry_point = manifest['entry_point']
-        self.description = manifest['description']
-        self.version = manifest['version']
+        self._entry_point = manifest["entry_point"]
+        self.description = manifest["description"]
+        self.version = manifest["version"]
 
         return manifest
 
     def load(self, config) -> BaseModule:
-
         if self._instance:
             return self._instance
 
@@ -205,8 +214,10 @@ class LazyBaseModule:
                     # clear out any empty strings that a user may have erroneously added
                     continue
                 if not check(dep):
-                    logger.error(f"Module '{self.name}' requires external dependency '{dep}' which is not available/setup. \
-                                 Have you installed the required dependencies for the '{self.name}' module? See the README for more information.")
+                    logger.error(
+                        f"Module '{self.name}' requires external dependency '{dep}' which is not available/setup. \
+                                 Have you installed the required dependencies for the '{self.name}' module? See the README for more information."
+                    )
                     exit(1)
 
         def check_python_dep(dep):
@@ -214,10 +225,10 @@ class LazyBaseModule:
             try:
                 m = self.module_factory.get_module_lazy(dep, suppress_warnings=True)
                 try:
-                # we must now load this module and set it up with the config
+                    # we must now load this module and set it up with the config
                     m.load(config)
                     return True
-                except:
+                except Exception:
                     logger.error(f"Unable to setup module '{dep}' for use in module '{self.name}'")
                     return False
             except IndexError:
@@ -226,13 +237,12 @@ class LazyBaseModule:
 
             return find_spec(dep)
 
-        check_deps(self.dependencies.get('python', []), check_python_dep)
-        check_deps(self.dependencies.get('bin', []), lambda dep: shutil.which(dep))
-
+        check_deps(self.dependencies.get("python", []), check_python_dep)
+        check_deps(self.dependencies.get("bin", []), lambda dep: shutil.which(dep))
 
         logger.debug(f"Loading module '{self.display_name}'...")
 
-        for qualname in [self.name, f'auto_archiver.modules.{self.name}']:
+        for qualname in [self.name, f"auto_archiver.modules.{self.name}"]:
             try:
                 # first import the whole module, to make sure it's working properly
                 __import__(qualname)
@@ -241,10 +251,10 @@ class LazyBaseModule:
                 pass
 
         # then import the file for the entry point
-        file_name, class_name = self.entry_point.split('::')
-        sub_qualname = f'{qualname}.{file_name}'
+        file_name, class_name = self.entry_point.split("::")
+        sub_qualname = f"{qualname}.{file_name}"
 
-        __import__(f'{qualname}.{file_name}', fromlist=[self.entry_point])
+        __import__(f"{qualname}.{file_name}", fromlist=[self.entry_point])
         # finally, get the class instance
         instance: BaseModule = getattr(sys.modules[sub_qualname], class_name)()
 
@@ -252,11 +262,11 @@ class LazyBaseModule:
         instance.name = self.name
         instance.display_name = self.display_name
         instance.module_factory = self.module_factory
-        
-        # merge the default config with the user config
-        default_config = dict((k, v['default']) for k, v in self.configs.items() if v.get('default'))
 
-        config[self.name] = default_config  | config.get(self.name, {})
+        # merge the default config with the user config
+        default_config = dict((k, v["default"]) for k, v in self.configs.items() if "default" in v)
+
+        config[self.name] = default_config | config.get(self.name, {})
         instance.config_setup(config)
         instance.setup()
 

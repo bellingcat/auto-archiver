@@ -13,13 +13,14 @@ from __future__ import annotations
 import hashlib
 from typing import Any, List, Union, Dict
 from dataclasses import dataclass, field
-from dataclasses_json import dataclass_json, config
+from dataclasses_json import dataclass_json
 import datetime
 from urllib.parse import urlparse
 from dateutil.parser import parse as parse_dt
 from loguru import logger
 
 from .media import Media
+
 
 @dataclass_json  # annotation order matters
 @dataclass
@@ -40,19 +41,23 @@ class Metadata:
         - If `True`, this instance's values are overwritten by `right`.
         - If `False`, the inverse applies.
         """
-        if not right: return self
+        if not right:
+            return self
         if overwrite_left:
             if right.status and len(right.status):
                 self.status = right.status
             self._context.update(right._context)
             for k, v in right.metadata.items():
-                assert k not in self.metadata or type(v) == type(self.get(k))
-                if type(v) not in [dict, list, set] or k not in self.metadata:
+                assert k not in self.metadata or type(v) is type(self.get(k))
+                if not isinstance(v, (dict, list, set)) or k not in self.metadata:
                     self.set(k, v)
                 else:  # key conflict
-                    if type(v) in [dict, set]: self.set(k, self.get(k) | v)
-                    elif type(v) == list: self.set(k, self.get(k) + v)
+                    if isinstance(v, (dict, set)):
+                        self.set(k, self.get(k) | v)
+                    elif type(v) is list:
+                        self.set(k, self.get(k) + v)
             self.media.extend(right.media)
+
         else:  # invert and do same logic
             return right.merge(self)
         return self
@@ -69,7 +74,7 @@ class Metadata:
 
     def append(self, key: str, val: Any) -> Metadata:
         if key not in self.metadata:
-            self.metadata[key] = []    
+            self.metadata[key] = []
         self.metadata[key] = val
         return self
 
@@ -80,24 +85,26 @@ class Metadata:
         return self.metadata.get(key, default)
 
     def success(self, context: str = None) -> Metadata:
-        if context: self.status = f"{context}: success"
-        else: self.status = "success"
+        if context:
+            self.status = f"{context}: success"
+        else:
+            self.status = "success"
         return self
 
     def is_success(self) -> bool:
         return "success" in self.status
 
     def is_empty(self) -> bool:
-        meaningfull_ids = set(self.metadata.keys()) - set(["_processed_at", "url", "total_bytes", "total_size", "archive_duration_seconds"])
+        meaningfull_ids = set(self.metadata.keys()) - set(
+            ["_processed_at", "url", "total_bytes", "total_size", "archive_duration_seconds"]
+        )
         return not self.is_success() and len(self.media) == 0 and len(meaningfull_ids) == 0
 
     @property  # getter .netloc
     def netloc(self) -> str:
         return urlparse(self.get_url()).netloc
 
-
-# custom getter/setters
-
+    # custom getter/setters
 
     def set_url(self, url: str) -> Metadata:
         assert type(url) is str and len(url) > 0, "invalid URL"
@@ -120,36 +127,43 @@ class Metadata:
         return self.get("title")
 
     def set_timestamp(self, timestamp: datetime.datetime) -> Metadata:
-        if type(timestamp) == str:
+        if isinstance(timestamp, str):
             timestamp = parse_dt(timestamp)
-        assert type(timestamp) == datetime.datetime, "set_timestamp expects a datetime instance"
+        assert isinstance(timestamp, datetime.datetime), "set_timestamp expects a datetime instance"
         return self.set("timestamp", timestamp)
 
-    def get_timestamp(self, utc=True, iso=True) -> datetime.datetime:
+    def get_timestamp(self, utc=True, iso=True) -> datetime.datetime | str | None:
         ts = self.get("timestamp")
-        if not ts: return 
+        if not ts:
+            return None
         try:
-            if type(ts) == str: ts = datetime.datetime.fromisoformat(ts)
-            if type(ts) == float: ts = datetime.datetime.fromtimestamp(ts)
-            if utc: ts = ts.replace(tzinfo=datetime.timezone.utc)
-            if iso: return ts.isoformat()
-            return ts
+            if isinstance(ts, str):
+                ts = datetime.datetime.fromisoformat(ts)
+            elif isinstance(ts, float):
+                ts = datetime.datetime.fromtimestamp(ts)
+            if utc:
+                ts = ts.replace(tzinfo=datetime.timezone.utc)
+            return ts.isoformat() if iso else ts
         except Exception as e:
             logger.error(f"Unable to parse timestamp {ts}: {e}")
-            return
+            return None
 
     def add_media(self, media: Media, id: str = None) -> Metadata:
         # adds a new media, optionally including an id
-        if media is None: return
+        if media is None:
+            return
         if id is not None:
-            assert not len([1 for m in self.media if m.get("id") == id]), f"cannot add 2 pieces of media with the same id {id}"
+            assert not len([1 for m in self.media if m.get("id") == id]), (
+                f"cannot add 2 pieces of media with the same id {id}"
+            )
             media.set("id", id)
         self.media.append(media)
         return media
 
     def get_media_by_id(self, id: str, default=None) -> Media:
         for m in self.media:
-            if m.get("id") == id: return m
+            if m.get("id") == id:
+                return m
         return default
 
     def remove_duplicate_media_by_hash(self) -> None:
@@ -159,7 +173,8 @@ class Metadata:
             with open(filename, "rb") as f:
                 while True:
                     buf = f.read(chunksize)
-                    if not buf: break
+                    if not buf:
+                        break
                     hash_algo.update(buf)
             return hash_algo.hexdigest()
 
@@ -167,15 +182,18 @@ class Metadata:
         new_media = []
         for m in self.media:
             h = m.get("hash")
-            if not h: h = calculate_hash_in_chunks(hashlib.sha256(), int(1.6e7), m.filename)
-            if len(h) and h in media_hashes: continue
+            if not h:
+                h = calculate_hash_in_chunks(hashlib.sha256(), int(1.6e7), m.filename)
+            if len(h) and h in media_hashes:
+                continue
             media_hashes.add(h)
             new_media.append(m)
         self.media = new_media
 
     def get_first_image(self, default=None) -> Media:
         for m in self.media:
-            if "image" in m.mimetype: return m
+            if "image" in m.mimetype:
+                return m
         return default
 
     def set_final_media(self, final: Media) -> Metadata:
@@ -193,22 +211,25 @@ class Metadata:
     def __str__(self) -> str:
         return self.__repr__()
 
-
     @staticmethod
     def choose_most_complete(results: List[Metadata]) -> Metadata:
         # returns the most complete result from a list of results
         # prioritizes results with more media, then more metadata
-        if len(results) == 0: return None
-        if len(results) == 1: return results[0]
+        if len(results) == 0:
+            return None
+        if len(results) == 1:
+            return results[0]
         most_complete = results[0]
         for r in results[1:]:
-            if len(r.media) > len(most_complete.media): most_complete = r
-            elif len(r.media) == len(most_complete.media) and len(r.metadata) > len(most_complete.metadata): most_complete = r
+            if len(r.media) > len(most_complete.media):
+                most_complete = r
+            elif len(r.media) == len(most_complete.media) and len(r.metadata) > len(most_complete.metadata):
+                most_complete = r
         return most_complete
 
     def set_context(self, key: str, val: Any) -> Metadata:
         self._context[key] = val
         return self
-    
+
     def get_context(self, key: str, default: Any = None) -> Any:
         return self._context.get(key, default)

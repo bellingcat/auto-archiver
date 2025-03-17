@@ -15,9 +15,10 @@ def mock_user_response():
             "username": "test_user",
             "full_name": "Test User",
             "profile_pic_url_hd": "http://example.com/profile.jpg",
-            "profile_pic_url": "http://example.com/profile_lowres.jpg"
+            "profile_pic_url": "http://example.com/profile_lowres.jpg",
         }
     }
+
 
 @pytest.fixture
 def mock_post_response():
@@ -27,16 +28,14 @@ def mock_post_response():
         "caption_text": "Test Caption",
         "taken_at": datetime.now().timestamp(),
         "video_url": "http://example.com/video.mp4",
-        "thumbnail_url": "http://example.com/thumbnail.jpg"
+        "thumbnail_url": "http://example.com/thumbnail.jpg",
     }
+
 
 @pytest.fixture
 def mock_story_response():
-    return [{
-        "id": "story_123",
-        "taken_at": datetime.now().timestamp(),
-        "video_url": "http://example.com/story.mp4"
-    }]
+    return [{"id": "story_123", "taken_at": datetime.now().timestamp(), "video_url": "http://example.com/story.mp4"}]
+
 
 @pytest.fixture
 def mock_highlight_response():
@@ -46,11 +45,13 @@ def mock_highlight_response():
                 "highlight:123": {
                     "id": "123",
                     "title": "Test Highlight",
-                    "items": [{
-                        "id": "item_123",
-                        "taken_at": datetime.now().timestamp(),
-                        "video_url": "http://example.com/highlight.mp4"
-                    }]
+                    "items": [
+                        {
+                            "id": "item_123",
+                            "taken_at": datetime.now().timestamp(),
+                            "video_url": "http://example.com/highlight.mp4",
+                        }
+                    ],
                 }
             }
         }
@@ -81,24 +82,30 @@ class TestInstagramAPIExtractor(TestExtractorBase):
         m.set("netloc", "instagram.com")
         return m
 
-    @pytest.mark.parametrize("url,expected", [
-        ("https://instagram.com/user", [("", "user", "")]),
-        ("https://instagr.am/p/post_id", []),
-        ("https://youtube.com", []),
-        ("https://www.instagram.com/reel/reel_id", [("reel", "reel_id", "")]),
-        ("https://instagram.com/stories/highlights/123", [("stories/highlights", "123", "")]),
-        ("https://instagram.com/stories/user/123", [("stories", "user", "123")]),
-    ])
+    @pytest.mark.parametrize(
+        "url,expected",
+        [
+            ("https://instagram.com/user", [("", "user", "")]),
+            ("https://instagr.am/p/post_id", []),
+            ("https://youtube.com", []),
+            ("https://www.instagram.com/reel/reel_id", [("reel", "reel_id", "")]),
+            ("https://instagram.com/stories/highlights/123", [("stories/highlights", "123", "")]),
+            ("https://instagram.com/stories/user/123", [("stories", "user", "123")]),
+        ],
+    )
     def test_url_parsing(self, url, expected):
         assert self.extractor.valid_url.findall(url) == expected
 
     def test_initialize(self):
         assert self.extractor.api_endpoint[-1] != "/"
 
-    @pytest.mark.parametrize("input_dict,expected", [
-        ({"x": 0, "valid": "data"}, {"valid": "data"}),
-        ({"nested": {"y": None, "valid": [{}]}}, {"nested": {"valid": [{}]}}),
-    ])
+    @pytest.mark.parametrize(
+        "input_dict,expected",
+        [
+            ({"x": 0, "valid": "data"}, {"valid": "data"}),
+            ({"nested": {"y": None, "valid": [{}]}}, {"nested": {"valid": [{}]}}),
+        ],
+    )
     def test_cleanup_dict(self, input_dict, expected):
         assert self.extractor.cleanup_dict(input_dict) == expected
 
@@ -114,8 +121,8 @@ class TestInstagramAPIExtractor(TestExtractorBase):
 
     def test_download_profile_basic(self, metadata, mock_user_response, mocker):
         """Test basic profile download without full_profile"""
-        mock_call = mocker.patch.object(self.extractor, 'call_api')
-        mock_download = mocker.patch.object(self.extractor, 'download_from_url')
+        mock_call = mocker.patch.object(self.extractor, "call_api")
+        mock_download = mocker.patch.object(self.extractor, "download_from_url")
         # Mock API responses
         mock_call.return_value = mock_user_response
         mock_download.return_value = "profile.jpg"
@@ -132,17 +139,14 @@ class TestInstagramAPIExtractor(TestExtractorBase):
 
     def test_download_profile_full(self, metadata, mock_user_response, mock_story_response, mocker):
         """Test full profile download with stories/posts"""
-        mock_call = mocker.patch.object(self.extractor, 'call_api')
-        mock_posts = mocker.patch.object(self.extractor, 'download_all_posts')
-        mock_highlights = mocker.patch.object(self.extractor, 'download_all_highlights')
-        mock_tagged = mocker.patch.object(self.extractor, 'download_all_tagged')
-        mock_stories = mocker.patch.object(self.extractor, '_download_stories_reusable')
+        mock_call = mocker.patch.object(self.extractor, "call_api")
+        mock_posts = mocker.patch.object(self.extractor, "download_all_posts")
+        mock_highlights = mocker.patch.object(self.extractor, "download_all_highlights")
+        mock_tagged = mocker.patch.object(self.extractor, "download_all_tagged")
+        mock_stories = mocker.patch.object(self.extractor, "_download_stories_reusable")
 
         self.extractor.full_profile = True
-        mock_call.side_effect = [
-            mock_user_response,
-            mock_story_response
-        ]
+        mock_call.side_effect = [mock_user_response, mock_story_response]
         mock_highlights.return_value = None
         mock_stories.return_value = mock_story_response
         mock_posts.return_value = None
@@ -155,7 +159,7 @@ class TestInstagramAPIExtractor(TestExtractorBase):
 
     def test_download_profile_not_found(self, metadata, mocker):
         """Test profile not found error"""
-        mock_call = mocker.patch.object(self.extractor, 'call_api')
+        mock_call = mocker.patch.object(self.extractor, "call_api")
         mock_call.return_value = {"user": None}
         with pytest.raises(AssertionError) as exc_info:
             self.extractor.download_profile(metadata, "invalid_user")
@@ -163,18 +167,14 @@ class TestInstagramAPIExtractor(TestExtractorBase):
 
     def test_download_profile_error_handling(self, metadata, mock_user_response, mocker):
         """Test error handling in full profile mode"""
-        mock_call = mocker.patch.object(self.extractor, 'call_api')
-        mock_highlights = mocker.patch.object(self.extractor, 'download_all_highlights')
-        mock_tagged = mocker.patch.object(self.extractor, 'download_all_tagged')
-        stories_tagged = mocker.patch.object(self.extractor, '_download_stories_reusable')
-        mock_posts = mocker.patch.object(self.extractor, 'download_all_posts')
+        mock_call = mocker.patch.object(self.extractor, "call_api")
+        mock_highlights = mocker.patch.object(self.extractor, "download_all_highlights")
+        mock_tagged = mocker.patch.object(self.extractor, "download_all_tagged")
+        stories_tagged = mocker.patch.object(self.extractor, "_download_stories_reusable")
+        mock_posts = mocker.patch.object(self.extractor, "download_all_posts")
 
         self.extractor.full_profile = True
-        mock_call.side_effect = [
-            mock_user_response,
-            Exception("Stories API failed"),
-            Exception("Posts API failed")
-        ]
+        mock_call.side_effect = [mock_user_response, Exception("Stories API failed"), Exception("Posts API failed")]
         mock_highlights.return_value = None
         mock_tagged.return_value = None
         stories_tagged.return_value = None

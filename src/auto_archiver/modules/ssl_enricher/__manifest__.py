@@ -5,9 +5,13 @@
     "dependencies": {
         "python": ["loguru", "slugify"],
     },
-    'entry_point': 'ssl_enricher::SSLEnricher',
+    "entry_point": "ssl_enricher::SSLEnricher",
     "configs": {
-        "skip_when_nothing_archived": {"default": True, "help": "if true, will skip enriching when no media is archived"},
+        "skip_when_nothing_archived": {
+            "default": True,
+            "type": "bool",
+            "help": "if true, will skip enriching when no media is archived",
+        },
     },
     "description": """
     Retrieves SSL certificate information for a domain and stores it as a file.
@@ -19,5 +23,5 @@
 
     ### Notes
     - Requires the target URL to use the HTTPS scheme; other schemes are not supported.
-    """
+    """,
 }

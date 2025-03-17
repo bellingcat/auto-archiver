@@ -6,18 +6,18 @@ from auto_archiver.core import Metadata
 
 class ConsoleDb(Database):
     """
-        Outputs results to the console
+    Outputs results to the console
     """
 
     def started(self, item: Metadata) -> None:
-        logger.warning(f"STARTED {item}")
+        logger.info(f"STARTED {item}")
 
-    def failed(self, item: Metadata, reason:str) -> None:
+    def failed(self, item: Metadata, reason: str) -> None:
         logger.error(f"FAILED {item}: {reason}")
 
     def aborted(self, item: Metadata) -> None:
         logger.warning(f"ABORTED {item}")
 
-    def done(self, item: Metadata, cached: bool=False) -> None:
+    def done(self, item: Metadata, cached: bool = False) -> None:
         """archival result ready - should be saved to DB"""
         logger.success(f"DONE {item}")

@@ -1,0 +1,2078 @@
+{
+    "modules": {
+        "atlos_feeder_db_storage": {
+            "name": "atlos_feeder_db_storage",
+            "display_name": "Atlos Feeder Database Storage",
+            "manifest": {
+                "name": "Atlos Feeder Database Storage",
+                "author": "Bellingcat",
+                "type": [
+                    "feeder",
+                    "database",
+                    "storage"
+                ],
+                "requires_setup": true,
+                "description": "\n    A module that integrates with the Atlos API to fetch source material URLs for archival, uplaod extracted media,\n    \n    [Atlos](https://www.atlos.org/) is a visual investigation and archiving platform designed for investigative research, journalism, and open-source intelligence (OSINT). \n    It helps users organize, analyze, and store media from various sources, making it easier to track and investigate digital evidence.\n    \n    To get started create a new project and obtain an API token from the settings page. You can group event's into Atlos's 'incidents'.\n    Here you can add 'source material' by URLn and the Atlos feeder will fetch these URLs for archival.\n    \n    You can use Atlos only as a 'feeder', however you can also implement the 'database' and 'storage' features to store the media files in Atlos which is recommended.\n    The Auto Archiver will retain the Atlos ID for each item, ensuring that the media and database outputs are uplaoded back into the relevant media item.\n    \n    \n    ### Features\n    - Connects to the Atlos API to retrieve a list of source material URLs.\n    - Iterates through the URLs from all source material items which are unprocessed, visible, and ready to archive.\n    - If the storage option is selected, it will store the media files alongside the original source material item in Atlos.\n    - Is the database option is selected it will output the results to the media item, as well as updating failure status with error details when archiving fails.\n    - Skips Storege/ database upload for items without an Atlos ID - restricting that you must use the Atlos feeder so that it has the Atlos ID to store the results with.\n\n    ### Notes\n    - Requires an Atlos account with a project and a valid API token for authentication.\n    - Ensures only unprocessed, visible, and ready-to-archive URLs are returned.\n    - Feches any media items within an Atlos project, regardless of separation into incidents.\n    ",
+                "dependencies": {
+                    "python": [
+                        "loguru",
+                        "requests"
+                    ]
+                },
+                "entry_point": "atlos_feeder_db_storage::AtlosFeederDbStorage",
+                "version": "1.0",
+                "configs": {
+                    "api_token": {
+                        "type": "str",
+                        "required": true,
+                        "help": "An Atlos API token. For more information, see https://docs.atlos.org/technical/api/"
+                    },
+                    "atlos_url": {
+                        "default": "https://platform.atlos.org",
+                        "help": "The URL of your Atlos instance (e.g., https://platform.atlos.org), without a trailing slash.",
+                        "type": "str"
+                    }
+                }
+            },
+            "configs": {
+                "api_token": {
+                    "type": "str",
+                    "required": true,
+                    "help": "An Atlos API token. For more information, see https://docs.atlos.org/technical/api/"
+                },
+                "atlos_url": {
+                    "default": "https://platform.atlos.org",
+                    "help": "The URL of your Atlos instance (e.g., https://platform.atlos.org), without a trailing slash.",
+                    "type": "str"
+                }
+            }
+        },
+        "csv_feeder": {
+            "name": "csv_feeder",
+            "display_name": "CSV Feeder",
+            "manifest": {
+                "name": "CSV Feeder",
+                "author": "Bellingcat",
+                "type": [
+                    "feeder"
+                ],
+                "requires_setup": true,
+                "description": "\n    Reads URLs from CSV files and feeds them into the archiving process.\n\n    ### Features\n    - Supports reading URLs from multiple input files, specified as a comma-separated list.\n    - Allows specifying the column number or name to extract URLs from.\n    - Skips header rows if the first value is not a valid URL.\n\n    ### Setup\n    - Input files should be formatted with one URL per line, with or without a header row.\n    - If you have a header row, you can specify the column number or name to read URLs from using the 'column' config option.\n    ",
+                "dependencies": {
+                    "python": [
+                        "loguru"
+                    ],
+                    "bin": [
+                        ""
+                    ]
+                },
+                "entry_point": "csv_feeder::CSVFeeder",
+                "version": "1.0",
+                "configs": {
+                    "files": {
+                        "default": null,
+                        "help": "Path to the input file(s) to read the URLs from, comma separated.                         Input files should be formatted with one URL per line",
+                        "required": true,
+                        "type": "valid_file",
+                        "nargs": "+"
+                    },
+                    "column": {
+                        "default": null,
+                        "help": "Column number or name to read the URLs from, 0-indexed"
+                    }
+                }
+            },
+            "configs": {
+                "files": {
+                    "default": null,
+                    "help": "Path to the input file(s) to read the URLs from, comma separated.                         Input files should be formatted with one URL per line",
+                    "required": true,
+                    "type": "valid_file",
+                    "nargs": "+"
+                },
+                "column": {
+                    "default": null,
+                    "help": "Column number or name to read the URLs from, 0-indexed"
+                }
+            }
+        },
+        "gsheet_feeder_db": {
+            "name": "gsheet_feeder_db",
+            "display_name": "Google Sheets Feeder Database",
+            "manifest": {
+                "name": "Google Sheets Feeder Database",
+                "author": "Bellingcat",
+                "type": [
+                    "feeder",
+                    "database"
+                ],
+                "requires_setup": true,
+                "description": "\n    GsheetsFeederDatabase\n    A Google Sheets-based feeder and optional database for the Auto Archiver.\n\n    This reads data from Google Sheets and filters rows based on user-defined rules.\n    The filtered rows are processed into `Metadata` objects.\n\n    ### Features\n    - Validates the sheet structure and filters rows based on input configurations.\n    - Processes only worksheets allowed by the `allow_worksheets` and `block_worksheets` configurations.\n    - Ensures only rows with valid URLs and unprocessed statuses are included for archival.\n    - Supports organizing stored files into folder paths based on sheet and worksheet names.\n    - If the database is enabled, this updates the Google Sheet with the status of the archived URLs, including in progress, success or failure, and method used.\n    - Saves metadata such as title, text, timestamp, hashes, screenshots, and media URLs to designated columns.\n    - Formats media-specific metadata, such as thumbnails and PDQ hashes for the sheet.\n    - Skips redundant updates for empty or invalid data fields.\n\n    ### Setup\n    - Requires a Google Service Account JSON file for authentication, which should be stored in `secrets/gsheets_service_account.json`.\n    To set up a service account, follow the instructions [here](https://gspread.readthedocs.io/en/latest/oauth2.html).\n    - Define the `sheet` or `sheet_id` configuration to specify the sheet to archive.\n    - Customize the column names in your Google sheet using the `columns` configuration.\n    - The Google Sheet can be used soley as a feeder or as a feeder and database, but note you can't currently feed into the database from an alternate feeder.\n    ",
+                "dependencies": {
+                    "python": [
+                        "loguru",
+                        "gspread",
+                        "slugify"
+                    ]
+                },
+                "entry_point": "gsheet_feeder_db::GsheetsFeederDB",
+                "version": "1.0",
+                "configs": {
+                    "sheet": {
+                        "default": null,
+                        "help": "name of the sheet to archive"
+                    },
+                    "sheet_id": {
+                        "default": null,
+                        "help": "the id of the sheet to archive (alternative to 'sheet' config)"
+                    },
+                    "header": {
+                        "default": 1,
+                        "type": "int",
+                        "help": "index of the header row (starts at 1)"
+                    },
+                    "service_account": {
+                        "default": "secrets/service_account.json",
+                        "help": "service account JSON file path. Learn how to create one: https://gspread.readthedocs.io/en/latest/oauth2.html",
+                        "required": true
+                    },
+                    "columns": {
+                        "default": {
+                            "url": "link",
+                            "status": "archive status",
+                            "folder": "destination folder",
+                            "archive": "archive location",
+                            "date": "archive date",
+                            "thumbnail": "thumbnail",
+                            "timestamp": "upload timestamp",
+                            "title": "upload title",
+                            "text": "text content",
+                            "screenshot": "screenshot",
+                            "hash": "hash",
+                            "pdq_hash": "perceptual hashes",
+                            "wacz": "wacz",
+                            "replaywebpage": "replaywebpage"
+                        },
+                        "help": "Custom names for the columns in your Google sheet. If you don't want to use the default column names, change them with this setting",
+                        "type": "json_loader"
+                    },
+                    "allow_worksheets": {
+                        "default": [],
+                        "help": "(CSV) only worksheets whose name is included in allow are included (overrides worksheet_block), leave empty so all are allowed"
+                    },
+                    "block_worksheets": {
+                        "default": [],
+                        "help": "(CSV) explicitly block some worksheets from being processed"
+                    },
+                    "use_sheet_names_in_stored_paths": {
+                        "default": true,
+                        "type": "bool",
+                        "help": "if True the stored files path will include 'workbook_name/worksheet_name/...'"
+                    }
+                }
+            },
+            "configs": {
+                "sheet": {
+                    "default": null,
+                    "help": "name of the sheet to archive"
+                },
+                "sheet_id": {
+                    "default": null,
+                    "help": "the id of the sheet to archive (alternative to 'sheet' config)"
+                },
+                "header": {
+                    "default": 1,
+                    "type": "int",
+                    "help": "index of the header row (starts at 1)"
+                },
+                "service_account": {
+                    "default": "secrets/service_account.json",
+                    "help": "service account JSON file path. Learn how to create one: https://gspread.readthedocs.io/en/latest/oauth2.html",
+                    "required": true
+                },
+                "columns": {
+                    "default": {
+                        "url": "link",
+                        "status": "archive status",
+                        "folder": "destination folder",
+                        "archive": "archive location",
+                        "date": "archive date",
+                        "thumbnail": "thumbnail",
+                        "timestamp": "upload timestamp",
+                        "title": "upload title",
+                        "text": "text content",
+                        "screenshot": "screenshot",
+                        "hash": "hash",
+                        "pdq_hash": "perceptual hashes",
+                        "wacz": "wacz",
+                        "replaywebpage": "replaywebpage"
+                    },
+                    "help": "Custom names for the columns in your Google sheet. If you don't want to use the default column names, change them with this setting",
+                    "type": "json_loader"
+                },
+                "allow_worksheets": {
+                    "default": [],
+                    "help": "(CSV) only worksheets whose name is included in allow are included (overrides worksheet_block), leave empty so all are allowed"
+                },
+                "block_worksheets": {
+                    "default": [],
+                    "help": "(CSV) explicitly block some worksheets from being processed"
+                },
+                "use_sheet_names_in_stored_paths": {
+                    "default": true,
+                    "type": "bool",
+                    "help": "if True the stored files path will include 'workbook_name/worksheet_name/...'"
+                }
+            }
+        },
+        "cli_feeder": {
+            "name": "cli_feeder",
+            "display_name": "Command Line Feeder",
+            "manifest": {
+                "name": "Command Line Feeder",
+                "author": "Bellingcat",
+                "type": [
+                    "feeder"
+                ],
+                "requires_setup": false,
+                "description": "\nThe Command Line Feeder is the default enabled feeder for the Auto Archiver. It allows you to pass URLs directly to the orchestrator from the command line \nwithout the need to specify any additional configuration or command line arguments:\n\n`auto-archiver --feeder cli_feeder -- \"https://example.com/1/,https://example.com/2/\"`\n\nYou can pass multiple URLs by separating them with a space. The URLs will be processed in the order they are provided.\n\n`auto-archiver --feeder cli_feeder -- https://example.com/1/ https://example.com/2/`\n",
+                "dependencies": {},
+                "entry_point": "cli_feeder::CLIFeeder",
+                "version": "1.0",
+                "configs": {
+                    "urls": {
+                        "default": null,
+                        "help": "URL(s) to archive, either a single URL or a list of urls, should not come from config.yaml"
+                    }
+                }
+            },
+            "configs": {
+                "urls": {
+                    "default": null,
+                    "help": "URL(s) to archive, either a single URL or a list of urls, should not come from config.yaml"
+                }
+            }
+        },
+        "instagram_api_extractor": {
+            "name": "instagram_api_extractor",
+            "display_name": "Instagram API Extractor",
+            "manifest": {
+                "name": "Instagram API Extractor",
+                "author": "Bellingcat",
+                "type": [
+                    "extractor"
+                ],
+                "requires_setup": true,
+                "description": "\nArchives various types of Instagram content using the Instagrapi API.\n\nRequires setting up an Instagrapi API deployment and providing an access token and API endpoint.\n\n### Features\n- Connects to an Instagrapi API deployment to fetch Instagram profiles, posts, stories, highlights, reels, and tagged content.\n- Supports advanced configuration options, including:\n  - Full profile download (all posts, stories, highlights, and tagged content).\n  - Limiting the number of posts to fetch for large profiles.\n  - Minimising JSON output to remove empty fields and redundant data.\n- Provides robust error handling and retries for API calls.\n- Ensures efficient media scraping, including handling nested or carousel media items.\n- Adds downloaded media and metadata to the result for further processing.\n\n### Notes\n- Requires a valid Instagrapi API token (`access_token`) and API endpoint (`api_endpoint`).\n- Full-profile downloads can be limited by setting `full_profile_max_posts`.\n- Designed to fetch content in batches for large profiles, minimising API load.\n",
+                "dependencies": {
+                    "python": [
+                        "requests",
+                        "loguru",
+                        "retrying",
+                        "tqdm"
+                    ]
+                },
+                "entry_point": "instagram_api_extractor::InstagramAPIExtractor",
+                "version": "1.0",
+                "configs": {
+                    "access_token": {
+                        "default": null,
+                        "help": "a valid instagrapi-api token"
+                    },
+                    "api_endpoint": {
+                        "required": true,
+                        "help": "API endpoint to use"
+                    },
+                    "full_profile": {
+                        "default": false,
+                        "type": "bool",
+                        "help": "if true, will download all posts, tagged posts, stories, and highlights for a profile, if false, will only download the profile pic and information."
+                    },
+                    "full_profile_max_posts": {
+                        "default": 0,
+                        "type": "int",
+                        "help": "Use to limit the number of posts to download when full_profile is true. 0 means no limit. limit is applied softly since posts are fetched in batch, once to: posts, tagged posts, and highlights"
+                    },
+                    "minimize_json_output": {
+                        "default": true,
+                        "type": "bool",
+                        "help": "if true, will remove empty values from the json output"
+                    }
+                }
+            },
+            "configs": {
+                "access_token": {
+                    "default": null,
+                    "help": "a valid instagrapi-api token"
+                },
+                "api_endpoint": {
+                    "required": true,
+                    "help": "API endpoint to use"
+                },
+                "full_profile": {
+                    "default": false,
+                    "type": "bool",
+                    "help": "if true, will download all posts, tagged posts, stories, and highlights for a profile, if false, will only download the profile pic and information."
+                },
+                "full_profile_max_posts": {
+                    "default": 0,
+                    "type": "int",
+                    "help": "Use to limit the number of posts to download when full_profile is true. 0 means no limit. limit is applied softly since posts are fetched in batch, once to: posts, tagged posts, and highlights"
+                },
+                "minimize_json_output": {
+                    "default": true,
+                    "type": "bool",
+                    "help": "if true, will remove empty values from the json output"
+                }
+            }
+        },
+        "instagram_tbot_extractor": {
+            "name": "instagram_tbot_extractor",
+            "display_name": "Instagram Telegram Bot Extractor",
+            "manifest": {
+                "name": "Instagram Telegram Bot Extractor",
+                "author": "Bellingcat",
+                "type": [
+                    "extractor"
+                ],
+                "requires_setup": true,
+                "description": "\nThe `InstagramTbotExtractor` module uses a Telegram bot (`instagram_load_bot`) to fetch and archive Instagram content,\nsuch as posts and stories. It leverages the Telethon library to interact with the Telegram API, sending Instagram URLs\nto the bot and downloading the resulting media and metadata. The downloaded content is stored as `Media` objects and\nreturned as part of a `Metadata` object.\n\n### Features\n- Supports archiving Instagram posts and stories through the Telegram bot.\n- Downloads and saves media files (e.g., images, videos) in a temporary directory.\n- Captures and returns metadata, including titles and descriptions, as a `Metadata` object.\n- Automatically manages Telegram session files for secure access.\n\n### Setup\n\nTo use the `InstagramTbotExtractor`, you need to provide the following configuration settings:\n- **API ID and Hash**: Telegram API credentials obtained from [my.telegram.org/apps](https://my.telegram.org/apps).\n- **Session File**: Optional path to store the Telegram session file for future use.\n- The session file is created automatically and should be unique for each instance.\n- You may need to enter your Telegram credentials (phone) and use the a 2FA code sent to you the first time you run the extractor.:\n```2025-01-30 00:43:49.348 | INFO     | auto_archiver.modules.instagram_tbot_extractor.instagram_tbot_extractor:setup:36 - SETUP instagram_tbot_extractor checking login...\nPlease enter your phone (or bot token): +447123456789\nPlease enter the code you received: 00000\nSigned in successfully as E C; remember to not break the ToS or you will risk an account ban!\n```\n    ",
+                "dependencies": {
+                    "python": [
+                        "loguru",
+                        "telethon"
+                    ]
+                },
+                "entry_point": "",
+                "version": "1.0",
+                "configs": {
+                    "api_id": {
+                        "default": null,
+                        "help": "telegram API_ID value, go to https://my.telegram.org/apps"
+                    },
+                    "api_hash": {
+                        "default": null,
+                        "help": "telegram API_HASH value, go to https://my.telegram.org/apps"
+                    },
+                    "session_file": {
+                        "default": "secrets/anon-insta",
+                        "help": "optional, records the telegram login session for future usage, '.session' will be appended to the provided value."
+                    },
+                    "timeout": {
+                        "default": 45,
+                        "type": "int",
+                        "help": "timeout to fetch the instagram content in seconds."
+                    }
+                }
+            },
+            "configs": {
+                "api_id": {
+                    "default": null,
+                    "help": "telegram API_ID value, go to https://my.telegram.org/apps"
+                },
+                "api_hash": {
+                    "default": null,
+                    "help": "telegram API_HASH value, go to https://my.telegram.org/apps"
+                },
+                "session_file": {
+                    "default": "secrets/anon-insta",
+                    "help": "optional, records the telegram login session for future usage, '.session' will be appended to the provided value."
+                },
+                "timeout": {
+                    "default": 45,
+                    "type": "int",
+                    "help": "timeout to fetch the instagram content in seconds."
+                }
+            }
+        },
+        "twitter_api_extractor": {
+            "name": "twitter_api_extractor",
+            "display_name": "Twitter API Extractor",
+            "manifest": {
+                "name": "Twitter API Extractor",
+                "author": "Bellingcat",
+                "type": [
+                    "extractor"
+                ],
+                "requires_setup": true,
+                "description": "\n        The `TwitterApiExtractor` fetches tweets and associated media using the Twitter API. \n        It supports multiple API configurations for extended rate limits and reliable access. \n        Features include URL expansion, media downloads (e.g., images, videos), and structured output \n        via `Metadata` and `Media` objects. Requires Twitter API credentials such as bearer tokens \n        or consumer key/secret and access token/secret.\n        \n        ### Features\n        - Fetches tweets and their metadata, including text, creation timestamp, and author information.\n        - Downloads media attachments (e.g., images, videos) in high quality.\n        - Supports multiple API configurations for improved rate limiting.\n        - Expands shortened URLs (e.g., `t.co` links).\n        - Outputs structured metadata and media using `Metadata` and `Media` objects.\n        \n        ### Setup\n        To use the `TwitterApiExtractor`, you must provide valid Twitter API credentials via configuration:\n        - **Bearer Token(s)**: A single token or a list for rate-limited API access.\n        - **Consumer Key and Secret**: Required for user-authenticated API access.\n        - **Access Token and Secret**: Complements the consumer key for enhanced API capabilities.\n        \n        Credentials can be obtained by creating a Twitter developer account at [Twitter Developer Platform](https://developer.twitter.com/en).\n        ",
+                "dependencies": {
+                    "python": [
+                        "requests",
+                        "loguru",
+                        "pytwitter",
+                        "slugify"
+                    ],
+                    "bin": [
+                        ""
+                    ]
+                },
+                "entry_point": "",
+                "version": "1.0",
+                "configs": {
+                    "bearer_token": {
+                        "default": null,
+                        "help": "[deprecated: see bearer_tokens] twitter API bearer_token which is enough for archiving, if not provided you will need consumer_key, consumer_secret, access_token, access_secret"
+                    },
+                    "bearer_tokens": {
+                        "default": [],
+                        "help": " a list of twitter API bearer_token which is enough for archiving, if not provided you will need consumer_key, consumer_secret, access_token, access_secret, if provided you can still add those for better rate limits. CSV of bearer tokens if provided via the command line"
+                    },
+                    "consumer_key": {
+                        "default": null,
+                        "help": "twitter API consumer_key"
+                    },
+                    "consumer_secret": {
+                        "default": null,
+                        "help": "twitter API consumer_secret"
+                    },
+                    "access_token": {
+                        "default": null,
+                        "help": "twitter API access_token"
+                    },
+                    "access_secret": {
+                        "default": null,
+                        "help": "twitter API access_secret"
+                    }
+                }
+            },
+            "configs": {
+                "bearer_token": {
+                    "default": null,
+                    "help": "[deprecated: see bearer_tokens] twitter API bearer_token which is enough for archiving, if not provided you will need consumer_key, consumer_secret, access_token, access_secret"
+                },
+                "bearer_tokens": {
+                    "default": [],
+                    "help": " a list of twitter API bearer_token which is enough for archiving, if not provided you will need consumer_key, consumer_secret, access_token, access_secret, if provided you can still add those for better rate limits. CSV of bearer tokens if provided via the command line"
+                },
+                "consumer_key": {
+                    "default": null,
+                    "help": "twitter API consumer_key"
+                },
+                "consumer_secret": {
+                    "default": null,
+                    "help": "twitter API consumer_secret"
+                },
+                "access_token": {
+                    "default": null,
+                    "help": "twitter API access_token"
+                },
+                "access_secret": {
+                    "default": null,
+                    "help": "twitter API access_secret"
+                }
+            }
+        },
+        "instagram_extractor": {
+            "name": "instagram_extractor",
+            "display_name": "Instagram Extractor",
+            "manifest": {
+                "name": "Instagram Extractor",
+                "author": "Bellingcat",
+                "type": [
+                    "extractor"
+                ],
+                "requires_setup": true,
+                "description": "\n    Uses the [Instaloader library](https://instaloader.github.io/as-module.html) to download content from Instagram. \n    \n      > \u26a0\ufe0f **Warning**  \n      > This module is not actively maintained due to known issues with blocking.  \n      > Prioritise usage of the [Instagram Tbot Extractor](./instagram_tbot_extractor.md) and [Instagram API Extractor](./instagram_api_extractor.md)\n  \n    This class handles both individual posts and user profiles, downloading as much information as possible, including images, videos, text, stories,\n    highlights, and tagged posts. \n    Authentication is required via username/password or a session file.\n                    \n                    ",
+                "dependencies": {
+                    "python": [
+                        "instaloader",
+                        "loguru"
+                    ]
+                },
+                "entry_point": "",
+                "version": "1.0",
+                "configs": {
+                    "username": {
+                        "required": true,
+                        "help": "A valid Instagram username."
+                    },
+                    "password": {
+                        "required": true,
+                        "help": "The corresponding Instagram account password."
+                    },
+                    "download_folder": {
+                        "default": "instaloader",
+                        "help": "Name of a folder to temporarily download content to."
+                    },
+                    "session_file": {
+                        "default": "secrets/instaloader.session",
+                        "help": "Path to the instagram session file which saves session credentials. If one doesn't exist this gives the path to store a new one."
+                    }
+                }
+            },
+            "configs": {
+                "username": {
+                    "required": true,
+                    "help": "A valid Instagram username."
+                },
+                "password": {
+                    "required": true,
+                    "help": "The corresponding Instagram account password."
+                },
+                "download_folder": {
+                    "default": "instaloader",
+                    "help": "Name of a folder to temporarily download content to."
+                },
+                "session_file": {
+                    "default": "secrets/instaloader.session",
+                    "help": "Path to the instagram session file which saves session credentials. If one doesn't exist this gives the path to store a new one."
+                }
+            }
+        },
+        "telethon_extractor": {
+            "name": "telethon_extractor",
+            "display_name": "Telethon Extractor",
+            "manifest": {
+                "name": "Telethon Extractor",
+                "author": "Bellingcat",
+                "type": [
+                    "extractor"
+                ],
+                "requires_setup": true,
+                "description": "\nThe `TelethonExtractor` uses the Telethon library to archive posts and media from Telegram channels and groups. \nIt supports private and public channels, downloading grouped posts with media, and can join channels using invite links \nif provided in the configuration. \n\n### Features\n- Fetches posts and metadata from Telegram channels and groups, including private channels.\n- Downloads media attachments (e.g., images, videos, audio) from individual posts or grouped posts.\n- Handles channel invites to join channels dynamically during setup.\n- Utilizes Telethon's capabilities for reliable Telegram interactions.\n- Outputs structured metadata and media using `Metadata` and `Media` objects.\n\n### Setup\nTo use the `TelethonExtractor`, you must configure the following:\n- **API ID and API Hash**: Obtain these from [my.telegram.org](https://my.telegram.org/apps).\n- **Session File**: Optional, but records login sessions for future use (default: `secrets/anon.session`).\n- **Bot Token**: Optional, allows access to additional content (e.g., large videos) but limits private channel archiving.\n- **Channel Invites**: Optional, specify a JSON string of invite links to join channels during setup.\n\n### First Time Login\nThe first time you run, you will be prompted to do a authentication with the phone number associated, alternatively you can put your `anon.session` in the root.\n\n\n",
+                "dependencies": {
+                    "python": [
+                        "telethon",
+                        "loguru",
+                        "tqdm"
+                    ],
+                    "bin": [
+                        ""
+                    ]
+                },
+                "entry_point": "",
+                "version": "1.0",
+                "configs": {
+                    "api_id": {
+                        "default": null,
+                        "help": "telegram API_ID value, go to https://my.telegram.org/apps"
+                    },
+                    "api_hash": {
+                        "default": null,
+                        "help": "telegram API_HASH value, go to https://my.telegram.org/apps"
+                    },
+                    "bot_token": {
+                        "default": null,
+                        "help": "optional, but allows access to more content such as large videos, talk to @botfather"
+                    },
+                    "session_file": {
+                        "default": "secrets/anon",
+                        "help": "optional, records the telegram login session for future usage, '.session' will be appended to the provided value."
+                    },
+                    "join_channels": {
+                        "default": true,
+                        "type": "bool",
+                        "help": "disables the initial setup with channel_invites config, useful if you have a lot and get stuck"
+                    },
+                    "channel_invites": {
+                        "default": {},
+                        "help": "(JSON string) private channel invite links (format: t.me/joinchat/HASH OR t.me/+HASH) and (optional but important to avoid hanging for minutes on startup) channel id (format: CHANNEL_ID taken from a post url like https://t.me/c/CHANNEL_ID/1), the telegram account will join any new channels on setup",
+                        "type": "json_loader"
+                    }
+                }
+            },
+            "configs": {
+                "api_id": {
+                    "default": null,
+                    "help": "telegram API_ID value, go to https://my.telegram.org/apps"
+                },
+                "api_hash": {
+                    "default": null,
+                    "help": "telegram API_HASH value, go to https://my.telegram.org/apps"
+                },
+                "bot_token": {
+                    "default": null,
+                    "help": "optional, but allows access to more content such as large videos, talk to @botfather"
+                },
+                "session_file": {
+                    "default": "secrets/anon",
+                    "help": "optional, records the telegram login session for future usage, '.session' will be appended to the provided value."
+                },
+                "join_channels": {
+                    "default": true,
+                    "type": "bool",
+                    "help": "disables the initial setup with channel_invites config, useful if you have a lot and get stuck"
+                },
+                "channel_invites": {
+                    "default": {},
+                    "help": "(JSON string) private channel invite links (format: t.me/joinchat/HASH OR t.me/+HASH) and (optional but important to avoid hanging for minutes on startup) channel id (format: CHANNEL_ID taken from a post url like https://t.me/c/CHANNEL_ID/1), the telegram account will join any new channels on setup",
+                    "type": "json_loader"
+                }
+            }
+        },
+        "vk_extractor": {
+            "name": "vk_extractor",
+            "display_name": "VKontakte Extractor",
+            "manifest": {
+                "name": "VKontakte Extractor",
+                "author": "Bellingcat",
+                "type": [
+                    "extractor"
+                ],
+                "requires_setup": true,
+                "description": "\nThe `VkExtractor` fetches posts, text, and images from VK (VKontakte) social media pages. \nThis archiver is specialized for `/wall` posts and uses the `VkScraper` library to extract \nand download content. Note that VK videos are handled separately by the `YTDownloader`.\n\n### Features\n- Extracts text, timestamps, and metadata from VK `/wall` posts.\n- Downloads associated images and attaches them to the resulting `Metadata` object.\n- Processes multiple segments of VK URLs that contain mixed content (e.g., wall, photo).\n- Outputs structured metadata and media using `Metadata` and `Media` objects.\n\n### Setup\nTo use the `VkArchiver`, you must provide valid VKontakte login credentials and session information:\n- **Username**: A valid VKontakte account username.\n- **Password**: The corresponding password for the VKontakte account.\n- **Session File**: Optional. Path to a session configuration file (`.json`) for persistent VK login.\n\nCredentials can be set in the configuration file or directly via environment variables. Ensure you \nhave access to the VKontakte API by creating an account at [VKontakte](https://vk.com/).\n",
+                "dependencies": {
+                    "python": [
+                        "loguru",
+                        "vk_url_scraper"
+                    ]
+                },
+                "entry_point": "",
+                "version": "1.0",
+                "configs": {
+                    "username": {
+                        "required": true,
+                        "help": "valid VKontakte username"
+                    },
+                    "password": {
+                        "required": true,
+                        "help": "valid VKontakte password"
+                    },
+                    "session_file": {
+                        "default": "secrets/vk_config.v2.json",
+                        "help": "valid VKontakte password"
+                    }
+                },
+                "depends": [
+                    "core",
+                    "utils"
+                ]
+            },
+            "configs": {
+                "username": {
+                    "required": true,
+                    "help": "valid VKontakte username"
+                },
+                "password": {
+                    "required": true,
+                    "help": "valid VKontakte password"
+                },
+                "session_file": {
+                    "default": "secrets/vk_config.v2.json",
+                    "help": "valid VKontakte password"
+                }
+            }
+        },
+        "generic_extractor": {
+            "name": "generic_extractor",
+            "display_name": "Generic Extractor",
+            "manifest": {
+                "name": "Generic Extractor",
+                "author": "Bellingcat",
+                "type": [
+                    "extractor"
+                ],
+                "requires_setup": false,
+                "description": "\nThis is the generic extractor used by auto-archiver, which uses `yt-dlp` under the hood.\n\nThis module is responsible for downloading and processing media content from platforms\nsupported by `yt-dlp`, such as YouTube, Facebook, and others. It provides functionality\nfor retrieving videos, subtitles, comments, and other metadata, and it integrates with\nthe broader archiving framework.\n\n### Features\n- Supports downloading videos and playlists.\n- Retrieves metadata like titles, descriptions, upload dates, and durations.\n- Downloads subtitles and comments when enabled.\n- Configurable options for handling live streams, proxies, and more.\n- Supports authentication of websites using the 'authentication' settings from your orchestration.\n\n### Dropins\n- For websites supported by `yt-dlp` that also contain posts in addition to videos\n (e.g. Facebook, Twitter, Bluesky), dropins can be created to extract post data and create \n metadata objects. Some dropins are included in this generic_archiver by default, but\ncustom dropins can be created to handle additional websites and passed to the archiver\nvia the command line using the `--dropins` option (TODO!).\n\n### Auto-Updates\n\nThe Generic Extractor will also automatically check for updates to `yt-dlp` (every 5 days by default).\nThis can be configured using the `ytdlp_update_interval` setting (or disabled by setting it to -1).\nIf you are having issues with the extractor, you can review the version of `yt-dlp` being used with `yt-dlp --version`.\n\n",
+                "dependencies": {
+                    "python": [
+                        "yt_dlp",
+                        "requests",
+                        "loguru",
+                        "slugify"
+                    ]
+                },
+                "entry_point": "",
+                "version": "0.1.0",
+                "configs": {
+                    "subtitles": {
+                        "default": true,
+                        "help": "download subtitles if available",
+                        "type": "bool"
+                    },
+                    "comments": {
+                        "default": false,
+                        "help": "download all comments if available, may lead to large metadata",
+                        "type": "bool"
+                    },
+                    "livestreams": {
+                        "default": false,
+                        "help": "if set, will download live streams, otherwise will skip them; see --max-filesize for more control",
+                        "type": "bool"
+                    },
+                    "live_from_start": {
+                        "default": false,
+                        "help": "if set, will download live streams from their earliest available moment, otherwise starts now.",
+                        "type": "bool"
+                    },
+                    "proxy": {
+                        "default": "",
+                        "help": "http/socks (https seems to not work atm) proxy to use for the webdriver, eg https://proxy-user:password@proxy-ip:port"
+                    },
+                    "end_means_success": {
+                        "default": true,
+                        "help": "if True, any archived content will mean a 'success', if False this archiver will not return a 'success' stage; this is useful for cases when the yt-dlp will archive a video but ignore other types of content like images or text only pages that the subsequent archivers can retrieve.",
+                        "type": "bool"
+                    },
+                    "allow_playlist": {
+                        "default": false,
+                        "help": "If True will also download playlists, set to False if the expectation is to download a single video.",
+                        "type": "bool"
+                    },
+                    "max_downloads": {
+                        "default": "inf",
+                        "help": "Use to limit the number of videos to download when a channel or long page is being extracted. 'inf' means no limit."
+                    },
+                    "ytdlp_update_interval": {
+                        "default": 5,
+                        "help": "How often to check for yt-dlp updates (days). If positive, will check and update yt-dlp every [num] days. Set it to -1 to disable, or 0 to always update on every run.",
+                        "type": "int"
+                    }
+                }
+            },
+            "configs": {
+                "subtitles": {
+                    "default": true,
+                    "help": "download subtitles if available",
+                    "type": "bool"
+                },
+                "comments": {
+                    "default": false,
+                    "help": "download all comments if available, may lead to large metadata",
+                    "type": "bool"
+                },
+                "livestreams": {
+                    "default": false,
+                    "help": "if set, will download live streams, otherwise will skip them; see --max-filesize for more control",
+                    "type": "bool"
+                },
+                "live_from_start": {
+                    "default": false,
+                    "help": "if set, will download live streams from their earliest available moment, otherwise starts now.",
+                    "type": "bool"
+                },
+                "proxy": {
+                    "default": "",
+                    "help": "http/socks (https seems to not work atm) proxy to use for the webdriver, eg https://proxy-user:password@proxy-ip:port"
+                },
+                "end_means_success": {
+                    "default": true,
+                    "help": "if True, any archived content will mean a 'success', if False this archiver will not return a 'success' stage; this is useful for cases when the yt-dlp will archive a video but ignore other types of content like images or text only pages that the subsequent archivers can retrieve.",
+                    "type": "bool"
+                },
+                "allow_playlist": {
+                    "default": false,
+                    "help": "If True will also download playlists, set to False if the expectation is to download a single video.",
+                    "type": "bool"
+                },
+                "max_downloads": {
+                    "default": "inf",
+                    "help": "Use to limit the number of videos to download when a channel or long page is being extracted. 'inf' means no limit."
+                },
+                "ytdlp_update_interval": {
+                    "default": 5,
+                    "help": "How often to check for yt-dlp updates (days). If positive, will check and update yt-dlp every [num] days. Set it to -1 to disable, or 0 to always update on every run.",
+                    "type": "int"
+                }
+            }
+        },
+        "tiktok_tikwm_extractor": {
+            "name": "tiktok_tikwm_extractor",
+            "display_name": "Tiktok Tikwm Extractor",
+            "manifest": {
+                "name": "Tiktok Tikwm Extractor",
+                "author": "Bellingcat",
+                "type": [
+                    "extractor"
+                ],
+                "requires_setup": false,
+                "description": "\n    Uses an unofficial TikTok video download platform's API to download videos: https://tikwm.com/\n\t\n\tThis extractor complements the generic_extractor which can already get TikTok videos, but this one can extract special videos like those marked as sensitive.\n\n    ### Features\n    - Downloads the video and, if possible, also the video cover.\n\t- Stores extra metadata about the post like author information, and more as returned by tikwm.com. \n\n    ### Notes\n    - If tikwm.com is down, this extractor will not work.\n\t- If tikwm.com changes their API, this extractor may break.\n\t- If no video is found, this extractor will consider the extraction failed.\n    ",
+                "dependencies": {
+                    "python": [
+                        "loguru",
+                        "requests"
+                    ],
+                    "bin": []
+                },
+                "entry_point": "",
+                "version": "1.0",
+                "configs": {}
+            },
+            "configs": null
+        },
+        "telegram_extractor": {
+            "name": "telegram_extractor",
+            "display_name": "Telegram Extractor",
+            "manifest": {
+                "name": "Telegram Extractor",
+                "author": "Bellingcat",
+                "type": [
+                    "extractor"
+                ],
+                "requires_setup": false,
+                "description": " \n        The `TelegramExtractor` retrieves publicly available media content from Telegram message links without requiring login credentials. \n        It processes URLs to fetch images and videos embedded in Telegram messages, ensuring a structured output using `Metadata` \n        and `Media` objects. Recommended for scenarios where login-based archiving is not viable, although `telethon_archiver` \n        is advised for more comprehensive functionality, and higher quality media extraction.\n        \n        ### Features\n- Extracts images and videos from public Telegram message links (`t.me`).\n- Processes HTML content of messages to retrieve embedded media.\n- Sets structured metadata, including timestamps, content, and media details.\n- Does not require user authentication for Telegram.\n\n    ",
+                "dependencies": {
+                    "python": [
+                        "requests",
+                        "bs4",
+                        "loguru"
+                    ]
+                },
+                "entry_point": "",
+                "version": "1.0",
+                "configs": {}
+            },
+            "configs": null
+        },
+        "wayback_extractor_enricher": {
+            "name": "wayback_extractor_enricher",
+            "display_name": "Wayback Machine Enricher (and Extractor)",
+            "manifest": {
+                "name": "Wayback Machine Enricher (and Extractor)",
+                "author": "Bellingcat",
+                "type": [
+                    "enricher",
+                    "extractor"
+                ],
+                "requires_setup": true,
+                "description": "\n    Submits the current URL to the Wayback Machine for archiving and returns either a job ID or the completed archive URL.\n\n    ### Features\n    - Archives URLs using the Internet Archive's Wayback Machine API.\n    - Supports conditional archiving based on the existence of prior archives within a specified time range.\n    - Provides proxies for HTTP and HTTPS requests.\n    - Fetches and confirms the archive URL or provides a job ID for later status checks.\n\n    ### Notes\n    - Requires a valid Wayback Machine API key and secret.\n    - Handles rate-limiting by Wayback Machine and retries status checks with exponential backoff.\n    \n    ### Steps to Get an Wayback API Key:\n    - Sign up for an account at [Internet Archive](https://archive.org/account/signup).\n    - Log in to your account.\n    - Navigte to your [account settings](https://archive.org/account).\n    - or: https://archive.org/developers/tutorial-get-ia-credentials.html\n    - Under Wayback Machine API Keys, generate a new key.\n    - Note down your API key and secret, as they will be required for authentication.\n    ",
+                "dependencies": {
+                    "python": [
+                        "loguru",
+                        "requests"
+                    ]
+                },
+                "entry_point": "wayback_extractor_enricher::WaybackExtractorEnricher",
+                "version": "1.0",
+                "configs": {
+                    "timeout": {
+                        "default": 15,
+                        "type": "int",
+                        "help": "seconds to wait for successful archive confirmation from wayback, if more than this passes the result contains the job_id so the status can later be checked manually."
+                    },
+                    "if_not_archived_within": {
+                        "default": null,
+                        "help": "only tell wayback to archive if no archive is available before the number of seconds specified, use None to ignore this option. For more information: https://docs.google.com/document/d/1Nsv52MvSjbLb2PCpHlat0gkzw0EvtSgpKHu4mk0MnrA"
+                    },
+                    "key": {
+                        "required": true,
+                        "help": "wayback API key. to get credentials visit https://archive.org/account/s3.php"
+                    },
+                    "secret": {
+                        "required": true,
+                        "help": "wayback API secret. to get credentials visit https://archive.org/account/s3.php"
+                    },
+                    "proxy_http": {
+                        "default": null,
+                        "help": "http proxy to use for wayback requests, eg http://proxy-user:password@proxy-ip:port"
+                    },
+                    "proxy_https": {
+                        "default": null,
+                        "help": "https proxy to use for wayback requests, eg https://proxy-user:password@proxy-ip:port"
+                    }
+                }
+            },
+            "configs": {
+                "timeout": {
+                    "default": 15,
+                    "type": "int",
+                    "help": "seconds to wait for successful archive confirmation from wayback, if more than this passes the result contains the job_id so the status can later be checked manually."
+                },
+                "if_not_archived_within": {
+                    "default": null,
+                    "help": "only tell wayback to archive if no archive is available before the number of seconds specified, use None to ignore this option. For more information: https://docs.google.com/document/d/1Nsv52MvSjbLb2PCpHlat0gkzw0EvtSgpKHu4mk0MnrA"
+                },
+                "key": {
+                    "required": true,
+                    "help": "wayback API key. to get credentials visit https://archive.org/account/s3.php"
+                },
+                "secret": {
+                    "required": true,
+                    "help": "wayback API secret. to get credentials visit https://archive.org/account/s3.php"
+                },
+                "proxy_http": {
+                    "default": null,
+                    "help": "http proxy to use for wayback requests, eg http://proxy-user:password@proxy-ip:port"
+                },
+                "proxy_https": {
+                    "default": null,
+                    "help": "https proxy to use for wayback requests, eg https://proxy-user:password@proxy-ip:port"
+                }
+            }
+        },
+        "wacz_extractor_enricher": {
+            "name": "wacz_extractor_enricher",
+            "display_name": "WACZ Enricher (and Extractor)",
+            "manifest": {
+                "name": "WACZ Enricher (and Extractor)",
+                "author": "Bellingcat",
+                "type": [
+                    "enricher",
+                    "extractor"
+                ],
+                "requires_setup": true,
+                "description": "\n    Creates .WACZ archives of web pages using the `browsertrix-crawler` tool, with options for media extraction and screenshot saving.\n    [Browsertrix-crawler](https://crawler.docs.browsertrix.com/user-guide/) is a headless browser-based crawler that archives web pages in WACZ format.\n\n    ### Features\n    - Archives web pages into .WACZ format using Docker or direct invocation of `browsertrix-crawler`.\n    - Supports custom profiles for archiving private or dynamic content.\n    - Extracts media (images, videos, audio) and screenshots from the archive, optionally adding them to the enrichment pipeline.\n    - Generates metadata from the archived page's content and structure (e.g., titles, text).\n\n    ### Notes\n    - Requires Docker for running `browsertrix-crawler` .\n    - Configurable via parameters for timeout, media extraction, screenshots, and proxy settings.\n    ",
+                "dependencies": {
+                    "python": [
+                        "loguru",
+                        "jsonlines",
+                        "warcio"
+                    ],
+                    "bin": [
+                        "docker"
+                    ]
+                },
+                "entry_point": "wacz_extractor_enricher::WaczExtractorEnricher",
+                "version": "1.0",
+                "configs": {
+                    "profile": {
+                        "default": null,
+                        "help": "browsertrix-profile (for profile generation see https://github.com/webrecorder/browsertrix-crawler#creating-and-using-browser-profiles)."
+                    },
+                    "docker_commands": {
+                        "default": null,
+                        "help": "if a custom docker invocation is needed"
+                    },
+                    "timeout": {
+                        "default": 120,
+                        "type": "int",
+                        "help": "timeout for WACZ generation in seconds"
+                    },
+                    "extract_media": {
+                        "default": false,
+                        "type": "bool",
+                        "help": "If enabled all the images/videos/audio present in the WACZ archive will be extracted into separate Media and appear in the html report. The .wacz file will be kept untouched."
+                    },
+                    "extract_screenshot": {
+                        "default": true,
+                        "type": "bool",
+                        "help": "If enabled the screenshot captured by browsertrix will be extracted into separate Media and appear in the html report. The .wacz file will be kept untouched."
+                    },
+                    "socks_proxy_host": {
+                        "default": null,
+                        "help": "SOCKS proxy host for browsertrix-crawler, use in combination with socks_proxy_port. eg: user:password@host"
+                    },
+                    "socks_proxy_port": {
+                        "default": null,
+                        "type": "int",
+                        "help": "SOCKS proxy port for browsertrix-crawler, use in combination with socks_proxy_host. eg 1234"
+                    },
+                    "proxy_server": {
+                        "default": null,
+                        "help": "SOCKS server proxy URL, in development"
+                    }
+                }
+            },
+            "configs": {
+                "profile": {
+                    "default": null,
+                    "help": "browsertrix-profile (for profile generation see https://github.com/webrecorder/browsertrix-crawler#creating-and-using-browser-profiles)."
+                },
+                "docker_commands": {
+                    "default": null,
+                    "help": "if a custom docker invocation is needed"
+                },
+                "timeout": {
+                    "default": 120,
+                    "type": "int",
+                    "help": "timeout for WACZ generation in seconds"
+                },
+                "extract_media": {
+                    "default": false,
+                    "type": "bool",
+                    "help": "If enabled all the images/videos/audio present in the WACZ archive will be extracted into separate Media and appear in the html report. The .wacz file will be kept untouched."
+                },
+                "extract_screenshot": {
+                    "default": true,
+                    "type": "bool",
+                    "help": "If enabled the screenshot captured by browsertrix will be extracted into separate Media and appear in the html report. The .wacz file will be kept untouched."
+                },
+                "socks_proxy_host": {
+                    "default": null,
+                    "help": "SOCKS proxy host for browsertrix-crawler, use in combination with socks_proxy_port. eg: user:password@host"
+                },
+                "socks_proxy_port": {
+                    "default": null,
+                    "type": "int",
+                    "help": "SOCKS proxy port for browsertrix-crawler, use in combination with socks_proxy_host. eg 1234"
+                },
+                "proxy_server": {
+                    "default": null,
+                    "help": "SOCKS server proxy URL, in development"
+                }
+            }
+        },
+        "metadata_enricher": {
+            "name": "metadata_enricher",
+            "display_name": "Media Metadata Enricher",
+            "manifest": {
+                "name": "Media Metadata Enricher",
+                "author": "Bellingcat",
+                "type": [
+                    "enricher"
+                ],
+                "requires_setup": true,
+                "description": "\n    Extracts metadata information from files using ExifTool.\n\n    ### Features\n    - Uses ExifTool to extract detailed metadata from media files.\n    - Processes file-specific data like camera settings, geolocation, timestamps, and other embedded metadata.\n    - Adds extracted metadata to the corresponding `Media` object within the `Metadata`.\n\n    ### Notes\n    - Requires ExifTool to be installed and accessible via the system's PATH.\n    - Skips enrichment for files where metadata extraction fails.\n    ",
+                "dependencies": {
+                    "python": [
+                        "loguru"
+                    ],
+                    "bin": [
+                        "exiftool"
+                    ]
+                },
+                "entry_point": "",
+                "version": "1.0",
+                "configs": {}
+            },
+            "configs": null
+        },
+        "timestamping_enricher": {
+            "name": "timestamping_enricher",
+            "display_name": "Timestamping Enricher",
+            "manifest": {
+                "name": "Timestamping Enricher",
+                "author": "Bellingcat",
+                "type": [
+                    "enricher"
+                ],
+                "requires_setup": true,
+                "description": "\n    Generates RFC3161-compliant timestamp tokens using Time Stamp Authorities (TSA) for archived files.\n\n    ### Features\n    - Creates timestamp tokens to prove the existence of files at a specific time, useful for legal and authenticity purposes.\n    - Aggregates file hashes into a text file and timestamps the concatenated data.\n    - Uses multiple Time Stamp Authorities (TSAs) to ensure reliability and redundancy.\n    - Validates timestamping certificates against trusted Certificate Authorities (CAs) using the `certifi` trust store.\n\n    ### Notes\n    - Should be run after the `hash_enricher` to ensure file hashes are available.\n    - Requires internet access to interact with the configured TSAs.\n    ",
+                "dependencies": {
+                    "python": [
+                        "loguru",
+                        "slugify",
+                        "tsp_client",
+                        "asn1crypto",
+                        "certvalidator",
+                        "certifi"
+                    ]
+                },
+                "entry_point": "",
+                "version": "1.0",
+                "configs": {
+                    "tsa_urls": {
+                        "default": [
+                            "http://timestamp.digicert.com",
+                            "http://timestamp.identrust.com",
+                            "http://timestamp.globalsign.com/tsa/r6advanced1",
+                            "http://tss.accv.es:8318/tsa"
+                        ],
+                        "help": "List of RFC3161 Time Stamp Authorities to use, separate with commas if passed via the command line."
+                    }
+                }
+            },
+            "configs": {
+                "tsa_urls": {
+                    "default": [
+                        "http://timestamp.digicert.com",
+                        "http://timestamp.identrust.com",
+                        "http://timestamp.globalsign.com/tsa/r6advanced1",
+                        "http://tss.accv.es:8318/tsa"
+                    ],
+                    "help": "List of RFC3161 Time Stamp Authorities to use, separate with commas if passed via the command line."
+                }
+            }
+        },
+        "screenshot_enricher": {
+            "name": "screenshot_enricher",
+            "display_name": "Screenshot Enricher",
+            "manifest": {
+                "name": "Screenshot Enricher",
+                "author": "Bellingcat",
+                "type": [
+                    "enricher"
+                ],
+                "requires_setup": true,
+                "description": "\n    Captures screenshots and optionally saves web pages as PDFs using a WebDriver.\n\n    ### Features\n    - Takes screenshots of web pages, with configurable width, height, and timeout settings.\n    - Optionally saves pages as PDFs, with additional configuration for PDF printing options.\n    - Bypasses URLs detected as authentication walls.\n    - Integrates seamlessly with the metadata enrichment pipeline, adding screenshots and PDFs as media.\n\n    ### Notes\n    - Requires a WebDriver (e.g., ChromeDriver) installed and accessible via the system's PATH.\n    ",
+                "dependencies": {
+                    "python": [
+                        "loguru",
+                        "selenium"
+                    ]
+                },
+                "entry_point": "",
+                "version": "1.0",
+                "configs": {
+                    "width": {
+                        "default": 1280,
+                        "type": "int",
+                        "help": "width of the screenshots"
+                    },
+                    "height": {
+                        "default": 1024,
+                        "type": "int",
+                        "help": "height of the screenshots"
+                    },
+                    "timeout": {
+                        "default": 60,
+                        "type": "int",
+                        "help": "timeout for taking the screenshot"
+                    },
+                    "sleep_before_screenshot": {
+                        "default": 4,
+                        "type": "int",
+                        "help": "seconds to wait for the pages to load before taking screenshot"
+                    },
+                    "http_proxy": {
+                        "default": "",
+                        "help": "http proxy to use for the webdriver, eg http://proxy-user:password@proxy-ip:port"
+                    },
+                    "save_to_pdf": {
+                        "default": false,
+                        "type": "bool",
+                        "help": "save the page as pdf along with the screenshot. PDF saving options can be adjusted with the 'print_options' parameter"
+                    },
+                    "print_options": {
+                        "default": {},
+                        "help": "options to pass to the pdf printer, in JSON format. See https://www.selenium.dev/documentation/webdriver/interactions/print_page/ for more information",
+                        "type": "json_loader"
+                    }
+                }
+            },
+            "configs": {
+                "width": {
+                    "default": 1280,
+                    "type": "int",
+                    "help": "width of the screenshots"
+                },
+                "height": {
+                    "default": 1024,
+                    "type": "int",
+                    "help": "height of the screenshots"
+                },
+                "timeout": {
+                    "default": 60,
+                    "type": "int",
+                    "help": "timeout for taking the screenshot"
+                },
+                "sleep_before_screenshot": {
+                    "default": 4,
+                    "type": "int",
+                    "help": "seconds to wait for the pages to load before taking screenshot"
+                },
+                "http_proxy": {
+                    "default": "",
+                    "help": "http proxy to use for the webdriver, eg http://proxy-user:password@proxy-ip:port"
+                },
+                "save_to_pdf": {
+                    "default": false,
+                    "type": "bool",
+                    "help": "save the page as pdf along with the screenshot. PDF saving options can be adjusted with the 'print_options' parameter"
+                },
+                "print_options": {
+                    "default": {},
+                    "help": "options to pass to the pdf printer, in JSON format. See https://www.selenium.dev/documentation/webdriver/interactions/print_page/ for more information",
+                    "type": "json_loader"
+                }
+            }
+        },
+        "whisper_enricher": {
+            "name": "whisper_enricher",
+            "display_name": "Whisper Enricher",
+            "manifest": {
+                "name": "Whisper Enricher",
+                "author": "Bellingcat",
+                "type": [
+                    "enricher"
+                ],
+                "requires_setup": true,
+                "description": "\n    Integrates with a Whisper API service to transcribe, translate, or detect the language of audio and video files.\n\n    ### Features\n    - Submits audio or video files to a Whisper API deployment for processing.\n    - Supports operations such as transcription, translation, and language detection.\n    - Optionally generates SRT subtitle files for video content.\n    - Integrates with S3-compatible storage systems to make files publicly accessible for processing.\n    - Handles job submission, status checking, artifact retrieval, and cleanup.\n\n    ### Notes\n    - Requires a Whisper API endpoint and API key for authentication.\n    - Only compatible with S3-compatible storage systems for media file accessibility.\n    - ** This stores the media files in S3 prior to enriching them as Whisper requires public URLs to access the media files.\n    - Handles multiple jobs and retries for failed or incomplete processing.\n    ",
+                "dependencies": {
+                    "python": [
+                        "s3_storage",
+                        "loguru",
+                        "requests"
+                    ]
+                },
+                "entry_point": "",
+                "version": "1.0",
+                "configs": {
+                    "api_endpoint": {
+                        "required": true,
+                        "help": "WhisperApi api endpoint, eg: https://whisperbox-api.com/api/v1, a deployment of https://github.com/bellingcat/whisperbox-transcribe."
+                    },
+                    "api_key": {
+                        "required": true,
+                        "help": "WhisperApi api key for authentication"
+                    },
+                    "include_srt": {
+                        "default": false,
+                        "type": "bool",
+                        "help": "Whether to include a subtitle SRT (SubRip Subtitle file) for the video (can be used in video players)."
+                    },
+                    "timeout": {
+                        "default": 90,
+                        "type": "int",
+                        "help": "How many seconds to wait at most for a successful job completion."
+                    },
+                    "action": {
+                        "default": "translate",
+                        "help": "which Whisper operation to execute",
+                        "choices": [
+                            "transcribe",
+                            "translate",
+                            "language_detection"
+                        ]
+                    }
+                }
+            },
+            "configs": {
+                "api_endpoint": {
+                    "required": true,
+                    "help": "WhisperApi api endpoint, eg: https://whisperbox-api.com/api/v1, a deployment of https://github.com/bellingcat/whisperbox-transcribe."
+                },
+                "api_key": {
+                    "required": true,
+                    "help": "WhisperApi api key for authentication"
+                },
+                "include_srt": {
+                    "default": false,
+                    "type": "bool",
+                    "help": "Whether to include a subtitle SRT (SubRip Subtitle file) for the video (can be used in video players)."
+                },
+                "timeout": {
+                    "default": 90,
+                    "type": "int",
+                    "help": "How many seconds to wait at most for a successful job completion."
+                },
+                "action": {
+                    "default": "translate",
+                    "help": "which Whisper operation to execute",
+                    "choices": [
+                        "transcribe",
+                        "translate",
+                        "language_detection"
+                    ]
+                }
+            }
+        },
+        "opentimestamps_enricher": {
+            "name": "opentimestamps_enricher",
+            "display_name": "OpenTimestamps Enricher",
+            "manifest": {
+                "name": "OpenTimestamps Enricher",
+                "author": "Bellingcat",
+                "type": [
+                    "enricher"
+                ],
+                "requires_setup": true,
+                "description": "\n    Creates OpenTimestamps proofs for archived files, providing blockchain-backed evidence of file existence at a specific time.\n\n    Uses OpenTimestamps \u2013 a service that timestamps data using the Bitcoin blockchain, providing a decentralized \n    and secure way to prove that data existed at a certain point in time.\n\n    ### Features\n    - Creates cryptographic timestamp proofs that link files to the Bitcoin blockchain\n    - Verifies existing timestamp proofs to confirm the time a file existed\n    - Uses multiple calendar servers to ensure reliability and redundancy\n    - Stores timestamp proofs alongside original files for future verification\n\n    ### Notes\n    - Can work offline to create timestamp proofs that can be upgraded later\n    - Verification checks if timestamps have been confirmed in the Bitcoin blockchain\n    - Should run after files have been archived and hashed\n\n    ### Verifying Timestamps Later\n    If you wish to verify a timestamp (ots) file later, you can install the opentimestamps-client command line tool and use the `ots verify` command.\n    Example: `ots verify my_file.ots`\n\n    Note: if you're using local storage with a filename_generator set to 'static' (a hash) or random, the files will be renamed when they are saved to the\n    final location meaning you will need to specify the original filename when verifying the timestamp with `ots verify -f original_filename my_file.ots`.\n    ",
+                "dependencies": {
+                    "python": [
+                        "loguru",
+                        "opentimestamps"
+                    ]
+                },
+                "entry_point": "",
+                "version": "1.0",
+                "configs": {
+                    "use_calendars": {
+                        "default": true,
+                        "help": "Whether to connect to OpenTimestamps calendar servers to create timestamps. If false, creates local timestamp proofs only.",
+                        "type": "bool"
+                    },
+                    "calendar_urls": {
+                        "default": [
+                            "https://alice.btc.calendar.opentimestamps.org",
+                            "https://bob.btc.calendar.opentimestamps.org",
+                            "https://finney.calendar.eternitywall.com"
+                        ],
+                        "help": "List of OpenTimestamps calendar servers to use for timestamping. See here for a list of calendars maintained by opentimestamps:https://opentimestamps.org/#calendars",
+                        "type": "list"
+                    },
+                    "calendar_whitelist": {
+                        "default": [],
+                        "help": "Optional whitelist of calendar servers. Override this if you are using your own calendar servers. e.g. ['https://mycalendar.com']",
+                        "type": "list"
+                    },
+                    "verify_timestamps": {
+                        "default": true,
+                        "help": "Whether to verify timestamps after creating them.",
+                        "type": "bool"
+                    }
+                }
+            },
+            "configs": {
+                "use_calendars": {
+                    "default": true,
+                    "help": "Whether to connect to OpenTimestamps calendar servers to create timestamps. If false, creates local timestamp proofs only.",
+                    "type": "bool"
+                },
+                "calendar_urls": {
+                    "default": [
+                        "https://alice.btc.calendar.opentimestamps.org",
+                        "https://bob.btc.calendar.opentimestamps.org",
+                        "https://finney.calendar.eternitywall.com"
+                    ],
+                    "help": "List of OpenTimestamps calendar servers to use for timestamping. See here for a list of calendars maintained by opentimestamps:https://opentimestamps.org/#calendars",
+                    "type": "list"
+                },
+                "calendar_whitelist": {
+                    "default": [],
+                    "help": "Optional whitelist of calendar servers. Override this if you are using your own calendar servers. e.g. ['https://mycalendar.com']",
+                    "type": "list"
+                },
+                "verify_timestamps": {
+                    "default": true,
+                    "help": "Whether to verify timestamps after creating them.",
+                    "type": "bool"
+                }
+            }
+        },
+        "thumbnail_enricher": {
+            "name": "thumbnail_enricher",
+            "display_name": "Thumbnail Enricher",
+            "manifest": {
+                "name": "Thumbnail Enricher",
+                "author": "Bellingcat",
+                "type": [
+                    "enricher"
+                ],
+                "requires_setup": false,
+                "description": "\n    Generates thumbnails for video files to provide visual previews.\n\n    ### Features\n    - Processes video files and generates evenly distributed thumbnails.\n    - Calculates the number of thumbnails based on video duration, `thumbnails_per_minute`, and `max_thumbnails`.\n    - Distributes thumbnails equally across the video's duration and stores them as media objects.\n    - Adds metadata for each thumbnail, including timestamps and IDs.\n\n    ### Notes\n    - Requires `ffmpeg` to be installed and accessible via the system's PATH.\n    - Handles videos without pre-existing duration metadata by probing with `ffmpeg`.\n    - Skips enrichment for non-video media files.\n    ",
+                "dependencies": {
+                    "python": [
+                        "loguru",
+                        "ffmpeg"
+                    ],
+                    "bin": [
+                        "ffmpeg"
+                    ]
+                },
+                "entry_point": "",
+                "version": "1.0",
+                "configs": {
+                    "thumbnails_per_minute": {
+                        "default": 60,
+                        "type": "int",
+                        "help": "how many thumbnails to generate per minute of video, can be limited by max_thumbnails"
+                    },
+                    "max_thumbnails": {
+                        "default": 16,
+                        "type": "int",
+                        "help": "limit the number of thumbnails to generate per video, 0 means no limit"
+                    }
+                }
+            },
+            "configs": {
+                "thumbnails_per_minute": {
+                    "default": 60,
+                    "type": "int",
+                    "help": "how many thumbnails to generate per minute of video, can be limited by max_thumbnails"
+                },
+                "max_thumbnails": {
+                    "default": 16,
+                    "type": "int",
+                    "help": "limit the number of thumbnails to generate per video, 0 means no limit"
+                }
+            }
+        },
+        "meta_enricher": {
+            "name": "meta_enricher",
+            "display_name": "Archive Metadata Enricher",
+            "manifest": {
+                "name": "Archive Metadata Enricher",
+                "author": "Bellingcat",
+                "type": [
+                    "enricher"
+                ],
+                "requires_setup": false,
+                "description": " \n    Adds metadata information about the archive operations, Adds metadata about archive operations, including file sizes and archive duration./\n    To be included at the end of all enrichments.\n    \n    ### Features\n- Calculates the total size of all archived media files, storing the result in human-readable and byte formats.\n- Computes the duration of the archival process, storing the elapsed time in seconds.\n- Ensures all enrichments are performed only if the `Metadata` object contains valid data.\n- Adds detailed metadata to provide insights into file sizes and archival performance.\n\n### Notes\n- Skips enrichment if no media or metadata is available in the `Metadata` object.\n- File sizes are calculated using the `os.stat` module, ensuring accurate byte-level reporting.\n",
+                "dependencies": {
+                    "python": [
+                        "loguru"
+                    ]
+                },
+                "entry_point": "",
+                "version": "1.0",
+                "configs": {}
+            },
+            "configs": null
+        },
+        "pdq_hash_enricher": {
+            "name": "pdq_hash_enricher",
+            "display_name": "PDQ Hash Enricher",
+            "manifest": {
+                "name": "PDQ Hash Enricher",
+                "author": "Bellingcat",
+                "type": [
+                    "enricher"
+                ],
+                "requires_setup": false,
+                "description": "\n    PDQ Hash Enricher for generating perceptual hashes of media files.\n\n    ### Features\n    - Calculates perceptual hashes for image files using the PDQ hashing algorithm.\n    - Enables detection of duplicate or near-duplicate visual content.\n    - Processes images stored in `Metadata` objects, adding computed hashes to the corresponding `Media` entries.\n    - Skips non-image media or files unsuitable for hashing (e.g., corrupted or unsupported formats).\n\n    ### Notes\n    - Best used after enrichers like `thumbnail_enricher` or `screenshot_enricher` to ensure images are available.\n    - Uses the `pdqhash` library to compute 256-bit perceptual hashes, which are stored as hexadecimal strings.\n    ",
+                "dependencies": {
+                    "python": [
+                        "loguru",
+                        "pdqhash",
+                        "numpy",
+                        "PIL"
+                    ]
+                },
+                "entry_point": "",
+                "version": "1.0",
+                "configs": {}
+            },
+            "configs": null
+        },
+        "ssl_enricher": {
+            "name": "ssl_enricher",
+            "display_name": "SSL Certificate Enricher",
+            "manifest": {
+                "name": "SSL Certificate Enricher",
+                "author": "Bellingcat",
+                "type": [
+                    "enricher"
+                ],
+                "requires_setup": false,
+                "description": "\n    Retrieves SSL certificate information for a domain and stores it as a file.\n\n    ### Features\n    - Fetches SSL certificates for domains using the HTTPS protocol.\n    - Stores certificates in PEM format and adds them as media to the metadata.\n    - Skips enrichment if no media has been archived, based on the `skip_when_nothing_archived` configuration.\n\n    ### Notes\n    - Requires the target URL to use the HTTPS scheme; other schemes are not supported.\n    ",
+                "dependencies": {
+                    "python": [
+                        "loguru",
+                        "slugify"
+                    ]
+                },
+                "entry_point": "ssl_enricher::SSLEnricher",
+                "version": "1.0",
+                "configs": {
+                    "skip_when_nothing_archived": {
+                        "default": true,
+                        "type": "bool",
+                        "help": "if true, will skip enriching when no media is archived"
+                    }
+                }
+            },
+            "configs": {
+                "skip_when_nothing_archived": {
+                    "default": true,
+                    "type": "bool",
+                    "help": "if true, will skip enriching when no media is archived"
+                }
+            }
+        },
+        "hash_enricher": {
+            "name": "hash_enricher",
+            "display_name": "Hash Enricher",
+            "manifest": {
+                "name": "Hash Enricher",
+                "author": "Bellingcat",
+                "type": [
+                    "enricher"
+                ],
+                "requires_setup": false,
+                "description": "\nGenerates cryptographic hashes for media files to ensure data integrity and authenticity.\n\n### Features\n- Calculates cryptographic hashes (SHA-256 or SHA3-512) for media files stored in `Metadata` objects.\n- Ensures content authenticity, integrity validation, and duplicate identification.\n- Efficiently processes large files by reading file bytes in configurable chunk sizes.\n- Supports dynamic configuration of hash algorithms and chunk sizes.\n- Updates media metadata with the computed hash value in the format `<algorithm>:<hash>`.\n\n### Notes\n- Default hash algorithm is SHA-256, but SHA3-512 is also supported.\n- Chunk size defaults to 16 MB but can be adjusted based on memory requirements.\n- Useful for workflows requiring hash-based content validation or deduplication.\n",
+                "dependencies": {
+                    "python": [
+                        "loguru"
+                    ]
+                },
+                "entry_point": "",
+                "version": "1.0",
+                "configs": {
+                    "algorithm": {
+                        "default": "SHA-256",
+                        "help": "hash algorithm to use",
+                        "choices": [
+                            "SHA-256",
+                            "SHA3-512"
+                        ]
+                    },
+                    "chunksize": {
+                        "default": 16000000,
+                        "help": "number of bytes to use when reading files in chunks (if this value is too large you will run out of RAM), default is 16MB",
+                        "type": "int"
+                    }
+                }
+            },
+            "configs": {
+                "algorithm": {
+                    "default": "SHA-256",
+                    "help": "hash algorithm to use",
+                    "choices": [
+                        "SHA-256",
+                        "SHA3-512"
+                    ]
+                },
+                "chunksize": {
+                    "default": 16000000,
+                    "help": "number of bytes to use when reading files in chunks (if this value is too large you will run out of RAM), default is 16MB",
+                    "type": "int"
+                }
+            }
+        },
+        "api_db": {
+            "name": "api_db",
+            "display_name": "Auto Archiver API Database",
+            "manifest": {
+                "name": "Auto Archiver API Database",
+                "author": "Bellingcat",
+                "type": [
+                    "database"
+                ],
+                "requires_setup": true,
+                "description": "\n     Provides integration with the Auto Archiver API for querying and storing archival data.\n\n### Features\n- **API Integration**: Supports querying for existing archives and submitting results.\n- **Duplicate Prevention**: Avoids redundant archiving when `use_api_cache` is disabled.\n- **Configurable**: Supports settings like API endpoint, authentication token, tags, and permissions.\n- **Tagging and Metadata**: Adds tags and manages metadata for archives.\n- **Optional Storage**: Archives results conditionally based on configuration.\n\n### Setup\nRequires access to an Auto Archiver API instance and a valid API token.\n     ",
+                "dependencies": {
+                    "python": [
+                        "requests",
+                        "loguru"
+                    ]
+                },
+                "entry_point": "api_db::AAApiDb",
+                "version": "1.0",
+                "configs": {
+                    "api_endpoint": {
+                        "required": true,
+                        "help": "API endpoint where calls are made to"
+                    },
+                    "api_token": {
+                        "default": null,
+                        "help": "API Bearer token."
+                    },
+                    "public": {
+                        "default": false,
+                        "type": "bool",
+                        "help": "whether the URL should be publicly available via the API"
+                    },
+                    "author_id": {
+                        "default": null,
+                        "help": "which email to assign as author"
+                    },
+                    "group_id": {
+                        "default": null,
+                        "help": "which group of users have access to the archive in case public=false as author"
+                    },
+                    "use_api_cache": {
+                        "default": false,
+                        "type": "bool",
+                        "help": "if True then the API database will be queried prior to any archiving operations and stop if the link has already been archived"
+                    },
+                    "store_results": {
+                        "default": true,
+                        "type": "bool",
+                        "help": "when set, will send the results to the API database."
+                    },
+                    "tags": {
+                        "default": [],
+                        "help": "what tags to add to the archived URL"
+                    }
+                }
+            },
+            "configs": {
+                "api_endpoint": {
+                    "required": true,
+                    "help": "API endpoint where calls are made to"
+                },
+                "api_token": {
+                    "default": null,
+                    "help": "API Bearer token."
+                },
+                "public": {
+                    "default": false,
+                    "type": "bool",
+                    "help": "whether the URL should be publicly available via the API"
+                },
+                "author_id": {
+                    "default": null,
+                    "help": "which email to assign as author"
+                },
+                "group_id": {
+                    "default": null,
+                    "help": "which group of users have access to the archive in case public=false as author"
+                },
+                "use_api_cache": {
+                    "default": false,
+                    "type": "bool",
+                    "help": "if True then the API database will be queried prior to any archiving operations and stop if the link has already been archived"
+                },
+                "store_results": {
+                    "default": true,
+                    "type": "bool",
+                    "help": "when set, will send the results to the API database."
+                },
+                "tags": {
+                    "default": [],
+                    "help": "what tags to add to the archived URL"
+                }
+            }
+        },
+        "console_db": {
+            "name": "console_db",
+            "display_name": "Console Database",
+            "manifest": {
+                "name": "Console Database",
+                "author": "Bellingcat",
+                "type": [
+                    "database"
+                ],
+                "requires_setup": false,
+                "description": "\nProvides a simple database implementation that outputs archival results and status updates to the console.\n\n### Features\n- Logs the status of archival tasks directly to the console, including:\n  - started\n  - failed (with error details)\n  - aborted\n  - done (with optional caching status)\n- Useful for debugging or lightweight setups where no external database is required.\n\n### Setup\nNo additional configuration is required.\n",
+                "dependencies": {
+                    "python": [
+                        "loguru"
+                    ]
+                },
+                "entry_point": "",
+                "version": "1.0",
+                "configs": {}
+            },
+            "configs": null
+        },
+        "csv_db": {
+            "name": "csv_db",
+            "display_name": "CSV Database",
+            "manifest": {
+                "name": "CSV Database",
+                "author": "Bellingcat",
+                "type": [
+                    "database"
+                ],
+                "requires_setup": false,
+                "description": "\nHandles exporting archival results to a CSV file.\n\n### Features\n- Saves archival metadata as rows in a CSV file.\n- Automatically creates the CSV file with a header if it does not exist.\n- Appends new metadata entries to the existing file.\n\n### Setup\nRequired config:\n- csv_file: Path to the CSV file where results will be stored (default: \"db.csv\").\n",
+                "dependencies": {
+                    "python": [
+                        "loguru"
+                    ]
+                },
+                "entry_point": "csv_db::CSVDb",
+                "version": "1.0",
+                "configs": {
+                    "csv_file": {
+                        "default": "db.csv",
+                        "help": "CSV file name to save metadata to"
+                    }
+                }
+            },
+            "configs": {
+                "csv_file": {
+                    "default": "db.csv",
+                    "help": "CSV file name to save metadata to"
+                }
+            }
+        },
+        "gdrive_storage": {
+            "name": "gdrive_storage",
+            "display_name": "Google Drive Storage",
+            "manifest": {
+                "name": "Google Drive Storage",
+                "author": "Dave Mateer",
+                "type": [
+                    "storage"
+                ],
+                "requires_setup": true,
+                "description": "\n    \n    GDriveStorage: A storage module for saving archived content to Google Drive.\n\n    Source Documentation: https://davemateer.com/2022/04/28/google-drive-with-python\n\n    ### Features\n    - Saves media files to Google Drive, organizing them into folders based on the provided path structure.\n    - Supports OAuth token-based authentication or service account credentials for API access.\n    - Automatically creates folders in Google Drive if they don't exist.\n    - Retrieves CDN URLs for stored files, enabling easy sharing and access.\n\n    ### Notes\n    - Requires setup with either a Google OAuth token or a service account JSON file.\n    - Files are uploaded to the specified `root_folder_id` and organized by the `media.key` structure.\n    - Automatically handles Google Drive API token refreshes for long-running jobs.\n    \n    ## Overview\nThis module integrates Google Drive as a storage backend, enabling automatic folder creation and file uploads. It supports authentication via **service accounts** (recommended for automation) or **OAuth tokens** (for user-based authentication).\n\n## Features\n- Saves files to Google Drive, organizing them into structured folders.\n- Supports both **service account** and **OAuth token** authentication.\n- Automatically creates folders if they don't exist.\n- Generates public URLs for easy file sharing.\n\n## Setup Guide\n1. **Enable Google Drive API**\n   - Create a Google Cloud project at [Google Cloud Console](https://console.cloud.google.com/)\n   - Enable the **Google Drive API**.\n\n2. **Set Up a Google Drive Folder**\n   - Create a folder in **Google Drive** and copy its **folder ID** from the URL.\n   - Add the **folder ID** to your configuration (`orchestration.yaml`):\n     ```yaml\n     root_folder_id: \"FOLDER_ID\"\n     ```\n\n3. **Authentication Options**\n   - **Option 1: Service Account (Recommended)**\n     - Create a **service account** in Google Cloud IAM.\n     - Download the JSON key file and save it as:\n       ```\n       secrets/service_account.json\n       ```\n     - **Share your Drive folder** with the service account\u2019s `client_email` (found in the JSON file).\n     \n   - **Option 2: OAuth Token (User Authentication)**\n     - Create OAuth **Desktop App credentials** in Google Cloud.\n     - Save the credentials as:\n       ```\n       secrets/oauth_credentials.json\n       ```\n     - Generate an OAuth token by running:\n       ```sh\n       python scripts/create_update_gdrive_oauth_token.py -c secrets/oauth_credentials.json\n       ```\n\n    \n    Notes on the OAuth token:\n    Tokens are refreshed after 1 hour however keep working for 7 days (tbc)\n    so as long as the job doesn't last for 7 days then this method of refreshing only once per run will work\n    see this link for details on the token:\n    https://davemateer.com/2022/04/28/google-drive-with-python#tokens\n    \n    \n",
+                "dependencies": {
+                    "python": [
+                        "loguru",
+                        "googleapiclient",
+                        "google"
+                    ]
+                },
+                "entry_point": "gdrive_storage::GDriveStorage",
+                "version": "1.0",
+                "configs": {
+                    "path_generator": {
+                        "default": "url",
+                        "help": "how to store the file in terms of directory structure: 'flat' sets to root; 'url' creates a directory based on the provided URL; 'random' creates a random directory.",
+                        "choices": [
+                            "flat",
+                            "url",
+                            "random"
+                        ]
+                    },
+                    "filename_generator": {
+                        "default": "static",
+                        "help": "how to name stored files: 'random' creates a random string; 'static' uses a hash, with the settings of the 'hash_enricher' module (defaults to SHA256 if not enabled).",
+                        "choices": [
+                            "random",
+                            "static"
+                        ]
+                    },
+                    "root_folder_id": {
+                        "required": true,
+                        "help": "root google drive folder ID to use as storage, found in URL: 'https://drive.google.com/drive/folders/FOLDER_ID'"
+                    },
+                    "oauth_token": {
+                        "default": null,
+                        "help": "JSON filename with Google Drive OAuth token: check auto-archiver repository scripts folder for create_update_gdrive_oauth_token.py. NOTE: storage used will count towards owner of GDrive folder, therefore it is best to use oauth_token_filename over service_account."
+                    },
+                    "service_account": {
+                        "default": "secrets/service_account.json",
+                        "help": "service account JSON file path, same as used for Google Sheets. NOTE: storage used will count towards the developer account."
+                    }
+                }
+            },
+            "configs": {
+                "path_generator": {
+                    "default": "url",
+                    "help": "how to store the file in terms of directory structure: 'flat' sets to root; 'url' creates a directory based on the provided URL; 'random' creates a random directory.",
+                    "choices": [
+                        "flat",
+                        "url",
+                        "random"
+                    ]
+                },
+                "filename_generator": {
+                    "default": "static",
+                    "help": "how to name stored files: 'random' creates a random string; 'static' uses a hash, with the settings of the 'hash_enricher' module (defaults to SHA256 if not enabled).",
+                    "choices": [
+                        "random",
+                        "static"
+                    ]
+                },
+                "root_folder_id": {
+                    "required": true,
+                    "help": "root google drive folder ID to use as storage, found in URL: 'https://drive.google.com/drive/folders/FOLDER_ID'"
+                },
+                "oauth_token": {
+                    "default": null,
+                    "help": "JSON filename with Google Drive OAuth token: check auto-archiver repository scripts folder for create_update_gdrive_oauth_token.py. NOTE: storage used will count towards owner of GDrive folder, therefore it is best to use oauth_token_filename over service_account."
+                },
+                "service_account": {
+                    "default": "secrets/service_account.json",
+                    "help": "service account JSON file path, same as used for Google Sheets. NOTE: storage used will count towards the developer account."
+                }
+            }
+        },
+        "s3_storage": {
+            "name": "s3_storage",
+            "display_name": "S3 Storage",
+            "manifest": {
+                "name": "S3 Storage",
+                "author": "Bellingcat",
+                "type": [
+                    "storage"
+                ],
+                "requires_setup": true,
+                "description": "\n    S3Storage: A storage module for saving media files to an S3-compatible object storage.\n\n    ### Features\n    - Uploads media files to an S3 bucket with customizable configurations.\n    - Supports `random_no_duplicate` mode to avoid duplicate uploads by checking existing files based on SHA-256 hashes.\n    - Automatically generates unique paths for files when duplicates are found.\n    - Configurable endpoint and CDN URL for different S3-compatible providers.\n    - Supports both private and public file storage, with public files being readable online.\n\n    ### Notes\n    - Requires S3 credentials (API key and secret) and a bucket name to function.\n    - The `random_no_duplicate` option ensures no duplicate uploads by leveraging hash-based folder structures.\n    - Uses `boto3` for interaction with the S3 API.\n    - Depends on the `HashEnricher` module for hash calculation.\n    ",
+                "dependencies": {
+                    "python": [
+                        "hash_enricher",
+                        "boto3",
+                        "loguru"
+                    ]
+                },
+                "entry_point": "",
+                "version": "1.0",
+                "configs": {
+                    "path_generator": {
+                        "default": "flat",
+                        "help": "how to store the file in terms of directory structure: 'flat' sets to root; 'url' creates a directory based on the provided URL; 'random' creates a random directory.",
+                        "choices": [
+                            "flat",
+                            "url",
+                            "random"
+                        ]
+                    },
+                    "filename_generator": {
+                        "default": "static",
+                        "help": "how to name stored files: 'random' creates a random string; 'static' uses a hash, with the settings of the 'hash_enricher' module (defaults to SHA256 if not enabled).",
+                        "choices": [
+                            "random",
+                            "static"
+                        ]
+                    },
+                    "bucket": {
+                        "default": null,
+                        "help": "S3 bucket name"
+                    },
+                    "region": {
+                        "default": null,
+                        "help": "S3 region name"
+                    },
+                    "key": {
+                        "default": null,
+                        "help": "S3 API key"
+                    },
+                    "secret": {
+                        "default": null,
+                        "help": "S3 API secret"
+                    },
+                    "random_no_duplicate": {
+                        "default": false,
+                        "type": "bool",
+                        "help": "if set, it will override `path_generator`, `filename_generator` and `folder`. It will check if the file already exists and if so it will not upload it again. Creates a new root folder path `no-dups/`"
+                    },
+                    "endpoint_url": {
+                        "default": "https://{region}.digitaloceanspaces.com",
+                        "help": "S3 bucket endpoint, {region} are inserted at runtime"
+                    },
+                    "cdn_url": {
+                        "default": "https://{bucket}.{region}.cdn.digitaloceanspaces.com/{key}",
+                        "help": "S3 CDN url, {bucket}, {region} and {key} are inserted at runtime"
+                    },
+                    "private": {
+                        "default": false,
+                        "type": "bool",
+                        "help": "if true S3 files will not be readable online"
+                    }
+                }
+            },
+            "configs": {
+                "path_generator": {
+                    "default": "flat",
+                    "help": "how to store the file in terms of directory structure: 'flat' sets to root; 'url' creates a directory based on the provided URL; 'random' creates a random directory.",
+                    "choices": [
+                        "flat",
+                        "url",
+                        "random"
+                    ]
+                },
+                "filename_generator": {
+                    "default": "static",
+                    "help": "how to name stored files: 'random' creates a random string; 'static' uses a hash, with the settings of the 'hash_enricher' module (defaults to SHA256 if not enabled).",
+                    "choices": [
+                        "random",
+                        "static"
+                    ]
+                },
+                "bucket": {
+                    "default": null,
+                    "help": "S3 bucket name"
+                },
+                "region": {
+                    "default": null,
+                    "help": "S3 region name"
+                },
+                "key": {
+                    "default": null,
+                    "help": "S3 API key"
+                },
+                "secret": {
+                    "default": null,
+                    "help": "S3 API secret"
+                },
+                "random_no_duplicate": {
+                    "default": false,
+                    "type": "bool",
+                    "help": "if set, it will override `path_generator`, `filename_generator` and `folder`. It will check if the file already exists and if so it will not upload it again. Creates a new root folder path `no-dups/`"
+                },
+                "endpoint_url": {
+                    "default": "https://{region}.digitaloceanspaces.com",
+                    "help": "S3 bucket endpoint, {region} are inserted at runtime"
+                },
+                "cdn_url": {
+                    "default": "https://{bucket}.{region}.cdn.digitaloceanspaces.com/{key}",
+                    "help": "S3 CDN url, {bucket}, {region} and {key} are inserted at runtime"
+                },
+                "private": {
+                    "default": false,
+                    "type": "bool",
+                    "help": "if true S3 files will not be readable online"
+                }
+            }
+        },
+        "local_storage": {
+            "name": "local_storage",
+            "display_name": "Local Storage",
+            "manifest": {
+                "name": "Local Storage",
+                "author": "Bellingcat",
+                "type": [
+                    "storage"
+                ],
+                "requires_setup": false,
+                "description": "\n    LocalStorage: A storage module for saving archived content locally on the filesystem.\n\n    ### Features\n    - Saves archived media files to a specified folder on the local filesystem.\n    - Maintains file metadata during storage using `shutil.copy2`.\n    - Supports both absolute and relative paths for stored files, configurable via `save_absolute`.\n    - Automatically creates directories as needed for storing files.\n\n    ### Notes\n    - Default storage folder is `./archived`, but this can be changed via the `save_to` configuration.\n    - The `save_absolute` option can reveal the file structure in output formats; use with caution.\n    ",
+                "dependencies": {
+                    "python": [
+                        "loguru"
+                    ]
+                },
+                "entry_point": "",
+                "version": "1.0",
+                "configs": {
+                    "path_generator": {
+                        "default": "flat",
+                        "help": "how to store the file in terms of directory structure: 'flat' sets to root; 'url' creates a directory based on the provided URL; 'random' creates a random directory.",
+                        "choices": [
+                            "flat",
+                            "url",
+                            "random"
+                        ]
+                    },
+                    "filename_generator": {
+                        "default": "static",
+                        "help": "how to name stored files: 'random' creates a random string; 'static' uses a hash, with the settings of the 'hash_enricher' module (defaults to SHA256 if not enabled)",
+                        "choices": [
+                            "random",
+                            "static"
+                        ]
+                    },
+                    "save_to": {
+                        "default": "./local_archive",
+                        "help": "folder where to save archived content"
+                    },
+                    "save_absolute": {
+                        "default": false,
+                        "type": "bool",
+                        "help": "whether the path to the stored file is absolute or relative in the output result inc. formatters (WARN: leaks the file structure)"
+                    }
+                }
+            },
+            "configs": {
+                "path_generator": {
+                    "default": "flat",
+                    "help": "how to store the file in terms of directory structure: 'flat' sets to root; 'url' creates a directory based on the provided URL; 'random' creates a random directory.",
+                    "choices": [
+                        "flat",
+                        "url",
+                        "random"
+                    ]
+                },
+                "filename_generator": {
+                    "default": "static",
+                    "help": "how to name stored files: 'random' creates a random string; 'static' uses a hash, with the settings of the 'hash_enricher' module (defaults to SHA256 if not enabled)",
+                    "choices": [
+                        "random",
+                        "static"
+                    ]
+                },
+                "save_to": {
+                    "default": "./local_archive",
+                    "help": "folder where to save archived content"
+                },
+                "save_absolute": {
+                    "default": false,
+                    "type": "bool",
+                    "help": "whether the path to the stored file is absolute or relative in the output result inc. formatters (WARN: leaks the file structure)"
+                }
+            }
+        },
+        "mute_formatter": {
+            "name": "mute_formatter",
+            "display_name": "Mute Formatter",
+            "manifest": {
+                "name": "Mute Formatter",
+                "author": "Bellingcat",
+                "type": [
+                    "formatter"
+                ],
+                "requires_setup": true,
+                "description": " Default formatter.\n    ",
+                "dependencies": {},
+                "entry_point": "",
+                "version": "1.0",
+                "configs": {}
+            },
+            "configs": null
+        },
+        "html_formatter": {
+            "name": "html_formatter",
+            "display_name": "HTML Formatter",
+            "manifest": {
+                "name": "HTML Formatter",
+                "author": "Bellingcat",
+                "type": [
+                    "formatter"
+                ],
+                "requires_setup": false,
+                "description": " ",
+                "dependencies": {
+                    "python": [
+                        "hash_enricher",
+                        "loguru",
+                        "jinja2"
+                    ],
+                    "bin": [
+                        ""
+                    ]
+                },
+                "entry_point": "",
+                "version": "1.0",
+                "configs": {
+                    "detect_thumbnails": {
+                        "default": true,
+                        "help": "if true will group by thumbnails generated by thumbnail enricher by id 'thumbnail_00'",
+                        "type": "bool"
+                    }
+                }
+            },
+            "configs": {
+                "detect_thumbnails": {
+                    "default": true,
+                    "help": "if true will group by thumbnails generated by thumbnail enricher by id 'thumbnail_00'",
+                    "type": "bool"
+                }
+            }
+        }
+    },
+    "steps": {
+        "feeders": [
+            "cli_feeder",
+            "atlos_feeder_db_storage",
+            "csv_feeder",
+            "gsheet_feeder_db"
+        ],
+        "extractors": [
+            "wayback_extractor_enricher",
+            "wacz_extractor_enricher",
+            "instagram_api_extractor",
+            "instagram_tbot_extractor",
+            "generic_extractor",
+            "tiktok_tikwm_extractor",
+            "twitter_api_extractor",
+            "instagram_extractor",
+            "telethon_extractor",
+            "vk_extractor",
+            "telegram_extractor"
+        ],
+        "enrichers": [
+            "wayback_extractor_enricher",
+            "wacz_extractor_enricher",
+            "metadata_enricher",
+            "timestamping_enricher",
+            "thumbnail_enricher",
+            "screenshot_enricher",
+            "meta_enricher",
+            "pdq_hash_enricher",
+            "whisper_enricher",
+            "opentimestamps_enricher",
+            "ssl_enricher",
+            "hash_enricher"
+        ],
+        "databases": [
+            "console_db",
+            "api_db",
+            "csv_db",
+            "atlos_feeder_db_storage",
+            "gsheet_feeder_db"
+        ],
+        "storages": [
+            "local_storage",
+            "gdrive_storage",
+            "atlos_feeder_db_storage",
+            "s3_storage"
+        ],
+        "formatters": [
+            "html_formatter",
+            "mute_formatter"
+        ]
+    },
+    "configs": [
+        "atlos_feeder_db_storage",
+        "csv_feeder",
+        "gsheet_feeder_db",
+        "cli_feeder",
+        "instagram_api_extractor",
+        "instagram_tbot_extractor",
+        "twitter_api_extractor",
+        "instagram_extractor",
+        "telethon_extractor",
+        "vk_extractor",
+        "generic_extractor",
+        "wayback_extractor_enricher",
+        "wacz_extractor_enricher",
+        "timestamping_enricher",
+        "screenshot_enricher",
+        "whisper_enricher",
+        "opentimestamps_enricher",
+        "thumbnail_enricher",
+        "ssl_enricher",
+        "hash_enricher",
+        "api_db",
+        "csv_db",
+        "gdrive_storage",
+        "s3_storage",
+        "local_storage",
+        "html_formatter"
+    ],
+    "module_types": [
+        "feeder",
+        "extractor",
+        "enricher",
+        "database",
+        "storage",
+        "formatter"
+    ],
+    "empty_config": "# Auto Archiver Configuration\n\n# Steps are the modules that will be run in the order they are defined\nsteps:\n  feeders: []\n  extractors: []\n  enrichers: []\n  databases: []\n  storages: []\n  formatters: []\n\n# Global configuration\n\n# Authentication\n# a dictionary of authentication information that can be used by extractors to login to website. \n# you can use a comma separated list for multiple domains on the same line (common usecase: x.com,twitter.com)\n# Common login 'types' are username/password, cookie, api key/token.\n# There are two special keys for using cookies, they are: cookies_file and cookies_from_browser. \n# Some Examples:\n# facebook.com:\n#   username: \"my_username\"\n#   password: \"my_password\"\n# or for a site that uses an API key:\n# twitter.com,x.com:\n#   api_key\n#   api_secret\n# youtube.com:\n#   cookie: \"login_cookie=value ; other_cookie=123\" # multiple 'key=value' pairs should be separated by ;\n\nauthentication: {}\n\n# These are the global configurations that are used by the modules\n\nlogging:\n  level: INFO\n\n"
+}

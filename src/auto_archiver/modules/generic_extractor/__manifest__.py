@@ -28,6 +28,13 @@ the broader archiving framework.
  metadata objects. Some dropins are included in this generic_archiver by default, but
 custom dropins can be created to handle additional websites and passed to the archiver
 via the command line using the `--dropins` option (TODO!).
+
+### Auto-Updates
+
+The Generic Extractor will also automatically check for updates to `yt-dlp` (every 5 days by default).
+This can be configured using the `ytdlp_update_interval` setting (or disabled by setting it to -1).
+If you are having issues with the extractor, you can review the version of `yt-dlp` being used with `yt-dlp --version`.
+
 """,
     "configs": {
         "subtitles": {"default": True, "help": "download subtitles if available", "type": "bool"},
@@ -63,6 +70,18 @@ via the command line using the `--dropins` option (TODO!).
         "max_downloads": {
             "default": "inf",
             "help": "Use to limit the number of videos to download when a channel or long page is being extracted. 'inf' means no limit.",
+        },
+        "ytdlp_update_interval": {
+            "default": 5,
+            "help": "How often to check for yt-dlp updates (days). If positive, will check and update yt-dlp every [num] days. Set it to -1 to disable, or 0 to always update on every run.",
+            "type": "int",
+        },
+        "ytdlp_args": {
+            "default": "",
+            "help": "Additional arguments to pass to yt-dlp, e.g. --no-check-certificate or --plugin-dirs.\
+See yt-dlp documentation here for more information: https://github.com/yt-dlp/yt-dlp?tab=readme-ov-file#general-options\
+Note: this is not to be confused with 'extractor_args' which are specific to the extractor itself.",
+            "type": "str",
         },
     },
 }

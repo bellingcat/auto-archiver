@@ -16,14 +16,14 @@
     "dependencies": {
         "python": ["loguru"],
         "bin": ["bash"],
-        },
-    # configurations that this module takes. These are argparse-compliant dicationaries, that are 
+    },
+    # configurations that this module takes. These are argparse-compliant dicationaries, that are
     # used to create command line arguments when the programme is run.
     # The full name of the config option will become: `module_name.config_name`
     "configs": {
-            "csv_file": {"default": "db.csv", "help": "CSV file name"},
-            "required_field": {"required": True, "help": "required field in the CSV file"},
-        },
+        "csv_file": {"default": "db.csv", "help": "CSV file name"},
+        "required_field": {"required": True, "help": "required field in the CSV file"},
+    },
     # A description of the module, used for documentation
     "description": "This is an example module",
 }
