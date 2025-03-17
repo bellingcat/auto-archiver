@@ -8,6 +8,7 @@ flexible setup in various environments.
 import argparse
 from ruamel.yaml import YAML, CommentedMap
 import json
+import os
 
 from loguru import logger
 
@@ -229,6 +230,10 @@ def read_yaml(yaml_filename: str) -> CommentedMap:
 
 def store_yaml(config: CommentedMap, yaml_filename: str) -> None:
     config_to_save = deepcopy(config)
+
+    ## if the save path is the default location (secrets) then create the 'secrets' folder
+    if os.path.dirname(yaml_filename) == "secrets":
+        os.makedirs("secrets", exist_ok=True)
 
     auth_dict = config_to_save.get("authentication", {})
     if auth_dict and auth_dict.get("load_from_file"):
