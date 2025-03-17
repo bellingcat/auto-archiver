@@ -377,7 +377,8 @@ Here's how that would look: \n\nsteps:\n  extractors:\n  - [your_extractor_name_
                 try:
                     loaded_module: BaseModule = self.module_factory.get_module(module, self.config)
                 except (KeyboardInterrupt, Exception) as e:
-                    logger.error(f"Error during setup of modules: {e}\n{traceback.format_exc()}")
+                    if not isinstance(e, KeyboardInterrupt) and not isinstance(e, SetupError):
+                        logger.error(f"Error during setup of modules: {e}\n{traceback.format_exc()}")
                     if loaded_module and module_type == "extractor":
                         loaded_module.cleanup()
                     raise e
