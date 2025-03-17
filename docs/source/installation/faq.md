@@ -56,5 +56,5 @@ If you cannot find an answer in the logs, then try searching this documentation 
 
 * The website may have temporarily adjusted its settings - sometimes sites like Telegram or Twitter adjust their scraping protection settings. Often,
 waiting a day or two and then trying again can work.
-* The site requires you to be logged in - make sure the 
+* The site requires you to be logged in - you could try using cookies or authentication to bypass any blocks. See [](../installation/authentication.md) for more information.
 * The website you're trying to archive has changed its settings/structure. Make sure you're using the latest version of Auto Archiver and try again.
