@@ -23,6 +23,11 @@ class GenericExtractor(Extractor):
     _dropins = {}
 
     def setup(self):
+        self.check_ytdlp_update()
+        self.setup_token_script()
+
+    def check_ytdlp_update(self):
+        """Handles checking and updating yt-dlp if necessary."""
         # check for file .ytdlp-update in the secrets folder
         if self.ytdlp_update_interval < 0:
             return
@@ -62,6 +67,24 @@ class GenericExtractor(Extractor):
 
         except Exception as e:
             logger.error(f"Error updating yt-dlp: {e}")
+
+    def setup_token_script(self):
+        """Setup PO Token provider https://github.com/Brainicism/bgutil-ytdlp-pot-provider."""
+
+        # Determine the default location for the transpiled PO token script.
+        default_script = os.path.expanduser("~/bgutil-ytdlp-pot-provider/server/build/generate_once.js")
+        # Check if the PO token script exists. if not, trigger the script generation.
+        if not os.path.exists(default_script):
+            logger.info("PO Token script not found. Running setup...")
+            try:
+                subprocess.run(["bash", "scripts/potoken_provider/setup_pot_provider.sh"], check=True)
+            except subprocess.CalledProcessError as e:
+                logger.error(f"Failed to setup PO Token script: {e}")
+                return
+
+        # Set the extractor_args to point to the default script, if not already provided.
+        # self.extractor_args.setdefault("youtube", {})["getpot_bgutil_script"] = default_script
+        logger.info(f"Using PO Token script at: {default_script}")
 
     def suitable_extractors(self, url: str) -> Generator[str, None, None]:
         """
