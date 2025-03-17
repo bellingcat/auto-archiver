@@ -6,7 +6,7 @@ import { viteSingleFile } from "vite-plugin-singlefile"
 export default defineConfig({
   plugins: [react(), viteSingleFile()],
   build: {
-    minify: false,
-    sourcemap: true,
+    // minify: false,
+    // sourcemap: true,
   }
 });

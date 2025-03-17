@@ -1,5 +1,11 @@
 # Installation
 
+```{toctree}
+:maxdepth: 1
+
+upgrading.md
+```
+
 There are 3 main ways to use the auto-archiver. We recommend the 'docker' method for most uses. This installs all the requirements in one command.
 
 1. Easiest (recommended): [via docker](#installing-with-docker)
