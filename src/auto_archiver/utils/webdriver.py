@@ -49,7 +49,7 @@ class CookieSettingDriver(webdriver.Firefox):
                         self.driver.add_cookie({"name": name, "value": value})
             elif self.cookiejar:
                 domain = urlparse(url).netloc
-                regex = re.compile(f"(www)?\.?{domain}$")
+                regex = re.compile(f"(www)?.?{domain}$")
                 for cookie in self.cookiejar:
                     if regex.match(cookie.domain):
                         try:

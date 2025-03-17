@@ -15,6 +15,9 @@ supported by `yt-dlp`, such as YouTube, Facebook, and others. It provides functi
 for retrieving videos, subtitles, comments, and other metadata, and it integrates with
 the broader archiving framework.
 
+For a full list of video platforms supported by `yt-dlp`, see the
+[official documentation](https://github.com/yt-dlp/yt-dlp/blob/master/supportedsites.md)
+
 ### Features
 - Supports downloading videos and playlists.
 - Retrieves metadata like titles, descriptions, upload dates, and durations.

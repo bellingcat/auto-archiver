@@ -112,7 +112,7 @@ class ArchivingOrchestrator:
     def check_steps(self, config):
         for module_type in MODULE_TYPES:
             if not config["steps"].get(f"{module_type}s", []):
-                if module_type == "feeder" or module_type == "formatter" and config["steps"].get(f"{module_type}"):
+                if (module_type == "feeder" or module_type == "formatter") and config["steps"].get(f"{module_type}"):
                     raise SetupError(
                         f"It appears you have '{module_type}' set under 'steps' in your configuration file, but as of version 0.13.0 of Auto Archiver, you must use '{module_type}s'. Change this in your configuration file and try again. \
 Here's how that would look: \n\nsteps:\n  {module_type}s:\n  - [your_{module_type}_name_here]\n  {'extractors:...' if module_type == 'feeder' else '...'}\n"
@@ -377,7 +377,8 @@ Here's how that would look: \n\nsteps:\n  extractors:\n  - [your_extractor_name_
                 try:
                     loaded_module: BaseModule = self.module_factory.get_module(module, self.config)
                 except (KeyboardInterrupt, Exception) as e:
-                    logger.error(f"Error during setup of modules: {e}\n{traceback.format_exc()}")
+                    if not isinstance(e, KeyboardInterrupt) and not isinstance(e, SetupError):
+                        logger.error(f"Error during setup of modules: {e}\n{traceback.format_exc()}")
                     if loaded_module and module_type == "extractor":
                         loaded_module.cleanup()
                     raise e

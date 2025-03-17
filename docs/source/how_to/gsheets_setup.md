@@ -86,7 +86,7 @@ gsheet_feeder_db:
 
 You can also pass these settings directly on the command line without having to edit the file, here'a an example of how to do that (using docker):
 
-`docker run --rm -v $PWD/secrets:/app/secrets -v $PWD/local_archive:/app/local_archive bellingcat/auto-archiver:dockerize --gsheet_feeder_db.sheet "My Awesome Sheet 2"`. 
+`docker run -it --rm -v $PWD/secrets:/app/secrets -v $PWD/local_archive:/app/local_archive bellingcat/auto-archiver:dockerize --gsheet_feeder_db.sheet "My Awesome Sheet 2"`. 
 
 Here, the sheet name has been overridden/specified in the command line invocation.
 
