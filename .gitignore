@@ -4,6 +4,7 @@ temp/
 .DS_Store
 expmt/
 service_account.json
+service_account-*.json
 __pycache__/
 ._*
 anu.html
