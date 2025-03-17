@@ -1,6 +1,7 @@
 import re
 from .dropin import GenericDropin
 from auto_archiver.core.metadata import Metadata
+from yt_dlp.extractor.facebook import FacebookIE
 
 # TODO: Remove if / when  https://github.com/yt-dlp/yt-dlp/pull/12275 is merged
 from yt_dlp.utils import (
@@ -121,11 +122,7 @@ def _extract_metadata(self, webpage, video_id):
 
 
 class Facebook(GenericDropin):
-    def extract_post(self, url: str, ie_instance):
-        video_id = ie_instance._match_valid_url(url).group("id")
-        ie_instance._download_webpage(url.replace("://m.facebook.com/", "://www.facebook.com/"), video_id)
-        webpage = ie_instance._download_webpage(url, ie_instance._match_valid_url(url).group("id"))
-
+    def extract_post(self, url: str, ie_instance: FacebookIE):
         post_id_regex = r"(?P<id>pfbid[A-Za-z0-9]+|\d+|t\.(\d+\/\d+))"
         post_id = re.search(post_id_regex, url).group("id")
         webpage = ie_instance._download_webpage(url.replace("://m.facebook.com/", "://www.facebook.com/"), post_id)
@@ -137,7 +134,7 @@ class Facebook(GenericDropin):
         post_data = _extract_metadata(ie_instance, webpage, post_id)
         return post_data
 
-    def create_metadata(self, post: dict, ie_instance, archiver, url):
+    def create_metadata(self, post: dict, ie_instance: FacebookIE, archiver, url):
         result = Metadata()
         result.set_content(post.get("description", ""))
         result.set_title(post.get("title", ""))
@@ -145,11 +142,11 @@ class Facebook(GenericDropin):
         result.set_url(url)
         return result
 
-    def is_suitable(self, url, info_extractor):
+    def is_suitable(self, url, info_extractor: FacebookIE):
         regex = r"(?:https?://(?:[\w-]+\.)?(?:facebook\.com||facebookwkhpilnemxj7asaniu7vnjjbiltxjqhye3mhbshg7kx5tfyd\.onion)/)"
         return re.match(regex, url)
 
-    def skip_ytdlp_download(self, url: str, ie_instance):
+    def skip_ytdlp_download(self, url: str, is_instance: FacebookIE):
         """
         Skip using the ytdlp download method for Facebook *photo* posts, they have a URL with an id of t.XXXXX/XXXXX
         """

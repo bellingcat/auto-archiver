@@ -352,7 +352,7 @@ class GenericExtractor(Extractor):
         dropin_submodule = self.dropin_for_name(info_extractor.ie_key())
 
         try:
-            if dropin_submodule and dropin_submodule.skip_ytdlp_download(info_extractor, url):
+            if dropin_submodule and dropin_submodule.skip_ytdlp_download(url, info_extractor):
                 logger.debug(f"Skipping using ytdlp to download files for {info_extractor.ie_key()}")
                 raise SkipYtdlp()
 
