@@ -13,6 +13,7 @@ from loguru import logger
 
 from auto_archiver.core.extractor import Extractor
 from auto_archiver.core import Metadata, Media
+from auto_archiver.utils import get_datetime_from_str
 from .dropin import GenericDropin
 
 
@@ -223,7 +224,7 @@ class GenericExtractor(Extractor):
             timestamp = datetime.datetime.fromtimestamp(timestamp, tz=datetime.timezone.utc).isoformat()
             result.set_timestamp(timestamp)
         if upload_date := video_data.pop("upload_date", None) and not result.get("upload_date"):
-            upload_date = datetime.datetime.strptime(upload_date, "%Y%m%d").replace(tzinfo=datetime.timezone.utc)
+            upload_date = get_datetime_from_str(upload_date, "%Y%m%d").replace(tzinfo=datetime.timezone.utc)
             result.set("upload_date", upload_date)
 
         # then clean away any keys we don't want
