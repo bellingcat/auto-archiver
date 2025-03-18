@@ -13,6 +13,7 @@ from loguru import logger
 
 from auto_archiver.core.extractor import Extractor
 from auto_archiver.core import Metadata, Media
+from .dropin import GenericDropin
 
 
 class SkipYtdlp(Exception):
@@ -71,14 +72,9 @@ class GenericExtractor(Extractor):
                 continue
 
             # check if there's a dropin and see if that declares whether it's suitable
-            dropin = self.dropin_for_name(info_extractor.ie_key())
-            if dropin and dropin.is_suitable(url, info_extractor):
+            dropin: GenericDropin = self.dropin_for_name(info_extractor.ie_key())
+            if dropin and dropin.suitable(url, info_extractor):
                 yield info_extractor
-                continue
-
-            if info_extractor.suitable(url):
-                yield info_extractor
-                continue
 
     def suitable(self, url: str) -> bool:
         """
@@ -300,7 +296,7 @@ class GenericExtractor(Extractor):
 
         return self.add_metadata(data, info_extractor, url, result)
 
-    def dropin_for_name(self, dropin_name: str, additional_paths=[], package=__package__) -> Type[InfoExtractor]:
+    def dropin_for_name(self, dropin_name: str, additional_paths=[], package=__package__) -> GenericDropin:
         dropin_name = dropin_name.lower()
 
         if dropin_name == "generic":

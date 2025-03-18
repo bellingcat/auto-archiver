@@ -142,7 +142,7 @@ class Facebook(GenericDropin):
         result.set_url(url)
         return result
 
-    def is_suitable(self, url, info_extractor: FacebookIE):
+    def suitable(self, url, info_extractor: FacebookIE):
         regex = r"(?:https?://(?:[\w-]+\.)?(?:facebook\.com||facebookwkhpilnemxj7asaniu7vnjjbiltxjqhye3mhbshg7kx5tfyd\.onion)/)"
         return re.match(regex, url)
 
