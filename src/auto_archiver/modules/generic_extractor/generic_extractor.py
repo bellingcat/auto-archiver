@@ -73,7 +73,8 @@ class GenericExtractor(Extractor):
 
         # Determine the default location for the transpiled PO token script.
         default_script = os.path.join(
-            "scripts", "potoken_provider", "bgutil-ytdlp-pot-provider", "server", "build", "generate_once.js"
+            # "scripts", "potoken_provider", "bgutil-server", "build", "generate_once.js"
+            "scripts", "potoken_provider", "bgutil-provider", "server", "build", "generate_once.js"
         )
         # Check if the PO token script exists. if not, trigger the script generation.
         if not os.path.exists(default_script):
@@ -445,6 +446,8 @@ class GenericExtractor(Extractor):
             "--write-subs" if self.subtitles else "--no-write-subs",
             "--write-auto-subs" if self.subtitles else "--no-write-auto-subs",
             "--live-from-start" if self.live_from_start else "--no-live-from-start",
+        #     TODO
+            "--verbose"
         ]
 
         # proxy handling

@@ -1,31 +1,42 @@
 #!/bin/bash
-set -e
+set -e  # Exit on error
 
 SCRIPTS_DIR="scripts/potoken_provider"
-BGUTIL_DIR="$SCRIPTS_DIR/bgutil-ytdlp-pot-provider"
-UPDATE=false
+TARGET_DIR="$SCRIPTS_DIR/bgutil-provider"
+SERVER_DIR="$TARGET_DIR/server"
+GEN_SCRIPT="$SERVER_DIR/build/generate_once.js"
 
-# Parse optional flag
-if [[ "$1" == "--update" ]]; then
-    UPDATE=true
-fi
-
-# Clone the repository, or update if it exists
-if [ ! -d "$BGUTIL_DIR" ]; then
-    echo "Cloning bgutil-ytdlp-pot-provider repository..."
-    git clone https://github.com/Brainicism/bgutil-ytdlp-pot-provider.git "$BGUTIL_DIR"
-elif [ "$UPDATE" == true ]; then
-    echo "Updating existing bgutil-ytdlp-pot-provider repository..."
-    cd "$BGUTIL_DIR" || exit 1
-    git pull origin master
+# Ensure the server directory exists
+if [ ! -d "$SERVER_DIR" ]; then
+    echo "Error: PO Token provider server directory is missing! Please run update_pot_provider.sh first."
+    exit 1
 fi
 
 # Move into the server directory
-cd "$BGUTIL_DIR/server" || exit 1
+cd "$SERVER_DIR" || exit 1
 
-# Install dependencies and transpile the script
-yarn install --frozen-lockfile
-npx tsc
+# Check if dependencies need installation
+if [ ! -d "node_modules" ]; then
+    echo "Installing dependencies..."
+    yarn install --frozen-lockfile
+else
+    echo "Dependencies already installed. Skipping yarn install."
+fi
 
-# The transpiled POT generation script is now available and will be used automatically by the generic extractor
-echo "PO Token provider script is ready: $BGUTIL_DIR/server/build/generate_once.js"
+# Check if build directory exists and if transpiling is needed
+if [ ! -d "build" ] || [ "$SERVER_DIR/src" -nt "$GEN_SCRIPT" ]; then
+    echo "Build directory missing or outdated. Running transpilation..."
+    npx tsc
+else
+    echo "Build directory is up to date. Skipping transpilation."
+fi
+
+# Ensure the script exists after transpilation
+if [ ! -f "$GEN_SCRIPT" ]; then
+    echo "Error: PO Token script not found after attempting transpilation."
+    exit 1
+fi
+
+
+# Confirm success
+echo "PO Token provider script is ready for use."
