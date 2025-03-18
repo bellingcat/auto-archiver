@@ -30,7 +30,7 @@ The email address will look something like `user@project-name.iam.gserviceaccoun
 
 We recommend copying [this template Google Sheet](https://docs.google.com/spreadsheets/d/1NJZo_XZUBKTI1Ghlgi4nTPVvCfb0HXAs6j5tNGas72k/edit?usp=sharing) as a starting point for your project, as this matches all the columns required.
 
-But if you like, you can also create your own custom sheet. The only column that's required is the 'link' column. This is the column with the URLs that you want the Auto Archiver to archive. 
+But if you like, you can also create your own custom sheet. The only columns required are 'link', 'archive status', and 'archive location'. 'link' is the column with the URLs that you want the Auto Archiver to archive, the other two record the archival status and result. 
 
 Here's an overview of all the columns, and what a complete sheet would look like.
 
