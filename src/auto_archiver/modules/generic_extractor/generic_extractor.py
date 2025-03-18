@@ -74,7 +74,6 @@ class GenericExtractor(Extractor):
         """Setup PO Token provider https://github.com/Brainicism/bgutil-ytdlp-pot-provider."""
 
         if self.pot_provider == "bgutils":
-
             # Check if the PO token generation script exists, set it up if not.
             try:
                 subprocess.run(["bash", "scripts/potoken_provider/setup_pot_provider.sh"], check=True)
@@ -83,11 +82,8 @@ class GenericExtractor(Extractor):
                 return
 
             # Use the PO Token script in yt-dlp to fetch tokens on demand.
-            pot_script = os.path.join(
-                "scripts", "potoken_provider", "bgutil-provider", "build", "generate_once.js"
-            )
+            pot_script = os.path.join("scripts", "potoken_provider", "bgutil-provider", "build", "generate_once.js")
             self.extractor_args.setdefault("youtube", {})["getpot_bgutil_script"] = pot_script
-
 
     def suitable_extractors(self, url: str) -> Generator[str, None, None]:
         """
