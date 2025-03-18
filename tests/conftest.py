@@ -118,7 +118,7 @@ def pytest_runtest_setup(item):
                 pytest.xfail(f"previous test failed ({test_name})")
 
 
-@pytest.fixture()
+@pytest.fixture
 def unpickle():
     """
     Returns a helper function that unpickles a file

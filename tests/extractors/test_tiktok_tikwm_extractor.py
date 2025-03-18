@@ -4,6 +4,8 @@ import pytest
 import yt_dlp
 
 from auto_archiver.modules.generic_extractor.generic_extractor import GenericExtractor
+from auto_archiver.modules.generic_extractor.tiktok import Tiktok, TikTokIE
+
 from .test_extractor_base import TestExtractorBase
 
 
@@ -17,9 +19,14 @@ def skip_ytdlp_own_methods(mocker):
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_get(mocker):
     return mocker.patch("auto_archiver.modules.generic_extractor.tiktok.requests.get")
+
+
+@pytest.fixture
+def tiktok_dropin() -> Tiktok:
+    return Tiktok()
 
 
 class TestTiktokTikwmExtractor(TestExtractorBase):
@@ -33,6 +40,25 @@ class TestTiktokTikwmExtractor(TestExtractorBase):
     config = {}
 
     VALID_EXAMPLE_URL = "https://www.tiktok.com/@example/video/1234"
+
+    @pytest.mark.parametrize(
+        "url, is_suitable",
+        [
+            ("https://bellingcat.com", False),
+            ("https://youtube.com", False),
+            ("https://tiktok.co/", False),
+            ("https://tiktok.com/", False),
+            ("https://www.tiktok.com/", False),
+            ("https://api.cool.tiktok.com/", False),
+            (VALID_EXAMPLE_URL, True),
+            ("https://www.tiktok.com/@bbcnews/video/7478038212070411542", True),
+            ("https://www.tiktok.com/@ggs68taiwan.official/video/7441821351142362375", True),
+            ("https://www.tiktok.com/t/ZP8YQ8e5j/", True),
+            ("https://vt.tiktok.com/ZSMTJeqRP/", True),
+        ],
+    )
+    def test_is_suitable(self, url, is_suitable, tiktok_dropin):
+        assert tiktok_dropin.suitable(url, TikTokIE()) == is_suitable
 
     def test_invalid_json_responses(self, mock_get, make_item, caplog):
         mock_get.return_value.status_code = 200

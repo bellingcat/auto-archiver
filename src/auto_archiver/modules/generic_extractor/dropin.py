@@ -59,9 +59,18 @@ class GenericDropin:
         """
         return metadata
 
-    def is_suitable(self, url, info_extractor: InfoExtractor):
+    def suitable(self, url, info_extractor: InfoExtractor):
         """
-        Used to override the InfoExtractor's 'is_suitable' method. Dropins should override this method to return True if the url is suitable for the extractor
-        (based on being able to parse other URLs)
+        A method to allow dropins to override their InfoExtractor's 'suitable' method.
+        Dropins should override this method and return True if the url is suitable for the extractor
+        (based on being able to parse other URLs). See the `suitable_extractors` method in the
+        `GenericExtractor` class for how this is implemented.
+
+        The default behaviour of this method is to return the result of the InfoExtractor's 'suitable' method.
+
+        ### Example: An example of where this is useful is for the FacebookIE extractor in yt-dlp. By default,
+        it's 'suitable' method only returns True for video URLs. However, we can override this method in the
+        Facebook dropin to return True for all Facebook URLs (photo/post types). This way, the Facebook dropin
+        can be used for all Facebook URLs.
         """
-        return False
+        return info_extractor.suitable(url)
