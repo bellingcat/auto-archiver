@@ -3,17 +3,16 @@ set -e  # Exit on error
 
 SCRIPTS_DIR="scripts/potoken_provider"
 TARGET_DIR="$SCRIPTS_DIR/bgutil-provider"
-SERVER_DIR="$TARGET_DIR/server"
-GEN_SCRIPT="$SERVER_DIR/build/generate_once.js"
+GEN_SCRIPT="$TARGET_DIR/build/generate_once.js"
 
 # Ensure the server directory exists
-if [ ! -d "$SERVER_DIR" ]; then
+if [ ! -d "$TARGET_DIR" ]; then
     echo "Error: PO Token provider server directory is missing! Please run update_pot_provider.sh first."
     exit 1
 fi
 
 # Move into the server directory
-cd "$SERVER_DIR" || exit 1
+cd "$TARGET_DIR" || exit 1
 
 # Check if dependencies need installation
 if [ ! -d "node_modules" ]; then
@@ -24,7 +23,7 @@ else
 fi
 
 # Check if build directory exists and if transpiling is needed
-if [ ! -d "build" ] || [ "$SERVER_DIR/src" -nt "$GEN_SCRIPT" ]; then
+if [ ! -d "build" ] || [ "src" -nt "$GEN_SCRIPT" ]; then
     echo "Build directory missing or outdated. Running transpilation..."
     npx tsc
 else
