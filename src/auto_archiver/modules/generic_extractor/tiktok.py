@@ -16,7 +16,7 @@ class Tiktok(GenericDropin):
 
     TIKWM_ENDPOINT = "https://www.tikwm.com/api/?url={url}"
 
-    def suitable(self, url, info_extractor):
+    def suitable(self, url, info_extractor) -> bool:
         """This dropin (which uses Tikvm) is suitable for *all* Tiktok type URLs - videos, lives, VMs, and users.
         Return the 'suitable' method from the TikTokIE class."""
         return any(extractor().suitable(url) for extractor in (TikTokIE, TikTokLiveIE, TikTokVMIE, TikTokUserIE))

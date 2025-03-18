@@ -75,6 +75,8 @@ class GenericExtractor(Extractor):
             dropin: GenericDropin = self.dropin_for_name(info_extractor.ie_key())
             if dropin and dropin.suitable(url, info_extractor):
                 yield info_extractor
+            elif info_extractor.suitable(url):
+                yield info_extractor
 
     def suitable(self, url: str) -> bool:
         """
