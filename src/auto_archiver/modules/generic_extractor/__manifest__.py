@@ -74,9 +74,9 @@ If you are having issues with the extractor, you can review the version of `yt-d
             "default": "inf",
             "help": "Use to limit the number of videos to download when a channel or long page is being extracted. 'inf' means no limit.",
         },
-        "update_pots": {
-            "default": False,
-            "help": "If set, will run the script to update the  pot generation script.",
+        "pot_provider": {
+            "default": "bgutils",
+            "help": "The Proof of origin provider method.",
         },
         "extractor_args": {
             "default": {},

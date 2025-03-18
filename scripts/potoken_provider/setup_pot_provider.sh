@@ -7,7 +7,7 @@ GEN_SCRIPT="$TARGET_DIR/build/generate_once.js"
 
 # Ensure the server directory exists
 if [ ! -d "$TARGET_DIR" ]; then
-    echo "Error: PO Token provider server directory is missing! Please run update_pot_provider.sh first."
+    echo "Error: PO Token provider server directory is missing! Please run scripts/update_pot_provider.sh first."
     exit 1
 fi
 
@@ -23,18 +23,19 @@ else
 fi
 
 # Check if build directory exists and if transpiling is needed
-if [ ! -d "build" ] || [ "src" -nt "$GEN_SCRIPT" ]; then
+if [ ! -d "build" ]; then
     echo "Build directory missing or outdated. Running transpilation..."
     npx tsc
 else
     echo "Build directory is up to date. Skipping transpilation."
 fi
 
-# Ensure the script exists after transpilation
-if [ ! -f "$GEN_SCRIPT" ]; then
-    echo "Error: PO Token script not found after attempting transpilation."
-    exit 1
-fi
+
+## Ensure the script exists after transpilation
+#if [ ! -f "$GEN_SCRIPT" ]; then
+#    echo "Error: PO Token script not found after attempting transpilation."
+#    exit 1
+#fi
 
 
 # Confirm success

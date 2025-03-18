@@ -71,23 +71,21 @@ class GenericExtractor(Extractor):
     def setup_token_script(self):
         """Setup PO Token provider https://github.com/Brainicism/bgutil-ytdlp-pot-provider."""
 
-        # Determine the default location for the transpiled PO token script.
-        default_script = os.path.join(
-            # "scripts", "potoken_provider", "bgutil-server", "build", "generate_once.js"
-            "scripts", "potoken_provider", "bgutil-provider", "server", "build", "generate_once.js"
-        )
-        # Check if the PO token script exists. if not, trigger the script generation.
-        if not os.path.exists(default_script):
-            logger.info("PO Token script not found. Running setup...")
+        if self.pot_provider == "bgutils":
+
+            # Check if the PO token generation script exists, set it up if not.
             try:
                 subprocess.run(["bash", "scripts/potoken_provider/setup_pot_provider.sh"], check=True)
             except subprocess.CalledProcessError as e:
                 logger.error(f"Failed to setup PO Token script: {e}")
                 return
 
-        # Use the PO Token script in yt-dlp to fetch tokens on demand.
-        self.extractor_args.setdefault("youtube", {})["getpot_bgutil_script"] = default_script
-        logger.info(f"Using PO Token script at: {default_script}")
+            # Use the PO Token script in yt-dlp to fetch tokens on demand.
+            pot_script = os.path.join(
+                "scripts", "potoken_provider", "bgutil-provider", "build", "generate_once.js"
+            )
+            self.extractor_args.setdefault("youtube", {})["getpot_bgutil_script"] = pot_script
+
 
     def suitable_extractors(self, url: str) -> Generator[str, None, None]:
         """
@@ -446,8 +444,6 @@ class GenericExtractor(Extractor):
             "--write-subs" if self.subtitles else "--no-write-subs",
             "--write-auto-subs" if self.subtitles else "--no-write-auto-subs",
             "--live-from-start" if self.live_from_start else "--no-live-from-start",
-        #     TODO
-            "--verbose"
         ]
 
         # proxy handling
