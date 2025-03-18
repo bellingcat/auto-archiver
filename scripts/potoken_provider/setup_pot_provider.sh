@@ -27,5 +27,5 @@ cd "$BGUTIL_DIR/server" || exit 1
 yarn install --frozen-lockfile
 npx tsc
 
-# The built script is now available and can be used by the generic extractor
+# The transpiled POT generation script is now available and will be used automatically by the generic extractor
 echo "PO Token provider script is ready: $BGUTIL_DIR/server/build/generate_once.js"

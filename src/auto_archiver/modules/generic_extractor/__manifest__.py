@@ -75,7 +75,7 @@ If you are having issues with the extractor, you can review the version of `yt-d
             "help": "Use to limit the number of videos to download when a channel or long page is being extracted. 'inf' means no limit.",
         },
         "extractor_args": {
-            "default": {},
+            "default": {"youtube": {"getpot_bgutil_script": "scripts/potoken_provider/bgutil-ytdlp-pot-provider/server/build/generate_once.js"}},
             "help": "Additional arguments to pass to the yt-dlp extractor. See https://github.com/yt-dlp/yt-dlp/blob/master/README.md#extractor-arguments.",
             "type": "json_loader",
         },
