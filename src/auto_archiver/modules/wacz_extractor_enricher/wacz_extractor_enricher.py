@@ -24,7 +24,8 @@ class WaczExtractorEnricher(Enricher, Extractor):
         self.use_docker = os.environ.get("WACZ_ENABLE_DOCKER") or not os.environ.get("RUNNING_IN_DOCKER")
         self.docker_in_docker = os.environ.get("WACZ_ENABLE_DOCKER") and os.environ.get("RUNNING_IN_DOCKER")
 
-        self.cwd_dind = f"/crawls/crawls{random_str(8)}"
+        self.crawl_id = random_str(8)
+        self.cwd_dind = f"/crawls/crawls{self.crawl_id}"
         self.browsertrix_home_host = os.environ.get("BROWSERTRIX_HOME_HOST")
         self.browsertrix_home_container = os.environ.get("BROWSERTRIX_HOME_CONTAINER") or self.browsertrix_home_host
         # create crawls folder if not exists, so it can be safely removed in cleanup
@@ -50,7 +51,7 @@ class WaczExtractorEnricher(Enricher, Extractor):
 
         url = to_enrich.get_url()
 
-        collection = random_str(8)
+        collection = self.crawl_id
         browsertrix_home_host = self.browsertrix_home_host or os.path.abspath(self.tmp_dir)
         browsertrix_home_container = self.browsertrix_home_container or browsertrix_home_host
 
@@ -102,10 +103,11 @@ class WaczExtractorEnricher(Enricher, Extractor):
                 ] + cmd
 
             if self.profile:
-                profile_fn = os.path.join(browsertrix_home_container, "profile.tar.gz")
+                profile_file = f"profile-{self.crawl_id}.tar.gz"
+                profile_fn = os.path.join(browsertrix_home_container, profile_file)
                 logger.debug(f"copying {self.profile} to {profile_fn}")
                 shutil.copyfile(self.profile, profile_fn)
-                cmd.extend(["--profile", os.path.join("/crawls", "profile.tar.gz")])
+                cmd.extend(["--profile", os.path.join("/crawls", profile_file)])
 
         else:
             logger.debug(f"generating WACZ without Docker for {url=}")
