@@ -29,6 +29,7 @@ class TestGenericExtractor(TestExtractorBase):
         "proxy": None,
         "cookies_from_browser": False,
         "cookie_file": None,
+        "pot_provider": False,
     }
 
     def test_load_dropin(self):

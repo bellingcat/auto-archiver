@@ -25,6 +25,11 @@ class GenericExtractor(Extractor):
     _dropins = {}
 
     def setup(self):
+        self.check_ytdlp_update()
+        self.setup_token_script()
+
+    def check_ytdlp_update(self):
+        """Handles checking and updating yt-dlp if necessary."""
         # check for file .ytdlp-update in the secrets folder
         if self.ytdlp_update_interval < 0:
             return
@@ -64,6 +69,21 @@ class GenericExtractor(Extractor):
 
         except Exception as e:
             logger.error(f"Error updating yt-dlp: {e}")
+
+    def setup_token_script(self):
+        """Setup PO Token provider https://github.com/Brainicism/bgutil-ytdlp-pot-provider."""
+
+        if self.pot_provider == "bgutils":
+            # Check if the PO token generation script exists, set it up if not.
+            try:
+                subprocess.run(["bash", "scripts/potoken_provider/setup_pot_provider.sh"], check=True)
+            except subprocess.CalledProcessError as e:
+                logger.error(f"Failed to setup PO Token script: {e}")
+                return
+
+            # Use the PO Token script in yt-dlp to fetch tokens on demand.
+            pot_script = os.path.join("scripts", "potoken_provider", "bgutil-provider", "build", "generate_once.js")
+            self.extractor_args.setdefault("youtube", {})["getpot_bgutil_script"] = pot_script
 
     def suitable_extractors(self, url: str) -> Generator[str, None, None]:
         """
@@ -422,16 +442,20 @@ class GenericExtractor(Extractor):
             "--write-subs" if self.subtitles else "--no-write-subs",
             "--write-auto-subs" if self.subtitles else "--no-write-auto-subs",
             "--live-from-start" if self.live_from_start else "--no-live-from-start",
-            "--proxy",
-            self.proxy if self.proxy else "",
-            f"--max-downloads {self.max_downloads}" if self.max_downloads != "inf" else "",
-            f"--playlist-end {self.max_downloads}" if self.max_downloads != "inf" else "",
         ]
+
+        # proxy handling
+        if self.proxy:
+            ydl_options.extend(["--proxy", self.proxy])
+
+        # max_downloads handling
+        if self.max_downloads != "inf":
+            ydl_options.extend(["--max-downloads", str(self.max_downloads)])
+            ydl_options.extend(["--playlist-end", str(self.max_downloads)])
 
         # set up auth
         auth = self.auth_for_site(url, extract_cookies=False)
-
-        # order of importance: username/pasword -> api_key -> cookie -> cookies_from_browser -> cookies_file
+        # order of importance: username/password -> api_key -> cookie -> cookies_from_browser -> cookies_file
         if auth:
             if "username" in auth and "password" in auth:
                 logger.debug(f"Using provided auth username and password for {url}")
@@ -446,6 +470,16 @@ class GenericExtractor(Extractor):
             elif "cookies_file" in auth:
                 logger.debug(f"Using cookies from file {auth['cookies_file']} for {url}")
                 ydl_options.extend(("--cookies", auth["cookies_file"]))
+
+        # Applying user-defined extractor_args
+        if self.extractor_args:
+            for key, args in self.extractor_args.items():
+                logger.debug(f"Setting extractor_args: {key}")
+                if isinstance(args, dict):
+                    arg_str = ";".join(f"{k}={v}" for k, v in args.items())
+                else:
+                    arg_str = str(args)
+                ydl_options.extend(["--extractor-args", f"{key}:{arg_str}"])
 
         if self.ytdlp_args:
             logger.debug("Adding additional ytdlp arguments: {self.ytdlp_args}")
