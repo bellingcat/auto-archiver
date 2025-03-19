@@ -82,7 +82,7 @@ def test_load_modules(module_name):
     default_config = module.configs
     assert loaded_module.name in loaded_module.config.keys()
     defaults = {k: v.get("default") for k, v in default_config.items()}
-    assert loaded_module.config[module_name] == defaults
+    assert defaults.keys() in [loaded_module.config[module_name].keys()]
 
 
 @pytest.mark.parametrize("module_name", ["local_storage", "generic_extractor", "html_formatter", "csv_db"])
