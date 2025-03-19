@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e  # Exit on error
+set -e
 
 SCRIPTS_DIR="scripts/potoken_provider"
 TARGET_DIR="$SCRIPTS_DIR/bgutil-provider"
@@ -11,7 +11,6 @@ if [ ! -d "$TARGET_DIR" ]; then
     exit 1
 fi
 
-# Move into the server directory
 cd "$TARGET_DIR" || exit 1
 
 # Check if dependencies need installation
@@ -31,12 +30,4 @@ else
 fi
 
 
-## Ensure the script exists after transpilation
-#if [ ! -f "$GEN_SCRIPT" ]; then
-#    echo "Error: PO Token script not found after attempting transpilation."
-#    exit 1
-#fi
-
-
-# Confirm success
 echo "PO Token provider script is ready for use."
