@@ -72,7 +72,10 @@
     ### Setup
     1. Requires a Google Service Account JSON file for authentication.
     To set up a service account, follow the instructions in the [how to](https://auto-archiver.readthedocs.io/en/latest/how_to/gsheets_setup.html),
-    or use the script `bash scripts/generate_google_service_account.sh`.
+    or use the script:
+    ```
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/bellingcat/auto-archiver/refs/heads/main/scripts/generate_google_services.sh)"
+    ```
     2. Create a Google sheet with the required column(s) and then define the `sheet` or `sheet_id` configuration to specify this sheet.
     3. Customize the column names in your Google sheet using the `columns` configuration.
     4. The Google Sheet can be used solely as a feeder or as a feeder and database, but note you can't currently feed into the database from an alternate feeder.

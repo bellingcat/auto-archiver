@@ -13,7 +13,11 @@ Once your Google Sheet is set up, you need to create what's called a 'service ac
 
 To do this, you can either:
 * a) follow the steps in [this guide](https://gspread.readthedocs.io/en/latest/oauth2.html) all the way up until step 8. You should have downloaded a file called `service_account.json` and should save it in the `secrets/` folder
-* b) run the `bash scripts/generate_google_services.sh` script to automatically generate the file. This uses gcloud to create a new project, a new user and downloads the service account automatically for you. The service account file will have the name `service_account-XXXXXXX.json` where XXXXXXX is a random 16 letter/digit string for the project created.
+* b) run the following script to automatically generate the file:
+```{code} bash
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/bellingcat/auto-archiver/refs/heads/main/scripts/generate_google_services.sh)"
+```
+This uses gcloud to create a new project, a new user and downloads the service account automatically for you. The service account file will have the name `service_account-XXXXXXX.json` where XXXXXXX is a random 16 letter/digit string for the project created.
 
 Once you've downloaded the file, you can save it to `secrets/service_account.json` (the default name), or to another file and then change the location in the settings (see step 4).
 
