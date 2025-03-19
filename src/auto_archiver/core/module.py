@@ -237,8 +237,13 @@ class LazyBaseModule:
 
             return find_spec(dep)
 
+        def check_bin_dep(dep):
+            if dep == "docker" and os.environ.get("RUNNING_IN_DOCKER"):
+                return True
+            return shutil.which(dep)
+
         check_deps(self.dependencies.get("python", []), check_python_dep)
-        check_deps(self.dependencies.get("bin", []), lambda dep: shutil.which(dep))
+        check_deps(self.dependencies.get("bin", []), check_bin_dep)
 
         logger.debug(f"Loading module '{self.display_name}'...")
 
