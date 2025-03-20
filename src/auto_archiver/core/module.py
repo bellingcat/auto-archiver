@@ -85,7 +85,11 @@ class ModuleFactory:
         if not available:
             message = f"Module '{module_name}' not found. Are you sure it's installed/exists?"
             if "archiver" in module_name:
-                message += f" Did you mean {module_name.replace('archiver', 'extractor')}?"
+                message += f" Did you mean '{module_name.replace('archiver', 'extractor')}'?"
+            elif "gsheet" in module_name:
+                message += " Did you mean 'gsheet_feeder_db'?"
+            elif "atlos" in module_name:
+                message += " Did you mean 'atlos_feeder_db_storage'?"
             raise IndexError(message)
         return available[0]
 
