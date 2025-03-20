@@ -74,6 +74,11 @@ If you are having issues with the extractor, you can review the version of `yt-d
             "default": "inf",
             "help": "Use to limit the number of videos to download when a channel or long page is being extracted. 'inf' means no limit.",
         },
+        "extractor_args": {
+            "default": {},
+            "help": "Additional arguments to pass to the yt-dlp extractor. See https://github.com/yt-dlp/yt-dlp/blob/master/README.md#extractor-arguments.",
+            "type": "json_loader",
+        },
         "ytdlp_update_interval": {
             "default": 5,
             "help": "How often to check for yt-dlp updates (days). If positive, will check and update yt-dlp every [num] days. Set it to -1 to disable, or 0 to always update on every run.",
