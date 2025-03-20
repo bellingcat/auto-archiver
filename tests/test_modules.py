@@ -1,6 +1,7 @@
 import pytest
 from auto_archiver.core.module import ModuleFactory, LazyBaseModule
 from auto_archiver.core.base_module import BaseModule
+from auto_archiver.core.consts import SetupError
 
 
 @pytest.fixture
@@ -25,10 +26,8 @@ def test_python_dependency_check(example_module):
     # monkey patch the manifest to include a nonexistnet dependency
     example_module.manifest["dependencies"]["python"] = ["does_not_exist"]
 
-    with pytest.raises(SystemExit) as load_error:
+    with pytest.raises(SetupError):
         example_module.load({})
-
-    assert load_error.value.code == 1
 
 
 def test_binary_dependency_check(example_module):
