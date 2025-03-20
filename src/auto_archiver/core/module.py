@@ -5,6 +5,7 @@ by handling user configuration, validating the steps properties, and implementin
 """
 
 from __future__ import annotations
+import subprocess
 
 from dataclasses import dataclass
 from typing import List, TYPE_CHECKING, Type
@@ -17,7 +18,7 @@ import os
 from os.path import join
 from loguru import logger
 import auto_archiver
-from auto_archiver.core.consts import DEFAULT_MANIFEST, MANIFEST_FILE
+from auto_archiver.core.consts import DEFAULT_MANIFEST, MANIFEST_FILE, SetupError
 
 if TYPE_CHECKING:
     from .base_module import BaseModule
@@ -220,9 +221,9 @@ class LazyBaseModule:
                 if not check(dep):
                     logger.error(
                         f"Module '{self.name}' requires external dependency '{dep}' which is not available/setup. \
-                                 Have you installed the required dependencies for the '{self.name}' module? See the README for more information."
+                                 Have you installed the required dependencies for the '{self.name}' module? See the documentation for more information."
                     )
-                    exit(1)
+                    raise SetupError()
 
         def check_python_dep(dep):
             # first check if it's a module:
@@ -241,8 +242,22 @@ class LazyBaseModule:
 
             return find_spec(dep)
 
+        def check_bin_dep(dep):
+            dep_exists = shutil.which(dep)
+
+            if dep == "docker":
+                if os.environ.get("RUNNING_IN_DOCKER"):
+                    # this is only for the WACZ enricher, which requires docker
+                    # if we're already running in docker then we don't need docker
+                    return True
+
+                # check if docker daemon is running
+                return dep_exists and subprocess.run(["docker", "ps", "-q"]).returncode == 0
+
+            return dep_exists
+
         check_deps(self.dependencies.get("python", []), check_python_dep)
-        check_deps(self.dependencies.get("bin", []), lambda dep: shutil.which(dep))
+        check_deps(self.dependencies.get("bin", []), check_bin_dep)
 
         logger.debug(f"Loading module '{self.display_name}'...")
 
