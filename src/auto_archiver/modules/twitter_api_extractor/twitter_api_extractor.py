@@ -2,7 +2,6 @@ import json
 import re
 import mimetypes
 import requests
-from datetime import datetime
 
 from loguru import logger
 from pytwitter import Api
@@ -10,6 +9,7 @@ from slugify import slugify
 
 from auto_archiver.core import Extractor
 from auto_archiver.core import Metadata, Media
+from auto_archiver.utils import get_datetime_from_str
 
 
 class TwitterApiExtractor(Extractor):
@@ -91,7 +91,7 @@ class TwitterApiExtractor(Extractor):
 
         result = Metadata()
         result.set_title(tweet.data.text)
-        result.set_timestamp(datetime.strptime(tweet.data.created_at, "%Y-%m-%dT%H:%M:%S.%fZ"))
+        result.set_timestamp(get_datetime_from_str(tweet.data.created_at, "%Y-%m-%dT%H:%M:%S.%fZ"))
 
         urls = []
         if tweet.includes:

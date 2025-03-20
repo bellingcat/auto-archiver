@@ -13,6 +13,7 @@ from loguru import logger
 
 from auto_archiver.core.extractor import Extractor
 from auto_archiver.core import Metadata, Media
+from auto_archiver.utils import get_datetime_from_str
 from .dropin import GenericDropin
 
 
@@ -202,7 +203,7 @@ class GenericExtractor(Extractor):
         if not result.get("url"):
             result.set_url(url)
 
-        if "description" in video_data and not result.get_content():
+        if "description" in video_data and not result.get("content"):
             result.set_content(video_data["description"])
         # extract comments if enabled
         if self.comments:
@@ -219,11 +220,14 @@ class GenericExtractor(Extractor):
             )
 
         # then add the common metadata
-        if timestamp := video_data.pop("timestamp", None) and not result.get("timestamp"):
+        timestamp = video_data.pop("timestamp", None)
+        if timestamp and not result.get("timestamp"):
             timestamp = datetime.datetime.fromtimestamp(timestamp, tz=datetime.timezone.utc).isoformat()
             result.set_timestamp(timestamp)
-        if upload_date := video_data.pop("upload_date", None) and not result.get("upload_date"):
-            upload_date = datetime.datetime.strptime(upload_date, "%Y%m%d").replace(tzinfo=datetime.timezone.utc)
+
+        upload_date = video_data.pop("upload_date", None)
+        if upload_date and not result.get("upload_date"):
+            upload_date = get_datetime_from_str(upload_date, "%Y%m%d").replace(tzinfo=datetime.timezone.utc)
             result.set("upload_date", upload_date)
 
         # then clean away any keys we don't want

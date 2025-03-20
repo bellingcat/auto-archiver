@@ -1,13 +1,12 @@
 import re
 import mimetypes
 import json
-from datetime import datetime
 
 from loguru import logger
 from slugify import slugify
 
 from auto_archiver.core.metadata import Metadata, Media
-from auto_archiver.utils import url as UrlUtil
+from auto_archiver.utils import url as UrlUtil, get_datetime_from_str
 from auto_archiver.core.extractor import Extractor
 
 from .dropin import GenericDropin, InfoExtractor
@@ -38,7 +37,7 @@ class Twitter(GenericDropin):
         try:
             if not tweet.get("user") or not tweet.get("created_at"):
                 raise ValueError("Error retreiving post. Are you sure it exists?")
-            timestamp = datetime.strptime(tweet["created_at"], "%a %b %d %H:%M:%S %z %Y")
+            timestamp = get_datetime_from_str(tweet["created_at"], "%a %b %d %H:%M:%S %z %Y")
         except (ValueError, KeyError) as ex:
             logger.warning(f"Unable to parse tweet: {str(ex)}\nRetreived tweet data: {tweet}")
             return False
