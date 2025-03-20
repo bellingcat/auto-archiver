@@ -373,9 +373,17 @@ Here's how that would look: \n\nsteps:\n  extractors:\n  - [your_extractor_name_
                 if module in invalid_modules:
                     continue
 
+                # check to make sure that we're trying to load it as the correct type - i.e. make sure the user hasn't put it under the wrong 'step'
+                lazy_module: LazyBaseModule = self.module_factory.get_module_lazy(module)
+                if module_type not in lazy_module.type:
+                    types = ",".join(f"'{t}'" for t in lazy_module.type)
+                    raise SetupError(
+                        f"Configuration Error: Module '{module}' is not a {module_type}, but has the types: {types}. Please check you set this module up under the right step in your orchestration file."
+                    )
+
                 loaded_module = None
                 try:
-                    loaded_module: BaseModule = self.module_factory.get_module(module, self.config)
+                    loaded_module: BaseModule = lazy_module.load(self.config)
                 except (KeyboardInterrupt, Exception) as e:
                     if not isinstance(e, KeyboardInterrupt) and not isinstance(e, SetupError):
                         logger.error(f"Error during setup of modules: {e}\n{traceback.format_exc()}")
