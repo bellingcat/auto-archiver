@@ -7,6 +7,7 @@ UUID=$(LC_ALL=C tr -dc a-z0-9 </dev/urandom | head -c 16)
 PROJECT_NAME="auto-archiver-$UUID"
 ACCOUNT_NAME="autoarchiver"
 KEY_FILE="service_account-$UUID.json"
+DEST_DIR="$1"
 
 echo "====================================================="
 echo "🔧 Auto-Archiver Google Services Setup Script"
@@ -16,6 +17,9 @@ echo "  1. Install Google Cloud SDK if needed"
 echo "  2. Create a Google Cloud project named $PROJECT_NAME"
 echo "  3. Create a service account for Auto-Archiver"
 echo "  4. Generate a key file for API access"
+echo ""
+echo "  Tip: Pass a directory path as an argument to this script to move the key file there"
+echo "  e.g. ./generate_google_services.sh /path/to/secrets"
 echo "====================================================="
 
 # Check and install Google Cloud SDK based on platform
@@ -86,6 +90,11 @@ gcloud projects create $PROJECT_NAME
 echo "👤 Creating service account: $ACCOUNT_NAME"
 gcloud iam service-accounts create $ACCOUNT_NAME --project $PROJECT_NAME
 
+# Enable required APIs (uncomment and add APIs as needed)
+echo "⬆️ Enabling required Google APIs..."
+gcloud services enable sheets.googleapis.com --project $PROJECT_NAME
+gcloud services enable drive.googleapis.com --project $PROJECT_NAME
+
 # Get the service account email
 echo "📧 Retrieving service account email..."
 ACCOUNT_EMAIL=$(gcloud iam service-accounts list --project $PROJECT_NAME --format="value(email)")
@@ -94,10 +103,21 @@ ACCOUNT_EMAIL=$(gcloud iam service-accounts list --project $PROJECT_NAME --forma
 echo "🔑 Generating service account key file: $KEY_FILE"
 gcloud iam service-accounts keys create $KEY_FILE --iam-account=$ACCOUNT_EMAIL
 
-# Enable required APIs (uncomment and add APIs as needed)
-echo "⬆️ Enabling required Google APIs..."
-gcloud services enable sheets.googleapis.com --project $PROJECT_NAME
-gcloud services enable drive.googleapis.com --project $PROJECT_NAME
+# move the file to TARGET_DIR if provided
+if [[ -n "$DEST_DIR" ]]; then
+    # Expand `~` if used
+    DEST_DIR=$(eval echo "$DEST_DIR")
+
+    # Ensure the directory exists
+    if [[ ! -d "$DEST_DIR" ]]; then
+        mkdir -p "$DEST_DIR"
+    fi
+
+    DEST_PATH="$DEST_DIR/$KEY_FILE"
+    echo "🚚 Moving key file to: $DEST_PATH"
+    mv "$KEY_FILE" "$DEST_PATH"
+    KEY_FILE="$DEST_PATH"
+fi
 
 echo "====================================================="
 echo "✅ SETUP COMPLETE!"
