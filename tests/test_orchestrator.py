@@ -4,6 +4,7 @@ from auto_archiver.core.orchestrator import ArchivingOrchestrator
 from auto_archiver.version import __version__
 from auto_archiver.core.config import read_yaml, store_yaml
 from auto_archiver.core import Metadata
+from auto_archiver.core.consts import SetupError
 
 TEST_ORCHESTRATION = "tests/data/test_orchestration.yaml"
 TEST_MODULES = "tests/data/test_modules/"
@@ -224,3 +225,15 @@ def test_multiple_orchestrator(test_args):
     output: Metadata = list(o2.feed())
     assert len(output) == 1
     assert output[0].get_url() == "https://example.com"
+
+
+def test_wrong_step_type(test_args, caplog):
+    args = test_args + [
+        "--feeders",
+        "example_extractor",  # example_extractor is not a valid feeder!
+    ]
+
+    orchestrator = ArchivingOrchestrator()
+    with pytest.raises(SetupError) as err:
+        orchestrator.setup(args)
+        assert "Module 'example_extractor' is not a feeder" in str(err.value)
