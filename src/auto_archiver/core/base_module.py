@@ -71,7 +71,16 @@ class BaseModule(ABC):
         :param site: the domain of the site to get authentication information for
         :param extract_cookies: whether or not to extract cookies from the given browser/file and return the cookie jar (disabling can speed up processing if you don't actually need the cookies jar).
 
-        :returns: authdict dict of login information for the given site
+        :returns: authdict dict -> {
+            "username": str,
+            "password": str,
+            "api_key": str,
+            "api_secret": str,
+            "cookie": str,
+            "cookies_file": str,
+            "cookies_from_browser": str,
+            "cookies_jar": CookieJar
+        }
 
         **Global options:**\n
         * cookies_from_browser: str - the name of the browser to extract cookies from (e.g. 'chrome', 'firefox' - uses ytdlp under the hood to extract\n
@@ -85,6 +94,7 @@ class BaseModule(ABC):
         * cookie: str - a cookie string to use for login (specific to this site)\n
         * cookies_file: str - the path to a cookies file to use for login (specific to this site)\n
         * cookies_from_browser: str - the name of the browser to extract cookies from (specitic for this site)\n
+
         """
         # TODO: think about if/how we can deal with sites that have multiple domains (main one is x.com/twitter.com)
         # for now the user must enter them both, like "x.com,twitter.com" in their config. Maybe we just hard-code?
