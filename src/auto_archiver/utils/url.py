@@ -4,8 +4,8 @@ from ipaddress import ip_address
 
 
 AUTHWALL_URLS = [
-    re.compile(r"https:\/\/t\.me(\/c)\/(.+)\/(\d+)"),  # telegram private channels
-    re.compile(r"https:\/\/www\.instagram\.com"),  # instagram
+    re.compile(r"https?:\/\/t\.me(\/c)\/(.+)\/(\d+)"),  # telegram private channels
+    re.compile(r"https?:\/\/(www\.)?instagram\.com"),  # instagram
 ]
 
 
@@ -81,56 +81,43 @@ def is_relevant_url(url: str) -> bool:
     """
     clean_url = remove_get_parameters(url)
 
-    # favicons
-    if "favicon" in url:
-        return False
-    # ifnore icons
-    if clean_url.endswith(".ico"):
-        return False
-    # ignore SVGs
-    if remove_get_parameters(url).endswith(".svg"):
-        return False
+    IRRELEVANT_URLS = [
+        # favicons
+        ("favicon",),
+        # twitter profile pictures
+        ("twimg.com/profile_images",),
+        ("twimg.com", "default_profile_images"),
+        # instagram profile pictures
+        ("https://scontent.cdninstagram.com/", "150x150"),
+        # instagram recurring images
+        ("https://static.cdninstagram.com/rsrc.php/",),
+        # telegram
+        ("https://telegram.org/img/emoji/",),
+        # youtube
+        ("https://www.youtube.com/s/gaming/emoji/",),
+        ("https://yt3.ggpht.com", "default-user="),
+        ("https://www.youtube.com/s/search/audio/",),
+        # ok
+        ("https://ok.ru/res/i/",),
+        ("https://vk.com/emoji/",),
+        ("vk.com/images/",),
+        ("vk.com/images/reaction/",),
+        # wikipedia
+        ("wikipedia.org/static",),
+    ]
 
-    # twitter profile pictures
-    if "twimg.com/profile_images" in url:
-        return False
-    if "twimg.com" in url and "/default_profile_images" in url:
-        return False
+    IRRELEVANT_ENDS_WITH = [
+        ".svg",  # ignore SVGs
+        ".ico",  # ignore icons
+    ]
 
-    # instagram profile pictures
-    if "https://scontent.cdninstagram.com/" in url and "150x150" in url:
-        return False
-    # instagram recurring images
-    if "https://static.cdninstagram.com/rsrc.php/" in url:
-        return False
+    for end in IRRELEVANT_ENDS_WITH:
+        if clean_url.endswith(end):
+            return False
 
-    # telegram
-    if "https://telegram.org/img/emoji/" in url:
-        return False
-
-    # youtube
-    if "https://www.youtube.com/s/gaming/emoji/" in url:
-        return False
-    if "https://yt3.ggpht.com" in url and "default-user=" in url:
-        return False
-    if "https://www.youtube.com/s/search/audio/" in url:
-        return False
-
-    # ok
-    if " https://ok.ru/res/i/" in url:
-        return False
-
-    # vk
-    if "https://vk.com/emoji/" in url:
-        return False
-    if "vk.com/images/" in url:
-        return False
-    if "vk.com/images/reaction/" in url:
-        return False
-
-    # wikipedia
-    if "wikipedia.org/static" in url:
-        return False
+    for parts in IRRELEVANT_URLS:
+        if all(part in clean_url for part in parts):
+            return False
 
     return True
 
