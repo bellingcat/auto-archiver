@@ -70,36 +70,6 @@ def test_domain_for_url(url, domain):
 def test_remove_get_parameters(url, without_get):
     assert remove_get_parameters(url) == without_get
 
-    # IRRELEVANT_URLS = [
-    #      # favicons
-    #     ("favicon",),
-    #     # twitter profile pictures
-    #     ("twimg.com/profile_images",),
-    #     ("twimg.com", "default_profile_images"),
-    #     # instagram profile pictures
-    #     ("https://scontent.cdninstagram.com/", "150x150"),
-    #     # instagram recurring images
-    #     ("https://static.cdninstagram.com/rsrc.php/",),
-    #     # telegram
-    #     ("https://telegram.org/img/emoji/",),
-    #     # youtube
-    #     ("https://www.youtube.com/s/gaming/emoji/",),
-    #     ("https://yt3.ggpht.com", "default-user="),
-    #     ("https://www.youtube.com/s/search/audio/",),
-    #     # ok
-    #     ("https://ok.ru/res/i/",),
-    #     ("https://vk.com/emoji/",),
-    #     ("vk.com/images/",),
-    #     ("vk.com/images/reaction/",),
-    #     # wikipedia
-    #     ("wikipedia.org/static",),
-    # ]
-
-    # IRRELEVANT_ENDS_WITH = [
-    #     ".svg", # ignore SVGs
-    #     ".ico", # ignore icons
-    # ]
-
 
 @pytest.mark.parametrize(
     "url, relevant",
