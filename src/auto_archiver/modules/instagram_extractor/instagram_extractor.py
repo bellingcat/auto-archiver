@@ -29,6 +29,9 @@ class InstagramExtractor(Extractor):
     # TODO: links to stories
 
     def setup(self) -> None:
+        logger.warning("Instagram Extractor is not actively maintained, and may not work as expected.")
+        logger.warning("Please consider using the Instagram Tbot Extractor or Instagram API Extractor instead.")
+
         self.insta = instaloader.Instaloader(
             download_geotags=True,
             download_comments=True,

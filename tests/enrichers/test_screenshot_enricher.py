@@ -85,8 +85,8 @@ def test_enrich_adds_screenshot(
     mock_driver, mock_driver_class, mock_options_instance = mock_selenium_env
     screenshot_enricher.enrich(metadata_with_video)
     mock_driver_class.assert_called_once_with(
-        cookies=None,
-        cookiejar=None,
+        cookie=None,
+        cookie_jar=None,
         facebook_accept_cookies=False,
         options=mock_options_instance,
     )
@@ -122,6 +122,38 @@ def test_enrich_auth_wall(
         mock_driver.get.assert_called_once_with(url)
         assert len(metadata_with_video.media) == 2
         assert metadata_with_video.media[1].properties.get("id") == "screenshot"
+
+
+def test_skip_authwall_no_cookies(screenshot_enricher, caplog):
+    with caplog.at_level("WARNING"):
+        screenshot_enricher.enrich(Metadata().set_url("https://instagram.com"))
+    assert "[SKIP] SCREENSHOT since url" in caplog.text
+
+
+@pytest.mark.parametrize(
+    "auth",
+    [
+        {"cookie": "cookie"},
+        {"cookies_jar": "cookie"},
+    ],
+)
+def test_dont_skip_authwall_with_cookies(screenshot_enricher, caplog, mocker, mock_selenium_env, auth):
+    mocker.patch("auto_archiver.utils.url.is_auth_wall", return_value=True)
+
+    # patch the authentication dict:
+    screenshot_enricher.authentication = {"example.com": auth}
+    with caplog.at_level("WARNING"):
+        screenshot_enricher.enrich(Metadata().set_url("https://example.com"))
+    assert "[SKIP] SCREENSHOT since url" not in caplog.text
+
+
+def test_show_warning_wrong_auth_type(screenshot_enricher, caplog, mocker, mock_selenium_env):
+    mock_driver, mock_driver_class, _ = mock_selenium_env
+    mocker.patch("auto_archiver.utils.url.is_auth_wall", return_value=True)
+    screenshot_enricher.authentication = {"example.com": {"username": "user", "password": "pass"}}
+    with caplog.at_level("WARNING"):
+        screenshot_enricher.enrich(Metadata().set_url("https://example.com"))
+    assert "Screenshot enricher only supports cookie-type authentication" in caplog.text
 
 
 def test_handle_timeout_exception(screenshot_enricher, metadata_with_video, mock_selenium_env, mocker):

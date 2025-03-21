@@ -22,35 +22,35 @@ from loguru import logger
 
 class CookieSettingDriver(webdriver.Firefox):
     facebook_accept_cookies: bool
-    cookies: str
-    cookiejar: MozillaCookieJar
+    cookie: str
+    cookie_jar: MozillaCookieJar
 
-    def __init__(self, cookies, cookiejar, facebook_accept_cookies, *args, **kwargs):
+    def __init__(self, cookie, cookie_jar, facebook_accept_cookies, *args, **kwargs):
         if os.environ.get("RUNNING_IN_DOCKER"):
             # Selenium doesn't support linux-aarch64 driver, we need to set this manually
             kwargs["service"] = webdriver.FirefoxService(executable_path="/usr/local/bin/geckodriver")
 
         super(CookieSettingDriver, self).__init__(*args, **kwargs)
-        self.cookies = cookies
-        self.cookiejar = cookiejar
+        self.cookie = cookie
+        self.cookie_jar = cookie_jar
         self.facebook_accept_cookies = facebook_accept_cookies
 
     def get(self, url: str):
-        if self.cookies or self.cookiejar:
+        if self.cookie_jar or self.cookie:
             # set up the driver to make it not 'cookie averse' (needs a context/URL)
             # get the 'robots.txt' file which should be quick and easy
             robots_url = urlunparse(urlparse(url)._replace(path="/robots.txt", query="", fragment=""))
             super(CookieSettingDriver, self).get(robots_url)
 
-            if self.cookies:
+            if self.cookie:
                 # an explicit cookie is set for this site, use that first
                 for cookie in self.cookies.split(";"):
                     for name, value in cookie.split("="):
                         self.driver.add_cookie({"name": name, "value": value})
-            elif self.cookiejar:
-                domain = urlparse(url).netloc
+            elif self.cookie_jar:
+                domain = urlparse(url).netloc.removeprefix("www.")
                 regex = re.compile(f"(www)?.?{domain}$")
-                for cookie in self.cookiejar:
+                for cookie in self.cookie_jar:
                     if regex.match(cookie.domain):
                         try:
                             self.add_cookie(
@@ -145,8 +145,8 @@ class Webdriver:
 
         try:
             self.driver = CookieSettingDriver(
-                cookies=self.auth.get("cookies"),
-                cookiejar=self.auth.get("cookies_jar"),
+                cookie=self.auth.get("cookie"),
+                cookie_jar=self.auth.get("cookies_jar"),
                 facebook_accept_cookies=self.facebook_accept_cookies,
                 options=options,
             )
