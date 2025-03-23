@@ -1,4 +1,4 @@
-FROM webrecorder/browsertrix-crawler:1.4.2 AS base
+FROM ubuntu:noble AS base
 
 ENV RUNNING_IN_DOCKER=1 \
     LANG=C.UTF-8 \
@@ -11,9 +11,14 @@ ENV RUNNING_IN_DOCKER=1 \
 ARG TARGETARCH
 
 # Installing system dependencies
-RUN add-apt-repository ppa:mozillateam/ppa && \
+RUN apt-get update && \ 
+    apt install -y --no-install-recommends software-properties-common && \ 
+    add-apt-repository ppa:mozillateam/ppa && \
 	apt-get update && \
-    apt-get install -y --no-install-recommends gcc ffmpeg fonts-noto exiftool && \
+    apt-get install -y --no-install-recommends ca-certificates build-essential python3-pip python3-dev python3-venv gcc wget ffmpeg fonts-noto exiftool \
+    fonts-arphic-ukai fonts-arphic-uming fonts-freefont-ttf fonts-gfs-neohellenic fonts-indic fonts-ipafont-mincho fonts-ipafont-gothic fonts-kacst \
+    fonts-liberation fonts-noto-cjk fonts-noto-color-emoji fonts-roboto fonts-stix fonts-thai-tlwg fonts-sil-padauk fonts-ubuntu fonts-unfonts-core fonts-wqy-zenhei \
+     && \
 	apt-get install -y --no-install-recommends firefox-esr && \
     ln -s /usr/bin/firefox-esr /usr/bin/firefox
 
@@ -34,6 +39,18 @@ RUN if [ $(uname -m) = "aarch64" ]; then \
 
 # Poetry and runtime
 FROM base AS runtime
+
+# Download and install node + Scoop
+RUN wget -q -O - https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.2/install.sh | bash \
+&& . "$HOME/.nvm/nvm.sh" \
+&& nvm install 23 && nvm use 23
+
+# Install Scoop - global install so `scoop` is available in the PATH
+RUN . "$HOME/.nvm/nvm.sh" && npm install -g @harvard-lil/scoop && \
+npx playwright install-deps chromium && \ 
+corepack enable yarn
+
+   
 
 ENV POETRY_NO_INTERACTION=1 \
     POETRY_VIRTUALENVS_IN_PROJECT=1 \
