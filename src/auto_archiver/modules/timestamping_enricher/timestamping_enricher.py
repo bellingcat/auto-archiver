@@ -78,7 +78,6 @@ class TimestampingEnricher(Enricher):
             try:
                 message = bytes(data_to_sign, encoding='utf8')
 
-                print(tsa_url)
                 logger.debug(f"Timestamping {url=} with {tsa_url=}")
                 signed: TimeStampResponse = self.sign_data(tsa_url, message)
                 
@@ -118,8 +117,6 @@ class TimestampingEnricher(Enricher):
             f.write(timestamp_token)
         return tst_path
 
-        trust_roots = []
-        with open(certifi.where(), "rb") as f:
     def verify_signed(self, timestamp_response: TimeStampResponse, message: bytes) ->  x509.Certificate:
         """
         Verify a Signed Timestamp Response is trusted by a known Certificate Authority.

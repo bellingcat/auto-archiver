@@ -30,6 +30,12 @@ def selfsigned_response() -> TimeStampResponse:
 
 
 @pytest.fixture
+def digicert_response() -> TimeStampResponse:
+    with open("tests/data/timestamping/digicert.tsr", "rb") as f:
+        return f.read()
+
+
+@pytest.fixture
 def filehash():
     return "4b7b4e39f12b8c725e6e603e6d4422500316df94211070682ef10260ff5759ef"
 
@@ -65,7 +71,6 @@ def test_full_enriching_selfsigned(setup_module, sample_media, mocker, selfsigne
 
     # set self-signed on tsp
     tsp.allow_selfsigned = True
-
     tsp.enrich(metadata)
 
     assert len(metadata.media)
@@ -131,12 +136,15 @@ def test_full_enriching_multiple_tsa(setup_module, sample_media, mocker, timesta
         assert len(timestamp_token_media.get("cert_chain")) == 3
 
 
-@pytest.mark.download
-def test_fails_for_digicert(setup_module):
+def test_fails_for_digicert(setup_module, mocker, digicert_response):
     """
     Digicert TSRs are not compliant with RFC 3161.
     See https://github.com/trailofbits/rfc3161-client/issues/104#issuecomment-2621960840
     """
+    mocker.patch("requests.sessions.Session.post", return_value=requests.Response())
+    mocker.patch("requests.Response.raise_for_status")
+    mocker.patch("requests.Response.content", new_callable=mocker.PropertyMock, return_value=digicert_response)
+
     tsa_url = "http://timestamp.digicert.com"
     tsp: TimestampingEnricher = setup_module("timestamping_enricher")
 
@@ -191,16 +199,10 @@ def test_order_crt_correctly(setup_module, wrong_order_timestamp_response):
     assert ordered_certs[1].subject.rfc4514_string() == "CN=TrustID Timestamping CA 3,O=IdenTrust,C=US"
 
 
-def test_invalid_tsa_404(setup_module, mocker):
-    tsp = setup_module("timestamping_enricher")
-    post_mock = mocker.patch("requests.sessions.Session.post")
-    post_mock.side_effect = Exception("error")
-    with pytest.raises(Exception, match="error"):
-        tsp.sign_data("http://bellingcat.com/", b"my-message")
-
-
-@pytest.mark.download
 def test_invalid_tsa_invalid_response(setup_module, mocker):
+    mocker.patch("requests.sessions.Session.post", return_value=requests.Response())
+    raise_for_status = mocker.patch("requests.Response.raise_for_status")
+    raise_for_status.side_effect = requests.exceptions.HTTPError("404 Client Error")
     tsp = setup_module("timestamping_enricher")
 
     with pytest.raises(requests.exceptions.HTTPError, match="404 Client Error"):
