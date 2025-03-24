@@ -3343,27 +3343,27 @@ h11 = ">=0.9.0,<1"
 
 [[package]]
 name = "yt-dlp"
-version = "2025.2.19"
+version = "2025.3.21"
 description = "A feature-rich command-line audio/video downloader"
 optional = false
 python-versions = ">=3.9"
 groups = ["main"]
 files = [
-    {file = "yt_dlp-2025.2.19-py3-none-any.whl", hash = "sha256:3ed218eaeece55e9d715afd41abc450dc406ee63bf79355169dfde312d38fdb8"},
-    {file = "yt_dlp-2025.2.19.tar.gz", hash = "sha256:f33ca76df2e4db31880f2fe408d44f5058d9f135015b13e50610dfbe78245bea"},
+    {file = "yt_dlp-2025.3.21-py3-none-any.whl", hash = "sha256:80d5ce15f9223e0c27020b861a4c5b72c6ba5d6c957c1b8fd2a022a69783f482"},
+    {file = "yt_dlp-2025.3.21.tar.gz", hash = "sha256:5bcf47b2897254ea3816935a8dde47d243bff556782cced6b16a2b85e6b682ba"},
 ]
 
 [package.extras]
 build = ["build", "hatchling", "pip", "setuptools (>=71.0.2)", "wheel"]
 curl-cffi = ["curl-cffi (==0.5.10) ; os_name == \"nt\" and implementation_name == \"cpython\"", "curl-cffi (>=0.5.10,!=0.6.*,<0.7.2) ; os_name != \"nt\" and implementation_name == \"cpython\""]
 default = ["brotli ; implementation_name == \"cpython\"", "brotlicffi ; implementation_name != \"cpython\"", "certifi", "mutagen", "pycryptodomex", "requests (>=2.32.2,<3)", "urllib3 (>=1.26.17,<3)", "websockets (>=13.0)"]
-dev = ["autopep8 (>=2.0,<3.0)", "pre-commit", "pytest (>=8.1,<9.0)", "pytest-rerunfailures (>=14.0,<15.0)", "ruff (>=0.9.0,<0.10.0)"]
+dev = ["autopep8 (>=2.0,<3.0)", "pre-commit", "pytest (>=8.1,<9.0)", "pytest-rerunfailures (>=14.0,<15.0)", "ruff (>=0.11.0,<0.12.0)"]
 pyinstaller = ["pyinstaller (>=6.11.1)"]
 secretstorage = ["cffi", "secretstorage"]
-static-analysis = ["autopep8 (>=2.0,<3.0)", "ruff (>=0.9.0,<0.10.0)"]
+static-analysis = ["autopep8 (>=2.0,<3.0)", "ruff (>=0.11.0,<0.12.0)"]
 test = ["pytest (>=8.1,<9.0)", "pytest-rerunfailures (>=14.0,<15.0)"]
 
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10,<3.13"
-content-hash = "beb354960b8d8af491a13e09cb565c7e3099a2b150167c16147aa0438e970018"
+content-hash = "147f2ae2e72b23cc47b8b6e398de52fd327b27851b3a23e037bbe2f9c9c90755"
