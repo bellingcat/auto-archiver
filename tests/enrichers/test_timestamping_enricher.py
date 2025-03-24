@@ -73,7 +73,7 @@ def test_full_enriching_selfsigned(setup_module, sample_media, mocker, selfsigne
     tsp.allow_selfsigned = True
     tsp.enrich(metadata)
 
-    assert len(metadata.media)
+    assert len(metadata.media) == 2
 
 
 def test_full_enriching(setup_module, sample_media, mocker, timestamp_response, filehash):

@@ -83,6 +83,7 @@ class TimestampingEnricher(Enricher):
                 
                 # fail if there's any issue with the certificates, uses certifi list of trusted CAs or the user-defined `cert_authorities`
                 root_cert = self.verify_signed(signed, message)
+
                 if not root_cert:
                     if self.allow_selfsigned:
                         logger.warning(f"Allowing self-signed certificat from TSA {tsa_url=}")
@@ -168,7 +169,6 @@ class TimestampingEnricher(Enricher):
                 return certificate
             except Rfc3161VerificationError as e:
                 continue
-    
         return None
 
     def sign_data(self, tsa_url: str, bytes_data: bytes) -> TimeStampResponse:
@@ -216,8 +216,11 @@ class TimestampingEnricher(Enricher):
     def save_certificate(self, tsp_response: TimeStampResponse, verified_root_cert: x509.Certificate) -> list[Media]:
         # returns the leaf certificate URL, fails if not set
 
-        certificates = self.tst_certs(tsp_response) + [verified_root_cert]
+        certificates = self.tst_certs(tsp_response)
 
+        if verified_root_cert:
+            # add the verified root certificate (if there is one - self signed certs will have None here)
+            certificates += [verified_root_cert]
 
         cert_chain = []
         for i, cert in enumerate(certificates):
