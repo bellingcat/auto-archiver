@@ -7,12 +7,7 @@ from slugify import slugify
 import requests
 from loguru import logger
 
-from rfc3161_client import (
-    TimestampRequestBuilder,
-    TimeStampResponse,
-    decode_timestamp_response,
-    VerifierBuilder
-)
+from rfc3161_client import (decode_timestamp_response,TimestampRequestBuilder,TimeStampResponse, VerifierBuilder)
 from rfc3161_client import VerificationError as Rfc3161VerificationError
 from rfc3161_client.base import HashAlgorithm
 from rfc3161_client.tsp import SignedData
@@ -167,8 +162,9 @@ class TimestampingEnricher(Enricher):
             try:
                 verifier.verify(timestamp_response, message_hash)
                 return certificate
-            except Rfc3161VerificationError as e:
+            except Rfc3161VerificationError:
                 continue
+
         return None
 
     def sign_data(self, tsa_url: str, bytes_data: bytes) -> TimeStampResponse:
