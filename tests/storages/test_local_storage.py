@@ -33,6 +33,7 @@ def test_too_long_save_path(setup_module):
     with pytest.raises(SetupError):
         setup_module("local_storage", {"save_to": "long" * 100})
 
+
 def test_get_cdn_url_relative(local_storage):
     local_storage.filename_generator = "random"
     media = Media(filename="dummy.txt")
