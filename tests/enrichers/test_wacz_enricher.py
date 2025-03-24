@@ -4,6 +4,7 @@ from zipfile import ZipFile
 import pytest
 
 from auto_archiver.core import Metadata, Media
+from auto_archiver.core.consts import SetupError
 
 
 @pytest.fixture
@@ -20,6 +21,15 @@ def wacz_enricher(setup_module, mock_binary_dependencies):
     }
     wacz = setup_module("wacz_extractor_enricher", configs)
     return wacz
+
+
+def test_raises_error_without_docker_installed(setup_module, mocker, caplog):
+    # pretend that docker isn't installed
+    mocker.patch("shutil.which").return_value = None
+    with pytest.raises(SetupError):
+        setup_module("wacz_extractor_enricher", {})
+
+    assert "requires external dependency 'docker' which is not available/setup" in caplog.text
 
 
 def test_setup_without_docker(wacz_enricher, mocker):

@@ -62,18 +62,8 @@ def test_simple_merge(basic_metadata):
 
 
 def test_left_merge():
-    left = (
-        Metadata()
-        .set("tags", ["a"])
-        .set("stats", {"views": 10})
-        .set("status", "success")
-    )
-    right = (
-        Metadata()
-        .set("tags", ["b"])
-        .set("stats", {"likes": 5})
-        .set("status", "no archiver")
-    )
+    left = Metadata().set("tags", ["a"]).set("stats", {"views": 10}).set("status", "success")
+    right = Metadata().set("tags", ["b"]).set("stats", {"likes": 5}).set("status", "no archiver")
 
     left.merge(right, overwrite_left=True)
     assert left.get("status") == "no archiver"
@@ -119,6 +109,7 @@ def test_is_empty():
 
 def test_store():
     pass
+
 
 # Test Media operations
 
@@ -175,6 +166,7 @@ def test_choose_most_complete():
 
     res = Metadata.choose_most_complete([m_more, m_less])
     assert res.metadata.get("title") == "Title 1"
+
 
 def test_choose_most_complete_from_pickles(unpickle):
     # test most complete from pickles before and after an enricher has run

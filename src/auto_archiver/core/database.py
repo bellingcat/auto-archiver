@@ -1,6 +1,6 @@
 """
 Database module for the auto-archiver that defines the interface for implementing database modules
-in the media archiving framework. 
+in the media archiving framework.
 """
 
 from __future__ import annotations
@@ -8,6 +8,7 @@ from abc import abstractmethod
 from typing import Union
 
 from auto_archiver.core import Metadata, BaseModule
+
 
 class Database(BaseModule):
     """
@@ -20,7 +21,7 @@ class Database(BaseModule):
         """signals the DB that the given item archival has started"""
         pass
 
-    def failed(self, item: Metadata, reason:str) -> None:
+    def failed(self, item: Metadata, reason: str) -> None:
         """update DB accordingly for failure"""
         pass
 
@@ -34,6 +35,6 @@ class Database(BaseModule):
         return False
 
     @abstractmethod
-    def done(self, item: Metadata, cached: bool=False) -> None:
+    def done(self, item: Metadata, cached: bool = False) -> None:
         """archival result ready - should be saved to DB"""
         pass

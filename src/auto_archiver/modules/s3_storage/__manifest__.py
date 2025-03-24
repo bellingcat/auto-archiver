@@ -13,27 +13,27 @@
         },
         "filename_generator": {
             "default": "static",
-            "help": "how to name stored files: 'random' creates a random string; 'static' uses a replicable strategy such as a hash.",
+            "help": "how to name stored files: 'random' creates a random string; 'static' uses a hash, with the settings of the 'hash_enricher' module (defaults to SHA256 if not enabled).",
             "choices": ["random", "static"],
         },
         "bucket": {"default": None, "help": "S3 bucket name"},
         "region": {"default": None, "help": "S3 region name"},
         "key": {"default": None, "help": "S3 API key"},
         "secret": {"default": None, "help": "S3 API secret"},
-        "random_no_duplicate": {"default": False,
-                                "type": "bool",
-                                "help": "if set, it will override `path_generator`, `filename_generator` and `folder`. It will check if the file already exists and if so it will not upload it again. Creates a new root folder path `no-dups/`"},
+        "random_no_duplicate": {
+            "default": False,
+            "type": "bool",
+            "help": "if set, it will override `path_generator`, `filename_generator` and `folder`. It will check if the file already exists and if so it will not upload it again. Creates a new root folder path `no-dups/`",
+        },
         "endpoint_url": {
-            "default": 'https://{region}.digitaloceanspaces.com',
-            "help": "S3 bucket endpoint, {region} are inserted at runtime"
+            "default": "https://{region}.digitaloceanspaces.com",
+            "help": "S3 bucket endpoint, {region} are inserted at runtime",
         },
         "cdn_url": {
-            "default": 'https://{bucket}.{region}.cdn.digitaloceanspaces.com/{key}',
-            "help": "S3 CDN url, {bucket}, {region} and {key} are inserted at runtime"
+            "default": "https://{bucket}.{region}.cdn.digitaloceanspaces.com/{key}",
+            "help": "S3 CDN url, {bucket}, {region} and {key} are inserted at runtime",
         },
-        "private": {"default": False,
-                    "type": "bool",
-                    "help": "if true S3 files will not be readable online"},
+        "private": {"default": False, "type": "bool", "help": "if true S3 files will not be readable online"},
     },
     "description": """
     S3Storage: A storage module for saving media files to an S3-compatible object storage.
@@ -50,5 +50,5 @@
     - The `random_no_duplicate` option ensures no duplicate uploads by leveraging hash-based folder structures.
     - Uses `boto3` for interaction with the S3 API.
     - Depends on the `HashEnricher` module for hash calculation.
-    """
+    """,
 }

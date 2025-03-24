@@ -4,6 +4,7 @@ temp/
 .DS_Store
 expmt/
 service_account.json
+service_account-*.json
 __pycache__/
 ._*
 anu.html
@@ -33,3 +34,6 @@ dist*
 docs/_build/
 docs/source/autoapi/
 docs/source/modules/autogen/
+scripts/settings_page.html
+scripts/settings/src/schema.json 
+.vite

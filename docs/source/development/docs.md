@@ -36,3 +36,12 @@ open docs/_build/html/index.html
 sphinx-autobuild docs/source docs/_build/html
 ```
 
+
+### Managing Readthedocs (RTD) Versions
+
+Version management is done at [https://app.readthedocs.org/projects/auto-archiver/](https://app.readthedocs.org/projects/auto-archiver/)
+(login required). Once logged in, you can create new versions, delete old versions or change visibility of versions. More info on
+[RTD](https://docs.readthedocs.com/platform/stable/versions.html).
+
+Currently, the Auto Archiver project is set up to automatically create a new docs version for each `vX.Y.Z` release. For more on this,
+see the RTD [instructions on automation](https://docs.readthedocs.com/platform/stable/guides/automation-rules.html) or edit the existing automation rule in the project settings.

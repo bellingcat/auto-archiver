@@ -2,7 +2,7 @@ from typing import Type
 
 import gspread
 import pytest
-from auto_archiver.modules.gsheet_feeder import GsheetsFeeder
+from auto_archiver.modules.gsheet_feeder_db import GsheetsFeederDB
 from auto_archiver.core import Metadata, Feeder
 
 
@@ -11,43 +11,40 @@ def test_setup_without_sheet_and_sheet_id(setup_module, mocker):
     mocker.patch("gspread.service_account")
     with pytest.raises(ValueError):
         setup_module(
-            "gsheet_feeder",
+            "gsheet_feeder_db",
             {"service_account": "dummy.json", "sheet": None, "sheet_id": None},
         )
 
 
 @pytest.fixture
-def gsheet_feeder(setup_module, mocker) -> GsheetsFeeder:
+def gsheet_feeder(setup_module, mocker) -> GsheetsFeederDB:
     config: dict = {
-                "service_account": "dummy.json",
-                "sheet": "test-auto-archiver",
-                "sheet_id": None,
-                "header": 1,
-                "columns": {
-                    "url": "link",
-                    "status": "archive status",
-                    "folder": "destination folder",
-                    "archive": "archive location",
-                    "date": "archive date",
-                    "thumbnail": "thumbnail",
-                    "timestamp": "upload timestamp",
-                    "title": "upload title",
-                    "text": "text content",
-                    "screenshot": "screenshot",
-                    "hash": "hash",
-                    "pdq_hash": "perceptual hashes",
-                    "wacz": "wacz",
-                    "replaywebpage": "replaywebpage",
-                },
-                "allow_worksheets": set(),
-                "block_worksheets": set(),
-                "use_sheet_names_in_stored_paths": True,
-            }
+        "service_account": "dummy.json",
+        "sheet": "test-auto-archiver",
+        "sheet_id": None,
+        "header": 1,
+        "columns": {
+            "url": "link",
+            "status": "archive status",
+            "folder": "destination folder",
+            "archive": "archive location",
+            "date": "archive date",
+            "thumbnail": "thumbnail",
+            "timestamp": "upload timestamp",
+            "title": "upload title",
+            "text": "text content",
+            "screenshot": "screenshot",
+            "hash": "hash",
+            "pdq_hash": "perceptual hashes",
+            "wacz": "wacz",
+            "replaywebpage": "replaywebpage",
+        },
+        "allow_worksheets": set(),
+        "block_worksheets": set(),
+        "use_sheet_names_in_stored_paths": True,
+    }
     mocker.patch("gspread.service_account")
-    feeder = setup_module(
-        "gsheet_feeder",
-        config
-    )
+    feeder = setup_module("gsheet_feeder_db", config)
     feeder.gsheets_client = mocker.MagicMock()
     return feeder
 
@@ -90,7 +87,7 @@ class MockWorksheet:
         return matching.get(col_name, default)
 
 
-def test__process_rows(gsheet_feeder: GsheetsFeeder):
+def test__process_rows(gsheet_feeder: GsheetsFeederDB):
     testworksheet = MockWorksheet()
     metadata_items = list(gsheet_feeder._process_rows(testworksheet))
     assert len(metadata_items) == 3
@@ -98,7 +95,7 @@ def test__process_rows(gsheet_feeder: GsheetsFeeder):
     assert metadata_items[0].get("url") == "http://example.com"
 
 
-def test__set_metadata(gsheet_feeder: GsheetsFeeder):
+def test__set_metadata(gsheet_feeder: GsheetsFeederDB):
     worksheet = MockWorksheet()
     metadata = Metadata()
     gsheet_feeder._set_context(metadata, worksheet, 1)
@@ -106,12 +103,12 @@ def test__set_metadata(gsheet_feeder: GsheetsFeeder):
 
 
 @pytest.mark.skip(reason="Not recognising folder column")
-def test__set_metadata_with_folder_pickled(gsheet_feeder: GsheetsFeeder, worksheet):
+def test__set_metadata_with_folder_pickled(gsheet_feeder: GsheetsFeederDB, worksheet):
     gsheet_feeder._set_context(worksheet, 7)
     assert Metadata.get_context("gsheet") == {"row": 1, "worksheet": worksheet}
 
 
-def test__set_metadata_with_folder(gsheet_feeder: GsheetsFeeder):
+def test__set_metadata_with_folder(gsheet_feeder: GsheetsFeederDB):
     testworksheet = MockWorksheet()
     metadata = Metadata()
     testworksheet.wks.title = "TestSheet"
@@ -128,9 +125,7 @@ def test__set_metadata_with_folder(gsheet_feeder: GsheetsFeeder):
         (None, "ABC123", "open_by_key", "ABC123", "opening by sheet ID"),
     ],
 )
-def test_open_sheet_with_name_or_id(
-    setup_module, sheet, sheet_id, expected_method, expected_arg, description, mocker
-):
+def test_open_sheet_with_name_or_id(setup_module, sheet, sheet_id, expected_method, expected_arg, description, mocker):
     """Ensure open_sheet() correctly opens by name or ID based on configuration."""
     mock_service_account = mocker.patch("gspread.service_account")
     mock_client = mocker.MagicMock()
@@ -140,14 +135,12 @@ def test_open_sheet_with_name_or_id(
 
     # Setup module with parameterized values
     feeder = setup_module(
-        "gsheet_feeder",
+        "gsheet_feeder_db",
         {"service_account": "dummy.json", "sheet": sheet, "sheet_id": sheet_id},
     )
     sheet_result = feeder.open_sheet()
     # Validate the correct method was called
-    getattr(mock_client, expected_method).assert_called_once_with(
-        expected_arg
-    ), f"Failed: {description}"
+    getattr(mock_client, expected_method).assert_called_once_with(expected_arg), f"Failed: {description}"
     assert sheet_result == "MockSheet", f"Failed: {description}"
 
 
@@ -159,7 +152,7 @@ def test_open_sheet_with_sheet_id(setup_module, mocker):
     mock_service_account.return_value = mock_client
     mock_client.open_by_key.return_value = "MockSheet"
     feeder = setup_module(
-        "gsheet_feeder",
+        "gsheet_feeder_db",
         {"service_account": "dummy.json", "sheet": None, "sheet_id": "ABC123"},
     )
     sheet = feeder.open_sheet()
@@ -170,7 +163,7 @@ def test_open_sheet_with_sheet_id(setup_module, mocker):
 def test_should_process_sheet(setup_module, mocker):
     mocker.patch("gspread.service_account")
     gdb = setup_module(
-        "gsheet_feeder",
+        "gsheet_feeder_db",
         {
             "service_account": "dummy.json",
             "sheet": "TestSheet",
@@ -179,18 +172,18 @@ def test_should_process_sheet(setup_module, mocker):
             "block_worksheets": {"Sheet3"},
         },
     )
-    assert gdb.should_process_sheet("TestSheet") == True
-    assert gdb.should_process_sheet("Sheet3") == False
+    assert gdb.should_process_sheet("TestSheet") is True
+    assert gdb.should_process_sheet("Sheet3") is False
     # False if allow_worksheets is set
-    assert gdb.should_process_sheet("AnotherSheet") == False
+    assert gdb.should_process_sheet("AnotherSheet") is False
 
 
 @pytest.mark.skip(reason="Requires a real connection")
 class TestGSheetsFeederReal:
-    """Testing GSheetsFeeder class"""
+    """Testing GsheetsFeeder class"""
 
-    module_name: str = "gsheet_feeder"
-    feeder: GsheetsFeeder
+    module_name: str = "gsheet_feeder_db"
+    feeder: GsheetsFeederDB
     # You must follow the setup process explain in the docs for this to work
     config: dict = {
         "service_account": "secrets/service_account.json",
@@ -220,9 +213,7 @@ class TestGSheetsFeederReal:
 
     @pytest.fixture(autouse=True)
     def setup_feeder(self, setup_module):
-        assert (
-            self.module_name is not None
-        ), "self.module_name must be set on the subclass"
+        assert self.module_name is not None, "self.module_name must be set on the subclass"
         assert self.config is not None, "self.config must be a dict set on the subclass"
         self.feeder: Type[Feeder] = setup_module(self.module_name, self.config)
 
@@ -241,9 +232,7 @@ class TestGSheetsFeederReal:
         """Ensure open_sheet() connects to a real Google Sheets instance."""
         sheet = self.feeder.open_sheet()
         assert sheet is not None, "open_sheet() should return a valid sheet instance"
-        assert hasattr(
-            sheet, "worksheets"
-        ), "Returned object should have worksheets method"
+        assert hasattr(sheet, "worksheets"), "Returned object should have worksheets method"
 
     def test_iter_yields_metadata_real_data(self):
         """Ensure __iter__() yields Metadata objects for real test sheet data."""

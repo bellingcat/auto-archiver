@@ -57,16 +57,19 @@ class TimestampingEnricher(Enricher):
         logger.debug(f"RFC3161 timestamping existing files for {url=}")
 
         # create a new text file with the existing media hashes
-        hashes = [m.get("hash").replace("SHA-256:", "").replace("SHA3-512:", "") for m in to_enrich.media if m.get("hash")]
+        hashes = [
+            m.get("hash").replace("SHA-256:", "").replace("SHA3-512:", "") for m in to_enrich.media if m.get("hash")
+        ]
 
         if not len(hashes):
             logger.warning(f"No hashes found in {url=}")
             return
+
         
         hashes_fn = os.path.join(self.tmp_dir, "hashes.txt")
 
         data_to_sign = "\n".join(hashes)
-        with open(hashes_fn, "w") as f: 
+        with open(hashes_fn, "w") as f:
             f.write(data_to_sign)
         hashes_media = Media(filename=hashes_fn)
 
@@ -115,6 +118,8 @@ class TimestampingEnricher(Enricher):
             f.write(timestamp_token)
         return tst_path
 
+        trust_roots = []
+        with open(certifi.where(), "rb") as f:
     def verify_signed(self, timestamp_response: TimeStampResponse, message: bytes) ->  x509.Certificate:
         """
         Verify a Signed Timestamp Response is trusted by a known Certificate Authority.

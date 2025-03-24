@@ -3,14 +3,7 @@
     "type": ["enricher"],
     "requires_setup": True,
     "dependencies": {
-        "python": [
-            "loguru",
-            "slugify",
-            "tsp_client",
-            "asn1crypto",
-            "certvalidator",
-            "certifi"
-        ],
+        "python": ["loguru", "slugify", "tsp_client", "asn1crypto", "certvalidator", "certifi"],
     },
     "configs": {
         "tsa_urls": {
@@ -56,5 +49,5 @@ but they are not trusted authorities",
     ### Notes
     - Should be run after the `hash_enricher` to ensure file hashes are available.
     - Requires internet access to interact with the configured TSAs.
-    """
+    """,
 }

@@ -1,17 +1,15 @@
-""" The `extractor` module defines the base functionality for implementing extractors in the media archiving framework.
-    This class provides common utility methods and a standard interface for extractors.
+"""The `extractor` module defines the base functionality for implementing extractors in the media archiving framework.
+This class provides common utility methods and a standard interface for extractors.
 
-    Factory method to initialize an extractor instance based on its name.
+Factory method to initialize an extractor instance based on its name.
 
 
 """
+
 from __future__ import annotations
-from pathlib import Path
 from abc import abstractmethod
-from dataclasses import dataclass
 import mimetypes
 import os
-import mimetypes
 import requests
 from loguru import logger
 from retrying import retry
@@ -39,7 +37,7 @@ class Extractor(BaseModule):
         Used to clean unnecessary URL parameters OR unfurl redirect links
         """
         return url
-    
+
     def match_link(self, url: str) -> re.Match:
         """
         Returns a match object if the given URL matches the valid_url pattern or False/None if not.
@@ -58,7 +56,7 @@ class Extractor(BaseModule):
         """
         if self.valid_url:
             return self.match_link(url) is not None
-        
+
         return True
 
     def _guess_file_type(self, path: str) -> str:
@@ -74,16 +72,17 @@ class Extractor(BaseModule):
     @retry(wait_random_min=500, wait_random_max=3500, stop_max_attempt_number=5)
     def download_from_url(self, url: str, to_filename: str = None, verbose=True) -> str:
         """
-            downloads a URL to provided filename, or inferred from URL, returns local filename
+        downloads a URL to provided filename, or inferred from URL, returns local filename
         """
         if not to_filename:
-            to_filename = url.split('/')[-1].split('?')[0]
+            to_filename = url.split("/")[-1].split("?")[0]
             if len(to_filename) > 64:
                 to_filename = to_filename[-64:]
         to_filename = os.path.join(self.tmp_dir, to_filename)
-        if verbose: logger.debug(f"downloading {url[0:50]=} {to_filename=}")
+        if verbose:
+            logger.debug(f"downloading {url[0:50]=} {to_filename=}")
         headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36'
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36"
         }
         try:
             d = requests.get(url, stream=True, headers=headers, timeout=30)
@@ -91,12 +90,12 @@ class Extractor(BaseModule):
 
             # get mimetype from the response headers
             if not mimetypes.guess_type(to_filename)[0]:
-                content_type = d.headers.get('Content-Type') or self._guess_file_type(url)
+                content_type = d.headers.get("Content-Type") or self._guess_file_type(url)
                 extension = mimetypes.guess_extension(content_type)
                 if extension:
                     to_filename += extension
 
-            with open(to_filename, 'wb') as f:
+            with open(to_filename, "wb") as f:
                 for chunk in d.iter_content(chunk_size=8192):
                     f.write(chunk)
             return to_filename
@@ -108,7 +107,7 @@ class Extractor(BaseModule):
     def download(self, item: Metadata) -> Metadata | False:
         """
         Downloads the media from the given URL and returns a Metadata object with the downloaded media.
-        
+
         If the URL is not supported or the download fails, this method should return False.
 
         """

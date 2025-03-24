@@ -13,11 +13,15 @@
         },
         "filename_generator": {
             "default": "static",
-            "help": "how to name stored files: 'random' creates a random string; 'static' uses a replicable strategy such as a hash.",
+            "help": "how to name stored files: 'random' creates a random string; 'static' uses a hash, with the settings of the 'hash_enricher' module (defaults to SHA256 if not enabled)",
             "choices": ["random", "static"],
         },
         "save_to": {"default": "./local_archive", "help": "folder where to save archived content"},
-        "save_absolute": {"default": False, "help": "whether the path to the stored file is absolute or relative in the output result inc. formatters (WARN: leaks the file structure)"},
+        "save_absolute": {
+            "default": False,
+            "type": "bool",
+            "help": "whether the path to the stored file is absolute or relative in the output result inc. formatters (Warning: saving an absolute path will show your computer's file structure)",
+        },
     },
     "description": """
     LocalStorage: A storage module for saving archived content locally on the filesystem.
@@ -31,5 +35,5 @@
     ### Notes
     - Default storage folder is `./archived`, but this can be changed via the `save_to` configuration.
     - The `save_absolute` option can reveal the file structure in output formats; use with caution.
-    """
+    """,
 }

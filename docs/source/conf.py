@@ -5,7 +5,7 @@ import os
 from importlib.metadata import metadata
 from datetime import datetime
 
-sys.path.append(os.path.abspath('../scripts'))
+sys.path.append(os.path.abspath("../scripts"))
 from scripts import generate_module_docs
 from auto_archiver.version import __version__
 
@@ -20,33 +20,35 @@ project = package_metadata["name"]
 copyright = str(datetime.now().year)
 author = "Bellingcat"
 release = package_metadata["version"]
-language = 'en'
+language = "en"
 
 # -- General configuration ---------------------------------------------------
 extensions = [
-    "myst_parser",                  # Markdown support
-    "autoapi.extension",            # Generate API documentation from docstrings
-    "sphinxcontrib.mermaid",        # Mermaid diagrams
-    "sphinx.ext.viewcode",          # Source code links
+    "myst_parser",  # Markdown support
+    "autoapi.extension",  # Generate API documentation from docstrings
+    "sphinxcontrib.mermaid",  # Mermaid diagrams
+    "sphinx.ext.viewcode",  # Source code links
     "sphinx_copybutton",
-    "sphinx.ext.napoleon",          # Google-style and NumPy-style docstrings
+    "sphinx.ext.napoleon",  # Google-style and NumPy-style docstrings
     "sphinx.ext.autosectionlabel",
     # 'sphinx.ext.autosummary',       # Summarize module/class/function docs
 ]
 
-templates_path = ['_templates']
+templates_path = ["_templates"]
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", ""]
 
 
 # -- AutoAPI Configuration ---------------------------------------------------
-autoapi_type = 'python'
+autoapi_type = "python"
 autoapi_dirs = ["../../src/auto_archiver/core/", "../../src/auto_archiver/utils/"]
 # get all the modules and add them to the autoapi_dirs
 autoapi_dirs.extend([f"../../src/auto_archiver/modules/{m}" for m in os.listdir("../../src/auto_archiver/modules")])
-autodoc_typehints = "signature"     # Include type hints in the signature
-autoapi_ignore = ["*/version.py", ]                 # Ignore specific modules
-autoapi_keep_files = True          # Option to retain intermediate JSON files for debugging
-autoapi_add_toctree_entry = True    # Include API docs in the TOC
+autodoc_typehints = "signature"  # Include type hints in the signature
+autoapi_ignore = [
+    "*/version.py",
+]  # Ignore specific modules
+autoapi_keep_files = True  # Option to retain intermediate JSON files for debugging
+autoapi_add_toctree_entry = True  # Include API docs in the TOC
 autoapi_python_use_implicit_namespaces = True
 autoapi_template_dir = "../_templates/autoapi"
 autoapi_options = [
@@ -59,13 +61,13 @@ autoapi_options = [
 
 # -- Markdown Support --------------------------------------------------------
 myst_enable_extensions = [
-    "deflist",              # Definition lists
-    "html_admonition",      # HTML-style admonitions
-    "html_image",           # Inline HTML images
-    "replacements",         # Substitutions like (C)
-    "smartquotes",          # Smart quotes
-    "linkify",              # Auto-detect links
-    "substitution",         # Text substitutions
+    "deflist",  # Definition lists
+    "html_admonition",  # HTML-style admonitions
+    "html_image",  # Inline HTML images
+    "replacements",  # Substitutions like (C)
+    "smartquotes",  # Smart quotes
+    "linkify",  # Auto-detect links
+    "substitution",  # Text substitutions
 ]
 myst_heading_anchors = 2
 myst_fence_as_directive = ["mermaid"]
@@ -76,7 +78,7 @@ source_suffix = {
 }
 
 # -- Options for HTML output -------------------------------------------------
-html_theme = 'sphinx_book_theme'
+html_theme = "sphinx_book_theme"
 html_static_path = ["../_static"]
 html_css_files = ["custom.css"]
 html_title = f"Auto Archiver v{__version__}"
@@ -85,7 +87,6 @@ html_theme_options = {
     "repository_url": "https://github.com/bellingcat/auto-archiver",
     "use_repository_button": True,
 }
-
 
 
 copybutton_prompt_text = r">>> |\.\.\."

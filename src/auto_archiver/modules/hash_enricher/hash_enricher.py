@@ -1,4 +1,4 @@
-""" Hash Enricher for generating cryptographic hashes of media files.
+"""Hash Enricher for generating cryptographic hashes of media files.
 
 The `HashEnricher` calculates cryptographic hashes (e.g., SHA-256, SHA3-512)
 for media files stored in `Metadata` objects. These hashes are used for
@@ -7,6 +7,7 @@ exact duplicates. The hash is computed by reading the file's bytes in chunks,
 making it suitable for handling large files efficiently.
 
 """
+
 import hashlib
 from loguru import logger
 
@@ -19,7 +20,6 @@ class HashEnricher(Enricher):
     """
     Calculates hashes for Media instances
     """
-
 
     def enrich(self, to_enrich: Metadata) -> None:
         url = to_enrich.get_url()
@@ -35,5 +35,6 @@ class HashEnricher(Enricher):
             hash_algo = hashlib.sha256
         elif self.algorithm == "SHA3-512":
             hash_algo = hashlib.sha3_512
-        else: return ""
+        else:
+            return ""
         return calculate_file_hash(filename, hash_algo, self.chunksize)
