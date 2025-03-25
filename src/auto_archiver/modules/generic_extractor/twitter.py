@@ -1,6 +1,5 @@
 import re
 import mimetypes
-import json
 
 from loguru import logger
 from slugify import slugify
@@ -32,6 +31,9 @@ class Twitter(GenericDropin):
         twid = ie_instance._match_valid_url(url).group("id")
         return ie_instance._extract_status(twid=twid)
 
+    def keys_to_clean(self, video_data, info_extractor):
+        return ["user", "created_at", "entities", "favorited", "translator_type"]
+
     def create_metadata(self, tweet: dict, ie_instance: InfoExtractor, archiver: Extractor, url: str) -> Metadata:
         result = Metadata()
         try:
@@ -42,9 +44,11 @@ class Twitter(GenericDropin):
             logger.warning(f"Unable to parse tweet: {str(ex)}\nRetreived tweet data: {tweet}")
             return False
 
-        result.set_title(tweet.get("full_text", "")).set_content(json.dumps(tweet, ensure_ascii=False)).set_timestamp(
-            timestamp
-        )
+        full_text = tweet.pop("full_text", "")
+        author = tweet["user"].get("name", "")
+        result.set("author", author).set_url(url)
+
+        result.set_title(f"{author} - {full_text}").set_content(full_text).set_timestamp(timestamp)
         if not tweet.get("entities", {}).get("media"):
             logger.debug("No media found, archiving tweet text only")
             result.status = "twitter-ytdl"

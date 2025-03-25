@@ -1,6 +1,7 @@
 import pytest
 from auto_archiver.core.module import ModuleFactory, LazyBaseModule
 from auto_archiver.core.base_module import BaseModule
+from auto_archiver.core.consts import SetupError
 
 
 @pytest.fixture
@@ -25,10 +26,8 @@ def test_python_dependency_check(example_module):
     # monkey patch the manifest to include a nonexistnet dependency
     example_module.manifest["dependencies"]["python"] = ["does_not_exist"]
 
-    with pytest.raises(SystemExit) as load_error:
+    with pytest.raises(SetupError):
         example_module.load({})
-
-    assert load_error.value.code == 1
 
 
 def test_binary_dependency_check(example_module):
@@ -81,8 +80,20 @@ def test_load_modules(module_name):
     # check that default settings are applied
     default_config = module.configs
     assert loaded_module.name in loaded_module.config.keys()
+    defaults = {k for k in default_config}
+    assert defaults in [loaded_module.config[module_name].keys()]
+
+
+@pytest.mark.parametrize("module_name", ["local_storage", "generic_extractor", "html_formatter", "csv_db"])
+def test_config_defaults(module_name):
+    # test the values of the default config values are set
+    # Note: some modules can alter values in the setup() method, this test checks cases that don't
+    module = ModuleFactory().get_module_lazy(module_name)
+    loaded_module = module.load({})
+    # check that default config values are set
+    default_config = module.configs
     defaults = {k: v.get("default") for k, v in default_config.items()}
-    assert defaults.keys() in [loaded_module.config[module_name].keys()]
+    assert defaults == loaded_module.config[module_name]
 
 
 @pytest.mark.parametrize("module_name", ["local_storage", "generic_extractor", "html_formatter", "csv_db"])

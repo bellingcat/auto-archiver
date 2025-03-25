@@ -6,12 +6,43 @@ This guide explains how to set up Google Sheets to process URLs automatically an
 2. Setting up a service account so Auto Archiver can access the sheet
 3. Setting the Auto Archiver settings
 
-### 1. Setting up your Google Sheet
 
-Any Google sheet must have at least *one* column, with the name 'link' (you can change this name afterwards). This is the column with the URLs that you want the Auto Archiver to archive. 
-Your sheet can have many other columns that the Auto Archiver can use, and you can also include any additional columns for your own personal use. The order of the columns does not matter, the naming just needs to be correctly assigned to its corresponding value in the configuration file.
+## 1. Setting up a Google Service Account
 
-We recommend copying [this template Google Sheet](https://docs.google.com/spreadsheets/d/1NJZo_XZUBKTI1Ghlgi4nTPVvCfb0HXAs6j5tNGas72k/edit?usp=sharing) as a starting point for your project, as this matches the default column names.
+Once your Google Sheet is set up, you need to create what's called a 'service account' that will allow the Auto Archiver to access it.
+
+To do this, you can either:
+* a) follow the steps in [this guide](https://gspread.readthedocs.io/en/latest/oauth2.html) all the way up until step 8. You should have downloaded a file called `service_account.json` and should save it in the `secrets/` folder
+* b) run the following script to automatically generate the file:
+```{code} bash
+https://raw.githubusercontent.com/bellingcat/auto-archiver/refs/heads/main/scripts/generate_google_services.sh | bash -s --
+```
+This uses gcloud to create a new project, a new user and downloads the service account automatically for you. The service account file will have the name `service_account-XXXXXXX.json` where XXXXXXX is a random 16 letter/digit string for the project created.
+
+```{note}
+To save the generated file to a different folder, pass an argument as follows:
+```{code} bash
+https://raw.githubusercontent.com/bellingcat/auto-archiver/refs/heads/main/scripts/generate_google_services.sh | bash -s -- /path/to/secrets
+```
+
+----------
+
+Once you've downloaded the file, you can save it to `secrets/service_account.json` (the default name), or to another file and then change the location in the settings (see step 4).
+
+Also make sure to **note down** the email address for this service account. You'll need that for step 3.
+
+```{note}
+The email address created in this step can be found either by opening the `service_account.json` file, or if you used b) the `generate_google_services.sh` script, then the script will have printed it out for you.
+
+The email address will look something like `user@project-name.iam.gserviceaccount.com`
+```
+
+
+## 2. Setting up your Google Sheet
+
+We recommend copying [this template Google Sheet](https://docs.google.com/spreadsheets/d/1NJZo_XZUBKTI1Ghlgi4nTPVvCfb0HXAs6j5tNGas72k/edit?usp=sharing) as a starting point for your project, as this matches all the columns required.
+
+But if you like, you can also create your own custom sheet. The only columns required are 'link', 'archive status', and 'archive location'. 'link' is the column with the URLs that you want the Auto Archiver to archive, the other two record the archival status and result. 
 
 Here's an overview of all the columns, and what a complete sheet would look like.
 
@@ -46,21 +77,18 @@ In this example the Ghseet Feeder and Gsheet DB are being used, and the archive 
 
 ![A screenshot of a Google Spreadsheet with column headers defined as above, and several Youtube and Twitter URLs in the "Link" column](../../demo-before.png)
 
-We'll change the name of the 'Destination Folder' column in step 3.
+We'll change the name of the 'Destination Folder' column in the Step 4a.
 
-## 2. Setting up your Service Account
+## 3. Share your Google Sheet with your Service Account email address
 
-Once your Google Sheet is set up, you need to create what's called a 'service account' that will allow the Auto Archiver to access it.
+Remember that email address you copied in Step 1? Now that you've set up your Google sheet, click 'Share' in the top
+right hand corner and enter the email address. Make sure to give the account **Editor** access. Here's how that looks:
 
-To do this, follow the steps in [this guide](https://gspread.readthedocs.io/en/latest/oauth2.html) all the way up until step 8. You should have downloaded a file called `service_account.json` and shared the Google Sheet with the log 'client_email' email address in this file.
+![Share sheet](share_sheet.png)
 
-Once you've downloaded the file, save it to `secrets/service_account.json`
+## 4. Setting up the configuration file
 
-## 3. Setting up the configuration file
-
-Now that you've set up your Google sheet, and you've set up the service account so Auto Archiver can access the sheet, the final step is to set your configuration.
-
-First, make sure you have `gsheet_feeder_db` set in the `steps.feeders` section of your config. If you wish to store the results of the archiving process back in your Google sheet, make sure to also set the `ghseet_db` settig in the `steps.databases` section. Here's how this might look:
+The final step is to set your configuration. First, make sure you have `gsheet_feeder_db` set in the `steps.feeders` section of your config. If you wish to store the results of the archiving process back in your Google sheet, make sure to also put `gsheet_feeder_db` setting in the `steps.databases` section. Here's how this might look:
 
 ```{code} yaml
 steps:
@@ -75,12 +103,15 @@ steps:
 Next, set up the `gsheet_feeder_db` configuration settings in the 'Configurations' part of the config `orchestration.yaml` file. Open up the file, and set the `gsheet_feeder_db.sheet` setting or the `gsheet_feeder_db.sheet_id` setting. The `sheet` should be the name of your sheet, as it shows in the top left of the sheet. 
 For example, the sheet [here](https://docs.google.com/spreadsheets/d/1NJZo_XZUBKTI1Ghlgi4nTPVvCfb0HXAs6j5tNGas72k/edit?gid=0#gid=0) is called 'Public Auto Archiver template'.
 
+If you saved your `service_account.json` file to anywhere other than the default location (`secrets/service_account.json`), then also make sure to change that now:
+
 Here's how this might look:
 
 ```{code} yaml
 ...
 gsheet_feeder_db:
     sheet: 'My Awesome Sheet'
+    service_account: secrets/service_account-XXXXX.json # or leave as secrets/service_account.json
     ...
 ```
 
@@ -90,7 +121,7 @@ You can also pass these settings directly on the command line without having to 
 
 Here, the sheet name has been overridden/specified in the command line invocation.
 
-### 3a. (Optional) Changing the column names
+### 4a. (Optional) Changing the column names
 
 In step 1, we said we would change the name of the 'Destination Folder'. Perhaps you don't like this name, or already have a sheet with a different name. In our example here, we want to name this column 'Save Folder'. To do this, we need to edit the `ghseet_feeder_db.column` setting in the configuration file. 
 For more information on this setting, see the [Gsheet Feeder Database docs](../modules/autogen/feeder/gsheet_feeder_db.md#configuration-options). We will first copy the default settings from the Gsheet Feeder docs for the 'column' settings, and then edit the 'Destination Folder' section to rename it 'Save Folder'. Our final configuration section looks like:

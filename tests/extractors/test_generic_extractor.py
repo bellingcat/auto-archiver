@@ -207,10 +207,11 @@ class TestGenericExtractor(TestExtractorBase):
 
         self.assertValidResponseMetadata(
             post,
-            "Onion rings are just vegetable donuts.",
+            "Cookie Monster - Onion rings are just vegetable donuts.",
             datetime.datetime(2023, 1, 24, 16, 25, 51, tzinfo=datetime.timezone.utc),
             "yt-dlp_Twitter: success",
         )
+        assert post.get("content") == "Onion rings are just vegetable donuts."
 
     @pytest.mark.download
     def test_twitter_download_video(self, make_item):

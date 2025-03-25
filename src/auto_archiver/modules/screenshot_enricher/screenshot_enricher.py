@@ -19,12 +19,21 @@ class ScreenshotEnricher(Enricher):
     def enrich(self, to_enrich: Metadata) -> None:
         url = to_enrich.get_url()
 
-        if UrlUtil.is_auth_wall(url):
-            logger.debug(f"[SKIP] SCREENSHOT since url is behind AUTH WALL: {url=}")
-            return
-
         logger.debug(f"Enriching screenshot for {url=}")
         auth = self.auth_for_site(url)
+
+        # screenshot enricher only supports cookie-type auth (selenium)
+        has_valid_auth = auth and (auth.get("cookies") or auth.get("cookies_jar") or auth.get("cookie"))
+
+        if UrlUtil.is_auth_wall(url) and not has_valid_auth:
+            logger.warning(f"[SKIP] SCREENSHOT since url is behind AUTH WALL and no login details provided: {url=}")
+            if any(auth.get(key) for key in ["username", "password", "api_key", "api_secret"]):
+                logger.warning(
+                    f"Screenshot enricher only supports cookie-type authentication, you have provided {auth.keys()} which are not supported.\
+                               Consider adding 'cookie', 'cookies_file' or 'cookies_from_browser' to your auth for this site."
+                )
+            return
+
         with self.webdriver_factory(
             self.width,
             self.height,
