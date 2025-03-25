@@ -13,11 +13,11 @@
     "@dnd-kit/sortable": "^10.0.0",
     "@emotion/react": "latest",
     "@emotion/styled": "latest",
-    "@mui/icons-material": "^6.4.7",
+    "@mui/icons-material": "^6.4.8",
     "@mui/material": "latest",
     "react": "19.0.0",
     "react-dom": "19.0.0",
-    "react-markdown": "^10.0.0",
+    "react-markdown": "^10.1.0",
     "yaml": "^2.7.0"
   },
   "devDependencies": {
@@ -26,6 +26,6 @@
     "@vitejs/plugin-react": "latest",
     "typescript": "latest",
     "vite": "latest",
-    "vite-plugin-singlefile": "^2.1.0"
+    "vite-plugin-singlefile": "^2.2.0"
   }
 }
