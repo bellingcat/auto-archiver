@@ -1,3 +1,4 @@
+import sys
 import datetime
 import os
 import importlib
@@ -37,11 +38,23 @@ class GenericExtractor(Extractor):
                 next_update_check = datetime.datetime.fromisoformat(f.read())
 
         if not next_update_check or next_update_check < datetime.datetime.now():
-            self.update_ytdlp()
+            updated = self.update_ytdlp()
 
             next_update_check = datetime.datetime.now() + datetime.timedelta(days=self.ytdlp_update_interval)
             with open(path, "w") as f:
                 f.write(next_update_check.isoformat())
+
+            if not updated:
+                return
+
+            if os.environ.get("AUTO_ARCHIVER_ALLOW_RESTART", "1") != "1":
+                logger.warning(
+                    "yt-dlp has been updated. Auto archiver should be restarted for these changes to take effect"
+                )
+            else:
+                logger.warning("Restarting auto-archiver to apply yt-dlp update")
+                logger.warning(" ======= RESTARTING ======= ")
+                os.execv(sys.executable, [sys.executable] + sys.argv)
 
     def update_ytdlp(self):
         logger.info("Checking and updating yt-dlp...")
@@ -58,12 +71,14 @@ class GenericExtractor(Extractor):
             if "Successfully installed yt-dlp" in result.stdout.decode():
                 new_version = importlib.metadata.version("yt-dlp")
                 logger.info(f"yt-dlp successfully (from {old_version} to {new_version})")
-                importlib.reload(yt_dlp)
+                return True
             else:
                 logger.info("yt-dlp already up to date")
+                return False
 
         except Exception as e:
             logger.error(f"Error updating yt-dlp: {e}")
+            return False
 
     def suitable_extractors(self, url: str) -> Generator[str, None, None]:
         """

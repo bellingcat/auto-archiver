@@ -86,6 +86,12 @@ class WaczExtractorEnricher(Enricher, Extractor):
         if self.docker_in_docker:
             cmd.extend(["--cwd", self.cwd_dind])
 
+        if self.auth_for_site(url):
+            # there's an auth for this site, but browsertrix only supports username/password auth
+            logger.warning(
+                "The WACZ enricher / Browsertrix does not support using the 'authentication' information for logging in. You should consider creating a Browser Profile for WACZ archiving. More information: https://auto-archiver.readthedocs.io/en/latest/modules/autogen/extractor/wacz_extractor_enricher.html#browsertrix-profiles"
+            )
+
         # call docker if explicitly enabled or we are running on the host (not in docker)
         if self.use_docker:
             logger.debug(f"generating WACZ in Docker for {url=}")
