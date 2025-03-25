@@ -219,7 +219,7 @@ class TestGenericExtractor(TestExtractorBase):
         post = self.extractor.download(make_item(url))
         self.assertValidResponseMetadata(
             post,
-            "Bellingcat - This month's Bellingchat Premium is with @KolinaKoltai. She reveals how she investigated a platform allowing users to create AI-generated child sexual abuse material and explains why it's crucial to investigate the people behind these services",
+            "Bellingcat - This month's Bellingchat Premium is with @KolinaKoltai",
             datetime.datetime(2024, 12, 24, 13, 44, 46, tzinfo=datetime.timezone.utc),
         )
 

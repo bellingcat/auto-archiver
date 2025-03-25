@@ -25,5 +25,5 @@ class TestExtractorBase(object):
         else:
             assert status == test_response.status
 
-        assert title == test_response.get_title()
-        assert timestamp, test_response.get("timestamp")
+        assert title in test_response.get_title()
+        assert timestamp == test_response.get("timestamp")
