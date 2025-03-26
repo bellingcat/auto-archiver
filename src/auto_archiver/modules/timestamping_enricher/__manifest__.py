@@ -3,7 +3,7 @@
     "type": ["enricher"],
     "requires_setup": True,
     "dependencies": {
-        "python": ["loguru", "slugify", "tsp_client", "asn1crypto", "certvalidator", "certifi"],
+        "python": ["loguru", "slugify", "cryptography", "rfc3161_client", "certifi"],
     },
     "configs": {
         "tsa_urls": {
