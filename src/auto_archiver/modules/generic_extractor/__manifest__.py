@@ -74,10 +74,10 @@ If you are having issues with the extractor, you can review the version of `yt-d
             "default": "inf",
             "help": "Use to limit the number of videos to download when a channel or long page is being extracted. 'inf' means no limit.",
         },
-        "pot_providers": {
-            "default": ["bgutils"],
-            "type": "list",
-            "help": "The Proof of origin provider methods to use. Set to an empty list: [] to disable.",
+        "bguils_po_token_method": {
+            "default": "auto",
+            "help": "Set up a Proof of origin token provider. This process has additional requirements. See [authentication](https://auto-archiver.readthedocs.io/en/latest/how_to/authentication_how_to.html) for more information.",
+            "choices": ["default", "script", "disabled"],
         },
         "extractor_args": {
             "default": {},

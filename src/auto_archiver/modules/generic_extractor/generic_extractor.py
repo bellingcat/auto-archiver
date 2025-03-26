@@ -29,9 +29,8 @@ class GenericExtractor(Extractor):
     _dropins = {}
 
     def setup(self):
-        self.in_docker = os.environ.get("RUNNING_IN_DOCKER")
         self.check_for_extractor_updates()
-        self.setup_token_script()
+        self.setup_po_tokens()
 
     def check_for_extractor_updates(self):
         """Checks whether yt-dlp or its plugins need updating and triggers a restart if so."""
@@ -79,21 +78,87 @@ class GenericExtractor(Extractor):
             logger.error(f"Error updating {package_name}: {e}")
         return False
 
+    def setup_po_tokens(self) -> None:
+        """Setup Proof of Origin Token method conditionally.
+           Uses provider: https://github.com/Brainicism/bgutil-ytdlp-pot-provider.
+        """
+        in_docker = os.environ.get("RUNNING_IN_DOCKER")
+        if self.bguils_po_token_method == "disabled":
+            # This allows disabling of the PO Token generation script in the Docker implementation.
+            logger.warning("Proof of Origin Token generation is disabled.")
+            return
 
-    def setup_token_script(self):
-        """Setup PO Token provider https://github.com/Brainicism/bgutil-ytdlp-pot-provider."""
+        if self.bguils_po_token_method == "default" and not in_docker:
+            logger.info(
+                "Proof of Origin Token method not explicitly set. "
+                "If you're running an external HTTP server separately, you can safely ignore this message. "
+                "To reduce the likelihood of bot detection, enable one of the methods described in the documentation: "
+                "https://auto-archiver.readthedocs.io/en/settings_page/installation/authentication.html#proof-of-origin-tokens"
+            )
+            return
 
-        if self.pot_provider == "bgutils":
-            # Check if the PO token generation script exists, set it up if not.
-            try:
-                subprocess.run(["bash", "scripts/potoken_provider/setup_pot_provider.sh"], check=True)
-            except subprocess.CalledProcessError as e:
-                logger.error(f"Failed to setup PO Token script: {e}")
+        # Either running in Docker, or "script" method is set beyond this point
+        self.setup_token_generation_script()
+
+    def setup_token_generation_script(self) -> None:
+        """ This function sets up the Proof of Origin Token generation script method for
+            bgutil-ytdlp-pot-provider if enabled or in Docker."""
+        missing_tools = [tool for tool in ("node", "yarn", "npx") if shutil.which(tool) is None]
+        if missing_tools:
+            logger.error(
+                f"Cannot set up PO Token script; missing required tools: {', '.join(missing_tools)}. "
+                "Install these tools or run bgutils via Docker. "
+                "See: https://github.com/Brainicism/bgutil-ytdlp-pot-provider"
+            )
+            return
+        try:
+            from importlib.metadata import version as get_version
+
+            plugin_version = get_version("bgutil-ytdlp-pot-provider")
+            base_dir = os.path.expanduser("~/bgutil-ytdlp-pot-provider")
+            server_dir = os.path.join(base_dir, "server")
+            version_file = os.path.join(server_dir, ".VERSION")
+            transpiled_script = os.path.join(server_dir, "build", "generate_once.js")
+
+            # Skip setup if version is correct and transpiled script exists
+            if os.path.isfile(transpiled_script) and os.path.isfile(version_file):
+                with open(version_file) as vf:
+                    if vf.read().strip() == plugin_version:
+                        logger.info("PO Token script already set up and up to date.")
+            else:
+                # Remove an outdated directory and pull a new version
+                if os.path.exists(base_dir):
+                    shutil.rmtree(base_dir)
+                os.makedirs(base_dir, exist_ok=True)
+
+                zip_url = f"https://github.com/Brainicism/bgutil-ytdlp-pot-provider/archive/refs/tags/{plugin_version}.zip"
+                zip_path = os.path.join(base_dir, f"{plugin_version}.zip")
+                logger.info(f"Downloading bgutils release zip for version {plugin_version}...")
+                urlretrieve(zip_url, zip_path)
+                with zipfile.ZipFile(zip_path, "r") as z:
+                    z.extractall(base_dir)
+                os.remove(zip_path)
+
+                extracted_root = os.path.join(base_dir, f"bgutil-ytdlp-pot-provider-{plugin_version}")
+                shutil.move(os.path.join(extracted_root, "server"), server_dir)
+                shutil.rmtree(extracted_root)
+                logger.info("Installing dependencies and transpiling PoT Generator script...")
+                subprocess.run(["yarn", "install", "--frozen-lockfile"], cwd=server_dir, check=True)
+                subprocess.run(["npx", "tsc"], cwd=server_dir, check=True)
+
+                with open(version_file, "w") as vf:
+                    vf.write(plugin_version)
+
+            script_path = os.path.join(server_dir, "build", "generate_once.js")
+            if not os.path.exists(script_path):
+                logger.error("generate_once.js not found after transpilation.")
                 return
 
-            # Use the PO Token script in yt-dlp to fetch tokens on demand.
-            pot_script = os.path.join("scripts", "potoken_provider", "bgutil-provider", "build", "generate_once.js")
-            self.extractor_args.setdefault("youtube", {})["getpot_bgutil_script"] = pot_script
+            self.extractor_args.setdefault("youtube", {})["getpot_bgutil_script"] = script_path
+            logger.info(f"PO Token script configured at: {script_path}")
+
+        except Exception as e:
+            logger.error(f"Failed to set up PO Token script: {e}")
 
 
     def suitable_extractors(self, url: str) -> Generator[str, None, None]:
