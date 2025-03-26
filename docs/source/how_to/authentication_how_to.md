@@ -151,6 +151,7 @@ See the [bgutil-ytdlp-pot-provider](https://github.com/Brainicism/bgutil-ytdlp-p
 - The token generation script is only triggered when needed by yt-dlp, so it should have no effect unless YouTube requests a POT.
 - If you're running the Auto Archiver in Docker, this is set up automatically.
 - If you're running locally, you'll need to run the setup script manually or enable the feature in your config.
+- You can set up both the server and the script, and the plugin will fallback on each other if needed. This is recommended for robustness!
 
 Configurations: 
 - **default**: In Docker this downloads, transpiles and creates a token generation script. Locally it does nothing. If you are running the bgutil-ytdlp-pot-provider server via Docker you can choose this.
@@ -185,7 +186,7 @@ To verify that the POT process working, look for the following lines in your log
 [debug] [GetPOT] Fetching gvs PO Token for tv client
 ```
 
-If it can't find the script, you'll see:
+If it can't find the script or something, you'll see something like this:
 ```shell
 [debug] [GetPOT] Fetching player PO Token for tv client
 WARNING: [GetPOT] BgUtilScript: Script path doesn't exist: /Users/you/bgutil-ytdlp-pot-provider/server/build/generate_once.js. Please make sure the script has been transpiled correctly.
@@ -193,4 +194,6 @@ WARNING: [GetPOT] BgUtilHTTP: Error reaching GET http://127.0.0.1:4416/ping (cau
 [debug] [GetPOT] No player PO Token provider available for tv client
 ```
 
-In this case check that the script has been transpiled correctly and is available at the path specified in the log.
+In this case check that the script has been transpiled correctly and is available at the path specified in the log, 
+or that the server is running and reachable.
+
