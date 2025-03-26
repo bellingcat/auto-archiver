@@ -80,7 +80,7 @@ class GenericExtractor(Extractor):
 
     def setup_po_tokens(self) -> None:
         """Setup Proof of Origin Token method conditionally.
-           Uses provider: https://github.com/Brainicism/bgutil-ytdlp-pot-provider.
+        Uses provider: https://github.com/Brainicism/bgutil-ytdlp-pot-provider.
         """
         in_docker = os.environ.get("RUNNING_IN_DOCKER")
         if self.bguils_po_token_method == "disabled":
@@ -101,8 +101,8 @@ class GenericExtractor(Extractor):
         self.setup_token_generation_script()
 
     def setup_token_generation_script(self) -> None:
-        """ This function sets up the Proof of Origin Token generation script method for
-            bgutil-ytdlp-pot-provider if enabled or in Docker."""
+        """This function sets up the Proof of Origin Token generation script method for
+        bgutil-ytdlp-pot-provider if enabled or in Docker."""
         missing_tools = [tool for tool in ("node", "yarn", "npx") if shutil.which(tool) is None]
         if missing_tools:
             logger.error(
@@ -131,7 +131,9 @@ class GenericExtractor(Extractor):
                     shutil.rmtree(base_dir)
                 os.makedirs(base_dir, exist_ok=True)
 
-                zip_url = f"https://github.com/Brainicism/bgutil-ytdlp-pot-provider/archive/refs/tags/{plugin_version}.zip"
+                zip_url = (
+                    f"https://github.com/Brainicism/bgutil-ytdlp-pot-provider/archive/refs/tags/{plugin_version}.zip"
+                )
                 zip_path = os.path.join(base_dir, f"{plugin_version}.zip")
                 logger.info(f"Downloading bgutils release zip for version {plugin_version}...")
                 urlretrieve(zip_url, zip_path)
@@ -159,7 +161,6 @@ class GenericExtractor(Extractor):
 
         except Exception as e:
             logger.error(f"Failed to set up PO Token script: {e}")
-
 
     def suitable_extractors(self, url: str) -> Generator[str, None, None]:
         """
