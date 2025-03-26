@@ -35,10 +35,10 @@ class TelethonExtractor(Extractor):
         self.session_file = self.session_file.removesuffix(".session")
 
         # make a copy of the session that is used exclusively with this archiver instance
-        new_session_file = os.path.join("secrets/", f"telethon-{time.strftime('%Y-%m-%d')}{random_str(8)}")
-        logger.debug(f"Making a copy of the session file {self.session_file}.session to {new_session_file}.session")
-        shutil.copy(f"{self.session_file}.session", f"{new_session_file}.session")
-        self.session_file = new_session_file
+        old_session_file = f"{self.session_file}.session"
+        self.session_file = os.path.join("secrets/", f"telethon-{time.strftime('%Y-%m-%d')}{random_str(8)}")
+        logger.debug(f"Making a copy of the session file {old_session_file} to {self.session_file}.session")
+        shutil.copy(old_session_file, f"{self.session_file}.session")
 
         # initiate the client
         self.client = TelegramClient(self.session_file, self.api_id, self.api_hash)
