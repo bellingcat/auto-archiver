@@ -21,6 +21,14 @@ TESTS_TO_RUN_LAST = ["test_twitter_api_archiver"]
 
 
 @pytest.fixture
+def get_lazy_module():
+    def _get_lazy_module(module_name):
+        return ModuleFactory().get_module_lazy(module_name)
+
+    return _get_lazy_module
+
+
+@pytest.fixture
 def setup_module(request):
     def _setup_module(module_name, config=None):
         if config is None:

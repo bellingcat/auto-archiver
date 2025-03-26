@@ -1,4 +1,9 @@
+import os
 import shutil
+import re
+import time
+from datetime import date
+
 from telethon.sync import TelegramClient
 from telethon.errors import ChannelInvalidError
 from telethon.tl.functions.messages import ImportChatInviteRequest
@@ -8,11 +13,9 @@ from telethon.errors.rpcerrorlist import (
     InviteRequestSentError,
     InviteHashExpiredError,
 )
-from loguru import logger
+
 from tqdm import tqdm
-import re
-import time
-import os
+from loguru import logger
 
 from auto_archiver.core import Extractor
 from auto_archiver.core import Metadata, Media
@@ -32,13 +35,22 @@ class TelethonExtractor(Extractor):
         logger.info(f"SETUP {self.name} checking login...")
 
         # in case the user already added '.session' to the session_file
-        self.session_file = self.session_file.removesuffix(".session")
+        base_session_name = self.session_file.removesuffix(".session")
+        base_session_filepath = f"{base_session_name}.session"
+
+        if self.session_file and not os.path.exists(base_session_filepath):
+            logger.warning(
+                f"SETUP - Session file {base_session_filepath} does not exist for {self.name}, creating an empty one."
+            )
+            with open(base_session_filepath, "w") as f:
+                f.write("")
 
         # make a copy of the session that is used exclusively with this archiver instance
-        old_session_file = f"{self.session_file}.session"
-        self.session_file = os.path.join("secrets/", f"telethon-{time.strftime('%Y-%m-%d')}{random_str(8)}")
-        logger.debug(f"Making a copy of the session file {old_session_file} to {self.session_file}.session")
-        shutil.copy(old_session_file, f"{self.session_file}.session")
+        self.session_file = os.path.join(
+            os.path.dirname(base_session_filepath), f"telethon-{date.today().strftime('%Y-%m-%d')}{random_str(8)}"
+        )
+        logger.debug(f"Making a copy of the session file {base_session_filepath} to {self.session_file}.session")
+        shutil.copy(base_session_filepath, f"{self.session_file}.session")
 
         # initiate the client
         self.client = TelegramClient(self.session_file, self.api_id, self.api_hash)
