@@ -31,10 +31,14 @@ class TelethonExtractor(Extractor):
         """
         logger.info(f"SETUP {self.name} checking login...")
 
+        # in case the user already added '.session' to the session_file
+        self.session_file = self.session_file.removesuffix(".session")
+
         # make a copy of the session that is used exclusively with this archiver instance
-        new_session_file = os.path.join("secrets/", f"telethon-{time.strftime('%Y-%m-%d')}{random_str(8)}.session")
-        shutil.copy(self.session_file + ".session", new_session_file)
-        self.session_file = new_session_file.replace(".session", "")
+        new_session_file = os.path.join("secrets/", f"telethon-{time.strftime('%Y-%m-%d')}{random_str(8)}")
+        logger.debug(f"Making a copy of the session file {self.session_file}.session to {new_session_file}.session")
+        shutil.copy(f"{self.session_file}.session", f"{new_session_file}.session")
+        self.session_file = new_session_file
 
         # initiate the client
         self.client = TelegramClient(self.session_file, self.api_id, self.api_hash)
@@ -87,8 +91,8 @@ class TelethonExtractor(Extractor):
                     pbar.update()
 
     def cleanup(self) -> None:
-        logger.info(f"CLEANUP {self.name}.")
-        session_file_name = self.session_file + ".session"
+        logger.info(f"CLEANUP {self.name} - removing session file {self.session_file}.session")
+        session_file_name = f"{self.session_file}.session"
         if os.path.exists(session_file_name):
             os.remove(session_file_name)
 
