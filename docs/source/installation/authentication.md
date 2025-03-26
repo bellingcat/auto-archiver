@@ -6,6 +6,15 @@ There are two main use cases for authentication:
 * Some websites require some kind of authentication in order to view the content. Examples include Facebook, Telegram etc.
 * Some websites use anti-bot systems to block bot-like tools from accessing the website. Adding real login information to auto-archiver can sometimes bypass this.
 
+```{note}
+
+The Authentication framework currently only works with the following modules:
+* Generic Extractor
+* Screenshot Enricher
+
+To authenticate for WACZ archiving, see the instructions on the [](../modules/autogen/enricher/wacz_extractor_enricher.md) page.
+```
+
 ## The Authentication Config
 
 You can save your authentication information directly inside your orchestration config file, or as a separate file (for security/multi-deploy purposes). Whether storing your settings inside the orchestration file, or as a separate file, the configuration format is the same. Currently, auto-archiver supports the following authentication types:
@@ -27,7 +36,7 @@ You can save your authentication information directly inside your orchestration 
 
 The Username & Password, and API settings only work with the Generic Extractor. Other modules (like the screenshot enricher) can only use the `cookies` options. Furthermore, many sites can still detect bots and block username/password logins. Twitter/X and YouTube are two prominent ones that block username/password logging.
 
-One of the 'Cookies' options is recommended for the most robust archiving.
+One of the 'Cookies' options is recommended for the most robust archiving, but it still isn't guaranteed to work.
 ```
 
 ```{code} yaml

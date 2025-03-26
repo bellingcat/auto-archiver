@@ -3,8 +3,18 @@ name: Ruff Formatting & Linting
 on:
   push:
     branches: [ main ]
+    paths-ignore:
+      - "README.md"
+      - ".github"
+      - "poetry.lock"
+      - "scripts/settings"
   pull_request:
     branches: [ main ]
+    paths-ignore:
+      - "README.md"
+      - ".github"
+      - "poetry.lock"
+      - "scripts/settings"
 
 jobs:
   build:

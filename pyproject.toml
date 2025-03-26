@@ -44,7 +44,7 @@ dependencies = [
     "pyOpenSSL (==24.2.1)",
     "boto3 (>=1.28.0,<2.0.0)",
     "dataclasses-json (>=0.0.0)",
-    "yt-dlp (>=2025.1.26,<2026.0.0)",
+    "yt-dlp (>=2025.3.21,<2026.0.0)",
     "numpy (==2.1.3)",
     "vk-url-scraper (>=0.0.0)",
     "requests[socks] (>=0.0.0)",
