@@ -141,6 +141,8 @@ When using the Auto Archiver PyPI package, or running locally, you will need add
 
 See the [bgutil-ytdlp-pot-provider](https://github.com/Brainicism/bgutil-ytdlp-pot-provider?tab=readme-ov-file#a-http-server-option) documentation for more details.
 
+⚠️WARNING⚠️: This will add the server scripts to the home directory of wherever this is running.
+
 - You can set the config option `"po_token_provider": true` under the `GenericExtractor` section of your config to "script" to enable the token generation script process locally.
 - Or you can run the bgutil-ytdlp-pot-provider server separately using their Docker image.
 
