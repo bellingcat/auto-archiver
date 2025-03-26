@@ -2,6 +2,7 @@ import os
 import shutil
 import re
 import time
+from pathlib import Path
 from datetime import date
 
 from telethon.sync import TelegramClient
@@ -42,8 +43,7 @@ class TelethonExtractor(Extractor):
             logger.warning(
                 f"SETUP - Session file {base_session_filepath} does not exist for {self.name}, creating an empty one."
             )
-            with open(base_session_filepath, "w") as f:
-                f.write("")
+            Path(base_session_filepath).touch()
 
         # make a copy of the session that is used exclusively with this archiver instance
         self.session_file = os.path.join(
