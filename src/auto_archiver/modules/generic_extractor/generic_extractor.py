@@ -1,10 +1,13 @@
+import shutil
 import sys
 import datetime
 import os
 import importlib
 import subprocess
+import zipfile
 
 from typing import Generator, Type
+from urllib.request import urlretrieve
 
 import yt_dlp
 from yt_dlp.extractor.common import InfoExtractor
@@ -26,64 +29,56 @@ class GenericExtractor(Extractor):
     _dropins = {}
 
     def setup(self):
-        self.check_ytdlp_update()
+        self.in_docker = os.environ.get("RUNNING_IN_DOCKER")
+        self.check_for_extractor_updates()
         self.setup_token_script()
 
-    def check_ytdlp_update(self):
-        """Handles checking and updating yt-dlp if necessary."""
-        # check for file .ytdlp-update in the secrets folder
+    def check_for_extractor_updates(self):
+        """Checks whether yt-dlp or its plugins need updating and triggers a restart if so."""
         if self.ytdlp_update_interval < 0:
             return
 
-        use_secrets = os.path.exists("secrets")
-        path = os.path.join("secrets" if use_secrets else "", ".ytdlp-update")
-        next_update_check = None
-        if os.path.exists(path):
-            with open(path, "r") as f:
-                next_update_check = datetime.datetime.fromisoformat(f.read())
+        update_file = os.path.join("secrets" if os.path.exists("secrets") else "", ".ytdlp-update")
+        next_check = None
+        if os.path.exists(update_file):
+            with open(update_file, "r") as f:
+                next_check = datetime.datetime.fromisoformat(f.read())
 
-        if not next_update_check or next_update_check < datetime.datetime.now():
-            updated = self.update_ytdlp()
+        if next_check and next_check > datetime.datetime.now():
+            return
 
-            next_update_check = datetime.datetime.now() + datetime.timedelta(days=self.ytdlp_update_interval)
-            with open(path, "w") as f:
-                f.write(next_update_check.isoformat())
+        yt_dlp_updated = self.update_package("yt-dlp")
+        bgutil_updated = self.update_package("bgutil-ytdlp-pot-provider")
 
-            if not updated:
-                return
+        # Write the new timestamp
+        with open(update_file, "w") as f:
+            next_check = datetime.datetime.now() + datetime.timedelta(days=self.ytdlp_update_interval)
+            f.write(next_check.isoformat())
 
+        if yt_dlp_updated or bgutil_updated:
             if os.environ.get("AUTO_ARCHIVER_ALLOW_RESTART", "1") != "1":
-                logger.warning(
-                    "yt-dlp has been updated. Auto archiver should be restarted for these changes to take effect"
-                )
+                logger.warning("yt-dlp or plugin was updated — please restart auto-archiver manually")
             else:
-                logger.warning("Restarting auto-archiver to apply yt-dlp update")
+                logger.warning("yt-dlp or plugin was updated — restarting auto-archiver")
                 logger.warning(" ======= RESTARTING ======= ")
                 os.execv(sys.executable, [sys.executable] + sys.argv)
 
-    def update_ytdlp(self):
-        logger.info("Checking and updating yt-dlp...")
-        logger.info(
-            f"Tip: change the 'ytdlp_update_interval' setting to control how often yt-dlp is updated. Set to -1 to disable or 0 to enable on every run. Current setting: {self.ytdlp_update_interval}"
-        )
+    def update_package(self, package_name: str) -> bool:
+        logger.info(f"Checking and updating {package_name}...")
         from importlib.metadata import version as get_version
 
-        old_version = get_version("yt-dlp")
+        old_version = get_version(package_name)
         try:
-            # try and update with pip (this works inside poetry environment and in a normal virtualenv)
-            result = subprocess.run(["pip", "install", "--upgrade", "yt-dlp"], check=True, capture_output=True)
-
-            if "Successfully installed yt-dlp" in result.stdout.decode():
-                new_version = importlib.metadata.version("yt-dlp")
-                logger.info(f"yt-dlp successfully (from {old_version} to {new_version})")
+            result = subprocess.run(["pip", "install", "--upgrade", package_name], check=True, capture_output=True)
+            if f"Successfully installed {package_name}" in result.stdout.decode():
+                new_version = importlib.metadata.version(package_name)
+                logger.info(f"{package_name} updated from {old_version} to {new_version}")
                 return True
-            else:
-                logger.info("yt-dlp already up to date")
-                return False
-
+            logger.info(f"{package_name} already up to date")
         except Exception as e:
-            logger.error(f"Error updating yt-dlp: {e}")
-            return False
+            logger.error(f"Error updating {package_name}: {e}")
+        return False
+
 
     def setup_token_script(self):
         """Setup PO Token provider https://github.com/Brainicism/bgutil-ytdlp-pot-provider."""
@@ -99,6 +94,7 @@ class GenericExtractor(Extractor):
             # Use the PO Token script in yt-dlp to fetch tokens on demand.
             pot_script = os.path.join("scripts", "potoken_provider", "bgutil-provider", "build", "generate_once.js")
             self.extractor_args.setdefault("youtube", {})["getpot_bgutil_script"] = pot_script
+
 
     def suitable_extractors(self, url: str) -> Generator[str, None, None]:
         """
