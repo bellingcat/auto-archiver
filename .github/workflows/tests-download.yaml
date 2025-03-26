@@ -7,7 +7,7 @@ on:
   
   # For PRs, run the tests-core workflow first
   workflow_run:
-    workflows: ["Core Tests"]  # This should match the name of your tests-core workflow
+    workflows: ["Core Tests"]
     types:
       - completed
     branches: [main]
@@ -30,7 +30,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          # When triggered by workflow_run, we need to check out the PR code
           ref: ${{ github.event.workflow_run.head_branch || github.ref }}
 
       - name: Install poetry
