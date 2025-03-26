@@ -214,11 +214,8 @@ class LazyBaseModule:
 
         # check external dependencies are installed
         def check_deps(deps, check):
-            for dep in deps:
-                if not len(dep):
-                    # clear out any empty strings that a user may have erroneously added
-                    continue
-                if not check(dep):
+            for dep in filter(lambda d: len(d.strip()), deps):
+                if not check(dep.strip()):
                     logger.error(
                         f"Module '{self.name}' requires external dependency '{dep}' which is not available/setup. \
                                  Have you installed the required dependencies for the '{self.name}' module? See the documentation for more information."
