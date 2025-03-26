@@ -237,3 +237,23 @@ def test_wrong_step_type(test_args, caplog):
     with pytest.raises(SetupError) as err:
         orchestrator.setup(args)
         assert "Module 'example_extractor' is not a feeder" in str(err.value)
+
+
+def test_load_failed_extractor_cleanup(test_args, mocker, caplog):
+    orchestrator = ArchivingOrchestrator()
+
+    # hack to set up the paths so we can patch properly
+    orchestrator.module_factory.setup_paths([TEST_MODULES])
+
+    # patch example_module.setup to throw an exception
+    mocker.patch(
+        "auto_archiver.modules.example_extractor.example_extractor.ExampleExtractor.setup",
+        side_effect=Exception("Test exception"),
+    )
+
+    with pytest.raises(Exception):
+        orchestrator.setup(test_args + ["--extractors", "example_extractor"])
+
+    assert "Error during setup of modules: Test exception" in caplog.text
+    # make sure the 'cleanup' is called
+    assert "cleanup" in caplog.text
