@@ -3,30 +3,38 @@
     "type": ["enricher"],
     "requires_setup": True,
     "dependencies": {
-        "python": ["loguru", "slugify", "tsp_client", "asn1crypto", "certvalidator", "certifi"],
+        "python": ["loguru", "slugify", "cryptography", "rfc3161_client", "certifi"],
     },
     "configs": {
         "tsa_urls": {
             "default": [
-                # [Adobe Approved Trust List] and [Windows Cert Store]
-                "http://timestamp.digicert.com",
-                "http://timestamp.identrust.com",
-                # "https://timestamp.entrust.net/TSS/RFC3161sha2TS", # not valid for timestamping
-                # "https://timestamp.sectigo.com", # wait 15 seconds between each request.
-                # [Adobe: European Union Trusted Lists].
-                # "https://timestamp.sectigo.com/qualified", # wait 15 seconds between each request.
-                # [Windows Cert Store]
-                "http://timestamp.globalsign.com/tsa/r6advanced1",
-                # [Adobe: European Union Trusted Lists] and [Windows Cert Store]
-                # "http://ts.quovadisglobal.com/eu", # not valid for timestamping
-                # "http://tsa.belgium.be/connect", # self-signed certificate in certificate chain
-                # "https://timestamp.aped.gov.gr/qtss", # self-signed certificate in certificate chain
-                # "http://tsa.sep.bg", # self-signed certificate in certificate chain
-                # "http://tsa.izenpe.com", #unable to get local issuer certificate
-                # "http://kstamp.keynectis.com/KSign", # unable to get local issuer certificate
-                "http://tss.accv.es:8318/tsa",
-            ],
+                # See https://github.com/trailofbits/rfc3161-client/issues/46 for a list of valid TSAs
+                # Full list of TSAs: https://gist.github.com/Manouchehri/fd754e402d98430243455713efada710
+                    "http://timestamp.identrust.com",
+                    "http://timestamp.ssl.trustwave.com",
+                    "http://zeitstempel.dfn.de",
+                    "http://ts.ssl.com",
+                    # "http://tsa.izenpe.com", # self-signed
+                    "http://tsa.lex-persona.com/tsa",
+                    # "http://ca.signfiles.com/TSAServer.aspx", # self-signed
+                    # "http://tsa.sinpe.fi.cr/tsaHttp/", # self-signed
+                    # "http://tsa.cra.ge/signserver/tsa?workerName=qtsa", # self-signed
+                    "http://tss.cnbs.gob.hn/TSS/HttpTspServer",
+                    "http://dss.nowina.lu/pki-factory/tsa/good-tsa",
+                    # "https://freetsa.org/tsr", # self-signed
+                ],
             "help": "List of RFC3161 Time Stamp Authorities to use, separate with commas if passed via the command line.",
+        },
+        "cert_authorities": {
+            "default": None,
+            "help": "Path to a file containing trusted Certificate Authorities (CAs) in PEM format. If empty, the default system authorities are used.",
+            "type": "str",
+        },
+        "allow_selfsigned": {
+            "default": False,
+            "help": "Whether or not to allow and save self-signed Timestamping certificates. This allows for a greater range of timestamping servers to be used, \
+but they are not trusted authorities",
+            "type": "bool"
         }
     },
     "description": """

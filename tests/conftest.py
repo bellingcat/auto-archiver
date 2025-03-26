@@ -10,7 +10,7 @@ from typing import Dict, Tuple
 import hashlib
 
 import pytest
-from auto_archiver.core.metadata import Metadata
+from auto_archiver.core.metadata import Metadata, Media
 from auto_archiver.core.module import ModuleFactory
 
 # Test names inserted into this list will be run last. This is useful for expensive/costly tests
@@ -138,6 +138,14 @@ def mock_binary_dependencies(mocker):
     # Mock all binary dependencies as available
     mock_shutil_which.return_value = "/usr/bin/fake_binary"
     return mock_shutil_which
+
+
+@pytest.fixture
+def sample_media(tmp_path) -> Media:
+    """Fixture creating a Media object with temporary source file"""
+    src_file = tmp_path / "source.txt"
+    src_file.write_text("test content")
+    return Media(_key="subdir/test.txt", filename=str(src_file))
 
 
 @pytest.fixture
