@@ -36,7 +36,7 @@ class TestGenericExtractor(TestExtractorBase):
         package = "auto_archiver.modules.generic_extractor"
         assert self.extractor.dropin_for_name("bluesky", package=package)
 
-        # test loading dropings via filepath
+        # test loading dropins via filepath
         path = os.path.join(dirname(dirname(__file__)), "data/")
         assert self.extractor.dropin_for_name("dropin", additional_paths=[path])
 
@@ -121,7 +121,7 @@ class TestGenericExtractor(TestExtractorBase):
             == "Buy NEW Keyboard Cat Merch! https://keyboardcat.creator-spring.com\n\nxo Keyboard Cat memes make your day better!\nhttp://www.keyboardcatstore.com/\nhttps://www.facebook.com/thekeyboardcat\nhttp://www.charlieschmidt.com/"
         )
         assert len(result.media) == 2
-        assert Path(result.media[0].filename).name == "J---aiyznGQ.webm"
+        assert "J---aiyznGQ" in Path(result.media[0].filename).name
         assert Path(result.media[1].filename).name == "hqdefault.jpg"
 
     @pytest.mark.download

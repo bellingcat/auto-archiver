@@ -142,6 +142,7 @@ def unpickle():
 
 @pytest.fixture
 def mock_binary_dependencies(mocker):
+    mocker.patch("subprocess.run").return_value = mocker.Mock(returncode=0)
     mock_shutil_which = mocker.patch("shutil.which")
     # Mock all binary dependencies as available
     mock_shutil_which.return_value = "/usr/bin/fake_binary"
