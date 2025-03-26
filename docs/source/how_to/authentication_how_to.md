@@ -106,5 +106,6 @@ Finally,Some important things to remember:
 
 ## Authenticating on XXXX site with username/password
 
-```{note} This section is still under construction 🚧
+```{note} 
+This section is still under construction 🚧
 ```
