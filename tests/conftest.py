@@ -17,7 +17,16 @@ from auto_archiver.core.module import ModuleFactory
 # that you only want to run if everything else succeeds (e.g. API calls). The order here is important
 # what comes first will be run first (at the end of all other tests not mentioned)
 # format is the name of the module (python file) without the .py extension
-TESTS_TO_RUN_LAST = ["test_twitter_api_archiver"]
+TESTS_TO_RUN_LAST = ["test_generic_archiver", "test_twitter_api_archiver"]
+
+
+# don't check for ytdlp updates in tests
+@pytest.fixture(autouse=True)
+def skip_check_for_update(mocker):
+    update_ytdlp = mocker.patch(
+        "auto_archiver.modules.generic_extractor.generic_extractor.GenericExtractor.update_ytdlp"
+    )
+    update_ytdlp.return_value = False
 
 
 @pytest.fixture
