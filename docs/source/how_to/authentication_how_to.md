@@ -117,7 +117,7 @@ YouTube uses **Proof of Origin Tokens (POT)** as part of its bot detection syste
 
 yt-dlp provides [a detailed guide to POTs](https://github.com/yt-dlp/yt-dlp/wiki/PO-Token-Guide).
 
-### How we can add POTs to Auto Archiver
+### How Auto Archiver Uses POT
 This feature is enabled for the Generic Archiver via two yt-dlp plugins:
 
 - **Client-side plugin**: [yt-dlp-get-pot](https://github.com/coletdjnz/yt-dlp-get-pot)  
@@ -130,10 +130,16 @@ These are installed in our Poetry environment.
 
 ### Integration Methods
 
-**Docker**:
+**Docker (Recommended)**:
 
 When running the Auto Archiver using the Docker image, we use the [Node.js token generation script](https://github.com/Brainicism/bgutil-ytdlp-pot-provider/tree/master/server).
 This is to avoid managing a separate server process, and is handled automatically inside the Docker container when needed.
+
+This is already included in the Docker image, however if you need to disable this you can set the config option `bguils_po_token_method` under the `generic_extractor` section of your `orchestration.yaml` config file to "disabled".
+```yaml
+generic_extractor:
+  bguils_po_token_method: "disabled"
+```
 
 **PyPi/ Local**:
 
@@ -143,8 +149,8 @@ See the [bgutil-ytdlp-pot-provider](https://github.com/Brainicism/bgutil-ytdlp-p
 
 ⚠️WARNING⚠️: This will add the server scripts to the home directory of wherever this is running.
 
-- You can set the config option `"po_token_provider": true` under the `GenericExtractor` section of your config to "script" to enable the token generation script process locally.
-- Or you can run the bgutil-ytdlp-pot-provider server separately using their Docker image.
+- You can set the config option `bguils_po_token_method` under the `generic_extractor` section of your `orchestration.yaml` config file to "script" to enable the token generation script process locally.
+- Alternatively you can run the bgutil-ytdlp-pot-provider server separately using their Docker image or Node.js server.
 
 ### Notes
 
@@ -153,12 +159,26 @@ See the [bgutil-ytdlp-pot-provider](https://github.com/Brainicism/bgutil-ytdlp-p
 - If you're running locally, you'll need to run the setup script manually or enable the feature in your config.
 - You can set up both the server and the script, and the plugin will fallback on each other if needed. This is recommended for robustness!
 
-Configurations: 
-- **default**: In Docker this downloads, transpiles and creates a token generation script. Locally it does nothing. If you are running the bgutil-ytdlp-pot-provider server via Docker you can choose this.
-- **script**: Download and create the node script, even outside of Docker.
-- **disabled**: Disable POT generation, even in docker.
+### Configurations: 
 
-### Advanced Configuration
+## Configurations Summary
+
+| Option     | Behavior                                                                                                                                   | Docker Default? |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------ | --------------- |
+| `default`  | Docker: Automatically downloads and uses the token generation script. Local: Does nothing; assumes a separate server is running externally. | ✅ Yes           |
+| `script`   | Explicitly downloads and uses the token generation script, even locally.                                                                   | ❌ No            |
+| `disabled` | Disables token generation completely.                                                                                                      | ❌ No            |
+
+Example configuration:
+
+ 
+```yaml
+generic_extractor:
+  # ...  
+  bguils_po_token_method: "script"
+```
+
+**Advanced Configuration:**
 
 If you change the default port of the bgutil-ytdlp-pot-provider server, you can pass the updated values using our `extractor_args` option for the gereric extractor.
 
