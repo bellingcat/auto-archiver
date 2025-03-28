@@ -1,6 +1,6 @@
 # InstagrAPI Server
 
-The instagram API Extractor requires a running instance of the InstagrAPI server. 
+The instagram API Extractor requires access to a running instance of the InstagrAPI server. 
 We have a lightweight script with the endpoints required for our Instagram API Extractor module which you can run locally, or via Docker.
 
 To run this you need to install some additional requirements.
@@ -11,7 +11,8 @@ Although there is an option to run the server in a Docker container, the authent
 
 ⚠️ Warning: Remember that it's best not to use your own personal account for archiving. [Here's why](../installation/authentication.md#recommendations-for-authentication).
 
-## Overview: How the Setup Works
+
+### Overview: How the Setup Works
 
 1. You enter your Instagram credentials in a local `.env` file
 2. You run the server **once locally** to generate a session file
@@ -21,8 +22,8 @@ Although there is an option to run the server in a Docker container, the authent
 
 ## 1. One-Time Local Setup 
 
-This generates a session file using your login details so Instagram recognises your login. 
-This will be reused automatically by the script, and can also be passed to the Docker container.
+This generates a session file using your login details so Instagram recognises your login as authentic. 
+This will be reused automatically by the server script, and can also be passed to the Docker container.
 
 ### 🔧 Step-by-step:
 
@@ -103,7 +104,7 @@ docker run -d \
   instagrapi-server
 ```
 
-This passes the /secrets/ directory to docker, so it can use your saved session file and credentials.
+This passes the /secrets/ directory to docker, which should contain the session file created from the first local run.
 
 ---
 
