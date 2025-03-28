@@ -309,13 +309,13 @@ class TestGenericExtractorPoToken:
         extractor.setup_token_generation_script.assert_not_called()
 
     def test_po_token_default_in_docker_calls_setup(self, extractor, mocker):
-        extractor.bguils_po_token_method = "default"
+        extractor.bguils_po_token_method = "auto"
         mocker.patch.dict(os.environ, {"RUNNING_IN_DOCKER": "1"})
         extractor.setup_po_tokens()
         extractor.setup_token_generation_script.assert_called_once()
 
     def test_po_token_default_local_does_not_call_setup(self, extractor, caplog, mocker):
-        extractor.bguils_po_token_method = "default"
+        extractor.bguils_po_token_method = "auto"
         # clears env vars for this test
         mocker.patch.dict(os.environ, {}, clear=True)
         extractor.setup_po_tokens()
