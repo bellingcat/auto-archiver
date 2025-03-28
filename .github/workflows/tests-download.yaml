@@ -1,20 +1,15 @@
 name: Download Tests
 
 on:
-  # Schedule this workflow to run every Monday at 14:35 UTC
   schedule:
     - cron: '35 14 * * 1'
-  
-  # For PRs, run the tests-core workflow first
-  workflow_run:
-    workflows: ["Core Tests"]
-    types:
-      - completed
+  pull_request:
+    branches: [ main ]
+    paths:
+      - src/**
 
 jobs:
   tests:
-    # Only run if the triggering workflow (tests-core) succeeded
-    if: ${{ github.event_name == 'schedule' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
@@ -26,11 +21,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-        with:
-          # For PRs, use the head commit SHA from the triggering workflow
-          ref: ${{ github.event.workflow_run.head_sha || github.ref }}
-          # If PR is from a fork, we need fetch-depth: 0
-          fetch-depth: ${{ github.event.workflow_run.head_repository.fork && '0' || '1' }}
 
       - name: Install poetry
         run: pipx install poetry
