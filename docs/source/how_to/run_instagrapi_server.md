@@ -61,7 +61,7 @@ This will be reused automatically by the server script, and can also be passed t
 
 The server should now be running within that session, and accessible at  http://127.0.0.1:8000 
 
-You can set this in the orchestration.yaml file like this:
+You can set this in the Auto Archiver orchestration.yaml file like this:
 ```yaml
 instagram_api_extractor:
   api_endpoint: http://127.0.0.1:8000
