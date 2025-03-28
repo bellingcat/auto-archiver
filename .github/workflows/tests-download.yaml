@@ -40,6 +40,9 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           cache: 'poetry'
+          cache-dependency-path: |
+            poetry.lock
+            /etc/os-release
 
       - name: Install dependencies
         run: poetry install --no-interaction --with dev
