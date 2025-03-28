@@ -1,0 +1,18 @@
+[project]
+name = "instaserver"
+version = "0.1.0"
+description = "A FastAPI InstagrAPI server"
+package-mode = false
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi (>=0.115.12,<0.116.0)",
+    "instagrapi (>=2.1.3,<3.0.0)",
+    "uvicorn (>=0.34.0,<0.35.0)",
+    "pillow (>=11.1.0,<12.0.0)",
+    "python-dotenv (>=1.1.0,<2.0.0)"
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
