@@ -31,9 +31,11 @@
         },
     },
     "description": """
-Archives various types of Instagram content using the Instagrapi API.
+Archives Instagram content using a deployment of the [Instagrapi API](https://subzeroid.github.io/instagrapi/).
 
-Requires setting up an Instagrapi API deployment and providing an access token and API endpoint.
+Requires either getting a token from using a hosted [(paid) service](https://api.instagrapi.com/docs) and setting this in the configuration file.
+Alternatively you can run your own server. We have a basic script which you can use for this which can be ran locally or using Docker.
+For more information, read the [how to guide](https://auto-archiver.readthedocs.io/en/latest/how_to/run_instagrapi_server.html) on this.
 
 ### Features
 - Connects to an Instagrapi API deployment to fetch Instagram profiles, posts, stories, highlights, reels, and tagged content.
