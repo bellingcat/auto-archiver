@@ -3,13 +3,37 @@
 The instagram API Extractor requires access to a running instance of the InstagrAPI server. 
 We have a lightweight script with the endpoints required for our Instagram API Extractor module which you can run locally, or via Docker.
 
-To run this you need to install some additional requirements.
 
-## Setup
-
-Although there is an option to run the server in a Docker container, the authentication is usually rejected without an additional session file, which can be created by running the server locally first.
 
 ⚠️ Warning: Remember that it's best not to use your own personal account for archiving. [Here's why](../installation/authentication.md#recommendations-for-authentication).
+## Quick Start: Using Docker
+
+We've provided a convenient shell script (`run_instagrapi_server.sh`) that simplifies the process of setting up and running the Instagrapi server in Docker. This script handles building the Docker image, setting up credentials, and starting the container.
+
+### 🔧 Running the script:
+
+Run this script either from the repository root or from within the `scripts/instagrapi_server` directory:
+
+```bash
+./scripts/instagrapi_server/run_instagrapi_server.sh
+```
+
+This script will:
+- Prompt for your Instagram username and password.
+- Create the necessary `.env` file.
+- Build the Docker image.
+- Start the Docker container and authenticate with Instagram, creating a session automatically.
+
+### ⏱ To run the server again later:
+```bash
+docker start ig-instasrv
+```
+
+### 🐛 Debugging:
+View logs:
+```bash
+docker logs ig-instasrv
+```
 
 
 ### Overview: How the Setup Works
@@ -20,12 +44,10 @@ Although there is an option to run the server in a Docker container, the authent
 
 ---
 
-## 1. One-Time Local Setup 
+## Optional: Manual / Local Setup
 
-This generates a session file using your login details so Instagram recognises your login as authentic. 
-This will be reused automatically by the server script, and can also be passed to the Docker container.
+If you'd prefer to run the server manually (without Docker), you can follow these steps:
 
-### 🔧 Step-by-step:
 
 1. **Navigate to the server folder (and stay there for the rest of this guide)**:
    ```bash
@@ -59,6 +81,17 @@ This will be reused automatically by the server script, and can also be passed t
    Login successful, session saved.
    ```
 
+✅ Your session is now saved to `secrets/instagrapi_session.json`.
+
+### To run it again locally:
+```bash
+poetry run uvicorn src.instaserver:app --port 8000
+```
+
+---
+
+## Adding the API Endpoint to Auto Archiver
+
 The server should now be running within that session, and accessible at  http://127.0.0.1:8000 
 
 You can set this in the Auto Archiver orchestration.yaml file like this:
@@ -67,10 +100,6 @@ instagram_api_extractor:
   api_endpoint: http://127.0.0.1:8000
 ```
 
-Or to run it in a Docker container, you can pass the session file to it now.
-**Stop the server** (`Ctrl+C`).
-
-📅 Your session has now been saved to `secrets/instagrapi_session.json`.
 
 ---
 
@@ -85,11 +114,11 @@ poetry run uvicorn src.instgrapinstance.instaserver:app --port 8000
 
 ---
 
-## 3. Running via Docker (After Setup to create the session file)
+## 3. Running via Docker (After Setup is Complete, either locally or via the script)
 
-Once the session file exists, you can pass this to docker Docker and it should authenticate successfully.
+Once the `instagrapi_session.json` and `.env` files are set up, you can pass them Docker and it should authenticate successfully.
 
-### 🔨 Build the Docker image:
+### 🔨 Build the Docker image manually:
 ```bash
 docker build -t instagrapi-server .
 ```
@@ -104,7 +133,9 @@ docker run -d \
   instagrapi-server
 ```
 
-This passes the /secrets/ directory to docker, which should contain the session file created from the first local run.
+This passes the /secrets/ directory to docker as well as the environment variables from the `.env` file.
+
+
 
 ---
 
@@ -134,6 +165,5 @@ docker start ig-instasrv
 
 ##  Notes
 
-- You only need to run the server **locally once** to generate a session.
 - Never share your `.env` or `instagrapi_session.json` — these contain sensitive login data. 
 - If you want to reset your session, simply delete the `secrets/instagrapi_session.json` file and re-run the local server.
