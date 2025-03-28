@@ -88,7 +88,7 @@ class GenericExtractor(Extractor):
             logger.warning("Proof of Origin Token generation is disabled.")
             return
 
-        if self.bguils_po_token_method == "default" and not in_docker:
+        if self.bguils_po_token_method == "auto" and not in_docker:
             logger.info(
                 "Proof of Origin Token method not explicitly set. "
                 "If you're running an external HTTP server separately, you can safely ignore this message. "

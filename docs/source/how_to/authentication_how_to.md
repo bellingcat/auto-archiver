@@ -164,8 +164,8 @@ See the [bgutil-ytdlp-pot-provider](https://github.com/Brainicism/bgutil-ytdlp-p
 ## Configurations Summary
 
 | Option     | Behavior                                                                                                                                   | Docker Default? |
-| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------ | --------------- |
-| `default`  | Docker: Automatically downloads and uses the token generation script. Local: Does nothing; assumes a separate server is running externally. | ✅ Yes           |
+|------------| ------------------------------------------------------------------------------------------------------------------------------------------ | --------------- |
+| `auto`     | Docker: Automatically downloads and uses the token generation script. Local: Does nothing; assumes a separate server is running externally. | ✅ Yes           |
 | `script`   | Explicitly downloads and uses the token generation script, even locally.                                                                   | ❌ No            |
 | `disabled` | Disables token generation completely.                                                                                                      | ❌ No            |
 
@@ -176,6 +176,9 @@ Example configuration:
 generic_extractor:
   # ...  
   bguils_po_token_method: "script"
+  # For debugging add the verbose flag here:
+  ytdlp_args: "--no-abort-on-error --abort-on-error --verbose"
+
 ```
 
 **Advanced Configuration:**
