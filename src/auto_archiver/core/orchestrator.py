@@ -387,8 +387,10 @@ Here's how that would look: \n\nsteps:\n  extractors:\n  - [your_extractor_name_
                 except (KeyboardInterrupt, Exception) as e:
                     if not isinstance(e, KeyboardInterrupt) and not isinstance(e, SetupError):
                         logger.error(f"Error during setup of modules: {e}\n{traceback.format_exc()}")
-                    if loaded_module and module_type == "extractor":
-                        loaded_module.cleanup()
+
+                    # access the _instance here because loaded_module may not return if there's an error
+                    if lazy_module._instance and module_type == "extractor":
+                        lazy_module._instance.cleanup()
                     raise e
 
                 if not loaded_module:

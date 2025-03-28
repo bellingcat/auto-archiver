@@ -4,12 +4,6 @@ import argparse
 import json
 
 
-def example_validator(value):
-    if "example" not in value:
-        raise argparse.ArgumentTypeError(f"{value} is not a valid value for this argument")
-    return value
-
-
 def positive_number(value):
     if value < 0:
         raise argparse.ArgumentTypeError(f"{value} is not a positive number")

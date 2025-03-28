@@ -19,7 +19,7 @@
         },
         "session_file": {
             "default": "secrets/anon",
-            "help": "optional, records the telegram login session for future usage, '.session' will be appended to the provided value.",
+            "help": "Path of the file to save the telegram login session for future usage, '.session' will be appended to the provided path.",
         },
         "join_channels": {
             "default": True,
