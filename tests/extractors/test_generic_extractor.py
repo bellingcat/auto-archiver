@@ -331,4 +331,3 @@ class TestGenericExtractorPoToken:
         extractor.in_docker = True
         extractor.setup_po_tokens()
         extractor.setup_token_generation_script.assert_called_once()
-
