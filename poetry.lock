@@ -159,6 +159,21 @@ html5lib = ["html5lib"]
 lxml = ["lxml"]
 
 [[package]]
+name = "bgutil-ytdlp-pot-provider"
+version = "0.7.4"
+description = ""
+optional = false
+python-versions = ">=3.8"
+groups = ["main"]
+files = [
+    {file = "bgutil_ytdlp_pot_provider-0.7.4-py3-none-any.whl", hash = "sha256:5f0b1d884fec66dff703c421ea06f5fc9b11022d9c0babdaa0cab13ed99b9d77"},
+    {file = "bgutil_ytdlp_pot_provider-0.7.4.tar.gz", hash = "sha256:b6c1462b8f979540078085cd82462ef967b8b70cd0810d469243a31f5081e5c6"},
+]
+
+[package.dependencies]
+yt-dlp-get-pot = ">=0.1.1"
+
+[[package]]
 name = "boto3"
 version = "1.37.18"
 description = "The AWS SDK for Python"
@@ -2266,23 +2281,6 @@ files = [
 rich = ">=11.0.0"
 
 [[package]]
-name = "roman-numerals-py"
-version = "3.1.0"
-description = "Manipulate well-formed Roman numerals"
-optional = false
-python-versions = ">=3.9"
-groups = ["docs"]
-markers = "python_version >= \"3.12\""
-files = [
-    {file = "roman_numerals_py-3.1.0-py3-none-any.whl", hash = "sha256:9da2ad2fb670bcf24e81070ceb3be72f6c11c440d73bd579fbeca1e9f330954c"},
-    {file = "roman_numerals_py-3.1.0.tar.gz", hash = "sha256:be4bf804f083a4ce001b5eb7e3c0862479d10f94c936f6c4e5f250aa5ff5bd2d"},
-]
-
-[package.extras]
-lint = ["mypy (==1.15.0)", "pyright (==1.1.394)", "ruff (==0.9.7)"]
-test = ["pytest (>=8)"]
-
-[[package]]
 name = "rsa"
 version = "4.9"
 description = "Pure-Python RSA implementation"
@@ -2506,7 +2504,6 @@ description = "Python documentation generator"
 optional = false
 python-versions = ">=3.10"
 groups = ["docs"]
-markers = "python_version < \"3.12\""
 files = [
     {file = "sphinx-8.1.3-py3-none-any.whl", hash = "sha256:09719015511837b76bf6e03e42eb7595ac8c2e41eeb9c29c5b755c6b677992a2"},
     {file = "sphinx-8.1.3.tar.gz", hash = "sha256:43c1911eecb0d3e161ad78611bc905d1ad0e523e4ddc202a58a821773dc4c927"},
@@ -2535,43 +2532,6 @@ tomli = {version = ">=2", markers = "python_version < \"3.11\""}
 docs = ["sphinxcontrib-websupport"]
 lint = ["flake8 (>=6.0)", "mypy (==1.11.1)", "pyright (==1.1.384)", "pytest (>=6.0)", "ruff (==0.6.9)", "sphinx-lint (>=0.9)", "tomli (>=2)", "types-Pillow (==10.2.0.20240822)", "types-Pygments (==2.18.0.20240506)", "types-colorama (==0.4.15.20240311)", "types-defusedxml (==0.7.0.20240218)", "types-docutils (==0.21.0.20241005)", "types-requests (==2.32.0.20240914)", "types-urllib3 (==1.26.25.14)"]
 test = ["cython (>=3.0)", "defusedxml (>=0.7.1)", "pytest (>=8.0)", "setuptools (>=70.0)", "typing_extensions (>=4.9)"]
-
-[[package]]
-name = "sphinx"
-version = "8.2.3"
-description = "Python documentation generator"
-optional = false
-python-versions = ">=3.11"
-groups = ["docs"]
-markers = "python_version >= \"3.12\""
-files = [
-    {file = "sphinx-8.2.3-py3-none-any.whl", hash = "sha256:4405915165f13521d875a8c29c8970800a0141c14cc5416a38feca4ea5d9b9c3"},
-    {file = "sphinx-8.2.3.tar.gz", hash = "sha256:398ad29dee7f63a75888314e9424d40f52ce5a6a87ae88e7071e80af296ec348"},
-]
-
-[package.dependencies]
-alabaster = ">=0.7.14"
-babel = ">=2.13"
-colorama = {version = ">=0.4.6", markers = "sys_platform == \"win32\""}
-docutils = ">=0.20,<0.22"
-imagesize = ">=1.3"
-Jinja2 = ">=3.1"
-packaging = ">=23.0"
-Pygments = ">=2.17"
-requests = ">=2.30.0"
-roman-numerals-py = ">=1.0.0"
-snowballstemmer = ">=2.2"
-sphinxcontrib-applehelp = ">=1.0.7"
-sphinxcontrib-devhelp = ">=1.0.6"
-sphinxcontrib-htmlhelp = ">=2.0.6"
-sphinxcontrib-jsmath = ">=1.0.1"
-sphinxcontrib-qthelp = ">=1.0.6"
-sphinxcontrib-serializinghtml = ">=1.1.9"
-
-[package.extras]
-docs = ["sphinxcontrib-websupport"]
-lint = ["betterproto (==2.0.0b6)", "mypy (==1.15.0)", "pypi-attestations (==0.0.21)", "pyright (==1.1.395)", "pytest (>=8.0)", "ruff (==0.9.9)", "sphinx-lint (>=0.9)", "types-Pillow (==10.2.0.20240822)", "types-Pygments (==2.19.0.20250219)", "types-colorama (==0.4.15.20240311)", "types-defusedxml (==0.7.0.20240218)", "types-docutils (==0.21.0.20241128)", "types-requests (==2.32.0.20241016)", "types-urllib3 (==1.26.25.14)"]
-test = ["cython (>=3.0)", "defusedxml (>=0.7.1)", "pytest (>=8.0)", "pytest-xdist[psutil] (>=3.4)", "setuptools (>=70.0)", "typing_extensions (>=4.9)"]
 
 [[package]]
 name = "sphinx-autoapi"
@@ -3376,7 +3336,19 @@ secretstorage = ["cffi", "secretstorage"]
 static-analysis = ["autopep8 (>=2.0,<3.0)", "ruff (>=0.11.0,<0.12.0)"]
 test = ["pytest (>=8.1,<9.0)", "pytest-rerunfailures (>=14.0,<15.0)"]
 
+[[package]]
+name = "yt-dlp-get-pot"
+version = "0.3.0"
+description = ""
+optional = false
+python-versions = ">=3.9"
+groups = ["main"]
+files = [
+    {file = "yt_dlp_get_pot-0.3.0-py3-none-any.whl", hash = "sha256:a49a596a3e3c02cd9ce051192ea3fe8168cf24ece8954bed6aa331a87d86954f"},
+    {file = "yt_dlp_get_pot-0.3.0.tar.gz", hash = "sha256:ac9530b9e7b3d667235b9119da475f595d2dc7e6f6bbf98b965011be454e8833"},
+]
+
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10,<3.13"
-content-hash = "ac5d473189adbadb3ee5d8a36e1898a39725755704e0677768303ae46bc246c8"
+content-hash = "c612e9f98ca5199092141bb04a0de4cd5314a8fdc8cb12c1d63eafe26bbf16aa"

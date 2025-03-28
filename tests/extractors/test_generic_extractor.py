@@ -29,6 +29,7 @@ class TestGenericExtractor(TestExtractorBase):
         "proxy": None,
         "cookies_from_browser": False,
         "cookie_file": None,
+        "pot_provider": False,
     }
 
     def test_load_dropin(self):
@@ -291,3 +292,42 @@ class TestGenericExtractor(TestExtractorBase):
         post = self.extractor.download(make_item(url))
         assert "Bellingcat researcher Kolina Koltai delves deeper into Clothoff" in post.get("content")
         assert post.get_title() == "Bellingcat"
+
+
+class TestGenericExtractorPoToken:
+    @pytest.fixture
+    def extractor(self, mocker):
+        extractor = GenericExtractor()
+        extractor.extractor_args = {}
+        extractor.setup_token_generation_script = mocker.Mock()
+        return extractor
+
+    def test_po_token_disabled_does_not_call_setup(self, extractor):
+        extractor.bguils_po_token_method = "disabled"
+        extractor.in_docker = True
+        extractor.setup_po_tokens()
+        extractor.setup_token_generation_script.assert_not_called()
+
+    def test_po_token_default_in_docker_calls_setup(self, extractor, mocker):
+        extractor.bguils_po_token_method = "auto"
+        mocker.patch.dict(os.environ, {"RUNNING_IN_DOCKER": "1"})
+        extractor.setup_po_tokens()
+        extractor.setup_token_generation_script.assert_called_once()
+
+    def test_po_token_default_local_does_not_call_setup(self, extractor, caplog, mocker):
+        extractor.bguils_po_token_method = "auto"
+        # clears env vars for this test
+        mocker.patch.dict(os.environ, {}, clear=True)
+        extractor.setup_po_tokens()
+        extractor.setup_token_generation_script.assert_not_called()
+        assert "Proof of Origin Token method not explicitly set" in caplog.text
+
+    def test_po_token_script_always_calls_setup(self, extractor):
+        extractor.bguils_po_token_method = "script"
+        extractor.in_docker = False
+        extractor.setup_po_tokens()
+        extractor.setup_token_generation_script.assert_called_once()
+        extractor.setup_token_generation_script.reset_mock()
+        extractor.in_docker = True
+        extractor.setup_po_tokens()
+        extractor.setup_token_generation_script.assert_called_once()

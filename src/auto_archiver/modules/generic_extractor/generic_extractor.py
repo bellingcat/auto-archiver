@@ -1,10 +1,13 @@
+import shutil
 import sys
 import datetime
 import os
 import importlib
 import subprocess
+import zipfile
 
 from typing import Generator, Type
+from urllib.request import urlretrieve
 
 import yt_dlp
 from yt_dlp.extractor.common import InfoExtractor
@@ -26,59 +29,138 @@ class GenericExtractor(Extractor):
     _dropins = {}
 
     def setup(self):
-        # check for file .ytdlp-update in the secrets folder
+        self.check_for_extractor_updates()
+        self.setup_po_tokens()
+
+    def check_for_extractor_updates(self):
+        """Checks whether yt-dlp or its plugins need updating and triggers a restart if so."""
         if self.ytdlp_update_interval < 0:
             return
 
-        use_secrets = os.path.exists("secrets")
-        path = os.path.join("secrets" if use_secrets else "", ".ytdlp-update")
-        next_update_check = None
-        if os.path.exists(path):
-            with open(path, "r") as f:
-                next_update_check = datetime.datetime.fromisoformat(f.read())
+        update_file = os.path.join("secrets" if os.path.exists("secrets") else "", ".ytdlp-update")
+        next_check = None
+        if os.path.exists(update_file):
+            with open(update_file, "r") as f:
+                next_check = datetime.datetime.fromisoformat(f.read())
 
-        if not next_update_check or next_update_check < datetime.datetime.now():
-            updated = self.update_ytdlp()
+        if next_check and next_check > datetime.datetime.now():
+            return
 
-            next_update_check = datetime.datetime.now() + datetime.timedelta(days=self.ytdlp_update_interval)
-            with open(path, "w") as f:
-                f.write(next_update_check.isoformat())
+        yt_dlp_updated = self.update_package("yt-dlp")
+        bgutil_updated = self.update_package("bgutil-ytdlp-pot-provider")
 
-            if not updated:
-                return
+        # Write the new timestamp
+        with open(update_file, "w") as f:
+            next_check = datetime.datetime.now() + datetime.timedelta(days=self.ytdlp_update_interval)
+            f.write(next_check.isoformat())
 
+        if yt_dlp_updated or bgutil_updated:
             if os.environ.get("AUTO_ARCHIVER_ALLOW_RESTART", "1") != "1":
-                logger.warning(
-                    "yt-dlp has been updated. Auto archiver should be restarted for these changes to take effect"
-                )
+                logger.warning("yt-dlp or plugin was updated — please restart auto-archiver manually")
             else:
-                logger.warning("Restarting auto-archiver to apply yt-dlp update")
+                logger.warning("yt-dlp or plugin was updated — restarting auto-archiver")
                 logger.warning(" ======= RESTARTING ======= ")
                 os.execv(sys.executable, [sys.executable] + sys.argv)
 
-    def update_ytdlp(self):
-        logger.info("Checking and updating yt-dlp...")
-        logger.info(
-            f"Tip: change the 'ytdlp_update_interval' setting to control how often yt-dlp is updated. Set to -1 to disable or 0 to enable on every run. Current setting: {self.ytdlp_update_interval}"
-        )
+    def update_package(self, package_name: str) -> bool:
+        logger.info(f"Checking and updating {package_name}...")
         from importlib.metadata import version as get_version
 
-        old_version = get_version("yt-dlp")
+        old_version = get_version(package_name)
         try:
-            # try and update with pip (this works inside poetry environment and in a normal virtualenv)
-            result = subprocess.run(["pip", "install", "--upgrade", "yt-dlp"], check=True, capture_output=True)
-
-            if "Successfully installed yt-dlp" in result.stdout.decode():
-                new_version = importlib.metadata.version("yt-dlp")
-                logger.info(f"yt-dlp successfully (from {old_version} to {new_version})")
+            result = subprocess.run(["pip", "install", "--upgrade", package_name], check=True, capture_output=True)
+            if f"Successfully installed {package_name}" in result.stdout.decode():
+                new_version = importlib.metadata.version(package_name)
+                logger.info(f"{package_name} updated from {old_version} to {new_version}")
                 return True
+            logger.info(f"{package_name} already up to date")
+        except Exception as e:
+            logger.error(f"Error updating {package_name}: {e}")
+        return False
+
+    def setup_po_tokens(self) -> None:
+        """Setup Proof of Origin Token method conditionally.
+        Uses provider: https://github.com/Brainicism/bgutil-ytdlp-pot-provider.
+        """
+        in_docker = os.environ.get("RUNNING_IN_DOCKER")
+        if self.bguils_po_token_method == "disabled":
+            # This allows disabling of the PO Token generation script in the Docker implementation.
+            logger.warning("Proof of Origin Token generation is disabled.")
+            return
+
+        if self.bguils_po_token_method == "auto" and not in_docker:
+            logger.info(
+                "Proof of Origin Token method not explicitly set. "
+                "If you're running an external HTTP server separately, you can safely ignore this message. "
+                "To reduce the likelihood of bot detection, enable one of the methods described in the documentation: "
+                "https://auto-archiver.readthedocs.io/en/settings_page/installation/authentication.html#proof-of-origin-tokens"
+            )
+            return
+
+        # Either running in Docker, or "script" method is set beyond this point
+        self.setup_token_generation_script()
+
+    def setup_token_generation_script(self) -> None:
+        """This function sets up the Proof of Origin Token generation script method for
+        bgutil-ytdlp-pot-provider if enabled or in Docker."""
+        missing_tools = [tool for tool in ("node", "yarn", "npx") if shutil.which(tool) is None]
+        if missing_tools:
+            logger.error(
+                f"Cannot set up PO Token script; missing required tools: {', '.join(missing_tools)}. "
+                "Install these tools or run bgutils via Docker. "
+                "See: https://github.com/Brainicism/bgutil-ytdlp-pot-provider"
+            )
+            return
+        try:
+            from importlib.metadata import version as get_version
+
+            plugin_version = get_version("bgutil-ytdlp-pot-provider")
+            base_dir = os.path.expanduser("~/bgutil-ytdlp-pot-provider")
+            server_dir = os.path.join(base_dir, "server")
+            version_file = os.path.join(server_dir, ".VERSION")
+            transpiled_script = os.path.join(server_dir, "build", "generate_once.js")
+
+            # Skip setup if version is correct and transpiled script exists
+            if os.path.isfile(transpiled_script) and os.path.isfile(version_file):
+                with open(version_file) as vf:
+                    if vf.read().strip() == plugin_version:
+                        logger.info("PO Token script already set up and up to date.")
             else:
-                logger.info("yt-dlp already up to date")
-                return False
+                # Remove an outdated directory and pull a new version
+                if os.path.exists(base_dir):
+                    shutil.rmtree(base_dir)
+                os.makedirs(base_dir, exist_ok=True)
+
+                zip_url = (
+                    f"https://github.com/Brainicism/bgutil-ytdlp-pot-provider/archive/refs/tags/{plugin_version}.zip"
+                )
+                zip_path = os.path.join(base_dir, f"{plugin_version}.zip")
+                logger.info(f"Downloading bgutils release zip for version {plugin_version}...")
+                urlretrieve(zip_url, zip_path)
+                with zipfile.ZipFile(zip_path, "r") as z:
+                    z.extractall(base_dir)
+                os.remove(zip_path)
+
+                extracted_root = os.path.join(base_dir, f"bgutil-ytdlp-pot-provider-{plugin_version}")
+                shutil.move(os.path.join(extracted_root, "server"), server_dir)
+                shutil.rmtree(extracted_root)
+                logger.info("Installing dependencies and transpiling PoT Generator script...")
+                subprocess.run(["yarn", "install", "--frozen-lockfile"], cwd=server_dir, check=True)
+                subprocess.run(["npx", "tsc"], cwd=server_dir, check=True)
+
+                with open(version_file, "w") as vf:
+                    vf.write(plugin_version)
+
+            script_path = os.path.join(server_dir, "build", "generate_once.js")
+            if not os.path.exists(script_path):
+                logger.error("generate_once.js not found after transpilation.")
+                return
+
+            self.extractor_args.setdefault("youtube", {})["getpot_bgutil_script"] = script_path
+            logger.info(f"PO Token script configured at: {script_path}")
 
         except Exception as e:
-            logger.error(f"Error updating yt-dlp: {e}")
-            return False
+            logger.error(f"Failed to set up PO Token script: {e}")
 
     def suitable_extractors(self, url: str) -> Generator[str, None, None]:
         """
