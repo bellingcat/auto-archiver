@@ -24,7 +24,7 @@ TESTS_TO_RUN_LAST = ["test_generic_archiver", "test_twitter_api_archiver"]
 @pytest.fixture(autouse=True)
 def skip_check_for_update(mocker):
     update_ytdlp = mocker.patch(
-        "auto_archiver.modules.generic_extractor.generic_extractor.GenericExtractor.update_ytdlp"
+        "auto_archiver.modules.generic_extractor.generic_extractor.GenericExtractor.update_package"
     )
     update_ytdlp.return_value = False
 
