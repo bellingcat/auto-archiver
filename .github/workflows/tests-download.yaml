@@ -10,9 +10,6 @@ on:
     workflows: ["Core Tests"]
     types:
       - completed
-    branches: [main]
-    paths:
-      - src/**
 
 jobs:
   tests:
@@ -30,7 +27,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.workflow_run.head_branch || github.ref }}
+          # For PRs, use the head commit SHA from the triggering workflow
+          ref: ${{ github.event.workflow_run.head_sha || github.ref }}
+          # If PR is from a fork, we need fetch-depth: 0
+          fetch-depth: ${{ github.event.workflow_run.head_repository.fork && '0' || '1' }}
 
       - name: Install poetry
         run: pipx install poetry
