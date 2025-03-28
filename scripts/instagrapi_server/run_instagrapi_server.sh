@@ -3,7 +3,6 @@
 # run_instagrapi_server.sh
 # Usage:
 #   From repo root:   ./scripts/instagrapi_server/run_instagrapi_server.sh
-#   From repo root:   ./scripts/instagrapi_server/run_instagrapi_server.sh
 #   Or from script dir: ./run_instagrapi_server.sh
 #
 
