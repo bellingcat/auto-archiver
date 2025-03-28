@@ -14,6 +14,7 @@ from rfc3161_client.tsp import SignedData
 from cryptography import x509
 from cryptography.hazmat.primitives import serialization
 import certifi
+
 from auto_archiver.core import Enricher
 from auto_archiver.core import Metadata, Media
 from auto_archiver.version import __version__
