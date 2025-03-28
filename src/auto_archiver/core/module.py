@@ -214,7 +214,7 @@ class LazyBaseModule:
 
         # check external dependencies are installed
         def check_deps(deps, check):
-            for dep in filter(lambda d: len(d.strip()), deps):
+            for dep in filter(lambda d: len(d.strip()) > 0, deps):
                 if not check(dep.strip()):
                     logger.error(
                         f"Module '{self.name}' requires external dependency '{dep}' which is not available/setup. \
@@ -274,6 +274,9 @@ class LazyBaseModule:
         # finally, get the class instance
         instance: BaseModule = getattr(sys.modules[sub_qualname], class_name)()
 
+        # save the instance for future easy loading
+        self._instance = instance
+
         # set the name, display name and module factory
         instance.name = self.name
         instance.display_name = self.display_name
@@ -286,8 +289,6 @@ class LazyBaseModule:
         instance.config_setup(config)
         instance.setup()
 
-        # save the instance for future easy loading
-        self._instance = instance
         return instance
 
     def __repr__(self):
