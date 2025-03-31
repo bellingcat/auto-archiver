@@ -190,7 +190,7 @@ class TelethonExtractor(Extractor):
         if getattr(original_post, "grouped_id", None) is None:
             return [original_post] if getattr(original_post, "media", False) else []
 
-        search_ids = [i for i in range(original_post.id - max_amp, original_post.id + max_amp + 1)]
+        search_ids = list(range(original_post.id - max_amp, original_post.id + max_amp + 1))
         posts = self.client.get_messages(chat, ids=search_ids)
         media = []
         for post in posts:

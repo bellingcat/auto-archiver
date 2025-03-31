@@ -5,6 +5,7 @@ formatting, database operations and clean up.
 """
 
 from __future__ import annotations
+from packaging import version
 from typing import Generator, Union, List, Type, TYPE_CHECKING
 import argparse
 import os
@@ -436,16 +437,19 @@ Here's how that would look: \n\nsteps:\n  extractors:\n  - [your_extractor_name_
 
     def check_for_updates(self):
         response = requests.get("https://pypi.org/pypi/auto-archiver/json").json()
-        latest_version = response["info"]["version"]
+        latest_version = version.parse(response["info"]["version"])
+        current_version = version.parse(__version__)
         # check version compared to current version
-        if latest_version != __version__:
+        if latest_version > current_version:
             if os.environ.get("RUNNING_IN_DOCKER"):
                 update_cmd = "`docker pull bellingcat/auto-archiver:latest`"
             else:
                 update_cmd = "`pip install --upgrade auto-archiver`"
             logger.warning("")
             logger.warning("********* IMPORTANT: UPDATE AVAILABLE ********")
-            logger.warning(f"A new version of auto-archiver is available (v{latest_version}, you have {__version__})")
+            logger.warning(
+                f"A new version of auto-archiver is available (v{latest_version}, you have v{current_version})"
+            )
             logger.warning(f"Make sure to update to the latest version using: {update_cmd}")
             logger.warning("")
 

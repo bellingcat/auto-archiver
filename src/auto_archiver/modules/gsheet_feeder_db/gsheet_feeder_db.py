@@ -88,10 +88,7 @@ class GsheetsFeederDB(Feeder, Database):
         if len(self.allow_worksheets) and sheet_name not in self.allow_worksheets:
             # ALLOW rules exist AND sheet name not explicitly allowed
             return False
-        if len(self.block_worksheets) and sheet_name in self.block_worksheets:
-            # BLOCK rules exist AND sheet name is blocked
-            return False
-        return True
+        return not (self.block_worksheets and sheet_name in self.block_worksheets)
 
     def missing_required_columns(self, gw: GWorksheet) -> list:
         missing = []
@@ -161,9 +158,8 @@ class GsheetsFeederDB(Feeder, Database):
         if (screenshot := item.get_media_by_id("screenshot")) and hasattr(screenshot, "urls"):
             batch_if_valid("screenshot", "\n".join(screenshot.urls))
 
-        if thumbnail := item.get_first_image("thumbnail"):
-            if hasattr(thumbnail, "urls"):
-                batch_if_valid("thumbnail", f'=IMAGE("{thumbnail.urls[0]}")')
+        if (thumbnail := item.get_first_image("thumbnail")) and hasattr(thumbnail, "urls"):
+            batch_if_valid("thumbnail", f'=IMAGE("{thumbnail.urls[0]}")')
 
         if browsertrix := item.get_media_by_id("browsertrix"):
             batch_if_valid("wacz", "\n".join(browsertrix.urls))
