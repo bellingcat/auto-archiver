@@ -68,6 +68,12 @@ def test_download_invalid(extractor, metadata_sample, mocker):
     assert extractor.download(metadata_sample) is False
 
 
+def test_fails_with_empty_response(extractor, metadata_sample, mocker):
+    mocker.patch.object(extractor, "_send_url_to_bot", return_value=(mocker.MagicMock(), 101))
+    mocker.patch.object(extractor, "_process_messages", return_value="")
+    assert extractor.download(metadata_sample) is False
+
+
 @pytest.mark.skip(reason="Requires authentication.")
 class TestInstagramTbotExtractorReal(TestExtractorBase):
     # To run these tests set the TELEGRAM_API_ID and TELEGRAM_API_HASH environment variables, and ensure the session file exists.
