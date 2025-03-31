@@ -158,9 +158,8 @@ class GsheetsFeederDB(Feeder, Database):
         if (screenshot := item.get_media_by_id("screenshot")) and hasattr(screenshot, "urls"):
             batch_if_valid("screenshot", "\n".join(screenshot.urls))
 
-        if thumbnail := item.get_first_image("thumbnail"):
-            if hasattr(thumbnail, "urls"):
-                batch_if_valid("thumbnail", f'=IMAGE("{thumbnail.urls[0]}")')
+        if (thumbnail := item.get_first_image("thumbnail")) and hasattr(thumbnail, "urls"):
+            batch_if_valid("thumbnail", f'=IMAGE("{thumbnail.urls[0]}")')
 
         if browsertrix := item.get_media_by_id("browsertrix"):
             batch_if_valid("wacz", "\n".join(browsertrix.urls))
