@@ -27,6 +27,9 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
+      - name: Install latest Poetry
+        run: pipx install poetry
+
       - name: Cache Poetry and pip artifacts
         uses: actions/cache@v4
         with:
