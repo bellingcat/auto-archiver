@@ -28,17 +28,26 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Poetry
-        run: pipx install poetry
-
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-          cache: 'poetry'
 
-      - name: Install dependencies
+      - name: Install latest Poetry
+        run: pipx install poetry
+
+      - name: Cache Poetry and pip artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/pypoetry
+            ~/.cache/pip
+          key: poetry-${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('**/poetry.lock') }}
+
+      - name: Install dependencies from source only
         run: poetry install --no-interaction --with dev
+        env:
+          PIP_NO_BINARY: ":all:"
 
       - name: Run Core Tests
         run: |
