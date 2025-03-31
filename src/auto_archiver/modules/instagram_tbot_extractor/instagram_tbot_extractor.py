@@ -88,6 +88,9 @@ class InstagramTbotExtractor(Extractor):
 
             if message:
                 result.set_content(message).set_title(message[:128])
+            elif result.is_empty():
+                logger.debug(f"No media found for link {url=} for {self.name}: {message}")
+                return False
             return result.success("insta-via-bot")
 
     def _send_url_to_bot(self, url: str):
@@ -104,13 +107,13 @@ class InstagramTbotExtractor(Extractor):
         message = ""
         time.sleep(3)
         # media is added before text by the bot so it can be used as a stop-logic mechanism
-        while attempts < max(self.timeout - 3, 3) and (not message or not len(seen_media)):
+        while attempts < max(self.timeout - 3, 15) and (not message or not len(seen_media)):
             attempts += 1
             time.sleep(1)
             for post in self.client.iter_messages(chat, min_id=since_id):
                 since_id = max(since_id, post.id)
                 # Skip known filler message:
-                if post.message == "The bot receives information through https://hikerapi.com/p/hJqpppqi":
+                if "The bot receives information through https://hikerapi.com/" in post.message:
                     continue
                 if post.media and post.id not in seen_media:
                     filename_dest = os.path.join(tmp_dir, f"{chat.id}_{post.id}")
