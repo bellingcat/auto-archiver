@@ -38,6 +38,9 @@ jobs:
             ~/.cache/pip
           key: poetry-${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('**/poetry.lock') }}
 
+      - name: Clear Poetry PyPI cache
+        run: poetry cache clear pypi --all
+
       - name: Install dependencies from source only
         run: poetry install --no-interaction --with dev
         env:
