@@ -36,15 +36,10 @@ jobs:
           path: |
             ~/.cache/pypoetry
             ~/.cache/pip
-          key: poetry-${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('**/poetry.lock') }}
-
-      - name: Clear Poetry PyPI cache
-        run: poetry cache clear pypi --all
+          key: poetry-${{ matrix.os }}-${{ matrix.python-version }}-${{ hashFiles('**/poetry.lock') }}
 
       - name: Install dependencies from source only
         run: poetry install --no-interaction --with dev
-        env:
-          PIP_NO_BINARY: ":all:"
 
       - name: Run Download Tests
         run: poetry run pytest -ra -v -x -m "download"
