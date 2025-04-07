@@ -13,12 +13,12 @@
     "@dnd-kit/sortable": "^10.0.0",
     "@emotion/react": "latest",
     "@emotion/styled": "latest",
-    "@mui/icons-material": "^6.4.7",
+    "@mui/icons-material": "^7.0.1",
     "@mui/material": "latest",
-    "react": "19.0.0",
-    "react-dom": "19.0.0",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
     "react-markdown": "^10.0.0",
-    "yaml": "^2.7.0"
+    "yaml": "^2.7.1"
   },
   "devDependencies": {
     "@types/react": "latest",
