@@ -57,6 +57,7 @@ dependencies = [
     "cryptography (>44.0.1,<45.0.0)",
     "opentimestamps (>=0.4.5,<0.5.0)",
     "bgutil-ytdlp-pot-provider (>=0.7.3,<0.8.0)",
+    "seleniumbase (>=4.36.4,<5.0.0)",
 ]
 
 [tool.poetry.group.dev.dependencies]
