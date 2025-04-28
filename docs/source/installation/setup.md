@@ -27,8 +27,8 @@ The way you run the Auto Archiver depends on how you installed it (docker instal
 If you installed Auto Archiver using docker, open up your terminal, and copy-paste / type the following command:
 
 ```bash
-docker run -it --rm -v $PWD/secrets:/app/secrets -v $PWD/local_archive:/app/local_archive bellingcat/auto-archiver
- ```
+docker run -it --rm -v $PWD/secrets:/app/secrets -v $PWD/local_archive:/app/local_archive bellingcat/auto-archiver -- "https://example.com/1/"
+```
 
 breaking this command down:
    1. `docker run` tells docker to start a new container (an instance of the image)
@@ -42,6 +42,7 @@ breaking this command down:
        1.  `-v` same as above, this is a volume instruction
        2.  `$PWD/local_archive` is a folder `local_archive/` in case you want to archive locally and have the files accessible outside docker
        3.  `/app/local_archive` is a folder inside docker that you can reference in your orchestration.yml file 
+   6. ` -- "https://example.com/1/"` this will pass the URL to archive to the default [command line feeder](../modules/autogen/feeder/cli_feeder.md)
 
 ### Example invocations
 
