@@ -51,6 +51,11 @@
             "help": "if True the stored files path will include 'workbook_name/worksheet_name/...'",
             "type": "bool",
         },
+        "must_have_folder_name_for_archive_to_run": {
+            "default": False,
+            "help": "if True the folder name must be set in the feeder eg DM001. This is to enforce files be stored in the correct folder on destination storage",
+            "type": "bool",
+        },
     },
     "description": """
     GsheetsFeederDatabase
