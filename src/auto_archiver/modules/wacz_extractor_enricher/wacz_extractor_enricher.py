@@ -194,7 +194,8 @@ class WaczExtractorEnricher(Enricher, Extractor):
                         shutil.copyfileobj(infile, outfile)
 
         # get media out of .warc
-        counter = 0
+        counter_warc_files = 0
+        counter_screenshots = 0
         seen_urls = set()
 
         with open(warc_filename, "rb") as warc_stream:
@@ -203,12 +204,12 @@ class WaczExtractorEnricher(Enricher, Extractor):
                 if (
                     record.rec_type == "resource" and record.content_type == "image/png" and self.extract_screenshot
                 ):  # screenshots
-                    fn = os.path.join(tmp_dir, f"warc-file-{counter}.png")
+                    fn = os.path.join(tmp_dir, f"warc-file-{counter_screenshots}.png")
                     with open(fn, "wb") as outf:
                         outf.write(record.raw_stream.read())
                     m = Media(filename=fn)
-                    to_enrich.add_media(m, "browsertrix-screenshot")
-                    counter += 1
+                    to_enrich.add_media(m, f"browsertrix-screenshot-{counter_screenshots}")
+                    counter_screenshots += 1
                 if not self.extract_media:
                     continue
 
@@ -231,7 +232,7 @@ class WaczExtractorEnricher(Enricher, Extractor):
 
                 # create local file and add media
                 ext = mimetypes.guess_extension(content_type)
-                warc_fn = f"warc-file-{counter}{ext}"
+                warc_fn = f"warc-file-{counter_screenshots}{ext}"
                 fn = os.path.join(tmp_dir, warc_fn)
 
                 record_url_best_qual = UrlUtil.twitter_best_quality_url(record_url)
@@ -256,6 +257,6 @@ class WaczExtractorEnricher(Enricher, Extractor):
                     continue
 
                 to_enrich.add_media(m, warc_fn)
-                counter += 1
+                counter_warc_files += 1
                 seen_urls.add(record_url)
-        logger.info(f"WACZ extract_media/extract_screenshot finished, found {counter} relevant media file(s)")
+        logger.info(f"WACZ extract_media/extract_screenshot finished, found {counter_warc_files + counter_screenshots} relevant media file(s)")
