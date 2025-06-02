@@ -156,7 +156,7 @@ class GenericExtractor(Extractor):
                 logger.error("generate_once.js not found after transpilation.")
                 return
 
-            self.extractor_args.setdefault("youtube", {})["getpot_bgutil_script"] = script_path
+            self.extractor_args.setdefault("youtubepot-bgutilscript", {})["script_path"] = script_path
             logger.info(f"PO Token script configured at: {script_path}")
 
         except Exception as e:
@@ -301,7 +301,7 @@ class GenericExtractor(Extractor):
             result.set_url(url)
 
         if "description" in video_data and not result.get("content"):
-            result.set_content(video_data["description"])
+            result.set_content(video_data.pop("description"))
         # extract comments if enabled
         if self.comments:
             result.set(
@@ -370,7 +370,6 @@ class GenericExtractor(Extractor):
                 return False
         else:
             entries = [data]
-
         result = Metadata()
 
         for entry in entries:
@@ -378,6 +377,10 @@ class GenericExtractor(Extractor):
                 filename = ydl.prepare_filename(entry)
                 if not os.path.exists(filename):
                     filename = filename.split(".")[0] + ".mkv"
+
+                if not os.path.exists(filename):
+                    logger.warning(f"File {filename} does not exist (see yt-dlp logs), skipping this entry.")
+                    continue
 
                 new_media = Media(filename)
                 for x in ["duration", "original_url", "fulltitle", "description", "upload_date"]:
@@ -396,6 +399,9 @@ class GenericExtractor(Extractor):
                 result.add_media(new_media)
             except Exception as e:
                 logger.error(f"Error processing entry {entry}: {e}")
+        if not len(result.media):
+            logger.warning(f"No media found for entry {entry}, skipping.")
+            return False
 
         return self.add_metadata(data, info_extractor, url, result)
 
