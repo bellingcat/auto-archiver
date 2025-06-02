@@ -303,12 +303,10 @@ class GenericExtractor(Extractor):
         if "description" in video_data and not result.get("content"):
             result.set_content(video_data["description"])
         # extract comments if enabled
-        if self.comments:
-            # If self.comments are true but no comments in the video_data
-            if video_data.get("comments", []) is not None:
-                result.set(
-                    "comments",
-                    [
+        if self.comments and video_data.get("comments", []) is not None:
+            result.set(
+                "comments",
+                [
                     {
                         "text": c["text"],
                         "author": c["author"],
