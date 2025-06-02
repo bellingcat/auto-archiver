@@ -119,4 +119,4 @@ def test_extract_media(wacz_enricher, metadata, tmp_path, mocker) -> None:
     metadata.add_media(Media("something.wacz"), "browsertrix")
     wacz_enricher.extract_media_from_wacz(metadata, str(wacz_file))
     assert len(metadata.media) == 2
-    assert metadata.media[1].properties.get("id") == "browsertrix-screenshot"
+    assert metadata.media[1].properties.get("id") == "browsertrix-screenshot-0"

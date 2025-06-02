@@ -71,7 +71,6 @@ The names of the actual modules have also changed, so for any extractor modules 
 - `telethon_archiver` → `telethon_extractor`
 - `wacz_archiver_enricher` → `wacz_extractor_enricher`
 - `wayback_archiver_enricher` → `wayback_extractor_enricher`
-- `vk_archiver` → `vk_extractor`
 
 
 #### c) Module Renaming
