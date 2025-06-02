@@ -387,7 +387,11 @@ class GenericExtractor(Extractor):
             directory = os.path.dirname(base_filename)  # '/get/path/to'
             basename = os.path.basename(base_filename)  # 'file'
             for f in os.listdir(directory):
-                if f.startswith(basename) or (entry_url and os.path.splitext(f)[0] in entry_url) and "video/" in (mimetypes.guess_type(f)[0] or ""):
+                if (
+                    f.startswith(basename)
+                    or (entry_url and os.path.splitext(f)[0] in entry_url)
+                    and "video/" in (mimetypes.guess_type(f)[0] or "")
+                ):
                     return os.path.join(directory, f)
             return False
 
@@ -552,7 +556,8 @@ class GenericExtractor(Extractor):
             "--write-subs" if self.subtitles else "--no-write-subs",
             "--write-auto-subs" if self.subtitles else "--no-write-auto-subs",
             "--live-from-start" if self.live_from_start else "--no-live-from-start",
-            "--postprocessor-args", "ffmpeg:-bitexact" # ensure bitexact output to avoid mismatching hashes for same video
+            "--postprocessor-args",
+            "ffmpeg:-bitexact",  # ensure bitexact output to avoid mismatching hashes for same video
         ]
 
         # proxy handling
