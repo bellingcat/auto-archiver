@@ -259,4 +259,6 @@ class WaczExtractorEnricher(Enricher, Extractor):
                 to_enrich.add_media(m, warc_fn)
                 counter_warc_files += 1
                 seen_urls.add(record_url)
-        logger.info(f"WACZ extract_media/extract_screenshot finished, found {counter_warc_files + counter_screenshots} relevant media file(s)")
+        logger.info(
+            f"WACZ extract_media/extract_screenshot finished, found {counter_warc_files + counter_screenshots} relevant media file(s)"
+        )
