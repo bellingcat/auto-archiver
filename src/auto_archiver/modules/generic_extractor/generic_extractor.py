@@ -394,11 +394,12 @@ class GenericExtractor(Extractor):
         for entry in entries:
             try:
                 filename = _helper_get_filename(entry)
-                logger.warning(f"Using filename {filename} for entry {entry.get('id', 'unknown')}")
 
                 if not filename or not os.path.exists(filename):
                     # file was not downloaded or could not be retrieved, example: sensitive videos on YT without using cookies.
                     continue
+
+                logger.debug(f"Using filename {filename} for entry {entry.get('id', 'unknown')}")
 
                 new_media = Media(filename)
                 for x in ["duration", "original_url", "fulltitle", "description", "upload_date"]:
@@ -551,6 +552,7 @@ class GenericExtractor(Extractor):
             "--write-subs" if self.subtitles else "--no-write-subs",
             "--write-auto-subs" if self.subtitles else "--no-write-auto-subs",
             "--live-from-start" if self.live_from_start else "--no-live-from-start",
+            "--postprocessor-args", "ffmpeg:-bitexact" # ensure bitexact output to avoid mismatching hashes for same video
         ]
 
         # proxy handling
