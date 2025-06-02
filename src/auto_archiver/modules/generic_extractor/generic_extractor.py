@@ -303,7 +303,7 @@ class GenericExtractor(Extractor):
         if "description" in video_data and not result.get("content"):
             result.set_content(video_data["description"])
         # extract comments if enabled
-        if self.comments:
+        if self.comments and video_data.get("comments", []) is not None:
             result.set(
                 "comments",
                 [
