@@ -55,7 +55,7 @@ dependencies = [
     "cryptography (>44.0.1,<45.0.0)",
     "opentimestamps (>=0.4.5,<0.5.0)",
     "bgutil-ytdlp-pot-provider (>=1.0.0)",
-    "yt-dlp (>=2025.5.22,<2026.0.0)",
+    "yt-dlp[curl-cffi,default] (>=2025.5.22,<2026.0.0)",
     "secretstorage (>=3.3.3,<4.0.0)",
 ]
 
