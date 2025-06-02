@@ -1,3 +1,4 @@
+import mimetypes
 import shutil
 import sys
 import datetime
@@ -11,6 +12,7 @@ from urllib.request import urlretrieve
 
 import yt_dlp
 from yt_dlp.extractor.common import InfoExtractor
+from yt_dlp.utils import MaxDownloadsReached
 import pysubs2
 
 from loguru import logger
@@ -362,7 +364,12 @@ class GenericExtractor(Extractor):
         # this time download
         ydl.params["getcomments"] = self.comments
         # TODO: for playlist or long lists of videos, how to download one at a time so they can be stored before the next one is downloaded?
-        data = ydl.extract_info(url, ie_key=info_extractor.ie_key(), download=True)
+        try:
+            data = ydl.extract_info(url, ie_key=info_extractor.ie_key(), download=True)
+        except MaxDownloadsReached:  # proceed as normal once MaxDownloadsReached is raised
+            pass
+        logger.success(data)
+
         if "entries" in data:
             entries = data.get("entries", [])
             if not len(entries):
@@ -372,14 +379,25 @@ class GenericExtractor(Extractor):
             entries = [data]
         result = Metadata()
 
+        def _helper_get_filename(entry: dict) -> str:
+            entry_url = entry.get("url")
+
+            filename = ydl.prepare_filename(entry)
+            base_filename, _ = os.path.splitext(filename)  # '/get/path/to/file' ignore '.ext'
+            directory = os.path.dirname(base_filename)  # '/get/path/to'
+            basename = os.path.basename(base_filename)  # 'file'
+            for f in os.listdir(directory):
+                if f.startswith(basename) or (entry_url and os.path.splitext(f)[0] in entry_url) and "video/" in (mimetypes.guess_type(f)[0] or ""):
+                    return os.path.join(directory, f)
+            return False
+
         for entry in entries:
             try:
-                filename = ydl.prepare_filename(entry)
-                if not os.path.exists(filename):
-                    filename = filename.split(".")[0] + ".mkv"
+                filename = _helper_get_filename(entry)
+                logger.warning(f"Using filename {filename} for entry {entry.get('id', 'unknown')}")
 
-                if not os.path.exists(filename):
-                    logger.warning(f"File {filename} does not exist (see yt-dlp logs), skipping this entry.")
+                if not filename or not os.path.exists(filename):
+                    # file was not downloaded or could not be retrieved, example: sensitive videos on YT without using cookies.
                     continue
 
                 new_media = Media(filename)
@@ -460,6 +478,13 @@ class GenericExtractor(Extractor):
 
         dropin_submodule = self.dropin_for_name(info_extractor.ie_key())
 
+        def _helper_for_successful_extract_info(data, info_extractor, url, ydl):
+            if data.get("is_live", False) and not self.livestreams:
+                logger.warning("Livestream detected, skipping due to 'livestreams' configuration setting")
+                return False
+            # it's a valid video, that the youtubdedl can download out of the box
+            return self.get_metadata_for_video(data, info_extractor, url, ydl)
+
         try:
             if dropin_submodule and dropin_submodule.skip_ytdlp_download(url, info_extractor):
                 logger.debug(f"Skipping using ytdlp to download files for {info_extractor.ie_key()}")
@@ -467,11 +492,12 @@ class GenericExtractor(Extractor):
 
             # don't download since it can be a live stream
             data = ydl.extract_info(url, ie_key=info_extractor.ie_key(), download=False)
-            if data.get("is_live", False) and not self.livestreams:
-                logger.warning("Livestream detected, skipping due to 'livestreams' configuration setting")
-                return False
-            # it's a valid video, that the youtubdedl can download out of the box
-            result = self.get_metadata_for_video(data, info_extractor, url, ydl)
+
+            result = _helper_for_successful_extract_info(data, info_extractor, url, ydl)
+
+        except MaxDownloadsReached:
+            # yt-dlp raises an error when the max downloads limit is reached, and it shouldn't for our purposes, so we consider that a success
+            result = _helper_for_successful_extract_info(data, info_extractor, url, ydl)
 
         except Exception as e:
             if info_extractor.IE_NAME == "generic":
