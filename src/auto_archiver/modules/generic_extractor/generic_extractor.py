@@ -1,3 +1,4 @@
+import mimetypes
 import shutil
 import sys
 import datetime
@@ -11,6 +12,7 @@ from urllib.request import urlretrieve
 
 import yt_dlp
 from yt_dlp.extractor.common import InfoExtractor
+from yt_dlp.utils import MaxDownloadsReached
 import pysubs2
 
 from loguru import logger
@@ -156,7 +158,7 @@ class GenericExtractor(Extractor):
                 logger.error("generate_once.js not found after transpilation.")
                 return
 
-            self.extractor_args.setdefault("youtube", {})["getpot_bgutil_script"] = script_path
+            self.extractor_args.setdefault("youtubepot-bgutilscript", {})["script_path"] = script_path
             logger.info(f"PO Token script configured at: {script_path}")
 
         except Exception as e:
@@ -301,9 +303,9 @@ class GenericExtractor(Extractor):
             result.set_url(url)
 
         if "description" in video_data and not result.get("content"):
-            result.set_content(video_data["description"])
+            result.set_content(video_data.pop("description"))
         # extract comments if enabled
-        if self.comments:
+        if self.comments and video_data.get("comments", []) is not None:
             result.set(
                 "comments",
                 [
@@ -362,7 +364,12 @@ class GenericExtractor(Extractor):
         # this time download
         ydl.params["getcomments"] = self.comments
         # TODO: for playlist or long lists of videos, how to download one at a time so they can be stored before the next one is downloaded?
-        data = ydl.extract_info(url, ie_key=info_extractor.ie_key(), download=True)
+        try:
+            data = ydl.extract_info(url, ie_key=info_extractor.ie_key(), download=True)
+        except MaxDownloadsReached:  # proceed as normal once MaxDownloadsReached is raised
+            pass
+        logger.success(data)
+
         if "entries" in data:
             entries = data.get("entries", [])
             if not len(entries):
@@ -370,14 +377,33 @@ class GenericExtractor(Extractor):
                 return False
         else:
             entries = [data]
-
         result = Metadata()
+
+        def _helper_get_filename(entry: dict) -> str:
+            entry_url = entry.get("url")
+
+            filename = ydl.prepare_filename(entry)
+            base_filename, _ = os.path.splitext(filename)  # '/get/path/to/file' ignore '.ext'
+            directory = os.path.dirname(base_filename)  # '/get/path/to'
+            basename = os.path.basename(base_filename)  # 'file'
+            for f in os.listdir(directory):
+                if (
+                    f.startswith(basename)
+                    or (entry_url and os.path.splitext(f)[0] in entry_url)
+                    and "video/" in (mimetypes.guess_type(f)[0] or "")
+                ):
+                    return os.path.join(directory, f)
+            return False
 
         for entry in entries:
             try:
-                filename = ydl.prepare_filename(entry)
-                if not os.path.exists(filename):
-                    filename = filename.split(".")[0] + ".mkv"
+                filename = _helper_get_filename(entry)
+
+                if not filename or not os.path.exists(filename):
+                    # file was not downloaded or could not be retrieved, example: sensitive videos on YT without using cookies.
+                    continue
+
+                logger.debug(f"Using filename {filename} for entry {entry.get('id', 'unknown')}")
 
                 new_media = Media(filename)
                 for x in ["duration", "original_url", "fulltitle", "description", "upload_date"]:
@@ -396,6 +422,9 @@ class GenericExtractor(Extractor):
                 result.add_media(new_media)
             except Exception as e:
                 logger.error(f"Error processing entry {entry}: {e}")
+        if not len(result.media):
+            logger.warning(f"No media found for entry {entry}, skipping.")
+            return False
 
         return self.add_metadata(data, info_extractor, url, result)
 
@@ -454,6 +483,13 @@ class GenericExtractor(Extractor):
 
         dropin_submodule = self.dropin_for_name(info_extractor.ie_key())
 
+        def _helper_for_successful_extract_info(data, info_extractor, url, ydl):
+            if data.get("is_live", False) and not self.livestreams:
+                logger.warning("Livestream detected, skipping due to 'livestreams' configuration setting")
+                return False
+            # it's a valid video, that the youtubdedl can download out of the box
+            return self.get_metadata_for_video(data, info_extractor, url, ydl)
+
         try:
             if dropin_submodule and dropin_submodule.skip_ytdlp_download(url, info_extractor):
                 logger.debug(f"Skipping using ytdlp to download files for {info_extractor.ie_key()}")
@@ -461,11 +497,12 @@ class GenericExtractor(Extractor):
 
             # don't download since it can be a live stream
             data = ydl.extract_info(url, ie_key=info_extractor.ie_key(), download=False)
-            if data.get("is_live", False) and not self.livestreams:
-                logger.warning("Livestream detected, skipping due to 'livestreams' configuration setting")
-                return False
-            # it's a valid video, that the youtubdedl can download out of the box
-            result = self.get_metadata_for_video(data, info_extractor, url, ydl)
+
+            result = _helper_for_successful_extract_info(data, info_extractor, url, ydl)
+
+        except MaxDownloadsReached:
+            # yt-dlp raises an error when the max downloads limit is reached, and it shouldn't for our purposes, so we consider that a success
+            result = _helper_for_successful_extract_info(data, info_extractor, url, ydl)
 
         except Exception as e:
             if info_extractor.IE_NAME == "generic":
@@ -519,6 +556,8 @@ class GenericExtractor(Extractor):
             "--write-subs" if self.subtitles else "--no-write-subs",
             "--write-auto-subs" if self.subtitles else "--no-write-auto-subs",
             "--live-from-start" if self.live_from_start else "--no-live-from-start",
+            "--postprocessor-args",
+            "ffmpeg:-bitexact",  # ensure bitexact output to avoid mismatching hashes for same video
         ]
 
         # proxy handling
