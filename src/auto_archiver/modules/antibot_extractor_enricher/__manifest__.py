@@ -1,7 +1,7 @@
 {
     "name": "Antibot Extractor/Enricher",
     "type": ["extractor", "enricher"],
-    "requires_setup": True,
+    "requires_setup": False,
     "dependencies": {
         "python": ["loguru", "seleniumbase"],
     },
