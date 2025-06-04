@@ -13,7 +13,7 @@ ARG TARGETARCH
 # Installing system dependencies
 RUN add-apt-repository ppa:mozillateam/ppa && \
 	apt-get update && \
-    apt-get install -y --no-install-recommends gcc ffmpeg fonts-noto exiftool && \
+    apt-get install -y --no-install-recommends gcc ffmpeg fonts-noto exiftool python3-tk && \
 	apt-get install -y --no-install-recommends firefox-esr && \
     ln -s /usr/bin/firefox-esr /usr/bin/firefox
 

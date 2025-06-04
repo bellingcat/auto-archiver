@@ -58,6 +58,7 @@ dependencies = [
     "yt-dlp[curl-cffi,default] (>=2025.5.22,<2026.0.0)",
     "secretstorage (>=3.3.3,<4.0.0)",
     "seleniumbase (>=4.36.4,<5.0.0)",
+    "pyautogui (>=0.9.54,<0.10.0)",
 ]
 
 [tool.poetry.group.dev.dependencies]
