@@ -43,7 +43,7 @@ class AntibotExtractorEnricher(Extractor, Enricher):
 
     def enrich(self, to_enrich: Metadata) -> bool:
         url = to_enrich.get_url()
-        # TODO: implement cookies auth = self.auth_for_site(url)
+        # TODO: implement cookies auth = self.auth_for_site(url) and combine with if UrlUtil.is_auth_wall(url) like in ScreenshotEnricher
         url_sample = url[:75]
         try:
             with SB(uc=True, agent=self.agent, headed=None, proxy=self.proxy) as sb:
