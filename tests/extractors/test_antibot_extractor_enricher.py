@@ -168,6 +168,6 @@ class TestAntibotExtractorEnricher(TestExtractorBase):
 
         item = make_item("https://example.com/")
         result = self.extractor.enrich(item)
-        
+
         assert result is False
         mock_logger.error.assert_called()
