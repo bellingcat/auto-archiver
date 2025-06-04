@@ -15,7 +15,7 @@
     - Skips non-image media or files unsuitable for hashing (e.g., corrupted or unsupported formats).
 
     ### Notes
-    - Best used after enrichers like `thumbnail_enricher` or `screenshot_enricher` to ensure images are available.
+    - Best used after enrichers like `thumbnail_enricher` or `antibot_extractor_enricher` (takes screenshots) to ensure images are available.
     - Uses the `pdqhash` library to compute 256-bit perceptual hashes, which are stored as hexadecimal strings.
     """,
 }

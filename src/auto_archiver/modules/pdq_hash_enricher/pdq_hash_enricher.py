@@ -6,7 +6,7 @@ objects and calculates perceptual hashes using the PDQ hashing algorithm.
 These hashes are designed specifically for images and can be used
 for detecting duplicate or near-duplicate visual content.
 
-This enricher is typically used after thumbnail or screenshot enrichers
+This enricher is typically used after thumbnail or screenshot (antibot) enrichers
 to ensure images are available for hashing.
 
 """
