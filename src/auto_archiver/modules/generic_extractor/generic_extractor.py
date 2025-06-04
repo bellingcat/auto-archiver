@@ -33,6 +33,9 @@ class GenericExtractor(Extractor):
     def setup(self):
         self.check_for_extractor_updates()
         self.setup_po_tokens()
+        # TODO: figure out why the following is not properly recognised by yt-dlp:
+        # if "generic" not in self.extractor_args:
+        #     self.extractor_args["generic"] = "impersonate"
 
     def check_for_extractor_updates(self):
         """Checks whether yt-dlp or its plugins need updating and triggers a restart if so."""
@@ -590,11 +593,11 @@ class GenericExtractor(Extractor):
         # Applying user-defined extractor_args
         if self.extractor_args:
             for key, args in self.extractor_args.items():
-                logger.debug(f"Setting extractor_args: {key}")
                 if isinstance(args, dict):
                     arg_str = ";".join(f"{k}={v}" for k, v in args.items())
                 else:
                     arg_str = str(args)
+                logger.debug(f"Setting extractor_args: {key}:{arg_str}")
                 ydl_options.extend(["--extractor-args", f"{key}:{arg_str}"])
 
         if self.ytdlp_args:
