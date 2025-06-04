@@ -11,7 +11,6 @@ are available on the [extractors](../modules/extractor.md) page. Some sites supp
 * Twitter
 * Instagram
 * Telegram
-* VKontact
 * Tiktok
 * Bluesky
 

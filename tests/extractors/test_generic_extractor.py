@@ -97,7 +97,7 @@ class TestGenericExtractor(TestExtractorBase):
     )
     def test_download_nonexistent_media(self, make_item, url):
         """
-        Test to make sure that the extractor doesn't break on non-existend posts/media
+        Test to make sure that the extractor doesn't break on non-existent posts/media
 
         It should return 'False'
         """

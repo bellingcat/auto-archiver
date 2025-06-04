@@ -51,8 +51,8 @@ After this, you're ready to set up your [your configuration file](configurations
 If using the local installation method, you will also need to install the following dependencies locally:
 
 1.[ffmpeg](https://www.ffmpeg.org/) - for handling of downloaded videos
-2. [firefox](https://www.mozilla.org/en-US/firefox/new/) and [geckodriver](https://github.com/mozilla/geckodriver/releases) on a path folder like `/usr/local/bin` - for taking webpage screenshots with the screenshot enricher
-3. (optional) [fonts-noto](https://fonts.google.com/noto) to deal with multiple unicode characters during selenium/geckodriver's screenshots: `sudo apt install fonts-noto -y`.
+<!-- 2. [firefox](https://www.mozilla.org/en-US/firefox/new/) and [geckodriver](https://github.com/mozilla/geckodriver/releases) on a path folder like `/usr/local/bin` - for taking webpage screenshots with the screenshot enricher -->
+3. (optional) [fonts-noto](https://fonts.google.com/noto) to deal with multiple unicode characters during selenium screenshots: `sudo apt install fonts-noto -y`.
 4. [Browsertrix Crawler docker image](https://hub.docker.com/r/webrecorder/browsertrix-crawler) for the WACZ enricher/archiver
 
 
