@@ -232,7 +232,9 @@ class WaczExtractorEnricher(Enricher, Extractor):
 
                 # create local file and add media
                 ext = mimetypes.guess_extension(content_type)
-                warc_fn = f"warc-file-{counter_screenshots}{ext}"
+
+                warc_fn = f"warc-file-{counter_warc_files}{ext}"
+
                 fn = os.path.join(tmp_dir, warc_fn)
 
                 record_url_best_qual = UrlUtil.twitter_best_quality_url(record_url)
