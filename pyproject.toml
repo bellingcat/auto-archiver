@@ -27,7 +27,6 @@ dependencies = [
     "bs4 (>=0.0.0)",
     "loguru (>=0.0.0)",
     "ffmpeg-python (>=0.0.0)",
-    "selenium (>=0.0.0)",
     "telethon (>=0.0.0)",
     "google-api-python-client (>=0.0.0)",
     "google-auth-httplib2 (>=0.0.0)",
