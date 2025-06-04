@@ -3,6 +3,7 @@ import math
 import mimetypes
 import os
 import sys
+import traceback
 from urllib.parse import urljoin
 
 from loguru import logger
@@ -75,7 +76,7 @@ class AntibotExtractorEnricher(Extractor, Enricher):
 
             return to_enrich
         except Exception as e:
-            logger.error(f"ANTIBOT runtime error: {e}")
+            logger.error(f"ANTIBOT runtime error: {e}: {traceback.format_exc()}")
             return False
 
     def _hit_auth_wall(self, sb: SB) -> bool:
