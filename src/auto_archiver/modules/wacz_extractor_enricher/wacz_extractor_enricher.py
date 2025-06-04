@@ -204,7 +204,7 @@ class WaczExtractorEnricher(Enricher, Extractor):
                 if (
                     record.rec_type == "resource" and record.content_type == "image/png" and self.extract_screenshot
                 ):  # screenshots
-                    fn = os.path.join(tmp_dir, f"warc-file-{counter_screenshots}.png")
+                    fn = os.path.join(tmp_dir, f"browsertrix-screenshot-{counter_screenshots}.png")
                     with open(fn, "wb") as outf:
                         outf.write(record.raw_stream.read())
                     m = Media(filename=fn)
@@ -232,7 +232,7 @@ class WaczExtractorEnricher(Enricher, Extractor):
 
                 # create local file and add media
                 ext = mimetypes.guess_extension(content_type)
-                warc_fn = f"warc-file-{counter_screenshots}{ext}"
+                warc_fn = f"warc-file-{counter_warc_files}{ext}"
                 fn = os.path.join(tmp_dir, warc_fn)
 
                 record_url_best_qual = UrlUtil.twitter_best_quality_url(record_url)

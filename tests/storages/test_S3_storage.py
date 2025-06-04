@@ -45,6 +45,19 @@ class TestS3Storage:
         assert self.storage.get_cdn_url(media) == "https://cdn.example.com/another/path.jpg"
 
     def test_uploadf_sets_acl_public(self, mocker):
+        media = Media("test.png")
+        mock_file = mocker.MagicMock()
+        mock_s3_upload = mocker.patch.object(self.storage.s3, "upload_fileobj")
+        mocker.patch.object(self.storage, "is_upload_needed", return_value=True)
+        self.storage.uploadf(mock_file, media)
+        mock_s3_upload.assert_called_once_with(
+            mock_file,
+            Bucket="test-bucket",
+            Key=media.key,
+            ExtraArgs={"ACL": "public-read", "ContentType": "image/png"},
+        )
+
+    def test_uploadf_detects_charset_for_text_files(self, mocker):
         media = Media("test.txt")
         mock_file = mocker.MagicMock()
         mock_s3_upload = mocker.patch.object(self.storage.s3, "upload_fileobj")
@@ -54,7 +67,7 @@ class TestS3Storage:
             mock_file,
             Bucket="test-bucket",
             Key=media.key,
-            ExtraArgs={"ACL": "public-read", "ContentType": "text/plain"},
+            ExtraArgs={"ACL": "public-read", "ContentType": "text/plain; charset=utf-8"},
         )
 
     def test_upload_decision_logic(self, mocker):

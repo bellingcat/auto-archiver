@@ -40,6 +40,8 @@ class S3Storage(Storage):
             try:
                 if media.mimetype:
                     extra_args["ContentType"] = media.mimetype
+                    if "text" in media.mimetype:
+                        extra_args["ContentType"] += "; charset=utf-8"
             except Exception as e:
                 logger.warning(f"Unable to get mimetype for {media.key=}, error: {e}")
         self.s3.upload_fileobj(file, Bucket=self.bucket, Key=media.key, ExtraArgs=extra_args)
