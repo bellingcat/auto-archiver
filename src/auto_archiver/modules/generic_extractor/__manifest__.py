@@ -62,7 +62,7 @@ If you are having issues with the extractor, you can review the version of `yt-d
         },
         "end_means_success": {
             "default": True,
-            "help": "if True, any archived content will mean a 'success', if False this archiver will not return a 'success' stage; this is useful for cases when the yt-dlp will archive a video but ignore other types of content like images or text only pages that the subsequent archivers can retrieve.",
+            "help": "if True, any archived content will mean a 'success', if False this extractor will not return a 'success' stage; this is useful for cases when the yt-dlp will archive a video but ignore other types of content like images or text only pages that the subsequent extractors can retrieve.",
             "type": "bool",
         },
         "allow_playlist": {
