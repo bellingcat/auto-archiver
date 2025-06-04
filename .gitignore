@@ -37,8 +37,3 @@ docs/source/modules/autogen/
 scripts/settings_page.html
 scripts/settings/src/schema.json 
 .vite
-extensions
-recordings
-saved_cookies
-downloaded_files
-face.py
