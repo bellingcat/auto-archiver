@@ -65,6 +65,13 @@ class GsheetsFeederDB(Feeder, Database):
             if status not in ["", None]:
                 continue
 
+            # Set in orchestration.yaml. Default is False
+            if self.must_have_folder_name_for_archive_to_run:
+                if not gw.get_cell(row, "folder"):
+                    logger.warning(f"Folder name not set {self.sheet}:{gw.wks.title}, row {row} - skipping and continuing with run")
+                    gw.set_cell(row, "status", "WARNING:Folder Name not set")
+                    continue
+
             # All checks done - archival process starts here
             m = Metadata().set_url(url)
             self._set_context(m, gw, row)
