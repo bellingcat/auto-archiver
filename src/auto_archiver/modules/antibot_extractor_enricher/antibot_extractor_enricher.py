@@ -93,7 +93,6 @@ class AntibotExtractorEnricher(Extractor, Enricher):
     def enrich(self, to_enrich: Metadata, custom_data_dir: bool = True) -> bool:
         using_user_data_dir = self.user_data_dir if custom_data_dir else None
         url = to_enrich.get_url()
-        # TODO: implement cookies auth = self.auth_for_site(url) and combine with if UrlUtil.is_auth_wall(url) like in ScreenshotEnricher
         url_sample = url[:75]
 
         try:

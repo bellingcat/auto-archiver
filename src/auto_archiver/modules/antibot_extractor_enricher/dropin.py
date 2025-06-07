@@ -24,7 +24,6 @@ class Dropin:
     def suitable(url: str) -> bool:
         """
         Check if the URL is suitable for processing with this dropin.
-
         :param url: The URL to check.
         :return: True if the URL is suitable for processing, False otherwise.
         """
@@ -33,7 +32,7 @@ class Dropin:
     @staticmethod
     def sanitize_url(url: str) -> str:
         """
-        Used to clean unnecessary URL parameters OR unfurl redirect links
+        Used to clean URLs before processing them.
         """
         return url
 
@@ -48,8 +47,6 @@ class Dropin:
     def add_extra_media(self, to_enrich: Metadata) -> tuple[int, int]:
         """
         Extract image and/or video data from the currently open post with SeleniumBase. Media is added to the `to_enrich` Metadata object.
-
-
         :return: A tuple (number of Images added, number of Videos added).
         """
         raise NotImplementedError("This method should be implemented in the subclass")

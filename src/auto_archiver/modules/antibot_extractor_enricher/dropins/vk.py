@@ -21,19 +21,14 @@ class VkDropin(Dropin):
 
     @staticmethod
     def suitable(url: str) -> bool:
-        """
-        Only suitable for VK URLs that match the wall, photo, or video patterns.
-        Otherwise, for example, for pages a large amount of media may be downloaded.
-        """
         return "vk.com" in url
 
     @staticmethod
     def sanitize_url(url: str) -> str:
-        # TODO: test method
         """
         Transforms modal URLs like 'https://vk.com/page_name?w=wall-123456_7890' to 'https://vk.com/wall-123456_7890'
         """
-        for pattern in [VkDropin.WALL_PATTERN, VkDropin.PHOTO_PATTERN, VkDropin.VIDEO_PATTERN]:
+        for pattern in [VkDropin.WALL_PATTERN, VkDropin.VIDEO_PATTERN, VkDropin.PHOTO_PATTERN]:
             match = pattern.search(url)
             if match:
                 return f"https://vk.com/{match.group(1)}"
@@ -49,6 +44,7 @@ class VkDropin(Dropin):
         return True
 
     def _login(self) -> bool:
+        # TODO: test method
         self.sb.activate_cdp_mode("https://vk.com")
         self.sb.wait_for_ready_state_complete()
         if "/feed" in self.sb.get_current_url():
@@ -91,8 +87,10 @@ class VkDropin(Dropin):
 
         :return: A tuple (number of Images added, number of Videos added).
         """
-        max_videos = self.extractor.max_download_videos
-        video_urls = [v.get_attribute("href") for v in self.sb.find_elements('a[href*="/video-"]')][:max_videos]
+        video_urls = [v.get_attribute("href") for v in self.sb.find_elements('a[href*="/video-"]')]
+        if type(self.extractor.max_download_videos) is int:
+            video_urls = video_urls[: self.extractor.max_download_videos]
+
         if not video_urls:
             return 0, 0
 
@@ -100,7 +98,7 @@ class VkDropin(Dropin):
         ydl_options = [
             "-o",
             os.path.join(self.extractor.tmp_dir, "%(id)s.%(ext)s"),
-            # "--quiet",
+            "--quiet",
             "--no-playlist",
             "--no-write-subs",
             "--no-write-auto-subs",
