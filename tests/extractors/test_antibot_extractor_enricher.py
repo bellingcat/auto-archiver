@@ -40,35 +40,46 @@ class TestAntibotExtractorEnricher(TestExtractorBase):
 
     @pytest.mark.download
     @pytest.mark.parametrize(
-        "url,in_title,image_count,video_count",
+        "url,in_title,in_text,image_count,video_count",
         [
             (
                 "https://en.wikipedia.org/wiki/Western_barn_owl",
                 "western barn owl",
+                "Tyto alba",
                 5,
                 0,
             ),
             (
                 "https://www.bellingcat.com/news/2025/04/29/open-sources-show-myanmar-junta-airstrike-damages-despite-post-earthquake-ceasefire/",
                 "open sources show myanmar",
+                "Bellingcat has geolocated",
                 5,
                 0,
             ),
             (
                 "https://www.bellingcat.com/news/2025/03/27/gaza-israel-palestine-shot-killed-injured-destroyed-dangerous-drone-journalists-in-gaza/",
                 "shot from above",
+                "continued the work of Gazan journalists",
                 5,
                 1,
             ),
             (
                 "https://www.bellingcat.com/about/general-information",
                 "general information",
+                "Stichting Bellingcat",
                 0,  # SVGs are ignored
+                0,
+            ),
+            (
+                "https://vk.com/wikipedia?from=search&w=wall-36156673_20451",
+                "Hounds of Love",
+                "16 сентября 1985 года лейблом EMI Records.",
+                5,
                 0,
             ),
         ],
     )
-    def test_download_pages_with_media(self, setup_module, make_item, url, in_title, image_count, video_count):
+    def test_download_pages_with_media(self, setup_module, make_item, url, in_title, in_text, image_count, video_count):
         """
         Test downloading pages with media.
         """
@@ -81,7 +92,7 @@ class TestAntibotExtractorEnricher(TestExtractorBase):
                 "max_download_videos": "inf",
             },
         )
-
+        url = self.extractor.sanitize_url(url)
         item = make_item(url)
         result = self.extractor.download(item)
 
@@ -89,7 +100,14 @@ class TestAntibotExtractorEnricher(TestExtractorBase):
 
         # Check title contains all required words (case-insensitive)
         page_title = result.get_title() or ""
-        assert in_title in page_title.lower(), f"Expected title to contain '{in_title}', got '{page_title}'"
+        assert in_title.lower() in page_title.lower(), f"Expected title to contain '{in_title}', got '{page_title}'"
+
+        # Check text contains all required words (case-insensitive)
+        with open(result.get_media_by_id("html_source_code").filename, "r", encoding="utf-8") as f:
+            html_content = f.read()
+            assert in_text.lower() in html_content.lower(), (
+                f"Expected HTML to contain '{in_text}', got '{html_content}'"
+            )
 
         image_media = [m for m in result.media if m.is_image() and not m.get("id") == "screenshot"]
         assert len(image_media) == image_count, f"Expected {image_count} image items, got {len(image_media)}"
