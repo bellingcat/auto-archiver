@@ -39,8 +39,7 @@ class AntibotExtractorEnricher(Extractor, Enricher):
         else:
             self.max_download_videos = int(self.max_download_videos)
 
-        os.makedirs(self.user_data_dir, exist_ok=True)
-        self._warn_about_docker_and_user_data_dir()
+        self._prepare_and_warn_about_docker_and_user_data_dir()
 
         self.dropins = self.load_dropins()
 
@@ -78,7 +77,9 @@ class AntibotExtractorEnricher(Extractor, Enricher):
             result.status = "antibot"
             return result
 
-    def _warn_about_docker_and_user_data_dir(self):
+    def _prepare_and_warn_about_docker_and_user_data_dir(self):
+        os.makedirs(self.user_data_dir, exist_ok=True)
+
         in_docker = os.environ.get("RUNNING_IN_DOCKER")
         if in_docker and self.user_data_dir:
             st = os.stat(self.user_data_dir)
