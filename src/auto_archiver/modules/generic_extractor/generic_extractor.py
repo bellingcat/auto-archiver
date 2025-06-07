@@ -382,8 +382,6 @@ class GenericExtractor(Extractor):
             entries = [data]
         result = Metadata()
 
-
-
         for entry in entries:
             try:
                 filename = ydl_entry_to_filename(ydl, entry)

@@ -5,11 +5,16 @@ import os
 import sys
 import traceback
 from urllib.parse import urljoin
+import glob
+import stat
+import importlib.util
 
 from loguru import logger
+import selenium
 from seleniumbase import SB
 
 from auto_archiver.core import Extractor, Enricher, Metadata, Media
+from auto_archiver.modules.antibot_extractor_enricher.dropin import Dropin
 from auto_archiver.utils.misc import random_str
 
 
@@ -34,6 +39,38 @@ class AntibotExtractorEnricher(Extractor, Enricher):
         else:
             self.max_download_videos = int(self.max_download_videos)
 
+        os.makedirs(self.user_data_dir, exist_ok=True)
+        self._warn_about_docker_and_user_data_dir()
+
+        self.dropins = self.load_dropins()
+
+    def load_dropins(self):
+        dropins = []
+
+        # TODO: add user-configurable drop-ins via config like generic_extractor
+        dropins_dir = os.path.join(os.path.dirname(__file__), "dropins")
+        for file_path in glob.glob(os.path.join(dropins_dir, "*.py")):
+            if os.path.basename(file_path).startswith("_"):
+                continue  # skip __init__.py or private modules
+            module_name = f"auto_archiver.modules.antibot_extractor_enricher.dropins.{os.path.splitext(os.path.basename(file_path))[0]}"
+            spec = importlib.util.spec_from_file_location(module_name, file_path)
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+            for attr in dir(module):
+                obj = getattr(module, attr)
+                if getattr(obj, "__module__", None) != module.__name__:
+                    continue  # Skip imported modules/classes/functions
+                if isinstance(obj, type) and issubclass(obj, Dropin):
+                    dropins.append(obj)
+        logger.debug(f"ANTIBOT loaded drop-in classes: {', '.join([d.__name__ for d in dropins])}")
+        return dropins
+
+    def sanitize_url(self, url: str) -> str:
+        for dropin in self.dropins:
+            if dropin.suitable(url):
+                return dropin.sanitize_url(url)
+        return url
+
     def download(self, item: Metadata) -> Metadata:
         result = Metadata()
         result.merge(item)
@@ -41,12 +78,26 @@ class AntibotExtractorEnricher(Extractor, Enricher):
             result.status = "antibot"
             return result
 
-    def enrich(self, to_enrich: Metadata) -> bool:
+    def _warn_about_docker_and_user_data_dir(self):
+        in_docker = os.environ.get("RUNNING_IN_DOCKER")
+        if in_docker and self.user_data_dir:
+            st = os.stat(self.user_data_dir)
+            perms = stat.filemode(st.st_mode)
+            owner = st.st_uid
+            group = st.st_gid
+            if owner != 0 or group != 0:
+                logger.warning(
+                    f"""ANTIBOT: Running in Docker with user_data_dir {self.user_data_dir} with permissions {perms} and non-root {owner=}. This may cause issues with Chrome, if you get 'session not created' errors make sure to remove the folder and let docker create it."""
+                )
+
+    def enrich(self, to_enrich: Metadata, custom_data_dir: bool = True) -> bool:
+        using_user_data_dir = self.user_data_dir if custom_data_dir else None
         url = to_enrich.get_url()
         # TODO: implement cookies auth = self.auth_for_site(url) and combine with if UrlUtil.is_auth_wall(url) like in ScreenshotEnricher
         url_sample = url[:75]
+
         try:
-            with SB(uc=True, agent=self.agent, headed=None, proxy=self.proxy) as sb:
+            with SB(uc=True, agent=self.agent, headed=None, user_data_dir=using_user_data_dir, proxy=self.proxy) as sb:
                 logger.info(f"ANTIBOT selenium browser is up with agent {self.agent}, opening {url_sample}...")
                 sb.uc_open_with_reconnect(url, 4)
 
@@ -55,11 +106,17 @@ class AntibotExtractorEnricher(Extractor, Enricher):
                 # TODO: implement other Captcha handling
                 sb.uc_gui_handle_captcha()  # handles Cloudflare Turnstile captcha if detected
 
-                # time.sleep(1)  # wait for the page to load
+                suitable_dropin = self._get_suitable_dropin(url, sb)
+
+                if suitable_dropin:
+                    suitable_dropin.open_page(url)
+
                 if self._hit_auth_wall(sb):
                     logger.warning(f"ANTIBOT SKIP since auth wall or CAPTCHA was detected for {url_sample}")
                     return False
                 logger.debug(f"ANTIBOT no auth wall detected for {url_sample}...")
+                sb.wait_for_ready_state_complete()
+                sb.sleep(1)  # margin for the page to load completely
 
                 to_enrich.set_title(sb.get_title())
                 self._enrich_html_source_code(sb, to_enrich)
@@ -67,17 +124,41 @@ class AntibotExtractorEnricher(Extractor, Enricher):
                 if self.save_to_pdf:
                     self._enrich_full_page_pdf(sb, to_enrich)
 
-                self._enrich_download_media(sb, to_enrich, css_selector="img", max_media=self.max_download_images)
-                self._enrich_download_media(
-                    sb, to_enrich, css_selector="video, source", max_media=self.max_download_videos
-                )
+                downloaded_images, downloaded_videos = 0, 0
+                if suitable_dropin:
+                    downloaded_images, downloaded_videos = suitable_dropin.add_extra_media(to_enrich)
 
+                self._enrich_download_media(
+                    sb, to_enrich, css_selector="img", max_media=self.max_download_images - downloaded_images
+                )
+                self._enrich_download_media(
+                    sb, to_enrich, css_selector="video, source", max_media=self.max_download_videos - downloaded_videos
+                )
                 logger.success(f"ANTIBOT completed for {url_sample}")
 
             return to_enrich
+        except selenium.common.exceptions.SessionNotCreatedException as e:
+            if custom_data_dir:  # the retry logic only works once
+                logger.error(
+                    f"ANTIBOT session not created error: {e}. Please remove the user_data_dir {self.user_data_dir} and try again, will retry without user data dir though."
+                )
+                return self.enrich(to_enrich, custom_data_dir=False)
+            raise e  # re-raise
         except Exception as e:
             logger.error(f"ANTIBOT runtime error: {e}: {traceback.format_exc()}")
             return False
+
+    def _get_suitable_dropin(self, url: str, sb: SB):
+        """
+        Returns a suitable drop-in for the given URL.
+        This method checks if the URL is suitable for any of the registered drop-ins.
+        """
+        for dropin in self.dropins:
+            if dropin.suitable(url):
+                logger.debug(f"ANTIBOT using drop-in {dropin.__class__.__name__} for {url}")
+                return dropin(sb, self)
+        # logger.warning(f"ANTIBOT no suitable drop-in found for {url}")
+        return None
 
     def _hit_auth_wall(self, sb: SB) -> bool:
         """
@@ -202,16 +283,20 @@ class AntibotExtractorEnricher(Extractor, Enricher):
         )
         url = to_enrich.get_url()
         all_urls = set()
-        media_elements = sb.find_elements(css_selector)
-        for media in media_elements:
+        # media_elements = sb.find_elements(css_selector)
+        sources = sb.execute_script(f"""
+            return Array.from(document.querySelectorAll("{css_selector}"))
+                    .map(el => el.src || el.href)
+                    .filter(Boolean);
+        """)
+        for src in sources:
             if len(all_urls) >= max_media:
                 logger.debug(f"Reached max download limit of {max_media} images/videos.")
                 break
-            if src := media.get_attribute("src"):
-                mimerype = mimetypes.guess_type(src)[0]
-                if mimerype in self.exclude_media_mimetypes:
-                    continue
-                full_src = urljoin(url, src)
-                if full_src not in all_urls and (filename := self.download_from_url(full_src)):
-                    all_urls.add(full_src)
-                    to_enrich.add_media(Media(filename=filename, properties={"url": full_src}))
+            mimerype = mimetypes.guess_type(src)[0]
+            if mimerype in self.exclude_media_mimetypes:
+                continue
+            full_src = urljoin(url, src)
+            if full_src not in all_urls and (filename := self.download_from_url(full_src)):
+                all_urls.add(full_src)
+                to_enrich.add_media(Media(filename=filename, properties={"url": full_src}))

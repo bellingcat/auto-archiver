@@ -128,7 +128,7 @@ def ydl_entry_to_filename(ydl, entry: dict) -> str:
     filename = ydl.prepare_filename(entry)
     if os.path.exists(filename):
         return filename
-    
+
     base_filename, _ = os.path.splitext(filename)  # '/get/path/to/file' ignore '.ext'
     directory = os.path.dirname(base_filename)  # '/get/path/to'
     basename = os.path.basename(base_filename)  # 'file'
