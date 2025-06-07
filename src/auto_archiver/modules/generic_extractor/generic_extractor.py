@@ -1,4 +1,3 @@
-import mimetypes
 import shutil
 import sys
 import datetime
