@@ -578,6 +578,7 @@ Here's how that would look: \n\nsteps:\n  extractors:\n  - [your_extractor_name_
 
         result.set_url(url)
         if original_url != url:
+            logger.debug(f"Sanitized URL from {original_url} to {url}")
             result.set("original_url", original_url)
 
         # 2 - notify start to DBs, propagate already archived if feature enabled in DBs
