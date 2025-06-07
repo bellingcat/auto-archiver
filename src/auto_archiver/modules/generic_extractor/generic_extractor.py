@@ -20,6 +20,7 @@ from loguru import logger
 from auto_archiver.core.extractor import Extractor
 from auto_archiver.core import Metadata, Media
 from auto_archiver.utils import get_datetime_from_str
+from auto_archiver.utils.misc import ydl_entry_to_filename
 from .dropin import GenericDropin
 
 
@@ -382,27 +383,13 @@ class GenericExtractor(Extractor):
             entries = [data]
         result = Metadata()
 
-        def _helper_get_filename(entry: dict) -> str:
-            entry_url = entry.get("url")
 
-            filename = ydl.prepare_filename(entry)
-            base_filename, _ = os.path.splitext(filename)  # '/get/path/to/file' ignore '.ext'
-            directory = os.path.dirname(base_filename)  # '/get/path/to'
-            basename = os.path.basename(base_filename)  # 'file'
-            for f in os.listdir(directory):
-                if (
-                    f.startswith(basename)
-                    or (entry_url and os.path.splitext(f)[0] in entry_url)
-                    and "video/" in (mimetypes.guess_type(f)[0] or "")
-                ):
-                    return os.path.join(directory, f)
-            return False
 
         for entry in entries:
             try:
-                filename = _helper_get_filename(entry)
+                filename = ydl_entry_to_filename(ydl, entry)
 
-                if not filename or not os.path.exists(filename):
+                if not filename:
                     # file was not downloaded or could not be retrieved, example: sensitive videos on YT without using cookies.
                     continue
 

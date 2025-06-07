@@ -1,5 +1,6 @@
 import hashlib
 import json
+import mimetypes
 import os
 import uuid
 from datetime import datetime, timezone
@@ -116,3 +117,26 @@ def get_timestamp(ts, utc=True, iso=True, dayfirst=True) -> str | datetime | Non
 
 def get_current_timestamp() -> str:
     return get_timestamp(datetime.now())
+
+
+def ydl_entry_to_filename(ydl, entry: dict) -> str:
+    import yt_dlp
+
+    ydl: yt_dlp.YoutubeDL
+    entry_url = entry.get("url")
+
+    filename = ydl.prepare_filename(entry)
+    if os.path.exists(filename):
+        return filename
+    
+    base_filename, _ = os.path.splitext(filename)  # '/get/path/to/file' ignore '.ext'
+    directory = os.path.dirname(base_filename)  # '/get/path/to'
+    basename = os.path.basename(base_filename)  # 'file'
+    for f in os.listdir(directory):
+        if (
+            f.startswith(basename)
+            or (entry_url and os.path.splitext(f)[0] in entry_url)
+            and "video/" in (mimetypes.guess_type(f)[0] or "")
+        ):
+            return os.path.join(directory, f)
+    return False
