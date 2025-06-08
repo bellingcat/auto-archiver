@@ -4,9 +4,7 @@
     "author": "Bellingcat",
     "type": ["extractor"],
     "requires_setup": False,
-    "dependencies": {
-        "python": ["yt_dlp", "requests", "loguru", "slugify"],
-    },
+    "dependencies": {"python": ["yt_dlp", "requests", "loguru", "slugify"], "bin": ["ffmpeg"]},
     "description": """
 This is the generic extractor used by auto-archiver, which uses `yt-dlp` under the hood.
 

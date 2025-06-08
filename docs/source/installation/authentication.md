@@ -52,12 +52,12 @@ authentication:
       username: myusername
       password: 123
     
-    facebook.com:
-       cookie: single_cookie
+   facebook.com:
+      cookie: single_cookie
 
-    othersite.com:
-       api_key: 123
-       api_secret: 1234
+   othersite.com:
+      api_key: 123
+      api_secret: 1234
   
 ```
 

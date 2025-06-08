@@ -2,9 +2,7 @@
     "name": "Antibot Extractor/Enricher",
     "type": ["extractor", "enricher"],
     "requires_setup": False,
-    "dependencies": {
-        "python": ["loguru", "seleniumbase"],
-    },
+    "dependencies": {"python": ["loguru", "seleniumbase", "yt_dlp"], "bin": ["ffmpeg"]},
     "configs": {
         "save_to_pdf": {
             "default": False,
@@ -22,6 +20,10 @@
         "exclude_media_extensions": {
             "default": ".svg,.ico,.gif",
             "help": "CSV of media (image/video) file extensions to exclude from download",
+        },
+        "user_data_dir": {
+            "default": "secrets/antibot_user_data",
+            "help": "Path to the user data directory for the webdriver. This is used to persist browser state, such as cookies and local storage. When using docker it's best to let docker create the folder otherwise there may be permission issues. The Extractor will try to work without it if that error occurs but login sessions will not be used or preserved on those runs.",
         },
         "proxy": {
             "default": None,
