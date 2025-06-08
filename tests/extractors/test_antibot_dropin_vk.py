@@ -5,6 +5,15 @@ from auto_archiver.modules.antibot_extractor_enricher.dropins.vk import VkDropin
 @pytest.mark.parametrize(
     "input_url,expected",
     [
+        # Unrelated URL, should return unchanged
+        (
+            "https://vk.com/id123456",
+            "https://vk.com/id123456",
+        ),
+        (
+            "https://example.com/",
+            "https://example.com/",
+        ),
         # Wall post modal URL
         (
             "https://vk.com/somepage?w=wall-123456_7890",
@@ -53,14 +62,25 @@ from auto_archiver.modules.antibot_extractor_enricher.dropins.vk import VkDropin
             "https://vk.com/video-111222_3334",
             "https://vk.com/video-111222_3334",
         ),
-        # Unrelated URL, should return unchanged
+        # Clip modal URL
         (
-            "https://vk.com/id123456",
-            "https://vk.com/id123456",
+            "https://vk.com/somepage?w=clip-555666_7778",
+            "https://vk.com/clip-555666_7778",
         ),
+        # Clip modal URL with no dash
         (
-            "https://example.com/",
-            "https://example.com/",
+            "https://vk.com/somepage?w=clip555666_7778",
+            "https://vk.com/clip555666_7778",
+        ),
+        # Clip modal URL with extra part
+        (
+            "https://vk.com/somepage?w=clip-555666_7778_ABC",
+            "https://vk.com/clip-555666_7778",
+        ),
+        # No modal, should return unchanged (clip)
+        (
+            "https://vk.com/clip-555666_7778",
+            "https://vk.com/clip-555666_7778",
         ),
         # Modal with multiple params, should still work with right priority
         (

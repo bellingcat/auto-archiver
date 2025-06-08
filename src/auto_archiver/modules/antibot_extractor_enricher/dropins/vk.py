@@ -16,8 +16,9 @@ class VkDropin(Dropin):
     """
 
     WALL_PATTERN = re.compile(r"(wall.{0,1}\d+_\d+)")
-    PHOTO_PATTERN = re.compile(r"(photo.{0,1}\d+_\d+)")
     VIDEO_PATTERN = re.compile(r"(video.{0,1}\d+_\d+(?:_\w+)?)")
+    CLIP_PATTERN = re.compile(r"(clip.{0,1}\d+_\d+)")
+    PHOTO_PATTERN = re.compile(r"(photo.{0,1}\d+_\d+)")
 
     @staticmethod
     def suitable(url: str) -> bool:
@@ -28,24 +29,21 @@ class VkDropin(Dropin):
         """
         Transforms modal URLs like 'https://vk.com/page_name?w=wall-123456_7890' to 'https://vk.com/wall-123456_7890'
         """
-        for pattern in [VkDropin.WALL_PATTERN, VkDropin.VIDEO_PATTERN, VkDropin.PHOTO_PATTERN]:
+        for pattern in [VkDropin.WALL_PATTERN, VkDropin.VIDEO_PATTERN, VkDropin.CLIP_PATTERN, VkDropin.PHOTO_PATTERN]:
             match = pattern.search(url)
             if match:
                 return f"https://vk.com/{match.group(1)}"
         return url
 
     def open_page(self, url) -> bool:
-        logger.debug("Checking if authenticated for VK...")
-        if self.sb.get_current_url() != url or self.sb.is_text_visible("Sign in to VK"):
-            logger.info("Opening VK page: {}", url)
+        if self.sb.is_text_visible("Sign in to VK"):
             self._login()
             self.sb.open(url)
-        logger.debug("VK page opened successfully.")
         return True
 
     def _login(self) -> bool:
         # TODO: test method
-        self.sb.activate_cdp_mode("https://vk.com")
+        self.sb.open("https://vk.com")
         self.sb.wait_for_ready_state_complete()
         if "/feed" in self.sb.get_current_url():
             logger.debug("Already logged in to VK.")
