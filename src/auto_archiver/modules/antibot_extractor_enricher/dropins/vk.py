@@ -37,6 +37,7 @@ class VkDropin(Dropin):
                 self.sb.open(url)
         return True
 
+    @logger.catch
     def _login(self) -> bool:
         # TODO: test method
         self.sb.open("https://vk.com")

@@ -29,6 +29,7 @@ class RedditDropin(Dropin):
                 self.sb.open(url)
         return True
 
+    @logger.catch
     def _login(self):
         self.sb.click_link_text("Log in")
         self.sb.wait_for_ready_state_complete()
