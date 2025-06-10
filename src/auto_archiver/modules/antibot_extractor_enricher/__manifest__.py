@@ -31,7 +31,9 @@
         },
     },
     "description": """
-    Uses a browser controlled by SeleniumBase to capture HTML, media, and screenshots/PDFs of a web page, by bypassing anti-bot measures like Cloudflare's Turnstile.
+    Uses a browser controlled by SeleniumBase to capture HTML, media, and screenshots/PDFs of a web page, by bypassing anti-bot measures like Cloudflare's Turnstile or Google Recaptcha.
+	
+	Still in trial development, please report any issues or suggestions via GitHub Issues.
 
     ### Features
 	- Extracts the HTML source code of the page.
@@ -40,7 +42,6 @@
 	- Downloads images and videos from the page, excluding specified file extensions.
 
     ### Notes
-    - Requires a WebDriver (e.g., ChromeDriver) installed and accessible via the system's PATH.
 	- Using a proxy affects Cloudflare Turnstile captcha handling, so it is recommended to use a proxy only if necessary.
     """,
 }
