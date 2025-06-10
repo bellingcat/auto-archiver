@@ -133,6 +133,36 @@ def is_relevant_url(url: str) -> bool:
 def twitter_best_quality_url(url: str) -> str:
     """
     some twitter image URLs point to a less-than best quality
-    this returns the URL pointing to the highest (original) quality
+    this returns the URL pointing to the highest (original) quality (with 'name=orig')
     """
-    return re.sub(r"name=(\w+)", "name=orig", url, 1)
+    parsed = urlparse(url)
+    query = parsed.query
+    if "name=" in query:
+        # Replace only the first occurrence of name=xxx with name=orig
+        new_query = re.sub(r"name=[^&]*", "name=orig", query, 1)
+        parsed = parsed._replace(query=new_query)
+        return urlunparse(parsed)
+    return url
+
+
+def get_media_url_best_quality(url: str) -> str:
+    """
+    Returns the best quality URL for the given media URL, it may not exist.
+    """
+    parsed = urlparse(url)
+
+    # twitter case
+    if any(d in parsed.netloc.replace("www", "") for d in ("twitter.com", "twimg.com", "x.com")):
+        url = twitter_best_quality_url(url)
+        parsed = urlparse(url)
+
+    # some cases https://example.com/media-1280x720.mp4 to https://example.com/media.mp4
+    basename = parsed.path.split("/")[-1]
+    match = re.match(r"(.+)-\d+x\d+(\.[a-zA-Z0-9]+)$", basename)
+    if match:
+        orig_basename = match.group(1) + match.group(2)
+        new_path = "/".join(parsed.path.split("/")[:-1] + [orig_basename])
+        parsed = parsed._replace(path=new_path)  # keep the query unchanged
+        url = urlunparse(parsed)
+
+    return url

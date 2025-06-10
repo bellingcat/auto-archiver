@@ -6,6 +6,7 @@ from auto_archiver.utils.url import (
     is_relevant_url,
     remove_get_parameters,
     twitter_best_quality_url,
+    get_media_url_best_quality,
 )
 
 
@@ -109,10 +110,51 @@ def test_is_relevant_url(url, relevant):
 @pytest.mark.parametrize(
     "url, best_quality",
     [
-        ("https://twitter.com/some_image.jpg?name=small", "https://twitter.com/some_image.jpg?name=orig"),
+        (
+            "https://twitter.com/some_image.jpg?name=small&this_is_another=145",
+            "https://twitter.com/some_image.jpg?name=orig&this_is_another=145",
+        ),
         ("https://twitter.com/some_image.jpg", "https://twitter.com/some_image.jpg"),
         ("https://twitter.com/some_image.jpg?name=orig", "https://twitter.com/some_image.jpg?name=orig"),
     ],
 )
 def test_twitter_best_quality_url(url, best_quality):
     assert twitter_best_quality_url(url) == best_quality
+
+
+@pytest.mark.parametrize(
+    "input_url,expected_url",
+    [
+        # Twitter: add/replace name= to name=orig
+        (
+            "https://pbs.twimg.com/media/abc123?format=jpg&name=small",
+            "https://pbs.twimg.com/media/abc123?format=jpg&name=orig",
+        ),
+        ("https://pbs.twimg.com/media/abc123?name=large", "https://pbs.twimg.com/media/abc123?name=orig"),
+        ("https://pbs.twimg.com/media/abc123?format=jpg", "https://pbs.twimg.com/media/abc123?format=jpg"),
+        # Twitter: already orig
+        (
+            "https://pbs.twimg.com/media/abc123?format=jpg&name=orig",
+            "https://pbs.twimg.com/media/abc123?format=jpg&name=orig",
+        ),
+        # X.com domain
+        ("https://x.com/media/abc123?name=medium", "https://x.com/media/abc123?name=orig"),
+        # twimg.com domain
+        ("https://twimg.com/media/abc123?name=thumb", "https://twimg.com/media/abc123?name=orig"),
+        # Non-twitter domain, no change
+        ("https://example.com/media/file.mp4", "https://example.com/media/file.mp4"),
+        # Remove -WxH from basename
+        ("https://example.com/media/file-1280x720.mp4", "https://example.com/media/file.mp4"),
+        ("https://example.com/media/file-1920x1080.jpg?foo=bar", "https://example.com/media/file.jpg?foo=bar"),
+        # Both twitter and -WxH
+        ("https://pbs.twimg.com/media/abc-1280x720.jpg?name=small", "https://pbs.twimg.com/media/abc.jpg?name=orig"),
+        # No match for -WxH, no change
+        ("https://example.com/media/file.mp4?foo=bar", "https://example.com/media/file.mp4?foo=bar"),
+        # Path with multiple directories
+        ("https://example.com/a/b/c/file-640x480.png", "https://example.com/a/b/c/file.png"),
+        # -WxH in directory, not basename (should not change)
+        ("https://example.com/media-1280x720/file.mp4", "https://example.com/media-1280x720/file.mp4"),
+    ],
+)
+def test_get_media_url_best_quality(input_url, expected_url):
+    assert get_media_url_best_quality(input_url) == expected_url
