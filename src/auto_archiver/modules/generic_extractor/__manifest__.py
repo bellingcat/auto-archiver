@@ -30,6 +30,8 @@ For a full list of video platforms supported by `yt-dlp`, see the
 custom dropins can be created to handle additional websites and passed to the archiver
 via the command line using the `--dropins` option (TODO!).
 
+You can see all currently implemented dropins in [the source code](https://github.com/bellingcat/auto-archiver/tree/main/src/auto_archiver/modules/generic_extractor).
+
 ### Auto-Updates
 
 The Generic Extractor will also automatically check for updates to `yt-dlp` (every 5 days by default).

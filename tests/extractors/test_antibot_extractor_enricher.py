@@ -34,7 +34,6 @@ class TestAntibotExtractorEnricher(TestExtractorBase):
         "save_to_pdf": False,
         "max_download_images": 0,
         "max_download_videos": 0,
-        "exclude_media_extensions": ".svg,.ico,.gif",
         "proxy": None,
     }
 
@@ -129,14 +128,32 @@ class TestAntibotExtractorEnricher(TestExtractorBase):
             ),
             (
                 "https://seleniumbase.io/apps/turnstile",
-                'id="captcha-success"',
+                '<img id="captcha-success" src="https://seleniumbase.io/cdn/img/green_check.png" style="" width="180">',
+            ),
+            (
+                "https://seleniumbase.io/apps/form_turnstile",
+                '<img id="captcha-success" src="https://seleniumbase.io/cdn/img/green_check.png" width="120" style="">',
+            ),
+            (
+                "https://gitlab.com/users/sign_in",
+                "Password",
             ),
         ],
     )
-    def test_download_with_cloudflare_turnstile(self, setup_module, make_item, url, in_html):
+    def test_overcome_cloudflare_turnstile(self, setup_module, make_item, url, in_html):
         """
         Test downloading a page with Cloudflare Turnstile captcha.
         """
+
+        self.extractor = setup_module(
+            self.extractor_module,
+            {
+                "save_to_pdf": True,
+                "detect_auth_wall": False,
+                "max_download_images": 5,
+                "max_download_videos": "inf",
+            },
+        )
 
         item = make_item(url)
         self.extractor.enrich(item)

@@ -1,12 +1,8 @@
-import os
 import re
 
-from auto_archiver.core.media import Media
 from auto_archiver.core.metadata import Metadata
 from auto_archiver.modules.antibot_extractor_enricher.dropin import Dropin
-from auto_archiver.utils.misc import ydl_entry_to_filename
 
-import yt_dlp
 from loguru import logger
 
 
@@ -37,10 +33,11 @@ class VkDropin(Dropin):
 
     def open_page(self, url) -> bool:
         if self.sb.is_text_visible("Sign in to VK"):
-            self._login()
-            self.sb.open(url)
+            if self._login():
+                self.sb.open(url)
         return True
 
+    @logger.catch
     def _login(self) -> bool:
         # TODO: test method
         self.sb.open("https://vk.com")
@@ -50,13 +47,9 @@ class VkDropin(Dropin):
             return True
 
         # need to login
-        logger.debug("Logging in to VK...")
-        auth = self.extractor.auth_for_site("vk.com")
-        username = auth.get("username", "")
-        password = auth.get("password", "")
-        if not username or not password:
-            raise ValueError("VK authentication requires a username and password.")
-        logger.debug("Using username: {}", username)
+        username, password = self._get_username_password("vk.com")
+        logger.debug("Logging in to VK with username: {}", username)
+
         self.sb.click('[data-testid="enter-another-way"]', timeout=10)
         self.sb.clear('input[name="login"][type="tel"]', by="css selector", timeout=10)
         self.sb.type('input[name="login"][type="tel"]', username, by="css selector", timeout=10)
@@ -80,47 +73,6 @@ class VkDropin(Dropin):
 
     @logger.catch
     def add_extra_media(self, to_enrich: Metadata) -> tuple[int, int]:
-        """
-        Extract video data from the currently open post with SeleniumBase.
-
-        :return: A tuple (number of Images added, number of Videos added).
-        """
         video_urls = [v.get_attribute("href") for v in self.sb.find_elements('a[href*="/video-"]')]
-        if type(self.extractor.max_download_videos) is int:
-            video_urls = video_urls[: self.extractor.max_download_videos]
 
-        if not video_urls:
-            return 0, 0
-
-        logger.debug(f"Found {len(video_urls)} video URLs in the post, using ytdlp for download.")
-        ydl_options = [
-            "-o",
-            os.path.join(self.extractor.tmp_dir, "%(id)s.%(ext)s"),
-            "--quiet",
-            "--no-playlist",
-            "--no-write-subs",
-            "--no-write-auto-subs",
-            "--postprocessor-args",
-            "ffmpeg:-bitexact",
-            "--max-filesize",
-            "1000M",  # Limit to 1GB per video
-        ]
-        *_, validated_options = yt_dlp.parse_options(ydl_options)
-        downloaded = 0
-        with yt_dlp.YoutubeDL(validated_options) as ydl:
-            for url in video_urls:
-                try:
-                    logger.debug(f"Downloading video from URL: {url}")
-                    info = ydl.extract_info(url, download=True)
-                    filename = ydl_entry_to_filename(ydl, info)
-                    if not filename:  # Failed to download video.
-                        continue
-                    media = Media(filename)
-                    for x in ["duration", "original_url", "fulltitle", "description", "upload_date"]:
-                        if x in info:
-                            media.set(x, info[x])
-                    to_enrich.add_media(media)
-                    downloaded += 1
-                except Exception as e:
-                    logger.error(f"Error downloading {url}: {e}")
-        return 0, downloaded
+        return 0, self._download_videos_with_ytdlp(video_urls, to_enrich)

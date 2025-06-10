@@ -17,13 +17,14 @@
             "default": 50,
             "help": "maximum number of videos to download from the page (0 = no download, inf = no limit).",
         },
-        "exclude_media_extensions": {
-            "default": ".svg,.ico,.gif",
-            "help": "CSV of media (image/video) file extensions to exclude from download",
-        },
         "user_data_dir": {
             "default": "secrets/antibot_user_data",
-            "help": "Path to the user data directory for the webdriver. This is used to persist browser state, such as cookies and local storage. When using docker it's best to let docker create the folder otherwise there may be permission issues. The Extractor will try to work without it if that error occurs but login sessions will not be used or preserved on those runs.",
+            "help": "Path to the user data directory for the webdriver. This is used to persist browser state, such as cookies and local storage. If you use the docker deployment, this path will be appended with `_docker` that is because the folder cannot be shared between the host and the container due to user permissions.",
+        },
+        "detect_auth_wall": {
+            "default": True,
+            "type": "bool",
+            "help": "detect if the page is behind an authentication wall (e.g. login required) and skip it. disable if you want to archive pages where logins are required.",
         },
         "proxy": {
             "default": None,
@@ -31,7 +32,9 @@
         },
     },
     "description": """
-    Uses a browser controlled by SeleniumBase to capture HTML, media, and screenshots/PDFs of a web page, by bypassing anti-bot measures like Cloudflare's Turnstile.
+    Uses a browser controlled by SeleniumBase to capture HTML, media, and screenshots/PDFs of a web page, by bypassing anti-bot measures like Cloudflare's Turnstile or Google Recaptcha.
+	
+	Still in trial development, please report any issues or suggestions via GitHub Issues.
 
     ### Features
 	- Extracts the HTML source code of the page.
@@ -40,7 +43,6 @@
 	- Downloads images and videos from the page, excluding specified file extensions.
 
     ### Notes
-    - Requires a WebDriver (e.g., ChromeDriver) installed and accessible via the system's PATH.
 	- Using a proxy affects Cloudflare Turnstile captcha handling, so it is recommended to use a proxy only if necessary.
     """,
 }
