@@ -69,7 +69,7 @@ class RedditDropin(Dropin):
 
     @logger.catch
     def add_extra_media(self, to_enrich: Metadata) -> tuple[int, int]:
-        filtered_urls = self.sb.execute_script(f"""
+        filtered_urls = self.sb.execute_script(rf"""
             return [...document.querySelectorAll("{self.video_selectors()}")]
             .map(el => el.src || el.href)
             .filter(url => url && /\.(m3u8|mpd|ism)$/.test(url));
