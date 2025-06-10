@@ -95,6 +95,11 @@ def test_remove_get_parameters(url, without_get):
         ("https://example.com/150x150.jpg", True),
         ("https://example.com/rsrc.php/", True),
         ("https://example.com/img/emoji/", True),
+        ("https://styles.redditmedia.com/123", False),
+        ("https://emoji.redditmedia.com/abc.jpg", False),
+        ("https://example.com/rsrc.m3u8?asdasd=10", False),
+        ("https://example.com/rsrc.mpd", False),
+        ("https://example.com/rsrc.ism?vid=12", False),
     ],
 )
 def test_is_relevant_url(url, relevant):

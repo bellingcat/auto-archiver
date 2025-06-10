@@ -78,6 +78,8 @@ def remove_get_parameters(url: str) -> str:
 def is_relevant_url(url: str) -> bool:
     """
     Detect if a detected media URL is recurring and therefore irrelevant to a specific archive. Useful, for example, for the enumeration of the media files in WARC files which include profile pictures, favicons, etc.
+
+    Assumption: URLs are relevant if they refer to files that can be downloaded with curl/requests, so excludes extensions like .m3u8.
     """
     clean_url = remove_get_parameters(url)
 
@@ -104,11 +106,17 @@ def is_relevant_url(url: str) -> bool:
         ("vk.com/images/reaction/",),
         # wikipedia
         ("wikipedia.org/static",),
+        # reddit
+        ("styles.redditmedia.com",),  # opinionated but excludes may irrelevant images like avatars and banners
+        ("emoji.redditmedia.com",),
     ]
 
     IRRELEVANT_ENDS_WITH = [
         ".svg",  # ignore SVGs
         ".ico",  # ignore icons
+        ".m3u8",
+        ".mpd",
+        ".ism",  # ignore index files for videos, these should be handled by ytdlp
     ]
 
     for end in IRRELEVANT_ENDS_WITH:
