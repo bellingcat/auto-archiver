@@ -17,10 +17,6 @@
             "default": 50,
             "help": "maximum number of videos to download from the page (0 = no download, inf = no limit).",
         },
-        "exclude_media_extensions": {
-            "default": ".svg,.ico,.gif",
-            "help": "CSV of media (image/video) file extensions to exclude from download",
-        },
         "user_data_dir": {
             "default": "secrets/antibot_user_data",
             "help": "Path to the user data directory for the webdriver. This is used to persist browser state, such as cookies and local storage. If you use the docker deployment, this path will be appended with `_docker` that is because the folder cannot be shared between the host and the container due to user permissions.",

@@ -1,6 +1,5 @@
 import base64
 import math
-import mimetypes
 import os
 import sys
 import traceback
@@ -26,10 +25,6 @@ class AntibotExtractorEnricher(Extractor, Enricher):
             self.agent = None  # Use the default UserAgent
 
         # parse configuration options
-        self.exclude_media_mimetypes = set(
-            [mimetypes.guess_type(f"file{m}")[0] for m in self.exclude_media_extensions.split(",")]
-        ) - {None}
-
         if self.max_download_images == "inf":
             self.max_download_images = math.inf
         else:
@@ -291,9 +286,6 @@ class AntibotExtractorEnricher(Extractor, Enricher):
                 logger.debug(f"Reached max download limit of {max_media} images/videos.")
                 break
             if not is_relevant_url(src):
-                continue
-            mimetype = mimetypes.guess_type(src)[0]
-            if mimetype in self.exclude_media_mimetypes:
                 continue
             full_src = urljoin(url, src)
             if full_src not in all_urls:

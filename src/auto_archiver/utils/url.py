@@ -111,12 +111,14 @@ def is_relevant_url(url: str) -> bool:
         ("emoji.redditmedia.com",),
     ]
 
+    # TODO: make these globally configurable
     IRRELEVANT_ENDS_WITH = [
         ".svg",  # ignore SVGs
         ".ico",  # ignore icons
+        # ignore index files for videos, these should be handled by ytdlp
         ".m3u8",
         ".mpd",
-        ".ism",  # ignore index files for videos, these should be handled by ytdlp
+        ".ism",
     ]
 
     for end in IRRELEVANT_ENDS_WITH:

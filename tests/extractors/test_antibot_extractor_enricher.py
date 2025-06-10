@@ -34,7 +34,6 @@ class TestAntibotExtractorEnricher(TestExtractorBase):
         "save_to_pdf": False,
         "max_download_images": 0,
         "max_download_videos": 0,
-        "exclude_media_extensions": ".svg,.ico,.gif",
         "proxy": None,
     }
 
