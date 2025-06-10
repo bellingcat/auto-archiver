@@ -23,7 +23,7 @@
         },
         "user_data_dir": {
             "default": "secrets/antibot_user_data",
-            "help": "Path to the user data directory for the webdriver. This is used to persist browser state, such as cookies and local storage. When using docker it's best to let docker create the folder otherwise there may be permission issues. The Extractor will try to work without it if that error occurs but login sessions will not be used or preserved on those runs.",
+            "help": "Path to the user data directory for the webdriver. This is used to persist browser state, such as cookies and local storage. If you use the docker deployment, this path will be appended with `_docker` that is because the folder cannot be shared between the host and the container due to user permissions.",
         },
         "detect_auth_wall": {
             "default": True,

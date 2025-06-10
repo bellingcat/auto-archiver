@@ -6,7 +6,6 @@ import sys
 import traceback
 from urllib.parse import urljoin
 import glob
-import stat
 import importlib.util
 
 from loguru import logger
@@ -41,7 +40,7 @@ class AntibotExtractorEnricher(Extractor, Enricher):
         else:
             self.max_download_videos = int(self.max_download_videos)
 
-        self._prepare_and_warn_about_docker_and_user_data_dir()
+        self._prepare_user_data_dir()
 
         self.dropins = self.load_dropins()
 
@@ -79,19 +78,12 @@ class AntibotExtractorEnricher(Extractor, Enricher):
             result.status = "antibot"
             return result
 
-    def _prepare_and_warn_about_docker_and_user_data_dir(self):
-        os.makedirs(self.user_data_dir, exist_ok=True)
-
-        in_docker = os.environ.get("RUNNING_IN_DOCKER")
-        if in_docker and self.user_data_dir:
-            st = os.stat(self.user_data_dir)
-            perms = stat.filemode(st.st_mode)
-            owner = st.st_uid
-            group = st.st_gid
-            if owner != 0 or group != 0:
-                logger.warning(
-                    f"""ANTIBOT: Running in Docker with user_data_dir {self.user_data_dir} with permissions {perms} and non-root {owner=}. This may cause issues with Chrome, if you get 'session not created' errors make sure to remove the folder and let docker create it."""
-                )
+    def _prepare_user_data_dir(self):
+        if self.user_data_dir:
+            in_docker = os.environ.get("RUNNING_IN_DOCKER")
+            if in_docker:
+                self.user_data_dir = self.user_data_dir.rstrip(os.path.sep) + "_docker"
+            os.makedirs(self.user_data_dir, exist_ok=True)
 
     def enrich(self, to_enrich: Metadata, custom_data_dir: bool = True) -> bool:
         using_user_data_dir = self.user_data_dir if custom_data_dir else None
