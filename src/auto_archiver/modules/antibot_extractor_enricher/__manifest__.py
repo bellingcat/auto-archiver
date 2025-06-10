@@ -25,6 +25,11 @@
             "default": "secrets/antibot_user_data",
             "help": "Path to the user data directory for the webdriver. This is used to persist browser state, such as cookies and local storage. When using docker it's best to let docker create the folder otherwise there may be permission issues. The Extractor will try to work without it if that error occurs but login sessions will not be used or preserved on those runs.",
         },
+        "detect_auth_wall": {
+            "default": True,
+            "type": "bool",
+            "help": "detect if the page is behind an authentication wall (e.g. login required) and skip it. disable if you want to archive pages where logins are required.",
+        },
         "proxy": {
             "default": None,
             "help": "proxy to use for the webdriver, Format: 'SERVER:PORT' or 'USER:PASS@SERVER:PORT'",

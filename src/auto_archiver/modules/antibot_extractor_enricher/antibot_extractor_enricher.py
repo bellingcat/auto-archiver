@@ -15,7 +15,9 @@ from seleniumbase import SB
 
 from auto_archiver.core import Extractor, Enricher, Metadata, Media
 from auto_archiver.modules.antibot_extractor_enricher.dropin import Dropin
+from auto_archiver.modules.antibot_extractor_enricher.dropins.default import DefaultDropin
 from auto_archiver.utils.misc import random_str
+from auto_archiver.utils.url import is_relevant_url
 
 
 class AntibotExtractorEnricher(Extractor, Enricher):
@@ -102,39 +104,41 @@ class AntibotExtractorEnricher(Extractor, Enricher):
                 sb.uc_open_with_reconnect(url, 4)
 
                 logger.debug(f"ANTIBOT handling CAPTCHAs for {url_sample}...")
+                sb.uc_gui_handle_cf()
+                sb.uc_gui_click_rc()  # NB: using handle instead of click breaks some sites like reddit, for now we separate here but can have dropins deciding this in the future
 
-                # TODO: implement other Captcha handling
-                sb.uc_gui_handle_captcha()  # handles Cloudflare Turnstile captcha if detected
+                dropin = self._get_suitable_dropin(url, sb)
+                dropin.open_page(url)
 
-                suitable_dropin = self._get_suitable_dropin(url, sb)
-
-                if suitable_dropin:
-                    suitable_dropin.open_page(url)
-
-                if self._hit_auth_wall(sb):
+                if self.detect_auth_wall and self._hit_auth_wall(sb):
                     logger.warning(f"ANTIBOT SKIP since auth wall or CAPTCHA was detected for {url_sample}")
                     return False
-                logger.debug(f"ANTIBOT no auth wall detected for {url_sample}...")
+
                 sb.wait_for_ready_state_complete()
                 sb.sleep(1)  # margin for the page to load completely
 
                 to_enrich.set_title(sb.get_title())
                 self._enrich_html_source_code(sb, to_enrich)
+
                 self._enrich_full_page_screenshot(sb, to_enrich)
                 if self.save_to_pdf:
                     self._enrich_full_page_pdf(sb, to_enrich)
 
-                downloaded_images, downloaded_videos = 0, 0
-                if suitable_dropin:
-                    downloaded_images, downloaded_videos = suitable_dropin.add_extra_media(to_enrich)
+                downloaded_images, downloaded_videos = dropin.add_extra_media(to_enrich)
 
                 self._enrich_download_media(
-                    sb, to_enrich, css_selector="img", max_media=self.max_download_images - downloaded_images
+                    sb,
+                    to_enrich,
+                    css_selector=dropin.images_selectors(),
+                    max_media=self.max_download_images - downloaded_images,
                 )
                 self._enrich_download_media(
-                    sb, to_enrich, css_selector="video, source", max_media=self.max_download_videos - downloaded_videos
+                    sb,
+                    to_enrich,
+                    css_selector=dropin.video_selectors(),
+                    max_media=self.max_download_videos - downloaded_videos,
                 )
-                logger.success(f"ANTIBOT completed for {url_sample}")
+                logger.info(f"ANTIBOT completed for {url_sample}")
 
             return to_enrich
         except selenium.common.exceptions.SessionNotCreatedException as e:
@@ -155,10 +159,10 @@ class AntibotExtractorEnricher(Extractor, Enricher):
         """
         for dropin in self.dropins:
             if dropin.suitable(url):
-                logger.debug(f"ANTIBOT using drop-in {dropin.__class__.__name__} for {url}")
+                logger.debug(f"ANTIBOT using drop-in {dropin.__name__} for {url}")
                 return dropin(sb, self)
-        # logger.warning(f"ANTIBOT no suitable drop-in found for {url}")
-        return None
+
+        return DefaultDropin(sb, self)
 
     def _hit_auth_wall(self, sb: SB) -> bool:
         """
@@ -168,8 +172,8 @@ class AntibotExtractorEnricher(Extractor, Enricher):
         # TODO: improve this detection logic, currently it is very basic and may not cover all cases
 
         # Common URL patterns
-        url = sb.get_current_url().lower()
-        if any(kw in url for kw in ["login", "signin", "signup", "register", "captcha"]):
+        current_url = sb.get_current_url().lower()
+        if any(kw in current_url for kw in ["login", "signin", "signup", "register", "captcha"]):
             return True
 
         # Common visible text markers
@@ -245,8 +249,12 @@ class AntibotExtractorEnricher(Extractor, Enricher):
         Enriches the full page screenshot of the Metadata object.
         This method is called by the enrich method.
         """
-        x = sb.execute_script("return document.documentElement.scrollWidth")
-        y = min(sb.execute_script("return document.documentElement.scrollHeight"), 25_000)
+        start_size = sb.get_window_size()
+        w, h = start_size["width"], start_size["height"]
+
+        x = max(sb.execute_script("return document.documentElement.scrollWidth"), w)
+        y = min(max(sb.execute_script("return document.documentElement.scrollHeight"), h), 25_000)
+        logger.debug(f"Setting window size to {x}x{y} for full page screenshot.")
         sb.set_window_size(x, y)
 
         screen_filename = os.path.join(self.tmp_dir, f"screenshot{random_str(6)}.png")
@@ -278,12 +286,9 @@ class AntibotExtractorEnricher(Extractor, Enricher):
         """
         if max_media == 0:
             return
-        logger.debug(
-            f"Downloading media from {to_enrich.get_url()} with selector '{css_selector}' up to {max_media} items."
-        )
         url = to_enrich.get_url()
         all_urls = set()
-        # media_elements = sb.find_elements(css_selector)
+
         sources = sb.execute_script(f"""
             return Array.from(document.querySelectorAll("{css_selector}"))
                     .map(el => el.src || el.href)
@@ -293,10 +298,15 @@ class AntibotExtractorEnricher(Extractor, Enricher):
             if len(all_urls) >= max_media:
                 logger.debug(f"Reached max download limit of {max_media} images/videos.")
                 break
-            mimerype = mimetypes.guess_type(src)[0]
-            if mimerype in self.exclude_media_mimetypes:
+            if not is_relevant_url(src):
+                continue
+            mimetype = mimetypes.guess_type(src)[0]
+            if mimetype in self.exclude_media_mimetypes:
                 continue
             full_src = urljoin(url, src)
-            if full_src not in all_urls and (filename := self.download_from_url(full_src)):
+            if full_src not in all_urls:
+                filename, full_src = self.download_from_url(full_src, try_best_quality=True)
+                if not filename:
+                    continue
                 all_urls.add(full_src)
                 to_enrich.add_media(Media(filename=filename, properties={"url": full_src}))
