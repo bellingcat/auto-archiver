@@ -36,7 +36,7 @@ class RedditDropin(Dropin):
         self._close_cookies_banner()
 
         username, password = self._get_username_password("reddit.com")
-        logger.debug("RedditDropin Logging in to VK with username: {}", username)
+        logger.debug("RedditDropin Logging in to Reddit with username: {}", username)
 
         self.sb.type("#login-username", username)
         self.sb.type("#login-password", password)

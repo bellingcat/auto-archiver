@@ -1,3 +1,4 @@
+import os
 import pytest
 
 from auto_archiver.modules.antibot_extractor_enricher.antibot_extractor_enricher import AntibotExtractorEnricher
@@ -34,7 +35,14 @@ class TestAntibotExtractorEnricher(TestExtractorBase):
         "save_to_pdf": False,
         "max_download_images": 0,
         "max_download_videos": 0,
+        "user_data_dir": "./tests/tmp/user_data",
         "proxy": None,
+        "authentication": {
+            "reddit.com": {
+                "username": os.environ.get("REDDIT_TEST_USERNAME"),
+                "password": os.environ.get("REDDIT_TEST_PASSWORD"),
+            }
+        },
     }
 
     @pytest.mark.download
@@ -76,16 +84,23 @@ class TestAntibotExtractorEnricher(TestExtractorBase):
                 5,
                 0,
             ),
+            (
+                "https://www.reddit.com/r/BeAmazed/comments/1l6b1n4/duy_tran_is_the_owner_and_prime_wood_work_artist/",
+                "Duy tran is the owner and prime wood work artist",
+                " Created Jan 26, 2015",
+                4,
+                0,
+            ),
         ],
     )
     def test_download_pages_with_media(self, setup_module, make_item, url, in_title, in_text, image_count, video_count):
         """
         Test downloading pages with media.
         """
-
         self.extractor = setup_module(
             self.extractor_module,
-            {
+            self.config
+            | {
                 "save_to_pdf": True,
                 "max_download_images": 5,
                 "max_download_videos": "inf",

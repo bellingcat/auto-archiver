@@ -1,6 +1,7 @@
 tmp*/
 temp/
 .env*
+!.env*.example
 .DS_Store
 expmt/
 service_account.json
