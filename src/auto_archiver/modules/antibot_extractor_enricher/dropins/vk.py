@@ -1,4 +1,5 @@
 import re
+from typing import Mapping
 
 from auto_archiver.core.metadata import Metadata
 from auto_archiver.modules.antibot_extractor_enricher.dropin import Dropin
@@ -15,6 +16,19 @@ class VkDropin(Dropin):
     VIDEO_PATTERN = re.compile(r"(video.{0,1}\d+_\d+(?:_\w+)?)")
     CLIP_PATTERN = re.compile(r"(clip.{0,1}\d+_\d+)")
     PHOTO_PATTERN = re.compile(r"(photo.{0,1}\d+_\d+)")
+
+    def documentation() -> Mapping[str, str]:
+        return {
+            "name": "VKontakte Dropin",
+            "description": "Handles VKontakte posts and works without authentication for some content.",
+            "site": "vk.com",
+            "authentication": {
+                "vk.com": {
+                    "username": "phone number with country code",
+                    "password": "password",
+                }
+            },
+        }
 
     @staticmethod
     def suitable(url: str) -> bool:
@@ -39,7 +53,7 @@ class VkDropin(Dropin):
 
     @logger.catch
     def _login(self) -> bool:
-        # TODO: test method
+        # TODO: test method, because current tests work without a login
         self.sb.open("https://vk.com")
         self.sb.wait_for_ready_state_complete()
         if "/feed" in self.sb.get_current_url():

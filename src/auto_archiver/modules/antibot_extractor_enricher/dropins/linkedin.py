@@ -1,3 +1,4 @@
+from typing import Mapping
 from loguru import logger
 from auto_archiver.modules.antibot_extractor_enricher.dropin import Dropin
 
@@ -6,6 +7,20 @@ class LinkedinDropin(Dropin):
     """
     A class to handle LinkedIn drop-in functionality for the antibot extractor enricher module.
     """
+
+    @staticmethod
+    def documentation() -> Mapping[str, str]:
+        return {
+            "name": "Linkedin Dropin",
+            "description": "Handles LinkedIn pages/posts and requires authentication to access most content but will still be useful without it. The first time you login to a new IP, LinkedIn may require an email verification code, you can do a manual login first and then it won't ask for it again.",
+            "site": "linkedin.com",
+            "authentication": {
+                "linkedin.com": {
+                    "username": "email address or phone number",
+                    "password": "password",
+                }
+            },
+        }
 
     notifications_css_selector = 'a[href*="linkedin.com/notifications"]'
 

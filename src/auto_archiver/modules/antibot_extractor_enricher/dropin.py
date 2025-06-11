@@ -1,4 +1,5 @@
 import os
+from typing import Mapping
 from loguru import logger
 from seleniumbase import SB
 import yt_dlp
@@ -12,6 +13,19 @@ class Dropin:
     A class to handle drop-in functionality for the antibot extractor enricher module.
     This class is designed to be a base class for drop-ins that can handle specific websites.
     """
+
+    @staticmethod
+    def documentation() -> Mapping[str, str]:
+        """
+        Each Dropin should auto-document itself with this method.
+        Return dictionary can include:
+        - 'name': A string representing the name of the dropin.
+        - 'description': A string describing the functionality of the dropin.
+        - 'site': A string representing the site this dropin is for.
+        - 'authentication': A dictionary with authentication example for the site.
+
+        """
+        return {}
 
     def __init__(self, sb: SB, extractor: Extractor):
         """

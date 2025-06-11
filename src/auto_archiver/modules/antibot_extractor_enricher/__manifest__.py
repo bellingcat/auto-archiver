@@ -31,11 +31,12 @@
             "help": "proxy to use for the webdriver, Format: 'SERVER:PORT' or 'USER:PASS@SERVER:PORT'",
         },
     },
+    "autodoc_dropins": True,
     "description": """
     Uses a browser controlled by SeleniumBase to capture HTML, media, and screenshots/PDFs of a web page, by bypassing anti-bot measures like Cloudflare's Turnstile or Google Recaptcha.
 	
-	Still in trial development, please report any issues or suggestions via GitHub Issues.
-
+	> ⚠️ Still in trial development, please report any issues or suggestions via [GitHub Issues](https://github.com/bellingcat/auto-archiver/issues).
+	
     ### Features
 	- Extracts the HTML source code of the page.
     - Takes full-page screenshots of web pages.
@@ -44,5 +45,9 @@
 
     ### Notes
 	- Using a proxy affects Cloudflare Turnstile captcha handling, so it is recommended to use a proxy only if necessary.
+
+	### Dropins
+	This module uses sub-modules called Dropins for specific sites that allow it to handle anti-bot measures and custom Login flows. You don't need to include the dropins in your configuration, but you do need to add authentication credentials if you want to overcome login walls on those sites, see detailed instructions for each Dropin below.
+
     """,
 }
