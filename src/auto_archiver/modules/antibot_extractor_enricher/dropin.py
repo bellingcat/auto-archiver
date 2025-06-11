@@ -53,6 +53,26 @@ class Dropin:
         """
         return "video, source"
 
+    def js_for_image_css_selectors(self) -> str:
+        """
+        A configurable JS script that receives a css selector from the dropin itself and returns an array of Image elements according to the selection.
+
+        You can overwrite this instead of `images_selector` for more control over scraped images.
+        """
+        return f"""
+            return Array.from(document.querySelectorAll("{self.images_selectors()}")).map(el => el.src || el.href).filter(Boolean);
+        """
+
+    def js_for_video_css_selectors(self) -> str:
+        """
+        A configurable JS script that receives a css selector from the dropin itself and returns an array of Video elements according to the selection.
+
+        You can overwrite this instead of `video_selector` for more control over scraped videos.
+        """
+        return f"""
+            return Array.from(document.querySelectorAll("{self.video_selectors()}")).map(el => el.src || el.href).filter(Boolean);
+        """
+
     def open_page(self, url) -> bool:
         """
         Make sure the page is opened, even if it requires authentication, captcha solving, etc.
@@ -66,7 +86,7 @@ class Dropin:
         Extract image and/or video data from the currently open post with SeleniumBase. Media is added to the `to_enrich` Metadata object.
         :return: A tuple (number of Images added, number of Videos added).
         """
-        raise NotImplementedError("This method should be implemented in the subclass")
+        return 0, 0
 
     def _get_username_password(self, site) -> tuple[str, str]:
         """

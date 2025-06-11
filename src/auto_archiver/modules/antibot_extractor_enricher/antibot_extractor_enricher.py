@@ -116,13 +116,13 @@ class AntibotExtractorEnricher(Extractor, Enricher):
                 self._enrich_download_media(
                     sb,
                     to_enrich,
-                    css_selector=dropin.images_selectors(),
+                    js_css_selector=dropin.js_for_image_css_selectors(),
                     max_media=self.max_download_images - downloaded_images,
                 )
                 self._enrich_download_media(
                     sb,
                     to_enrich,
-                    css_selector=dropin.video_selectors(),
+                    js_css_selector=dropin.js_for_video_css_selectors(),
                     max_media=self.max_download_videos - downloaded_videos,
                 )
                 logger.info(f"ANTIBOT completed for {url_sample}")
@@ -266,7 +266,7 @@ class AntibotExtractorEnricher(Extractor, Enricher):
         to_enrich.add_media(Media(filename=pdf_filename), id="pdf")
 
     @logger.catch
-    def _enrich_download_media(self, sb: SB, to_enrich: Metadata, css_selector: str, max_media: int):
+    def _enrich_download_media(self, sb: SB, to_enrich: Metadata, js_css_selector: str, max_media: int):
         """
         Downloads media from the page and adds them to the Metadata object.
         This method is called by the enrich method.
@@ -276,11 +276,8 @@ class AntibotExtractorEnricher(Extractor, Enricher):
         url = to_enrich.get_url()
         all_urls = set()
 
-        sources = sb.execute_script(f"""
-            return Array.from(document.querySelectorAll("{css_selector}"))
-                    .map(el => el.src || el.href)
-                    .filter(Boolean);
-        """)
+        sources = sb.execute_script(js_css_selector)
+        # js_for_css_selectors
         for src in sources:
             if len(all_urls) >= max_media:
                 logger.debug(f"Reached max download limit of {max_media} images/videos.")
