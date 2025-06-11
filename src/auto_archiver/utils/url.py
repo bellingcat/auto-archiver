@@ -113,6 +113,8 @@ def is_relevant_url(url: str) -> bool:
         # reddit
         ("styles.redditmedia.com",),  # opinionated but excludes may irrelevant images like avatars and banners
         ("emoji.redditmedia.com",),
+        # linkedin
+        ("static.licdn.com",),
     ]
 
     # TODO: make these globally configurable
