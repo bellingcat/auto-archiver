@@ -41,7 +41,11 @@ class TestAntibotExtractorEnricher(TestExtractorBase):
             "reddit.com": {
                 "username": os.environ.get("REDDIT_TEST_USERNAME"),
                 "password": os.environ.get("REDDIT_TEST_PASSWORD"),
-            }
+            },
+            "linkedin.com": {
+                "username": os.environ.get("LINKEDIN_TEST_USERNAME"),
+                "password": os.environ.get("LINKEDIN_TEST_PASSWORD"),
+            },
         },
     }
 
@@ -144,6 +148,28 @@ class TestAntibotExtractorEnricher(TestExtractorBase):
         ],
     )
     def test_reddit_download_with_login(
+        self, setup_module, make_item, url, in_title, in_text, image_count, video_count
+    ):
+        self.test_download_pages_with_media(setup_module, make_item, url, in_title, in_text, image_count, video_count)
+
+    @pytest.mark.skipif(
+        not os.environ.get("REDDIT_TEST_USERNAME") or not os.environ.get("REDDIT_TEST_PASSWORD"),
+        reason="No Reddit test credentials provided",
+    )
+    @pytest.mark.download
+    @pytest.mark.parametrize(
+        "url,in_title,in_text,image_count,video_count",
+        [
+            (
+                "https://www.linkedin.com/posts/bellingcat_live-podcast-bellingcat-activity-7331725631799398400-xocM/",
+                "Post",
+                "It takes time to go from hunch to reporting...",
+                2,
+                0,
+            ),
+        ],
+    )
+    def test_linkedin_download_with_login(
         self, setup_module, make_item, url, in_title, in_text, image_count, video_count
     ):
         self.test_download_pages_with_media(setup_module, make_item, url, in_title, in_text, image_count, video_count)
