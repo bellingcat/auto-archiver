@@ -1,4 +1,5 @@
 from contextlib import suppress
+from typing import Mapping
 from auto_archiver.core.metadata import Metadata
 from auto_archiver.modules.antibot_extractor_enricher.dropin import Dropin
 
@@ -9,6 +10,19 @@ class RedditDropin(Dropin):
     """
     A class to handle Reddit drop-in functionality for the antibot extractor enricher module.
     """
+
+    def documentation() -> Mapping[str, str]:
+        return {
+            "name": "Reddit Dropin",
+            "description": "Handles Reddit posts and works without authentication until Reddit flags your IP, so authentication is advised.",
+            "site": "reddit.com",
+            "authentication": {
+                "reddit.com": {
+                    "username": "email address or username",
+                    "password": "password",
+                }
+            },
+        }
 
     @staticmethod
     def suitable(url: str) -> bool:
@@ -36,7 +50,7 @@ class RedditDropin(Dropin):
         self._close_cookies_banner()
 
         username, password = self._get_username_password("reddit.com")
-        logger.debug("RedditDropin Logging in to VK with username: {}", username)
+        logger.debug("RedditDropin Logging in to Reddit with username: {}", username)
 
         self.sb.type("#login-username", username)
         self.sb.type("#login-password", password)

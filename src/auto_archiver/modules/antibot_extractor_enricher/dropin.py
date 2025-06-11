@@ -1,4 +1,5 @@
 import os
+from typing import Mapping
 from loguru import logger
 from seleniumbase import SB
 import yt_dlp
@@ -12,6 +13,19 @@ class Dropin:
     A class to handle drop-in functionality for the antibot extractor enricher module.
     This class is designed to be a base class for drop-ins that can handle specific websites.
     """
+
+    @staticmethod
+    def documentation() -> Mapping[str, str]:
+        """
+        Each Dropin should auto-document itself with this method.
+        Return dictionary can include:
+        - 'name': A string representing the name of the dropin.
+        - 'description': A string describing the functionality of the dropin.
+        - 'site': A string representing the site this dropin is for.
+        - 'authentication': A dictionary with authentication example for the site.
+
+        """
+        return {}
 
     def __init__(self, sb: SB, extractor: Extractor):
         """
@@ -53,6 +67,26 @@ class Dropin:
         """
         return "video, source"
 
+    def js_for_image_css_selectors(self) -> str:
+        """
+        A configurable JS script that receives a css selector from the dropin itself and returns an array of Image elements according to the selection.
+
+        You can overwrite this instead of `images_selector` for more control over scraped images.
+        """
+        return f"""
+            return Array.from(document.querySelectorAll("{self.images_selectors()}")).map(el => el.src || el.href).filter(Boolean);
+        """
+
+    def js_for_video_css_selectors(self) -> str:
+        """
+        A configurable JS script that receives a css selector from the dropin itself and returns an array of Video elements according to the selection.
+
+        You can overwrite this instead of `video_selector` for more control over scraped videos.
+        """
+        return f"""
+            return Array.from(document.querySelectorAll("{self.video_selectors()}")).map(el => el.src || el.href).filter(Boolean);
+        """
+
     def open_page(self, url) -> bool:
         """
         Make sure the page is opened, even if it requires authentication, captcha solving, etc.
@@ -66,7 +100,7 @@ class Dropin:
         Extract image and/or video data from the currently open post with SeleniumBase. Media is added to the `to_enrich` Metadata object.
         :return: A tuple (number of Images added, number of Videos added).
         """
-        raise NotImplementedError("This method should be implemented in the subclass")
+        return 0, 0
 
     def _get_username_password(self, site) -> tuple[str, str]:
         """

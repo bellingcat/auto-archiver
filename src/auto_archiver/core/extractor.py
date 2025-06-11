@@ -77,6 +77,8 @@ class Extractor(BaseModule):
         downloads a URL to provided filename, or inferred from URL, returns local filename
         Warning: if try_best_quality is True, it will return a tuple of (filename, best_quality_url) if the download was successful.
         """
+        if any(url.startswith(x) for x in ["blob:", "data:"]):
+            return None, url if try_best_quality else None
 
         if try_best_quality:
             with suppress(Exception):
@@ -116,6 +118,8 @@ class Extractor(BaseModule):
 
         except requests.RequestException as e:
             logger.warning(f"Failed to fetch the Media URL: {str(e)[:250]}")
+        if try_best_quality:
+            return None, url
 
     @abstractmethod
     def download(self, item: Metadata) -> Metadata | False:

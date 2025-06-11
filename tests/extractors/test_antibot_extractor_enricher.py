@@ -1,3 +1,4 @@
+import os
 import pytest
 
 from auto_archiver.modules.antibot_extractor_enricher.antibot_extractor_enricher import AntibotExtractorEnricher
@@ -34,7 +35,18 @@ class TestAntibotExtractorEnricher(TestExtractorBase):
         "save_to_pdf": False,
         "max_download_images": 0,
         "max_download_videos": 0,
+        "user_data_dir": "./tests/tmp/user_data",
         "proxy": None,
+        "authentication": {
+            "reddit.com": {
+                "username": os.environ.get("REDDIT_TEST_USERNAME"),
+                "password": os.environ.get("REDDIT_TEST_PASSWORD"),
+            },
+            "linkedin.com": {
+                "username": os.environ.get("LINKEDIN_TEST_USERNAME"),
+                "password": os.environ.get("LINKEDIN_TEST_PASSWORD"),
+            },
+        },
     }
 
     @pytest.mark.download
@@ -82,10 +94,10 @@ class TestAntibotExtractorEnricher(TestExtractorBase):
         """
         Test downloading pages with media.
         """
-
         self.extractor = setup_module(
             self.extractor_module,
-            {
+            self.config
+            | {
                 "save_to_pdf": True,
                 "max_download_images": 5,
                 "max_download_videos": "inf",
@@ -117,6 +129,50 @@ class TestAntibotExtractorEnricher(TestExtractorBase):
             assert any(m.get("id") == expected_id for m in result.media), (
                 f"Expected media with id '{expected_id}' not found"
             )
+
+    @pytest.mark.skipif(
+        not os.environ.get("REDDIT_TEST_USERNAME") or not os.environ.get("REDDIT_TEST_PASSWORD"),
+        reason="No Reddit test credentials provided",
+    )
+    @pytest.mark.download
+    @pytest.mark.parametrize(
+        "url,in_title,in_text,image_count,video_count",
+        [
+            (
+                "https://www.reddit.com/r/BeAmazed/comments/1l6b1n4/duy_tran_is_the_owner_and_prime_wood_work_artist/",
+                "Duy tran is the owner and prime wood work artist",
+                " Created Jan 26, 2015",
+                4,
+                0,
+            ),
+        ],
+    )
+    def test_reddit_download_with_login(
+        self, setup_module, make_item, url, in_title, in_text, image_count, video_count
+    ):
+        self.test_download_pages_with_media(setup_module, make_item, url, in_title, in_text, image_count, video_count)
+
+    @pytest.mark.skipif(
+        not os.environ.get("LINKEDIN_TEST_USERNAME") or not os.environ.get("LINKEDIN_TEST_PASSWORD"),
+        reason="No LinkedIn test credentials provided",
+    )
+    @pytest.mark.download
+    @pytest.mark.parametrize(
+        "url,in_title,in_text,image_count,video_count",
+        [
+            (
+                "https://www.linkedin.com/posts/bellingcat_live-podcast-bellingcat-activity-7331725631799398400-xocM/",
+                "Post",
+                "It takes time to go from hunch to reporting...",
+                2,
+                0,
+            ),
+        ],
+    )
+    def test_linkedin_download_with_login(
+        self, setup_module, make_item, url, in_title, in_text, image_count, video_count
+    ):
+        self.test_download_pages_with_media(setup_module, make_item, url, in_title, in_text, image_count, video_count)
 
     @pytest.mark.download
     @pytest.mark.parametrize(

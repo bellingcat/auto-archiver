@@ -1,5 +1,6 @@
 import pytest
 from auto_archiver.utils.url import (
+    clean,
     is_auth_wall,
     check_url_or_raise,
     domain_for_url,
@@ -158,3 +159,39 @@ def test_twitter_best_quality_url(url, best_quality):
 )
 def test_get_media_url_best_quality(input_url, expected_url):
     assert get_media_url_best_quality(input_url) == expected_url
+
+
+@pytest.mark.parametrize(
+    "input_url,expected_url",
+    [
+        # No trackers present
+        ("https://example.com/page?foo=bar&baz=qux", "https://example.com/page?foo=bar&baz=qux"),
+        # Single tracker present
+        ("https://example.com/page?utm_source=google&foo=bar", "https://example.com/page?foo=bar"),
+        # Multiple trackers present
+        ("https://example.com/page?utm_source=google&utm_medium=email&utm_campaign=spring", "https://example.com/page"),
+        # Trackers mixed with other params
+        (
+            "https://example.com/page?foo=bar&utm_content=abc&baz=qux&gclid=123",
+            "https://example.com/page?foo=bar&baz=qux",
+        ),
+        # Only trackers present
+        ("https://example.com/page?utm_source=google&gclid=123", "https://example.com/page"),
+        # No query string
+        ("https://example.com/page", "https://example.com/page"),
+        # Trackers in fragment (should not be removed)
+        ("https://example.com/page#utm_source=google", "https://example.com/page#utm_source=google"),
+        # Trackers after fragment
+        ("https://example.com/page?utm_source=google#section-1", "https://example.com/page#section-1"),
+        # Trackers with empty value
+        ("https://example.com/page?utm_source=&foo=bar", "https://example.com/page?foo=bar"),
+        # Trackers with multiple values
+        ("https://example.com/page?utm_source=google&utm_source=bing&foo=bar", "https://example.com/page?foo=bar"),
+        # Trackers with encoded values
+        ("https://example.com/page?utm_source=google%20ads&foo=bar", "https://example.com/page?foo=bar"),
+        # Unrelated param with similar name
+        ("https://example.com/page?utm_sourc=keepme&foo=bar", "https://example.com/page?utm_sourc=keepme&foo=bar"),
+    ],
+)
+def test_clean_removes_trackers(input_url, expected_url):
+    assert clean(input_url) == expected_url

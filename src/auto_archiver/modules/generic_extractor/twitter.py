@@ -7,8 +7,7 @@ from slugify import slugify
 from auto_archiver.core.metadata import Metadata, Media
 from auto_archiver.utils import url as UrlUtil, get_datetime_from_str
 from auto_archiver.core.extractor import Extractor
-
-from .dropin import GenericDropin, InfoExtractor
+from auto_archiver.modules.generic_extractor.dropin import GenericDropin, InfoExtractor
 
 
 class Twitter(GenericDropin):
