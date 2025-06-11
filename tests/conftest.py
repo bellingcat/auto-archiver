@@ -9,6 +9,7 @@ from tempfile import TemporaryDirectory
 from typing import Dict, Tuple
 import hashlib
 
+from loguru import logger
 import pytest
 from auto_archiver.core.metadata import Metadata, Media
 from auto_archiver.core.module import ModuleFactory
@@ -18,6 +19,24 @@ from auto_archiver.core.module import ModuleFactory
 # what comes first will be run first (at the end of all other tests not mentioned)
 # format is the name of the module (python file) without the .py extension
 TESTS_TO_RUN_LAST = ["test_generic_archiver", "test_twitter_api_archiver"]
+
+
+def pytest_configure():
+    # load environment variables from .env.test file.
+    env_path = os.path.join(os.path.dirname(__file__), ".env.test")
+    if os.path.exists(env_path):
+        with open(env_path) as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith("#"):
+                    continue
+                if "=" in line:
+                    key, value = line.split("=", 1)
+                    os.environ[key.strip()] = value.strip().lstrip('"').rstrip('"')
+    else:
+        logger.warning(
+            f"Environment file {env_path} not found. Skipping loading environment variables, some tests may fail."
+        )
 
 
 # don't check for ytdlp updates in tests

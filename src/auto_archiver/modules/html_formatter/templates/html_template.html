@@ -12,6 +12,12 @@
             font-family: 'Roboto', sans-serif;
         }
 
+        h2 {
+            white-space: normal;
+            overflow-wrap: break-word;
+            word-break: break-word;
+        }
+
         table {
             table-layout: fixed;
             width: 90%;
@@ -97,13 +103,17 @@
             background-color: #f1f1f1;
         }
 
-        .pem-certificate, .text-preview {
+        .pem-certificate,
+        .text-preview {
             text-align: left;
             font-size: small;
         }
-        .text-preview{
+
+        .text-preview {
             padding-left: 10px;
             padding-right: 10px;
+            max-height: 300px;
+            overflow: auto;
             white-space: pre-wrap;
         }
     </style>

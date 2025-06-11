@@ -98,12 +98,11 @@ class BaseModule(ABC):
         """
         # TODO: think about if/how we can deal with sites that have multiple domains (main one is x.com/twitter.com)
         # for now the user must enter them both, like "x.com,twitter.com" in their config. Maybe we just hard-code?
-
-        site = UrlUtil.domain_for_url(site).removeprefix("www.")
+        domain = UrlUtil.domain_for_url(site).removeprefix("www.")
         # add the 'www' version of the site to the list of sites to check
         authdict = {}
 
-        for to_try in [site, f"www.{site}"]:
+        for to_try in [site, domain, f"www.{domain}"]:
             if to_try in self.authentication:
                 authdict.update(self.authentication[to_try])
                 break
@@ -111,9 +110,9 @@ class BaseModule(ABC):
         # do a fuzzy string match just to print a warning - don't use it since it's insecure
         if not authdict:
             for key in self.authentication.keys():
-                if key in site or site in key:
+                if key in domain or domain in key:
                     logger.debug(
-                        f"Could not find exact authentication information for site '{site}'. \
+                        f"Could not find exact authentication information for '{domain}'. \
 did find information for '{key}' which is close, is this what you meant? \
 If so, edit your authentication settings to make sure it exactly matches."
                     )

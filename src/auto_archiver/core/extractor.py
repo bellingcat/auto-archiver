@@ -8,6 +8,7 @@ Factory method to initialize an extractor instance based on its name.
 
 from __future__ import annotations
 from abc import abstractmethod
+from contextlib import suppress
 import mimetypes
 import os
 import requests
@@ -16,6 +17,7 @@ from retrying import retry
 import re
 
 from auto_archiver.core import Metadata, BaseModule
+from auto_archiver.utils.url import get_media_url_best_quality
 
 
 class Extractor(BaseModule):
@@ -70,10 +72,22 @@ class Extractor(BaseModule):
         return ""
 
     @retry(wait_random_min=500, wait_random_max=3500, stop_max_attempt_number=5)
-    def download_from_url(self, url: str, to_filename: str = None, verbose=True) -> str:
+    def download_from_url(self, url: str, to_filename: str = None, verbose=True, try_best_quality=False) -> str:
         """
         downloads a URL to provided filename, or inferred from URL, returns local filename
+        Warning: if try_best_quality is True, it will return a tuple of (filename, best_quality_url) if the download was successful.
         """
+        if any(url.startswith(x) for x in ["blob:", "data:"]):
+            return None, url if try_best_quality else None
+
+        if try_best_quality:
+            with suppress(Exception):
+                # Attempt to download the original URL
+                best_quality_url = get_media_url_best_quality(url)
+                orig_download = self.download_from_url(best_quality_url, to_filename, verbose)
+                if orig_download:
+                    return orig_download, best_quality_url
+
         if not to_filename:
             to_filename = url.split("/")[-1].split("?")[0]
             if len(to_filename) > 64:
@@ -98,10 +112,14 @@ class Extractor(BaseModule):
             with open(to_filename, "wb") as f:
                 for chunk in d.iter_content(chunk_size=8192):
                     f.write(chunk)
+            if try_best_quality:
+                return to_filename, url
             return to_filename
 
         except requests.RequestException as e:
-            logger.warning(f"Failed to fetch the Media URL: {e}")
+            logger.warning(f"Failed to fetch the Media URL: {str(e)[:250]}")
+        if try_best_quality:
+            return None, url
 
     @abstractmethod
     def download(self, item: Metadata) -> Metadata | False:
