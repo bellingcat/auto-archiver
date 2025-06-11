@@ -1,5 +1,5 @@
 import re
-from urllib.parse import urlparse, urlunparse
+from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 from ipaddress import ip_address
 
 
@@ -53,7 +53,11 @@ def domain_for_url(url: str) -> str:
 
 
 def clean(url: str) -> str:
-    return url
+    TRACKERS = {"utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content", "fbclid", "gclid"}
+
+    parsed = urlparse(url)
+    clean_qs = [(k, v) for k, v in parse_qsl(parsed.query) if k not in TRACKERS]
+    return parsed._replace(query=urlencode(clean_qs)).geturl()
 
 
 def is_auth_wall(url: str) -> bool:

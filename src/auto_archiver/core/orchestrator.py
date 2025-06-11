@@ -34,7 +34,7 @@ from .config import (
 from .module import ModuleFactory, LazyBaseModule
 from . import validators, Feeder, Extractor, Database, Storage, Formatter, Enricher
 from .consts import MODULE_TYPES, SetupError
-from auto_archiver.utils.url import check_url_or_raise
+from auto_archiver.utils.url import check_url_or_raise, clean
 
 if TYPE_CHECKING:
     from .base_module import BaseModule
@@ -572,7 +572,7 @@ Here's how that would look: \n\nsteps:\n  extractors:\n  - [your_extractor_name_
             raise e
 
         # 1 - sanitize - each archiver is responsible for cleaning/expanding its own URLs
-        url = original_url
+        url = clean(original_url)
         for a in self.extractors:
             url = a.sanitize_url(url)
 
