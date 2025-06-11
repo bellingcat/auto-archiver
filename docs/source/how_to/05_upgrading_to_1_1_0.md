@@ -15,18 +15,28 @@ We have dropped the `vk_extractor` because of problems in a project we relied on
 Module 'vk_extractor' not found. Are you sure it's installed/exists?
 ```
 
+## Dropping `screenshot_enricher` module
+We have dropped the `screenshot_enricher` module because a new `antibot_extractor_enricher` (see below) module replaces its functionality more robustly and with less dependency hassle on geckodriver/firefox. You will need to remove it from your configuration file, otherwise you will see an error like:
+
+```{code} console
+Module 'screenshot_enricher' not found. Are you sure it's installed/exists?
+```
+
+
 ## New `antibot_extractor_enricher` module and VkDropin
-We have added a new `antibot_extractor_enricher` module that uses a computer-controlled browser to extract content from websites that use anti-bot measures. You can add it to your configuration file like this:
+We have added a new [`antibot_extractor_enricher`](../modules/autogen/extractor/antibot_extractor_enricher.md) module that uses a computer-controlled browser to extract content from websites that use anti-bot measures. You can add it to your configuration file like this:
 
 ```{code} yaml
 steps:
-	extractors:
-		- antibot_extractor_enricher
+  extractors:
+    - antibot_extractor_enricher
 
-	# or alternatively, if you want to use it as an enricher:
-	enrichers:
-		- antibot_extractor_enricher
+  # or alternatively, if you want to use it as an enricher:
+  enrichers:
+    - antibot_extractor_enricher
 ```
+
+It will take a full page screenshot, a PDF capture, extract HTML source code, and any other relevant media. 
 
 It comes with Dropins that we will be adding and maintaining. 
 
@@ -36,9 +46,9 @@ One such Dropin is the VkDropin which uses this automated browser to access VKon
 
 ```{code} yaml
 authentication:
-  vk:
-	username: your_username
-	password: your_password
+  vk.com:
+  username: your_username
+  password: your_password
 ```
 
 See all available Dropins in [the source code](https://github.com/bellingcat/auto-archiver/tree/main/src/auto_archiver/modules/antibot_extractor_enricher/dropins). Usually each Dropin needs its own authentication settings, similarly to the VkDropin.
