@@ -84,13 +84,6 @@ class TestAntibotExtractorEnricher(TestExtractorBase):
                 5,
                 0,
             ),
-            (
-                "https://www.reddit.com/r/BeAmazed/comments/1l6b1n4/duy_tran_is_the_owner_and_prime_wood_work_artist/",
-                "Duy tran is the owner and prime wood work artist",
-                " Created Jan 26, 2015",
-                4,
-                0,
-            ),
         ],
     )
     def test_download_pages_with_media(self, setup_module, make_item, url, in_title, in_text, image_count, video_count):
@@ -132,6 +125,28 @@ class TestAntibotExtractorEnricher(TestExtractorBase):
             assert any(m.get("id") == expected_id for m in result.media), (
                 f"Expected media with id '{expected_id}' not found"
             )
+
+    @pytest.mark.skipif(
+        not os.environ.get("REDDIT_TEST_USERNAME") or not os.environ.get("REDDIT_TEST_PASSWORD"),
+        reason="No Reddit test credentials provided",
+    )
+    @pytest.mark.download
+    @pytest.mark.parametrize(
+        "url,in_title,in_text,image_count,video_count",
+        [
+            (
+                "https://www.reddit.com/r/BeAmazed/comments/1l6b1n4/duy_tran_is_the_owner_and_prime_wood_work_artist/",
+                "Duy tran is the owner and prime wood work artist",
+                " Created Jan 26, 2015",
+                4,
+                0,
+            ),
+        ],
+    )
+    def test_reddit_download_with_login(
+        self, setup_module, make_item, url, in_title, in_text, image_count, video_count
+    ):
+        self.test_download_pages_with_media(setup_module, make_item, url, in_title, in_text, image_count, video_count)
 
     @pytest.mark.download
     @pytest.mark.parametrize(
