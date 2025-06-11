@@ -10,6 +10,7 @@ from auto_archiver.modules.generic_extractor.generic_extractor import GenericExt
 from .test_extractor_base import TestExtractorBase
 
 CI = os.getenv("GITHUB_ACTIONS", "") == "true"
+TEST_TRUTH_SOCIAL = os.getenv("TEST_TRUTH_SOCIAL", "") == "true"
 
 
 class TestGenericExtractor(TestExtractorBase):
@@ -149,6 +150,7 @@ class TestGenericExtractor(TestExtractorBase):
         result = self.extractor.download(item)
         assert result is not False
 
+    @pytest.mark.skipif(not TEST_TRUTH_SOCIAL, reason="Truth social download tests disabled in environment variables.")
     @pytest.mark.skipif(CI, reason="Truth social blocks GH actions.")
     @pytest.mark.download
     def test_truthsocial_download_video(self, make_item):
@@ -157,6 +159,7 @@ class TestGenericExtractor(TestExtractorBase):
         assert len(result.media) == 1
         assert result is not False
 
+    @pytest.mark.skipif(not TEST_TRUTH_SOCIAL, reason="Truth social download tests disabled in environment variables.")
     @pytest.mark.skipif(CI, reason="Truth social blocks GH actions.")
     @pytest.mark.download
     def test_truthsocial_download_no_media(self, make_item):
@@ -164,6 +167,7 @@ class TestGenericExtractor(TestExtractorBase):
         result = self.extractor.download(item)
         assert result is not False
 
+    @pytest.mark.skipif(not TEST_TRUTH_SOCIAL, reason="Truth social download tests disabled in environment variables.")
     @pytest.mark.skipif(CI, reason="Truth social blocks GH actions.")
     @pytest.mark.download
     def test_truthsocial_download_poll(self, make_item):
@@ -171,6 +175,7 @@ class TestGenericExtractor(TestExtractorBase):
         result = self.extractor.download(item)
         assert result is not False
 
+    @pytest.mark.skipif(not TEST_TRUTH_SOCIAL, reason="Truth social download tests disabled in environment variables.")
     @pytest.mark.skipif(CI, reason="Truth social blocks GH actions.")
     @pytest.mark.download
     def test_truthsocial_download_single_image(self, make_item):
@@ -179,6 +184,7 @@ class TestGenericExtractor(TestExtractorBase):
         assert len(result.media) == 1
         assert result is not False
 
+    @pytest.mark.skipif(not TEST_TRUTH_SOCIAL, reason="Truth social download tests disabled in environment variables.")
     @pytest.mark.skipif(CI, reason="Truth social blocks GH actions.")
     @pytest.mark.download
     def test_truthsocial_download_multiple_images(self, make_item):
@@ -276,6 +282,7 @@ class TestGenericExtractor(TestExtractorBase):
 
         assert "Bellingchat Premium is with Kolina Koltai" in post.get_title()
 
+    @pytest.mark.skip(reason="Newer yt-dlp versions don't support image download.")
     @pytest.mark.download
     def test_download_facebook_image(self, make_item):
         post = self.extractor.download(
