@@ -153,8 +153,8 @@ class TestAntibotExtractorEnricher(TestExtractorBase):
         self.test_download_pages_with_media(setup_module, make_item, url, in_title, in_text, image_count, video_count)
 
     @pytest.mark.skipif(
-        not os.environ.get("REDDIT_TEST_USERNAME") or not os.environ.get("REDDIT_TEST_PASSWORD"),
-        reason="No Reddit test credentials provided",
+        not os.environ.get("LINKEDIN_TEST_USERNAME") or not os.environ.get("LINKEDIN_TEST_PASSWORD"),
+        reason="No LinkedIn test credentials provided",
     )
     @pytest.mark.download
     @pytest.mark.parametrize(
