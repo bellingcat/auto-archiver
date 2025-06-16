@@ -60,11 +60,11 @@ dependencies = [
 ]
 
 [tool.poetry.group.dev.dependencies]
-pytest = "^8.3.4"
+pytest = "^8.4.0"
 autopep8 = "^2.3.1"
 pytest-loguru = "^0.4.0"
 pytest-mock = "^3.14.0"
-ruff = "^0.9.10"
+ruff = "^0.11.13"
 pre-commit = "^4.1.0"
 
 [tool.poetry.group.docs.dependencies]
