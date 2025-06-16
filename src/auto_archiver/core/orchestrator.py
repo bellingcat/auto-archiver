@@ -264,6 +264,14 @@ Here's how that would look: \n\nsteps:\n  extractors:\n  - [your_extractor_name_
             default=None,
         )
 
+        parser.add_argument(
+            "--logging.each_level_in_separate_file",
+            action="store",
+            dest="logging.each_level_in_separate_file",
+            help="whether to write each logging level to a separate file",
+            default=False,
+        )
+
     def add_individual_module_args(
         self, modules: list[LazyBaseModule] = None, parser: argparse.ArgumentParser = None
     ) -> None:
@@ -334,10 +342,27 @@ Here's how that would look: \n\nsteps:\n  extractors:\n  - [your_extractor_name_
         # add other logging info
         if self.logger_id is None:  # note - need direct comparison to None since need to consider falsy value 0
             self.logger_id = logger.add(sys.stderr, level=logging_config["level"])
-            if log_file := logging_config["file"]:
-                logger.add(log_file) if not logging_config["rotation"] else logger.add(
-                    log_file, rotation=logging_config["rotation"]
-                )
+
+            # Default to False (above in parser code)
+            separate_file = logging_config["each_level_in_separate_file"]
+
+            # Default to None if not set
+            rotation=logging_config["rotation"]
+
+            if separate_file:
+                logger.add("logs/1debug.log", level="DEBUG", rotation=rotation)
+                logger.add("logs/2info.log", level="INFO", rotation=rotation)
+                logger.add("logs/3success.log", level="SUCCESS", rotation=rotation)
+                logger.add("logs/4warning.log", level="WARNING", rotation=rotation)
+                logger.add("logs/5error.log", level="ERROR", rotation=rotation)
+            else:
+                log_file = logging_config["file"]
+                logger.add(log_file, rotation=rotation)
+
+            # if log_file := logging_config["file"]:
+            #     logger.add(log_file) if not logging_config["rotation"] else logger.add(
+            #         log_file, rotation=logging_config["rotation"]
+            #     )
 
     def install_modules(self, modules_by_type):
         """
