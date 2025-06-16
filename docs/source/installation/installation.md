@@ -55,7 +55,7 @@ If using the local installation method, you will also need to install the follow
 3. (optional) [fonts-noto](https://fonts.google.com/noto) to deal with multiple unicode characters during selenium screenshots: `sudo apt install fonts-noto -y`.
 4. [Browsertrix Crawler docker image](https://hub.docker.com/r/webrecorder/browsertrix-crawler) for the WACZ enricher/archiver
 
-### Bash script for Ubuntu Server install
+### Bash script for Ubuntu 24 Server install
 
 This acts as a handy guide on all requirements. This is built and tested on the 29th of May 2025 on Ubuntu Server 24.04.2 LTS (which is the current latest LTS)
 
@@ -66,6 +66,8 @@ This acts as a handy guide on all requirements. This is built and tested on the 
 # which the application runs under which makes debugging easier
 
 cd ~
+sudo apt update -y
+sudo apt upgrade -y
 
 # Clone only my latest branch
 git clone -b v1-test --single-branch https://github.com/djhmateer/auto-archiver
@@ -81,14 +83,13 @@ sudo apt upgrade -y
 # Poetry install 2.1.3 on 2nd June 25
 curl -sSL https://install.python-poetry.org | python3 -
 
-# had to restart shell here.. neither of below worked 
-# source ~/.bashrc
-# exec bash
-
-cd auto-archiver
+# had to restart here.. 
+sudo reboot
 
 # C++ compiler so pdqhash will install next
-sudo apt install build-essential python3-dev
+sudo apt install build-essential python3-dev -y
+
+cd auto-archiver
 
 poetry install
 
@@ -130,14 +131,13 @@ sudo apt-get install -f
 ## Gecko driver
 # check version numbers for new ones
 # https://github.com/mozilla/geckodriver/releases/
-cd ~
-wget https://github.com/mozilla/geckodriver/releases/download/v0.35.0/geckodriver-v0.35.0-linux64.tar.gz
+wget https://github.com/mozilla/geckodriver/releases/download/v0.36.0/geckodriver-v0.36.0-linux64.tar.gz
 tar -xvzf geckodriver*
 chmod +x geckodriver
 sudo mv geckodriver /usr/local/bin/
 rm geckodriver*
 
-# Fonts
+# Fonts so selenium via firefox can render other languages eg Burmese
 sudo apt install fonts-noto -y
 
 # Docker
@@ -160,10 +160,11 @@ sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin 
 # add dave user to docker group 
 sudo usermod -aG docker $USER
 
-# restart shell
-# TODO try: source ~/.bashrc
-# exec bash
+# reboot otherwise can't pull images
 
+# https://github.com/webrecorder/browsertrix-crawler
+# https://hub.docker.com/r/webrecorder/browsertrix-crawler/tags
+# 1.6.2 on 4th Jun 2025
 docker pull webrecorder/browsertrix-crawler:latest
 
 # exif
@@ -172,7 +173,9 @@ sudo apt install libimage-exiftool-perl -y
 
 ## CRON run every minute
 # the cron job running as user dave will execute the shell script
-sudo chmod +x ~/auto-archiver/scripts/cron_1.sh
+# I have many scripts running from cron_11 upwards.
+# patch in the correct number
+sudo chmod +x ~/auto-archiver/scripts/cron_15.sh
 
 # don't want service to run until a reboot otherwise problems with Gecko driver
 sudo service cron stop
@@ -180,13 +183,15 @@ sudo service cron stop
 # runs the script every minute
 # notice put in a # to disable so will have to manually start it.
 cat <<EOT >> run-auto-archive
-#*/1 * * * * dave /home/dave/auto-archiver/scripts/cron_1.sh
+#*/1 * * * * dave /home/dave/auto-archiver/scripts/cron_15.sh
 EOT
 
 sudo mv run-auto-archive /etc/cron.d
 sudo chown root /etc/cron.d/run-auto-archive
 sudo chmod 600 /etc/cron.d/run-auto-archive
 
+# Helper alias 'c' to open the above file
+echo "alias c='sudo vim /etc/cron.d/run-auto-archive'" >> ~/.bashrc
 
 # secrets folder copy
 # I run dev from:
@@ -195,9 +200,7 @@ sudo chmod 600 /etc/cron.d/run-auto-archive
 # orchestration.yaml - for aa config
 # service_account - for google spreadsheet
 # anon.session - for telethon so don't have to type in phone number
-# vk_config.v2.json - so don't have to login to vk again
 # profile.tar.gz - for wacz to have a logged in profile for facebook, x.com and instagram to get data
-
 
 # Youtube - POT Tokens
 # https://github.com/Brainicism/bgutil-ytdlp-pot-provider
