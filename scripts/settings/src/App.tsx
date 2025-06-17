@@ -31,7 +31,7 @@ import {
   Stack,
   Button,
 } from '@mui/material';
-import Grid from '@mui/material/Grid2';
+import Grid from '@mui/material/Grid';
 
 import { parseDocument, Document, YAMLSeq, YAMLMap, Scalar } from 'yaml'
 import StepCard from './StepCard';
