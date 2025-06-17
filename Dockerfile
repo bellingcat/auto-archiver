@@ -1,4 +1,4 @@
-FROM webrecorder/browsertrix-crawler:1.6.2 AS base
+FROM webrecorder/browsertrix-crawler:1.6.3 AS base
 
 ENV RUNNING_IN_DOCKER=1 \
     LANG=C.UTF-8 \
