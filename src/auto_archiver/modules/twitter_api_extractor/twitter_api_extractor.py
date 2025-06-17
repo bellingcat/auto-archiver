@@ -1,3 +1,4 @@
+from datetime import timezone
 import json
 import re
 import mimetypes
@@ -91,7 +92,9 @@ class TwitterApiExtractor(Extractor):
 
         result = Metadata()
         result.set_title(tweet.data.text)
-        result.set_timestamp(get_datetime_from_str(tweet.data.created_at, "%Y-%m-%dT%H:%M:%S.%fZ"))
+        result.set_timestamp(
+            get_datetime_from_str(tweet.data.created_at, "%Y-%m-%dT%H:%M:%S.%fZ").replace(tzinfo=timezone.utc)
+        )
 
         urls = []
         if tweet.includes:
