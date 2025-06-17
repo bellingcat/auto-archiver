@@ -10,7 +10,7 @@ from .dropin import GenericDropin
 
 class Tiktok(GenericDropin):
     """
-    TikTok droping for the Generic Extractor that uses an unofficial API if/when ytdlp fails.
+    TikTok dropin for the Generic Extractor that uses an unofficial API if/when ytdlp fails.
     It's useful for capturing content that requires a login, like sensitive content.
     """
 

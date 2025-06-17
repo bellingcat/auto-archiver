@@ -6,6 +6,16 @@ Connects to an Instagrapi API deployment and allows for downloading Instagram us
 posts, stories, highlights, and tagged content. It offers advanced configuration options for filtering
 data, reducing JSON output size, and handling large profiles.
 
+DM 28th May 2025 - this is a work in progress.
+https://www.instagram.com/bug_girl1618/
+https://www.instagram.com/noam_tsuriely?igsh=dXcxZnV0eHNkdjJ4  (got 94 items with max_posts=2)
+with max_posts=2
+we still:
+got 12 posts
+got 20 in tagged (posts)
+got 20 highlights... or 57?
+
+Because of the way the the code works below. Need to investigate whether this is good for the client.
 """
 
 import re
@@ -290,6 +300,9 @@ class InstagramAPIExtractor(Extractor):
             _, media, media_id = self.scrape_media(resources[0], context)
             resources = resources[1:]
 
+        # DM 29th May 2025 - this is a problem for INS029 a private post that hiker can't see.
+        # but we can get via wacz enricher?
+        # this throws an no archiver results.. .but we can't to revert to wayback machine?
         assert media, f"Image/video not found in {item=}"
 
         # posts with multiple items contain a resources list

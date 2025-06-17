@@ -56,7 +56,7 @@ class TelethonExtractor(Extractor):
         self.client = TelegramClient(self.session_file, self.api_id, self.api_hash)
 
         with self.client.start():
-            logger.success(f"SETUP {self.name} login works.")
+            logger.info(f"SETUP {self.name} login works.")
 
         if self.join_channels and len(self.channel_invites):
             logger.info(f"SETUP {self.name} joining channels...")

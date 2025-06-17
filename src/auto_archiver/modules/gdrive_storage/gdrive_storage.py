@@ -93,27 +93,39 @@ class GDriveStorage(Storage):
         # upload file to gd
         logger.debug(f"uploading {filename=} to folder id {upload_to}")
         file_metadata = {"name": [filename], "parents": [upload_to]}
-        media = MediaFileUpload(media.filename, resumable=True)
-        gd_file = (
-            self.service.files()
-            .create(supportsAllDrives=True, body=file_metadata, media_body=media, fields="id")
-            .execute()
-        )
-        logger.debug(f"uploadf: uploaded file {gd_file['id']} successfully in folder={upload_to}")
+
+        # DM 4th Jun 2025 - somehow a file was trying to be uploaded which didn't exist
+        # so catch and carry on instead of leaving in state: Archive in progress
+        try:
+            media = MediaFileUpload(media.filename, resumable=True)
+            gd_file = (
+                         self.service.files()
+                        .create(supportsAllDrives=True, body=file_metadata, media_body=media, fields="id")
+                        .execute()
+                    )
+            logger.debug(f"uploadf: uploaded file {gd_file['id']} successfully in folder={upload_to}")
+        except FileNotFoundError as e:
+            logger.error(f'gd uploadf: file not found {media.filename} - {e}')
+        except Exception as e:
+            logger.error(f'gd uploadf: error uploading {media.filename} to {upload_to} - {e}')
 
     # must be implemented even if unused
     def uploadf(self, file: IO[bytes], key: str, **kwargs: dict) -> bool:
         pass
 
+    # DM 19th Feb 2024
+    # this does slow down other calls - the retries 3, and sleep 30 - but it gets rid of transient google drive errors
+    # problem is that it retries 3 times to see if the folder is there (and it shouldn't be ie we haven't 
+    # tried to create it yet)
     def _get_id_from_parent_and_name(
         self,
         parent_id: str,
         name: str,
-        retries: int = 1,
-        sleep_seconds: int = 10,
+        retries: int = 3, # was 1
+        sleep_seconds: int = 30, # was 10 in old code
         use_mime_type: bool = False,
         raise_on_missing: bool = True,
-        use_cache=False,
+        use_cache=False, # Todo see if this works well for more speed
     ):
         """
         Retrieves the id of a folder or file from its @name and the @parent_id folder
@@ -137,6 +149,11 @@ class GDriveStorage(Storage):
         if use_mime_type:
             query_string += " and mimeType='application/vnd.google-apps.folder' "
 
+        # TODO refactor as it always waits 160s before creating a folder for the first time
+        # need to extend logic somehow so that it know when first folder should be created to just create it.
+
+        # DM 4th Jun 25 - test this hard to get it to fail - yes I can get it to fail with 1, 10 and True for cache on a lot of files with xxx client
+        # TODO - multiple file uploads at same time?
         for attempt in range(retries):
             results = (
                 self.service.files()

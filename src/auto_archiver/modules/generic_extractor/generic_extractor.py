@@ -308,10 +308,12 @@ class GenericExtractor(Extractor):
         if "description" in video_data and not result.get("content"):
             result.set_content(video_data.get("description"))
         # extract comments if enabled
-        if self.comments and video_data.get("comments", []) is not None:
-            result.set(
-                "comments",
-                [
+        if self.comments:
+            # If self.comments are true but no comments in the video_data
+            if video_data.get("comments", []) is not None:
+                result.set(
+                    "comments",
+                    [
                     {
                         "text": c["text"],
                         "author": c["author"],
@@ -375,7 +377,8 @@ class GenericExtractor(Extractor):
         if "entries" in data:
             entries = data.get("entries", [])
             if not len(entries):
-                logger.warning("YoutubeDLArchiver could not find any video")
+                # DM 3rd Jun 25 - demoting to info as Instragram image only posts get trapped here which is fine.
+                logger.info("YoutubeDLArchiver could not find any video")
                 return False
         else:
             entries = [data]
@@ -409,7 +412,7 @@ class GenericExtractor(Extractor):
             except Exception as e:
                 logger.error(f"Error processing entry {entry}: {e}")
         if not len(result.media):
-            logger.warning(f"No media found for entry {entry}, skipping.")
+            logger.info(f"No media found for entry {entry}, skipping.")
             return False
 
         return self.add_metadata(data, info_extractor, url, result)

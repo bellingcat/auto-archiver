@@ -33,16 +33,24 @@ class ThumbnailEnricher(Enricher):
                 folder = os.path.join(self.tmp_dir, random_str(24))
                 os.makedirs(folder, exist_ok=True)
                 logger.debug(f"generating thumbnails for {m.filename}")
-                duration = m.get("duration")
 
-                if duration is None:
-                    try:
-                        probe = ffmpeg.probe(m.filename)
-                        duration = float(
-                            next(stream for stream in probe["streams"] if stream["codec_type"] == "video")["duration"]
-                        )
-                        to_enrich.media[m_id].set("duration", duration)
-                    except Exception as e:
+                # DM 22nd May 2025 - have seen a duration on 18 seconds here
+                # youtube says 17 seconds
+                # when downloaded it says 16 seconds
+                # which then caused maths problems
+                # duration = m.get("duration")
+                # if duration is None:
+
+                try:
+                    probe = ffmpeg.probe(m.filename)
+                    duration = float(
+                        next(stream for stream in probe["streams"] if stream["codec_type"] == "video")["duration"]
+                    )
+                    to_enrich.media[m_id].set("duration", duration)
+                except Exception as e:
+                    # Fall back which is sometimes not quite right see above message
+                    duration = m.get("duration")
+                    if duration is None:
                         logger.error(f"error getting duration of video {m.filename}: {e}")
                         return
 
@@ -57,6 +65,10 @@ class ThumbnailEnricher(Enricher):
                     ).run()
 
                     try:
+                        # DM 3rd Jun 25 - check if the file was created as through various maths issues with short videos the last out file can be missing
+                        if not os.path.exists(output_path):
+                            logger.info(f"thumbnail {index} for media {m.filename} was not created")
+                            continue
                         thumbnails_media.append(
                             Media(filename=output_path)
                             .set("id", f"thumbnail_{index}")

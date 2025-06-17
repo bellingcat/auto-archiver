@@ -20,7 +20,7 @@ class OpentimestampsEnricher(Enricher):
         # Get the media files to timestamp
         media_files = [m for m in to_enrich.media if m.filename and not m.get("opentimestamps")]
         if not media_files:
-            logger.warning(f"No files found to timestamp in {url=}")
+            logger.debug(f"No files found to timestamp in {url=} - this is normal if no files have been archived eg a 404 url")
             return
 
         timestamp_files = []
@@ -119,7 +119,7 @@ class OpentimestampsEnricher(Enricher):
         if timestamp_files:
             to_enrich.set("opentimestamped", True)
             to_enrich.set("opentimestamps_count", len(timestamp_files))
-            logger.success(f"{len(timestamp_files)} OpenTimestamps proofs created for {url=}")
+            logger.info(f"{len(timestamp_files)} OpenTimestamps proofs created for {url=}")
         else:
             to_enrich.set("opentimestamped", False)
             logger.warning(f"No successful timestamps created for {url=}")

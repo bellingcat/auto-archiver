@@ -10,6 +10,7 @@ The filtered rows are processed into `Metadata` objects.
 """
 
 import os
+import time
 from typing import Tuple, Union
 from urllib.parse import quote
 
@@ -37,6 +38,7 @@ class GsheetsFeederDB(Feeder, Database):
             return self.gsheets_client.open_by_key(self.sheet_id)
 
     def __iter__(self) -> Metadata:
+        # This is the 1.Feeder step ie opening the spreadsheet and iterating over the worksheets
         sh = self.open_sheet()
         for ii, worksheet in enumerate(sh.worksheets()):
             if not self.should_process_sheet(worksheet.title):
@@ -52,7 +54,7 @@ class GsheetsFeederDB(Feeder, Database):
 
             # process and yield metadata here:
             yield from self._process_rows(gw)
-            logger.success(f"Finished worksheet {worksheet.title}")
+            logger.info(f"Finished worksheet {worksheet.title}")
 
     def _process_rows(self, gw: GWorksheet):
         for row in range(1 + self.header, gw.count_rows() + 1):
@@ -64,6 +66,13 @@ class GsheetsFeederDB(Feeder, Database):
             # TODO: custom status parser(?) aka should_retry_from_status
             if status not in ["", None]:
                 continue
+
+            # Set in orchestration.yaml. Default is False
+            if self.must_have_folder_name_for_archive_to_run:
+                if not gw.get_cell(row, "folder"):
+                    logger.warning(f"Folder name not set {self.sheet}:{gw.wks.title}, row {row} - skipping and continuing with run")
+                    gw.set_cell(row, "status", "WARNING:Folder Name not set")
+                    continue
 
             # All checks done - archival process starts here
             m = Metadata().set_url(url)
@@ -101,6 +110,7 @@ class GsheetsFeederDB(Feeder, Database):
         logger.info(f"STARTED {item}")
         gw, row = self._retrieve_gsheet(item)
         gw.set_cell(row, "status", "Archive in progress")
+        logger.info(f" row: {row} on {gw.wks.spreadsheet.title} : {gw.wks.title}")
 
     def failed(self, item: Metadata, reason: str) -> None:
         logger.error(f"FAILED {item}")
@@ -120,14 +130,26 @@ class GsheetsFeederDB(Feeder, Database):
         gw, row = self._retrieve_gsheet(item)
         # self._safe_status_update(item, 'done')
 
+        # DM - success log message showing the row, sheet and tab
+        spreadsheet = gw.wks.spreadsheet.title
+        worksheet = gw.wks.title
+        logger.success(f" row {row} on {spreadsheet} : {worksheet}")
+
         cell_updates = []
         row_values = gw.get_row(row)
 
         def batch_if_valid(col, val, final_value=None):
             final_value = final_value or val
             try:
-                if val and gw.col_exists(col) and gw.get_cell(row_values, col) == "":
-                    cell_updates.append((row, col, final_value))
+                if self.allow_overwrite_of_spreadsheet_cells:
+                    if val and gw.col_exists(col):
+                        existing_value = gw.get_cell(row_values, col)
+                        if existing_value:
+                            logger.info(f"Overwriting spreadsheet cell {col}={existing_value} with {final_value} in {gw.wks.title} row {row}")
+                        cell_updates.append((row, col, final_value))
+                else:
+                    if val and gw.col_exists(col) and gw.get_cell(row_values, col) == "":
+                        cell_updates.append((row, col, final_value))
             except Exception as e:
                 logger.error(f"Unable to batch {col}={final_value} due to {e}")
 
@@ -173,7 +195,17 @@ class GsheetsFeederDB(Feeder, Database):
                 ),
             )
 
-        gw.batch_set_cell(cell_updates)
+        # DM 4th Jun 25 - saw this fail with a google api [503]: The service is currently unavailable.
+        # so added a retry loop.
+        attempt = 1
+        while attempt <= 5:
+            try:
+                gw.batch_set_cell(cell_updates)
+                break
+            except Exception as e:
+                logger.warning(f"Attempt {attempt} of batch_set_cell failed due to {e} ")
+                attempt += 1
+                time.sleep(5 * attempt) # linear backoff
 
     def _safe_status_update(self, item: Metadata, new_status: str) -> None:
         try:
