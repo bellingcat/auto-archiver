@@ -541,7 +541,7 @@ Here's how that would look: \n\nsteps:\n  extractors:\n  - [your_extractor_name_
                 yield self.feed_item(item)
                 url_count += 1
 
-        logger.success(f"Processed {url_count} URL(s)")
+        logger.info(f"Processed {url_count} URL(s)")
         self.cleanup()
 
     def feed_item(self, item: Metadata) -> Metadata:

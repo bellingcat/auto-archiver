@@ -100,7 +100,12 @@ class Storage(BaseModule):
 
         # Handle filename_generator logic
         filename_generator = self.filename_generator
-        if filename_generator == "random":
+        # DM 9th Jun 25 - special case for metadata.json file in metadata_json_enricher
+        # where we want the filename to remain metadata.json 
+        # TODO - should this be a config option to keep the original filename? Is it useful anywhere else?
+        if filename.endswith('metadata'):
+            filename = 'metadata'
+        elif filename_generator == "random":
             filename = random_str(24)
         elif filename_generator == "static":
             # load the hash_enricher module
