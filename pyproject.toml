@@ -4,8 +4,6 @@ build-backend = "poetry.core.masonry.api"
 
 [project]
 name = "auto-archiver"
-# to add a custom version use local versioning eg 1.1.0+dm.1
-# then poetry install
 version = "1.1.0"
 description = "Automatically archive links to videos, images, and social media content from Google Sheets (and more)."
 
