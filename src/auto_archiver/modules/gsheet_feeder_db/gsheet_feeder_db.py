@@ -10,12 +10,13 @@ The filtered rows are processed into `Metadata` objects.
 """
 
 import os
-from typing import Tuple, Union
+from typing import Tuple, Union, Iterator
 from urllib.parse import quote
 
 import gspread
 from loguru import logger
 from slugify import slugify
+from retrying import retry
 
 from auto_archiver.core import Feeder, Database, Media
 from auto_archiver.core import Metadata
@@ -33,10 +34,10 @@ class GsheetsFeederDB(Feeder, Database):
     def open_sheet(self):
         if self.sheet:
             return self.gsheets_client.open(self.sheet)
-        else:  # self.sheet_id
+        else:
             return self.gsheets_client.open_by_key(self.sheet_id)
 
-    def __iter__(self) -> Metadata:
+    def __iter__(self) -> Iterator[Metadata]:
         sh = self.open_sheet()
         for ii, worksheet in enumerate(sh.worksheets()):
             if not self.should_process_sheet(worksheet.title):
@@ -45,14 +46,14 @@ class GsheetsFeederDB(Feeder, Database):
             logger.info(f"Opening worksheet {ii=}: {worksheet.title=} header={self.header}")
             gw = GWorksheet(worksheet, header_row=self.header, columns=self.columns)
             if len(missing_cols := self.missing_required_columns(gw)):
-                logger.warning(
+                logger.debug(
                     f"SKIPPED worksheet '{worksheet.title}' due to missing required column(s) for {missing_cols}"
                 )
                 continue
 
             # process and yield metadata here:
             yield from self._process_rows(gw)
-            logger.success(f"Finished worksheet {worksheet.title}")
+            logger.info(f"Finished worksheet {worksheet.title}")
 
     def _process_rows(self, gw: GWorksheet):
         for row in range(1 + self.header, gw.count_rows() + 1):
@@ -173,7 +174,16 @@ class GsheetsFeederDB(Feeder, Database):
                 ),
             )
 
-        gw.batch_set_cell(cell_updates)
+        @retry(
+            wait_incrementing_start=1000,
+            wait_incrementing_increment=3000,
+            wait_incrementing_max=20_000,
+            stop_max_attempt_number=5,
+        )
+        def batch_set_cell_with_retry(gw, cell_updates: list):
+            gw.batch_set_cell(cell_updates)
+
+        batch_set_cell_with_retry(gw, cell_updates)
 
     def _safe_status_update(self, item: Metadata, new_status: str) -> None:
         try:

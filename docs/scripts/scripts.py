@@ -47,7 +47,6 @@ def generate_module_docs():
 
     for module in sorted(ModuleFactory().available_modules(), key=lambda x: (x.requires_setup, x.name)):
         # generate the markdown file from the __manifest__.py file.
-
         manifest = module.manifest
         for type in manifest["type"]:
             modules_by_type.setdefault(type, []).append(module)
@@ -63,6 +62,27 @@ def generate_module_docs():
 {description}
 """
         steps_str = "\n".join(f"  {t}s:\n  - {module.name}" for t in manifest["type"])
+
+        if manifest.get("autodoc_dropins"):
+            loaded_module = module.load({})
+            dropins = loaded_module.load_dropins()
+            dropin_str = "\n##### Available Dropins\n"
+            for dropin in dropins:
+                if not (ddoc := dropin.documentation()):
+                    continue
+                dropin_str += f"\n###### {ddoc.get('name', dropin.__name__)}\n\n"
+                dropin_str += f"{ddoc.get('description')}\n\n"
+                if ddoc.get("site"):
+                    dropin_str += f"**Site**: {ddoc['site']}\n\n"
+                if dauth := ddoc.get("authentication"):
+                    dropin_str += "**YAML configuration**:\n"
+                    dropin_auth_yaml = "authentication:\n...\n"
+                    for site, creds in dauth.items():
+                        dropin_auth_yaml += f"  {site}:\n"
+                        for k, v in creds.items():
+                            dropin_auth_yaml += f'    {k}: "{v}"\n'
+                    dropin_str += f"```{{code}} yaml\n{dropin_auth_yaml}...\n```\n"
+            readme_str += dropin_str
 
         if not manifest["configs"]:
             config_string = f"# No configuration options for {module.name}.*\n"

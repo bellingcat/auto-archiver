@@ -34,7 +34,7 @@ from .config import (
 from .module import ModuleFactory, LazyBaseModule
 from . import validators, Feeder, Extractor, Database, Storage, Formatter, Enricher
 from .consts import MODULE_TYPES, SetupError
-from auto_archiver.utils.url import check_url_or_raise
+from auto_archiver.utils.url import check_url_or_raise, clean
 
 if TYPE_CHECKING:
     from .base_module import BaseModule
@@ -249,7 +249,7 @@ Here's how that would look: \n\nsteps:\n  extractors:\n  - [your_extractor_name_
             action="store",
             dest="logging.level",
             choices=["INFO", "DEBUG", "ERROR", "WARNING"],
-            help="the logging level to use",
+            help="the logging level to use for the standard output and file logging",
             default="INFO",
             type=str.upper,
         )
@@ -262,6 +262,14 @@ Here's how that would look: \n\nsteps:\n  extractors:\n  - [your_extractor_name_
             dest="logging.rotation",
             help="the logging rotation to use",
             default=None,
+        )
+
+        parser.add_argument(
+            "--logging.each_level_in_separate_file",
+            action="store",
+            dest="logging.each_level_in_separate_file",
+            help="if set, writes each logging level to a separate file (ignores --logging.level), you must also set --logging.file. Each level will have a dedicate logs file matching your <file>.debug, <file>.info, etc.",
+            default=False,
         )
 
     def add_individual_module_args(
@@ -333,11 +341,24 @@ Here's how that would look: \n\nsteps:\n  extractors:\n  - [your_extractor_name_
 
         # add other logging info
         if self.logger_id is None:  # note - need direct comparison to None since need to consider falsy value 0
-            self.logger_id = logger.add(sys.stderr, level=logging_config["level"])
-            if log_file := logging_config["file"]:
-                logger.add(log_file) if not logging_config["rotation"] else logger.add(
-                    log_file, rotation=logging_config["rotation"]
+            use_level = logging_config["level"]
+            self.logger_id = logger.add(sys.stderr, level=use_level)
+
+            rotation = logging_config["rotation"]
+            log_file = logging_config["file"]
+
+            if logging_config.get("each_level_in_separate_file"):
+                assert logging_config["file"], (
+                    "You must set --logging.file if you want to use --logging.each_level_in_separate_file"
                 )
+                for i, level in enumerate(["DEBUG", "INFO", "SUCCESS", "WARNING", "ERROR"], start=1):
+                    logger.add(
+                        f"{log_file}.{i}_{level.lower()}",
+                        filter=lambda rec, lvl=level: rec["level"].name == lvl,
+                        rotation=rotation,
+                    )
+            elif log_file:
+                logger.add(log_file, rotation=rotation, level=use_level)
 
     def install_modules(self, modules_by_type):
         """
@@ -516,7 +537,7 @@ Here's how that would look: \n\nsteps:\n  extractors:\n  - [your_extractor_name_
                 yield self.feed_item(item)
                 url_count += 1
 
-        logger.success(f"Processed {url_count} URL(s)")
+        logger.info(f"Processed {url_count} URL(s)")
         self.cleanup()
 
     def feed_item(self, item: Metadata) -> Metadata:
@@ -572,12 +593,13 @@ Here's how that would look: \n\nsteps:\n  extractors:\n  - [your_extractor_name_
             raise e
 
         # 1 - sanitize - each archiver is responsible for cleaning/expanding its own URLs
-        url = original_url
+        url = clean(original_url)
         for a in self.extractors:
             url = a.sanitize_url(url)
 
         result.set_url(url)
         if original_url != url:
+            logger.debug(f"Sanitized URL from {original_url} to {url}")
             result.set("original_url", original_url)
 
         # 2 - notify start to DBs, propagate already archived if feature enabled in DBs

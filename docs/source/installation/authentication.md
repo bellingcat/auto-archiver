@@ -9,8 +9,8 @@ There are two main use cases for authentication:
 ```{note}
 
 The Authentication framework currently only works with the following modules:
-* Generic Extractor
-* Screenshot Enricher
+* [Generic Extractor](../modules/autogen/extractor/generic_extractor.md) - the main module for extracting content from websites
+* [Antibot Extractor/Enricher](../modules/autogen/extractor/antibot_extractor_enricher.md)
 
 To authenticate for WACZ archiving, see the instructions on the [](../modules/autogen/enricher/wacz_extractor_enricher.md) page.
 ```
@@ -34,7 +34,8 @@ You can save your authentication information directly inside your orchestration 
 
 ```{note} 
 
-The Username & Password, and API settings only work with the Generic Extractor. Other modules (like the screenshot enricher) can only use the `cookies` options. Furthermore, many sites can still detect bots and block username/password logins. Twitter/X and YouTube are two prominent ones that block username/password logging.
+Currently, the Username & Password, and API settings only work with the Generic and Antibot Extractors. Furthermore, many sites can still detect bots and block username/password logins. Twitter/X and YouTube are two prominent ones that block username/password logins.
+
 
 One of the 'Cookies' options is recommended for the most robust archiving, but it still isn't guaranteed to work.
 ```
@@ -52,12 +53,12 @@ authentication:
       username: myusername
       password: 123
     
-    facebook.com:
-       cookie: single_cookie
+   facebook.com:
+      cookie: single_cookie
 
-    othersite.com:
-       api_key: 123
-       api_secret: 1234
+   othersite.com:
+      api_key: 123
+      api_secret: 1234
   
 ```
 

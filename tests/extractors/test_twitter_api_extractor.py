@@ -140,22 +140,22 @@ class TestTwitterApiExtractor(TestExtractorBase):
             (
                 "https://x.com/SozinhoRamalho/status/1876710769913450647",
                 "ignore tweet, testing sensitivity warning nudity https://t.co/t3u0hQsSB1",
-                datetime.datetime(2024, 12, 31, 14, 18, 33, tzinfo=datetime.timezone.utc),
+                datetime.datetime(2025, 1, 7, 19, 21, 29, tzinfo=datetime.timezone.utc),
             ),
             (
                 "https://x.com/SozinhoRamalho/status/1876710875475681357",
                 "ignore tweet, testing sensitivity warning violence https://t.co/syYDSkpjZD",
-                datetime.datetime(2024, 12, 31, 14, 18, 33, tzinfo=datetime.timezone.utc),
+                datetime.datetime(2025, 1, 7, 19, 21, 54, tzinfo=datetime.timezone.utc),
             ),
             (
                 "https://x.com/SozinhoRamalho/status/1876711053813227618",
                 "ignore tweet, testing sensitivity warning sensitive https://t.co/XE7cRdjzYq",
-                datetime.datetime(2024, 12, 31, 14, 18, 33, tzinfo=datetime.timezone.utc),
+                datetime.datetime(2025, 1, 7, 19, 22, 37, tzinfo=datetime.timezone.utc),
             ),
             (
                 "https://x.com/SozinhoRamalho/status/1876711141314801937",
                 "ignore tweet, testing sensitivity warning nudity, violence, sensitivity https://t.co/YxCFbbhYE3",
-                datetime.datetime(2024, 12, 31, 14, 18, 33, tzinfo=datetime.timezone.utc),
+                datetime.datetime(2025, 1, 7, 19, 22, 58, tzinfo=datetime.timezone.utc),
             ),
         ],
     )

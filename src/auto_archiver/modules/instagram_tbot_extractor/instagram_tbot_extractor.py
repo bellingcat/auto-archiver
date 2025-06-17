@@ -58,7 +58,7 @@ class InstagramTbotExtractor(Extractor):
                 "If you do, disable at least one of the archivers for the first-time setup of the telethon session: {e}"
             )
         with self.client.start():
-            logger.success(f"SETUP {self.name} login works.")
+            logger.info(f"SETUP {self.name} login works.")
 
     def cleanup(self) -> None:
         logger.info(f"CLEANUP {self.name}.")

@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [project]
 name = "auto-archiver"
-version = "1.0.1"
+version = "1.1.0"
 description = "Automatically archive links to videos, images, and social media content from Google Sheets (and more)."
 
 requires-python = ">=3.10,<3.13"
@@ -27,7 +27,6 @@ dependencies = [
     "bs4 (>=0.0.0)",
     "loguru (>=0.0.0)",
     "ffmpeg-python (>=0.0.0)",
-    "selenium (>=0.0.0)",
     "telethon (>=0.0.0)",
     "google-api-python-client (>=0.0.0)",
     "google-auth-httplib2 (>=0.0.0)",
@@ -57,6 +56,8 @@ dependencies = [
     "bgutil-ytdlp-pot-provider (>=1.0.0)",
     "yt-dlp[curl-cffi,default] (>=2025.5.22,<2026.0.0)",
     "secretstorage (>=3.3.3,<4.0.0)",
+    "seleniumbase (>=4.36.4,<5.0.0)",
+    "pyautogui (>=0.9.54,<0.10.0)",
 ]
 
 [tool.poetry.group.dev.dependencies]

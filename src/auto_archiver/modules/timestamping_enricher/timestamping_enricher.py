@@ -58,7 +58,7 @@ class TimestampingEnricher(Enricher):
         ]
 
         if not len(hashes):
-            logger.warning(f"No hashes found in {url=}")
+            logger.debug(f"No hashes found in {url=}")
             return
 
         
@@ -101,7 +101,7 @@ class TimestampingEnricher(Enricher):
             hashes_media.set("cryptography v", version("cryptography"))
             to_enrich.add_media(hashes_media, id="timestamped_hashes")
             to_enrich.set("timestamped", True)
-            logger.success(f"{len(timestamp_tokens)} timestamp tokens created for {url=}")
+            logger.info(f"{len(timestamp_tokens)} timestamp tokens created for {url=}")
         else:
             logger.warning(f"No successful timestamps for {url=}")
 

@@ -4,9 +4,7 @@
     "author": "Bellingcat",
     "type": ["extractor"],
     "requires_setup": False,
-    "dependencies": {
-        "python": ["yt_dlp", "requests", "loguru", "slugify"],
-    },
+    "dependencies": {"python": ["yt_dlp", "requests", "loguru", "slugify"], "bin": ["ffmpeg"]},
     "description": """
 This is the generic extractor used by auto-archiver, which uses `yt-dlp` under the hood.
 
@@ -31,6 +29,8 @@ For a full list of video platforms supported by `yt-dlp`, see the
  metadata objects. Some dropins are included in this generic_archiver by default, but
 custom dropins can be created to handle additional websites and passed to the archiver
 via the command line using the `--dropins` option (TODO!).
+
+You can see all currently implemented dropins in [the source code](https://github.com/bellingcat/auto-archiver/tree/main/src/auto_archiver/modules/generic_extractor).
 
 ### Auto-Updates
 
@@ -62,7 +62,7 @@ If you are having issues with the extractor, you can review the version of `yt-d
         },
         "end_means_success": {
             "default": True,
-            "help": "if True, any archived content will mean a 'success', if False this archiver will not return a 'success' stage; this is useful for cases when the yt-dlp will archive a video but ignore other types of content like images or text only pages that the subsequent archivers can retrieve.",
+            "help": "if True, any archived content will mean a 'success', if False this extractor will not return a 'success' stage; this is useful for cases when the yt-dlp will archive a video but ignore other types of content like images or text only pages that the subsequent extractors can retrieve.",
             "type": "bool",
         },
         "allow_playlist": {

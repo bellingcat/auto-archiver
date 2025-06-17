@@ -1,6 +1,7 @@
 tmp*/
 temp/
 .env*
+!.env*.example
 .DS_Store
 expmt/
 service_account.json
@@ -37,3 +38,7 @@ docs/source/modules/autogen/
 scripts/settings_page.html
 scripts/settings/src/schema.json 
 .vite
+downloaded_files
+latest_logs
+# for launch.json
+.vscode

@@ -1,6 +1,6 @@
 # Keeping Logs
 
-Auto Archiver's logs can be helpful for debugging problematic archiving processes. This guide shows you how to use the logs to 
+Auto Archiver's logs can be helpful for debugging problematic archiving processes. This guide shows you how to use the logs configuration.
 
 ## Setting up logging
 
@@ -8,10 +8,10 @@ Logging settings can be set on the command line or using the orchestration confi
 
 #### Enabling or Disabling Logging
 
-Logging to the console is enabled by default. If you want to globally disable Auto Archiver's logging, then you can set `enabled: false` in your `logging` config:
+Logging to the console is enabled by default. If you want to globally disable Auto Archiver's logging, then you can set `enabled: false` in your `logging` config file:
 
 ```{code} yaml
-
+:caption: orchestration.yaml
 ...
 logging:
    enabled: false
@@ -24,7 +24,7 @@ This will disable all logs from Auto Archiver, but it does not disable logs for 
 
 #### Logging Level
 
-There are 7 logging levels in total, with 4 commonly used levels. They are: `DEBUG`, `INFO`, `WARNING` and `ERROR`.
+There are 7 logging levels in total, with 5 of them used in this tool. They are: `DEBUG`, `INFO`, `SUCCESS`, `WARNING` and `ERROR`.
 
 Change the warning level by setting the value in your orchestration config file:
 
@@ -44,7 +44,7 @@ For normal usage, it is recommended to use the `INFO` level, or if you prefer qu
 
 ### Logging to a file
 
-As default, auto-archiver will log to the console. But if you wish to store your logs for future reference, or you are running the auto-archiver from within code a implementation, then you may with to enable file logging. This can be done by setting the `file:` config value in the logging settings.
+As default, auto-archiver will log to the console. But if you wish to store your logs for future reference, or you are running the auto-archiver from within code a implementation, then you may wish to enable file logging. This can be done by setting the `file:` config value in the logging settings.
 
 **Rotation:** For file logging, you can choose to 'rotate' your log files (creating new log files) so they do not get too large. Change this by setting the 'rotation' option in your logging settings. For a full list of rotation options, see the [loguru docs](https://loguru.readthedocs.io/en/stable/overview.html#easier-file-logging-with-rotation-retention-compression).
 
@@ -57,15 +57,33 @@ logging:
     rotation: 1 day
 ```
 
-### Full logging example
+### Logging each level to a different file
+If you want to log each level to a different file, you can do this by setting the `each_level_in_separate_file:` option to `true` and also setting your `file:` name, a new file will be created for each of the 5 levels used, by appending the `0_level` name to the file like so `your_file.log.1_error`. In this case the `level:` option is ignored, and all levels will be logged. 
 
-The below example logs only `WARNING` logs to the console and to the file `/my/file.log`, rotating that file once per week:
 
 ```{code} yaml
 :caption: orchestration.yaml
 
 logging:
-    level: WARNING
+    each_level_in_separate_file: true
+    file: /my/logs/file.log 
+```
+This will create the following files:
+- `/my/logs/file.log.1_debug`
+- `/my/logs/file.log.2_info`
+- `/my/logs/file.log.3_success`
+- `/my/logs/file.log.4_warning`
+- `/my/logs/file.log.5_error`
+
+### Full logging example
+
+The below example logs only `DEBUG` logs to the console and to the file `/my/file.log`, rotating that file once per week:
+
+```{code} yaml
+:caption: orchestration.yaml
+
+logging:
+    level: DEBUG
     file: /my/file.log
     rotation: 1 week
 ```
