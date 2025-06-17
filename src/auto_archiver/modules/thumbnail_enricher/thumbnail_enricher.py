@@ -35,16 +35,18 @@ class ThumbnailEnricher(Enricher):
                 logger.debug(f"generating thumbnails for {m.filename}")
                 duration = m.get("duration")
 
-                if duration is None:
-                    try:
-                        probe = ffmpeg.probe(m.filename)
-                        duration = float(
-                            next(stream for stream in probe["streams"] if stream["codec_type"] == "video")["duration"]
-                        )
-                        to_enrich.media[m_id].set("duration", duration)
-                    except Exception as e:
-                        logger.error(f"error getting duration of video {m.filename}: {e}")
-                        return
+                try:
+                    probe = ffmpeg.probe(m.filename)
+                    duration = float(
+                        next(stream for stream in probe["streams"] if stream["codec_type"] == "video")["duration"]
+                    )
+                    to_enrich.media[m_id].set("duration", duration)
+                except Exception as e:
+                    logger.warning(f"failed to get duration with FFMPEG from {m.filename}: {e}")
+
+                if not duration or type(duration) not in [float, int] or duration <= 0:
+                    logger.warning(f"cannot generate thumbnails for {m.filename} without valid duration")
+                    continue
 
                 num_thumbs = int(min(max(1, (duration / 60) * self.thumbnails_per_minute), self.max_thumbnails))
                 timestamps = [duration / (num_thumbs + 1) * i for i in range(1, num_thumbs + 1)]
