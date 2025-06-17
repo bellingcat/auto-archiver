@@ -16,6 +16,7 @@ from urllib.parse import quote
 import gspread
 from loguru import logger
 from slugify import slugify
+from retrying import retry
 
 from auto_archiver.core import Feeder, Database, Media
 from auto_archiver.core import Metadata
@@ -173,7 +174,16 @@ class GsheetsFeederDB(Feeder, Database):
                 ),
             )
 
-        gw.batch_set_cell(cell_updates)
+        @retry(
+            wait_incrementing_start=1000,
+            wait_incrementing_increment=3000,
+            wait_incrementing_max=20_000,
+            stop_max_attempt_number=5,
+        )
+        def batch_set_cell_with_retry(gw, cell_updates: list):
+            gw.batch_set_cell(cell_updates)
+
+        batch_set_cell_with_retry(gw, cell_updates)
 
     def _safe_status_update(self, item: Metadata, new_status: str) -> None:
         try:
