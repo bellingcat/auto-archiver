@@ -25,7 +25,7 @@ import {
     Typography,
     InputAdornment,
 } from '@mui/material';
-import Grid from '@mui/material/Grid2';
+import Grid from '@mui/material/Grid';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
