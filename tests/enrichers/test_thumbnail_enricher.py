@@ -25,6 +25,7 @@ def mock_ffmpeg_environment(mocker):
     # Mocking all the ffmpeg calls in one place
     mock_ffmpeg_input = mocker.patch("ffmpeg.input")
     mock_makedirs = mocker.patch("os.makedirs")
+    mocker.patch("os.path.exists", return_value=True)
     (mocker.patch.object(Media, "is_video", return_value=True),)
     mock_probe = mocker.patch(
         "ffmpeg.probe",

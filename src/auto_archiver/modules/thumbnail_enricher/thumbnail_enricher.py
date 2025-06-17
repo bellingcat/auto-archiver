@@ -59,6 +59,9 @@ class ThumbnailEnricher(Enricher):
                     ).run()
 
                     try:
+                        if not os.path.exists(output_path):
+                            logger.info(f"thumbnail {index} for media {m.filename} was not created")
+                            continue
                         thumbnails_media.append(
                             Media(filename=output_path)
                             .set("id", f"thumbnail_{index}")
