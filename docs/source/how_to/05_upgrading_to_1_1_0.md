@@ -47,8 +47,8 @@ One such Dropin is the VkDropin which uses this automated browser to access VKon
 ```{code} yaml
 authentication:
   vk.com:
-  username: your_username
-  password: your_password
+    username: your_username
+    password: your_password
 ```
 
 See all available Dropins in [the source code](https://github.com/bellingcat/auto-archiver/tree/main/src/auto_archiver/modules/antibot_extractor_enricher/dropins). Usually each Dropin needs its own authentication settings, similarly to the VkDropin.
