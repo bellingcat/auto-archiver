@@ -116,7 +116,7 @@ class Media:
         # self.is_video() should be used together with this method
         try:
             streams = ffmpeg.probe(self.filename, select_streams="v")["streams"]
-            logger.warning(f"STREAMS FOR {self.filename} {streams}")
+            logger.debug(f"STREAMS FOR {self.filename} {streams}")
             return any(s.get("duration_ts", 0) > 0 for s in streams)
         except Error:
             return False  # ffmpeg errors when reading bad files

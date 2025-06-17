@@ -34,7 +34,8 @@ You can save your authentication information directly inside your orchestration 
 
 ```{note} 
 
-Currently, the Username & Password, and API settings only work with the Generic and Antibot Extractors. Furthermore, many sites can still detect bots and block username/password logins. Twitter/X and YouTube are two prominent ones that block username/password logging.
+Currently, the Username & Password, and API settings only work with the Generic and Antibot Extractors. Furthermore, many sites can still detect bots and block username/password logins. Twitter/X and YouTube are two prominent ones that block username/password logins.
+
 
 One of the 'Cookies' options is recommended for the most robust archiving, but it still isn't guaranteed to work.
 ```
