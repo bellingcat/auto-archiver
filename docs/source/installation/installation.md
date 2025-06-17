@@ -56,6 +56,9 @@ If using the local installation method, you will also need to install the follow
 4. [Browsertrix Crawler docker image](https://hub.docker.com/r/webrecorder/browsertrix-crawler) for the WACZ enricher/archiver
 
 
+### Custom installation scripts
+- [Ubuntu 24 Server Install by @djhmateer](example_scripts/ubuntu_24_server_install.md) - a WYSIWYG example script from a user who set up the Auto Archiver on a fresh Ubuntu 24 server.
+
 
 ## Developer Install
 

@@ -40,3 +40,5 @@ scripts/settings/src/schema.json
 .vite
 downloaded_files
 latest_logs
+# for launch.json
+.vscode
