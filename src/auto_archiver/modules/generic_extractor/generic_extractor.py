@@ -375,7 +375,7 @@ class GenericExtractor(Extractor):
         if "entries" in data:
             entries = data.get("entries", [])
             if not len(entries):
-                logger.warning("YoutubeDLArchiver could not find any video")
+                logger.info("YoutubeDLArchiver could not find any video")
                 return False
         else:
             entries = [data]
@@ -409,7 +409,7 @@ class GenericExtractor(Extractor):
             except Exception as e:
                 logger.error(f"Error processing entry {entry}: {e}")
         if not len(result.media):
-            logger.warning(f"No media found for entry {entry}, skipping.")
+            logger.info(f"No media found for entry {entry}, skipping.")
             return False
 
         return self.add_metadata(data, info_extractor, url, result)
