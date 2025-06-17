@@ -249,7 +249,7 @@ Here's how that would look: \n\nsteps:\n  extractors:\n  - [your_extractor_name_
             action="store",
             dest="logging.level",
             choices=["INFO", "DEBUG", "ERROR", "WARNING"],
-            help="the logging level to use",
+            help="the logging level to use for the standard output and file logging",
             default="INFO",
             type=str.upper,
         )
@@ -268,7 +268,7 @@ Here's how that would look: \n\nsteps:\n  extractors:\n  - [your_extractor_name_
             "--logging.each_level_in_separate_file",
             action="store",
             dest="logging.each_level_in_separate_file",
-            help="whether to write each logging level to a separate file",
+            help="if set, writes each logging level to a separate file (ignores --logging.level), you must also set --logging.file. Each level will have a dedicate logs file matching your <file>.debug, <file>.info, etc.",
             default=False,
         )
 
@@ -341,28 +341,24 @@ Here's how that would look: \n\nsteps:\n  extractors:\n  - [your_extractor_name_
 
         # add other logging info
         if self.logger_id is None:  # note - need direct comparison to None since need to consider falsy value 0
-            self.logger_id = logger.add(sys.stderr, level=logging_config["level"])
+            use_level = logging_config["level"]
+            self.logger_id = logger.add(sys.stderr, level=use_level)
 
-            # Default to False (above in parser code)
-            separate_file = logging_config["each_level_in_separate_file"]
+            rotation = logging_config["rotation"]
+            log_file = logging_config["file"]
 
-            # Default to None if not set
-            rotation=logging_config["rotation"]
-
-            if separate_file:
-                logger.add("logs/1debug.log", level="DEBUG", rotation=rotation)
-                logger.add("logs/2info.log", level="INFO", rotation=rotation)
-                logger.add("logs/3success.log", level="SUCCESS", rotation=rotation)
-                logger.add("logs/4warning.log", level="WARNING", rotation=rotation)
-                logger.add("logs/5error.log", level="ERROR", rotation=rotation)
-            else:
-                log_file = logging_config["file"]
-                logger.add(log_file, rotation=rotation)
-
-            # if log_file := logging_config["file"]:
-            #     logger.add(log_file) if not logging_config["rotation"] else logger.add(
-            #         log_file, rotation=logging_config["rotation"]
-            #     )
+            if logging_config.get("each_level_in_separate_file"):
+                assert logging_config["file"], (
+                    "You must set --logging.file if you want to use --logging.each_level_in_separate_file"
+                )
+                for i, level in enumerate(["DEBUG", "INFO", "SUCCESS", "WARNING", "ERROR"], start=1):
+                    logger.add(
+                        f"{log_file}.{i}_{level.lower()}",
+                        filter=lambda rec, lvl=level: rec["level"].name == lvl,
+                        rotation=rotation,
+                    )
+            elif log_file:
+                logger.add(log_file, rotation=rotation, level=use_level)
 
     def install_modules(self, modules_by_type):
         """
