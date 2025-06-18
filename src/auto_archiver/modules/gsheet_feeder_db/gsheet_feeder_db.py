@@ -117,12 +117,14 @@ class GsheetsFeederDB(Feeder, Database):
 
     def done(self, item: Metadata, cached: bool = False) -> None:
         """archival result ready - should be saved to DB"""
-        logger.success(f"DONE {item.get_url()}")
         gw, row = self._retrieve_gsheet(item)
-        # self._safe_status_update(item, 'done')
 
         cell_updates = []
         row_values = gw.get_row(row)
+
+        spreadsheet = gw.wks.spreadsheet.title
+        worksheet = gw.wks.title
+        logger.info(f"DONE url='{item.get_url()}' {row=} on {spreadsheet=} : {worksheet=}")
 
         def batch_if_valid(col, val, final_value=None):
             final_value = final_value or val
