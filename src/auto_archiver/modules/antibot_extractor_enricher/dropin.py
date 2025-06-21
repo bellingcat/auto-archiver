@@ -1,6 +1,7 @@
 import os
+import traceback
 from typing import Mapping
-from loguru import logger
+from auto_archiver.utils.custom_logger import logger
 from seleniumbase import SB
 import yt_dlp
 
@@ -143,7 +144,7 @@ class Dropin:
         with yt_dlp.YoutubeDL(validated_options) as ydl:
             for url in video_urls:
                 try:
-                    logger.debug(f"Downloading video from URL: {url}")
+                    logger.debug("downloading video from url")
                     info = ydl.extract_info(url, download=True)
                     filename = ydl_entry_to_filename(ydl, info)
                     if not filename:  # Failed to download video.
@@ -155,5 +156,5 @@ class Dropin:
                     to_enrich.add_media(media)
                     downloaded += 1
                 except Exception as e:
-                    logger.error(f"Error downloading {url}: {e}")
+                    logger.error(f"download failed: {e} {traceback.format_exc()}")
         return downloaded

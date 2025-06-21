@@ -14,7 +14,7 @@ You will need to provide your phone number and a 2FA code the first time you run
 
 import os
 from telethon.sync import TelegramClient
-from loguru import logger
+from auto_archiver.utils.custom_logger import logger
 
 
 # Create a

@@ -2,7 +2,7 @@ from typing import IO
 
 import boto3
 import os
-from loguru import logger
+from auto_archiver.utils.custom_logger import logger
 
 from auto_archiver.core import Media
 from auto_archiver.core import Storage

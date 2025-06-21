@@ -9,7 +9,7 @@ from tempfile import TemporaryDirectory
 from typing import Dict, Tuple
 import hashlib
 
-from loguru import logger
+from auto_archiver.utils.custom_logger import logger
 import pytest
 from auto_archiver.core.metadata import Metadata, Media
 from auto_archiver.core.module import ModuleFactory

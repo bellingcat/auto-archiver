@@ -17,7 +17,7 @@ from dataclasses_json import dataclass_json
 import datetime
 from urllib.parse import urlparse
 from dateutil.parser import parse as parse_dt
-from loguru import logger
+from auto_archiver.utils.custom_logger import logger
 
 from .media import Media
 

@@ -4,7 +4,7 @@ import os
 import pathlib
 from jinja2 import Environment, FileSystemLoader
 from urllib.parse import quote
-from loguru import logger
+from auto_archiver.utils.custom_logger import logger
 import json
 import base64
 
@@ -35,7 +35,7 @@ class HtmlFormatter(Formatter):
     def format(self, item: Metadata) -> Media:
         url = item.get_url()
         if item.is_empty():
-            logger.debug(f"[SKIP] FORMAT there is no media or metadata to format: {url=}")
+            logger.debug("nothing to format, skipping")
             return
 
         content = self.template.render(

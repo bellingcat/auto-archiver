@@ -2,7 +2,7 @@ import ssl
 import os
 from slugify import slugify
 from urllib.parse import urlparse
-from loguru import logger
+from auto_archiver.utils.custom_logger import logger
 
 from auto_archiver.core import Enricher
 from auto_archiver.core import Metadata, Media

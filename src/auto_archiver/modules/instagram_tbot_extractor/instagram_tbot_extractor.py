@@ -12,7 +12,7 @@ import shutil
 import time
 from sqlite3 import OperationalError
 
-from loguru import logger
+from auto_archiver.utils.custom_logger import logger
 from telethon.sync import TelegramClient
 
 from auto_archiver.core import Extractor

@@ -1,6 +1,6 @@
 import subprocess
 import traceback
-from loguru import logger
+from auto_archiver.utils.custom_logger import logger
 
 from auto_archiver.core import Enricher
 from auto_archiver.core import Metadata

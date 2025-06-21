@@ -14,7 +14,7 @@ from datetime import datetime
 import traceback
 
 import requests
-from loguru import logger
+from auto_archiver.utils.custom_logger import logger
 from retrying import retry
 from tqdm import tqdm
 
@@ -45,11 +45,11 @@ class InstagramAPIExtractor(Extractor):
         url = item.get_url()
         url.replace("instagr.com", "instagram.com").replace("instagr.am", "instagram.com")
         insta_matches = self.valid_url.findall(url)
-        logger.info(f"{insta_matches=}")
+
         if not len(insta_matches) or len(insta_matches[0]) != 3:
             return
         if len(insta_matches) > 1:
-            logger.warning(f"Multiple instagram matches found in {url=}, using the first one")
+            logger.debug("multiple instagram matches found, using the first one")
             return
         g1, g2, g3 = insta_matches[0][0], insta_matches[0][1], insta_matches[0][2]
         if g1 == "":
@@ -65,7 +65,7 @@ class InstagramAPIExtractor(Extractor):
                 return self.download_post(item, id=g3, context="story")
             return self.download_stories(item, g2)
         else:
-            logger.warning(f"Unknown instagram regex group match {g1=} found in {url=}")
+            logger.warning(f"unknown instagram regex group match {g1=}")
             return
 
     @retry(wait_random_min=1000, wait_random_max=3000, stop_max_attempt_number=5)
@@ -112,8 +112,8 @@ class InstagramAPIExtractor(Extractor):
                 count_posts += len(stories)
                 result.set("#stories", len(stories))
             except Exception as e:
-                result.append("errors", f"Error downloading stories for {username}")
-                logger.error(f"Error downloading stories for {username}: {e} {traceback.format_exc()}")
+                result.append("errors", f"error downloading stories for {username}")
+                logger.error(f"error downloading stories for {username}: {e} {traceback.format_exc()}")
 
             # download all posts
             try:
@@ -122,8 +122,8 @@ class InstagramAPIExtractor(Extractor):
                         result, user_id, max_to_download=self.full_profile_max_posts - count_posts
                     )
             except Exception as e:
-                result.append("errors", f"Error downloading posts for {username}")
-                logger.error(f"Error downloading posts for {username}: {e} {traceback.format_exc()}")
+                result.append("errors", f"error downloading posts for {username}")
+                logger.error(f"error downloading posts for {username}: {e} {traceback.format_exc()}")
 
             # download all tagged
             try:
@@ -132,8 +132,8 @@ class InstagramAPIExtractor(Extractor):
                         result, user_id, max_to_download=self.full_profile_max_posts - count_posts
                     )
             except Exception as e:
-                result.append("errors", f"Error downloading tagged posts for {username}")
-                logger.error(f"Error downloading tagged posts for {username}: {e} {traceback.format_exc()}")
+                result.append("errors", f"error downloading tagged posts for {username}")
+                logger.error(f"error downloading tagged posts for {username}: {e} {traceback.format_exc()}")
 
             # download all highlights
             try:
@@ -159,10 +159,10 @@ class InstagramAPIExtractor(Extractor):
             except Exception as e:
                 result.append(
                     "errors",
-                    f"Error downloading highlight id{h.get('pk')} for {username}",
+                    f"error downloading highlight id{h.get('pk')} for {username}",
                 )
                 logger.error(
-                    f"Error downloading highlight id{h.get('pk')} for {username}: {e} {traceback.format_exc()}"
+                    f"error downloading highlight id{h.get('pk')} for {username}: {e} {traceback.format_exc()}"
                 )
             if count_highlights >= max_to_download:
                 logger.debug(f"HIGHLIGHTS reached max_to_download={self.full_profile_max_posts}")
@@ -208,8 +208,8 @@ class InstagramAPIExtractor(Extractor):
             try:
                 self.scrape_item(result, h, "highlight")
             except Exception as e:
-                result.append("errors", f"Error downloading highlight {h.get('id')}")
-                logger.error(f"Error downloading highlight, skipping {h.get('id')}: {e} {traceback.format_exc()}")
+                result.append("errors", f"error downloading highlight {h.get('id')}")
+                logger.error(f"error downloading highlight, skipping {h.get('id')}: {e} {traceback.format_exc()}")
 
         return h_info
 
@@ -251,8 +251,8 @@ class InstagramAPIExtractor(Extractor):
                 try:
                     self.scrape_item(result, p, "post")
                 except Exception as e:
-                    result.append("errors", f"Error downloading post {p.get('id')}")
-                    logger.error(f"Error downloading post, skipping {p.get('id')}: {e} {traceback.format_exc()}")
+                    result.append("errors", f"error downloading post {p.get('id')}")
+                    logger.error(f"error downloading post, skipping {p.get('id')}: {e} {traceback.format_exc()}")
                 pbar.update(1)
                 post_count += 1
             if post_count >= max_to_download:
@@ -279,8 +279,8 @@ class InstagramAPIExtractor(Extractor):
                 try:
                     self.scrape_item(result, p, "tagged")
                 except Exception as e:
-                    result.append("errors", f"Error downloading tagged post {p.get('id')}")
-                    logger.error(f"Error downloading tagged post, skipping {p.get('id')}: {e} {traceback.format_exc()}")
+                    result.append("errors", f"error downloading tagged post {p.get('id')}")
+                    logger.error(f"error downloading tagged post, skipping {p.get('id')}: {e} {traceback.format_exc()}")
                 pbar.update(1)
                 tagged_count += 1
             if tagged_count >= max_to_download:

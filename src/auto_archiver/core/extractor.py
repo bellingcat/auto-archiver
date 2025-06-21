@@ -12,7 +12,7 @@ from contextlib import suppress
 import mimetypes
 import os
 import requests
-from loguru import logger
+from auto_archiver.utils.custom_logger import logger
 from retrying import retry
 import re
 
@@ -94,7 +94,7 @@ class Extractor(BaseModule):
                 to_filename = to_filename[-64:]
         to_filename = os.path.join(self.tmp_dir, to_filename)
         if verbose:
-            logger.debug(f"downloading {url[0:50]=} {to_filename=}")
+            logger.debug(f"downloading {to_filename=}")
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36"
         }
@@ -117,7 +117,7 @@ class Extractor(BaseModule):
             return to_filename
 
         except requests.RequestException as e:
-            logger.warning(f"Failed to fetch the Media URL: {str(e)[:250]}")
+            logger.warning(f"Failed to fetch the Media URL: {e}")
         if try_best_quality:
             return None, url
 

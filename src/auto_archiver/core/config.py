@@ -10,7 +10,7 @@ from ruamel.yaml import YAML, CommentedMap
 import json
 import os
 
-from loguru import logger
+from auto_archiver.utils.custom_logger import logger
 
 from copy import deepcopy
 from auto_archiver.core.consts import MODULE_TYPES
@@ -118,8 +118,7 @@ class DefaultValidatingParser(argparse.ArgumentParser):
         """
         Override of error to format a nicer looking error message using logger
         """
-        logger.error("Problem with configuration file (tip: use --help to see the available options):")
-        logger.error(message)
+        logger.error(f"Problem with configuration file (tip: use --help to see the available options): \n{message}")
         self.exit(2)
 
     def parse_known_args(self, args=None, namespace=None):
@@ -136,8 +135,7 @@ class DefaultValidatingParser(argparse.ArgumentParser):
                     try:
                         self._check_value(action, action.default)
                     except argparse.ArgumentError as e:
-                        logger.error(f"You have an invalid setting in your configuration file ({action.dest}):")
-                        logger.error(e)
+                        logger.error(f"You have an invalid setting in your configuration file ({action.dest}):\n {e}")
                         exit()
 
         return super().parse_known_args(args, namespace)

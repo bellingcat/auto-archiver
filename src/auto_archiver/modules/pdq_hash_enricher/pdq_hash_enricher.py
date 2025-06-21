@@ -15,7 +15,7 @@ import traceback
 import pdqhash
 import numpy as np
 from PIL import Image, UnidentifiedImageError
-from loguru import logger
+from auto_archiver.utils.custom_logger import logger
 
 from auto_archiver.core import Enricher
 from auto_archiver.core import Metadata
