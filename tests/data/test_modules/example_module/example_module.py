@@ -1,6 +1,6 @@
 from auto_archiver.core import Extractor, Enricher, Feeder, Database, Storage, Formatter, Metadata
 
-from loguru import logger
+from auto_archiver.utils.custom_logger import logger
 
 
 class ExampleModule(Extractor, Enricher, Feeder, Database, Storage, Formatter):

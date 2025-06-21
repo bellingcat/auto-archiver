@@ -1,5 +1,5 @@
 import os
-from loguru import logger
+from auto_archiver.utils.custom_logger import logger
 from csv import DictWriter
 from dataclasses import asdict
 

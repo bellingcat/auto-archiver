@@ -4,7 +4,7 @@ import re
 import mimetypes
 import requests
 
-from loguru import logger
+from auto_archiver.utils.custom_logger import logger
 from pytwitter import Api
 from slugify import slugify
 

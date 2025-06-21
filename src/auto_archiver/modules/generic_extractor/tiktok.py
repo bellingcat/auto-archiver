@@ -1,5 +1,5 @@
 import requests
-from loguru import logger
+from auto_archiver.utils.custom_logger import logger
 
 from yt_dlp.extractor.tiktok import TikTokIE, TikTokLiveIE, TikTokVMIE, TikTokUserIE
 
@@ -22,7 +22,7 @@ class Tiktok(GenericDropin):
         return any(extractor().suitable(url) for extractor in (TikTokIE, TikTokLiveIE, TikTokVMIE, TikTokUserIE))
 
     def extract_post(self, url: str, ie_instance):
-        logger.debug(f"Using Tikwm API to attempt to download tiktok video from {url=}")
+        logger.debug(f"using Tikwm API to attempt to download tiktok video from {url=}")
 
         endpoint = self.TIKWM_ENDPOINT.format(url=url)
 

@@ -7,7 +7,7 @@ from tempfile import TemporaryDirectory
 from auto_archiver.utils import url as UrlUtil
 from auto_archiver.core.consts import MODULE_TYPES as CONF_MODULE_TYPES
 
-from loguru import logger
+from auto_archiver.utils.custom_logger import logger
 
 if TYPE_CHECKING:
     from .module import ModuleFactory

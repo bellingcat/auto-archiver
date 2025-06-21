@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 from dateutil.parser import parse as parse_dt
 
 import requests
-from loguru import logger
+from auto_archiver.utils.custom_logger import logger
 
 
 def mkdir_if_not_exists(folder):

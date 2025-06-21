@@ -16,7 +16,7 @@ import sys
 from importlib.util import find_spec
 import os
 from os.path import join
-from loguru import logger
+from auto_archiver.utils.custom_logger import logger
 import auto_archiver
 from auto_archiver.core.consts import DEFAULT_MANIFEST, MANIFEST_FILE, SetupError
 

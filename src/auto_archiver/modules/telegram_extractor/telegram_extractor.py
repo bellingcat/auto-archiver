@@ -2,7 +2,7 @@ import requests
 import re
 import html
 from bs4 import BeautifulSoup
-from loguru import logger
+from auto_archiver.utils.custom_logger import logger
 
 from auto_archiver.core import Extractor
 from auto_archiver.core import Metadata, Media

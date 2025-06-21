@@ -8,7 +8,7 @@ from google.oauth2 import service_account
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
-from loguru import logger
+from auto_archiver.utils.custom_logger import logger
 
 from auto_archiver.core import Media
 from auto_archiver.core import Storage
@@ -23,10 +23,10 @@ class GDriveStorage(Storage):
     def _setup_google_drive_service(self):
         """Initialize Google Drive service based on provided credentials."""
         if self.oauth_token:
-            logger.debug(f"Using Google Drive OAuth token: {self.oauth_token}")
+            logger.debug(f"using Google Drive OAuth token: {self.oauth_token}")
             self.service = self._initialize_with_oauth_token()
         elif self.service_account:
-            logger.debug(f"Using Google Drive service account: {self.service_account}")
+            logger.debug(f"using Google Drive service account: {self.service_account}")
             self.service = self._initialize_with_service_account()
         else:
             raise ValueError("Missing credentials: either `oauth_token` or `service_account` must be provided.")
@@ -41,7 +41,7 @@ class GDriveStorage(Storage):
         if not creds.valid and creds.expired and creds.refresh_token:
             creds.refresh(Request())
             with open(self.oauth_token, "w") as token_file:
-                logger.debug("Saving refreshed OAuth token.")
+                logger.debug("saving refreshed OAuth token.")
                 token_file.write(creds.to_json())
         elif not creds.valid:
             raise ValueError("Invalid OAuth token. Please regenerate the token.")
@@ -180,7 +180,7 @@ class GDriveStorage(Storage):
         Creates a new GDrive folder @name inside folder @parent_id
         Returns id of the created folder
         """
-        logger.debug(f"Creating new folder with {name=} inside {parent_id=}")
+        logger.debug(f"creating new folder with {name=} inside {parent_id=}")
         file_metadata = {"name": [name], "mimeType": "application/vnd.google-apps.folder", "parents": [parent_id]}
         gd_folder = self.service.files().create(supportsAllDrives=True, body=file_metadata, fields="id").execute()
         return gd_folder.get("id")

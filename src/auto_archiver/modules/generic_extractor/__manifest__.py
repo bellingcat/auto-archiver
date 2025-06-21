@@ -58,7 +58,7 @@ If you are having issues with the extractor, you can review the version of `yt-d
         },
         "proxy": {
             "default": "",
-            "help": "http/socks (https seems to not work atm) proxy to use for the webdriver, eg https://proxy-user:password@proxy-ip:port",
+            "help": "http/https/socks proxy to use for the webdriver, eg https://proxy-user:password@proxy-ip:port",
         },
         "end_means_success": {
             "default": True,

@@ -11,7 +11,7 @@ from dataclasses import dataclass, field
 from dataclasses_json import dataclass_json, config
 import mimetypes
 
-from loguru import logger
+from auto_archiver.utils.custom_logger import logger
 
 
 @dataclass_json  # annotation order matters
@@ -121,8 +121,7 @@ class Media:
         except Error:
             return False  # ffmpeg errors when reading bad files
         except Exception as e:
-            logger.error(e)
-            logger.error(traceback.format_exc())
+            logger.error(f"{e}: {traceback.format_exc()}")
             try:
                 fsize = os.path.getsize(self.filename)
                 return fsize > 20_000

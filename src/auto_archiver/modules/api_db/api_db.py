@@ -2,7 +2,7 @@ from typing import Union
 
 import os
 import requests
-from loguru import logger
+from auto_archiver.utils.custom_logger import logger
 
 from auto_archiver.core import Database
 from auto_archiver.core import Metadata
@@ -36,9 +36,9 @@ class AAApiDb(Database):
         if not self.store_results:
             return
         if cached:
-            logger.debug(f"skipping saving archive of {item.get_url()} to the AA API because it was cached")
+            logger.debug("skipping saving archive to AA API because it was cached")
             return
-        logger.debug(f"saving archive of {item.get_url()} to the AA API.")
+        logger.debug("saving archive to the AA API.")
 
         payload = {
             "author_id": self.author_id,

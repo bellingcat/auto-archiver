@@ -4,7 +4,7 @@ import os
 import shutil
 import subprocess
 from zipfile import ZipFile
-from loguru import logger
+from auto_archiver.utils.custom_logger import logger
 from warcio.archiveiterator import ArchiveIterator
 
 from auto_archiver.core import Media, Metadata

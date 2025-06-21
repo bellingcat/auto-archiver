@@ -1,4 +1,5 @@
 from datetime import datetime
+import math
 
 import pytest
 
@@ -147,14 +148,14 @@ class TestInstagramAPIExtractor(TestExtractorBase):
 
         self.extractor.full_profile = True
         mock_call.side_effect = [mock_user_response, mock_story_response]
-        mock_highlights.return_value = None
+        mock_highlights.return_value = 1
         mock_stories.return_value = mock_story_response
-        mock_posts.return_value = None
-        mock_tagged.return_value = None
+        mock_posts.return_value = 2
+        mock_tagged.return_value = 3
 
         result = self.extractor.download_profile(metadata, "test_user")
         assert result.get("#stories") == len(mock_story_response)
-        mock_posts.assert_called_once_with(result, "123")
+        mock_posts.assert_called_once_with(result, "123", max_to_download=math.inf)
         assert "errors" not in result.metadata
 
     def test_download_profile_not_found(self, metadata, mocker):
@@ -175,10 +176,10 @@ class TestInstagramAPIExtractor(TestExtractorBase):
 
         self.extractor.full_profile = True
         mock_call.side_effect = [mock_user_response, Exception("Stories API failed"), Exception("Posts API failed")]
-        mock_highlights.return_value = None
-        mock_tagged.return_value = None
+        mock_highlights.return_value = 1
+        mock_tagged.return_value = 2
         stories_tagged.return_value = None
-        mock_posts.return_value = None
+        mock_posts.return_value = 4
         result = self.extractor.download_profile(metadata, "test_user")
 
         assert result.is_success()

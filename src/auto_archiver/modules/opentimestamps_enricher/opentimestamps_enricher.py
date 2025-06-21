@@ -1,6 +1,6 @@
 import os
 
-from loguru import logger
+from auto_archiver.utils.custom_logger import logger
 import opentimestamps
 from opentimestamps.calendar import RemoteCalendar, DEFAULT_CALENDAR_WHITELIST
 from opentimestamps.core.timestamp import Timestamp, DetachedTimestampFile

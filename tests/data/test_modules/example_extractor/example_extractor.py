@@ -1,6 +1,6 @@
 from auto_archiver.core import Extractor
 
-from loguru import logger
+from auto_archiver.utils.custom_logger import logger
 
 
 class ExampleExtractor(Extractor):

@@ -10,7 +10,10 @@ def mock_gworksheet(mocker):
     mock_gworksheet = mocker.MagicMock(spec=GWorksheet)
     mock_gworksheet.col_exists.return_value = True
     mock_gworksheet.get_cell.return_value = ""
-    mock_gworksheet.get_row.return_value = {}
+    mock_gworksheet.wks = mocker.MagicMock()
+    mock_gworksheet.wks.spreadsheet = mocker.MagicMock()
+    mock_gworksheet.wks.spreadsheet.title = "Test Spreadsheet"
+    mock_gworksheet.title = "Test Worksheet"
     return mock_gworksheet
 
 

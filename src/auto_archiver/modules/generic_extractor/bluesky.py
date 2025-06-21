@@ -1,4 +1,4 @@
-from loguru import logger
+from auto_archiver.utils.custom_logger import logger
 
 from auto_archiver.core.extractor import Extractor
 from auto_archiver.core.metadata import Metadata, Media
@@ -18,7 +18,7 @@ class Bluesky(GenericDropin):
         # download if embeds present (1 video XOR >=1 images)
         for media in self._download_bsky_embeds(post, archiver):
             result.add_media(media)
-        logger.debug(f"Downloaded {len(result.media)} media files")
+        logger.debug(f"downloaded {len(result.media)} media files")
 
         return result
 

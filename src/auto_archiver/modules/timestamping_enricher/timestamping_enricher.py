@@ -5,7 +5,7 @@ import hashlib
 
 from slugify import slugify
 import requests
-from loguru import logger
+from auto_archiver.utils.custom_logger import logger
 
 from rfc3161_client import (decode_timestamp_response,TimestampRequestBuilder,TimeStampResponse, VerifierBuilder)
 from rfc3161_client import VerificationError as Rfc3161VerificationError

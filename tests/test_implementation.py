@@ -25,7 +25,7 @@ def orchestration_file(orchestration_file_path):
 def autoarchiver(tmp_path, monkeypatch, request):
     def _autoarchiver(args=[]):
         def cleanup():
-            from loguru import logger
+            from auto_archiver.utils.custom_logger import logger
 
             if not logger._core.handlers.get(0):
                 logger._core.handlers_count = 0

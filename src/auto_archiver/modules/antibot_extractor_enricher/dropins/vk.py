@@ -4,7 +4,7 @@ from typing import Mapping
 from auto_archiver.core.metadata import Metadata
 from auto_archiver.modules.antibot_extractor_enricher.dropin import Dropin
 
-from loguru import logger
+from auto_archiver.utils.custom_logger import logger
 
 
 class VkDropin(Dropin):
@@ -57,12 +57,12 @@ class VkDropin(Dropin):
         self.sb.open("https://vk.com")
         self.sb.wait_for_ready_state_complete()
         if "/feed" in self.sb.get_current_url():
-            logger.debug("Already logged in to VK.")
+            logger.debug("already logged in to VK.")
             return True
 
         # need to login
         username, password = self._get_username_password("vk.com")
-        logger.debug("Logging in to VK with username: {}", username)
+        logger.debug("logging in to VK with username: {}", username)
 
         self.sb.click('[data-testid="enter-another-way"]', timeout=10)
         self.sb.clear('input[name="login"][type="tel"]', by="css selector", timeout=10)
