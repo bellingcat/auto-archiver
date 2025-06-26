@@ -170,12 +170,14 @@ class InstagramAPIExtractor(Extractor):
         result.set("#highlights", count_highlights)
         return count_highlights
 
-    def download_post(self, result: Metadata, code: str = None, id: str = None, context: str = None) -> Metadata:
+    def download_post(self, result: Metadata, code: str = None, id: str = None, context: str = "") -> Metadata:
         if id:
             post = self.call_api("v1/media/by/id", {"id": id})
         else:
             post = self.call_api("v1/media/by/code", {"code": code})
         assert post, f"Post {id or code} not found"
+
+        result.set(f"{context}_data", post)
 
         if caption_text := post.get("caption_text"):
             result.set_title(caption_text)
