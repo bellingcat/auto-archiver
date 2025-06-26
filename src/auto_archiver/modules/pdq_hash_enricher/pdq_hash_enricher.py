@@ -28,8 +28,7 @@ class PdqHashEnricher(Enricher):
     """
 
     def enrich(self, to_enrich: Metadata) -> None:
-        url = to_enrich.get_url()
-        logger.debug(f"calculating perceptual hashes for {url=}")
+        logger.debug("Calculating perceptual hashes")
         media_with_hashes = []
 
         for m in to_enrich.media:
@@ -44,7 +43,7 @@ class PdqHashEnricher(Enricher):
                     media.set("pdq_hash", hd)
                     media_with_hashes.append(media.filename)
 
-        logger.debug(f"calculated '{len(media_with_hashes)}' perceptual hashes for {url=}: {media_with_hashes}")
+        logger.debug(f"Calculated '{len(media_with_hashes)}' perceptual hashes: {media_with_hashes}")
 
     def calculate_pdq_hash(self, filename):
         # returns a hexadecimal string with the perceptual hash for the given filename

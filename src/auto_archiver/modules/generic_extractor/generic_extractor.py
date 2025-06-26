@@ -67,7 +67,7 @@ class GenericExtractor(Extractor):
                 os.execv(sys.executable, [sys.executable] + sys.argv)
 
     def update_package(self, package_name: str) -> bool:
-        logger.info(f"checking and updating {package_name}...")
+        logger.info(f"Checking and updating {package_name}...")
         from importlib.metadata import version as get_version
 
         old_version = get_version(package_name)
@@ -79,7 +79,7 @@ class GenericExtractor(Extractor):
                 return True
             logger.info(f"{package_name} already up to date")
         except Exception as e:
-            logger.error(f"failed to update {package_name}: {e}")
+            logger.error(f"Failed to update {package_name}: {e}")
         return False
 
     def setup_po_tokens(self) -> None:
@@ -110,7 +110,7 @@ class GenericExtractor(Extractor):
         missing_tools = [tool for tool in ("node", "yarn", "npx") if shutil.which(tool) is None]
         if missing_tools:
             logger.error(
-                f"cannot set up PO Token script; missing required tools: {', '.join(missing_tools)}. "
+                f"Cannot set up PO Token script; missing required tools: {', '.join(missing_tools)}. "
                 "Install these tools or run bgutils via Docker. "
                 "See: https://github.com/Brainicism/bgutil-ytdlp-pot-provider"
             )
@@ -139,7 +139,7 @@ class GenericExtractor(Extractor):
                     f"https://github.com/Brainicism/bgutil-ytdlp-pot-provider/archive/refs/tags/{plugin_version}.zip"
                 )
                 zip_path = os.path.join(base_dir, f"{plugin_version}.zip")
-                logger.info(f"downloading bgutils release zip for version {plugin_version}...")
+                logger.info(f"Downloading bgutils release zip for version {plugin_version}...")
                 urlretrieve(zip_url, zip_path)
                 with zipfile.ZipFile(zip_path, "r") as z:
                     z.extractall(base_dir)
@@ -148,7 +148,7 @@ class GenericExtractor(Extractor):
                 extracted_root = os.path.join(base_dir, f"bgutil-ytdlp-pot-provider-{plugin_version}")
                 shutil.move(os.path.join(extracted_root, "server"), server_dir)
                 shutil.rmtree(extracted_root)
-                logger.info("installing dependencies and transpiling PoT Generator script...")
+                logger.info("Installing dependencies and transpiling PoT Generator script...")
                 subprocess.run(["yarn", "install", "--frozen-lockfile"], cwd=server_dir, check=True)
                 subprocess.run(["npx", "tsc"], cwd=server_dir, check=True)
 
@@ -164,7 +164,7 @@ class GenericExtractor(Extractor):
             logger.info(f"PO Token script configured at: {script_path}")
 
         except Exception as e:
-            logger.error(f"failed to set up PO Token script: {e}")
+            logger.error(f"Failed to set up PO Token script: {e}")
 
     def suitable_extractors(self, url: str) -> Generator[str, None, None]:
         """
@@ -205,7 +205,7 @@ class GenericExtractor(Extractor):
                 media = Media(cover_image_path)
                 metadata.add_media(media, id="cover")
             except Exception as e:
-                logger.error(f"could not download cover image {thumbnail_url}: {e}")
+                logger.error(f"Could not download cover image {thumbnail_url}: {e}")
 
         dropin = self.dropin_for_name(info_extractor.ie_key())
         if dropin:
@@ -352,7 +352,7 @@ class GenericExtractor(Extractor):
 
         if not dropin:
             # TODO: add a proper link to 'how to create your own dropin'
-            logger.debug(f"""could not find valid dropin for {info_extractor.ie_key()}.
+            logger.debug(f"""Could not find valid dropin for {info_extractor.ie_key()}.
                      Why not try creating your own, and make sure it has a valid function called 'create_metadata'. Learn more: https://auto-archiver.readthedocs.io/en/latest/user_guidelines.html#""")
             return False
 
@@ -374,7 +374,7 @@ class GenericExtractor(Extractor):
         if "entries" in data:
             entries = data.get("entries", [])
             if not len(entries):
-                logger.info("YoutubeDLArchiver could not find any video")
+                logger.info("GenericExtractor could not find any video")
                 return False
         else:
             entries = [data]
@@ -388,7 +388,7 @@ class GenericExtractor(Extractor):
                     # file was not downloaded or could not be retrieved, example: sensitive videos on YT without using cookies.
                     continue
 
-                logger.debug(f"using filename {filename} for entry {entry.get('id', 'unknown')}")
+                logger.debug(f"Using filename {filename} for entry {entry.get('id', 'unknown')}")
 
                 new_media = Media(filename)
                 for x in ["duration", "original_url", "fulltitle", "description", "upload_date"]:
@@ -403,12 +403,12 @@ class GenericExtractor(Extractor):
                             text = " ".join([line.text for line in subs])
                             new_media.set(f"subtitles_{lang}", text)
                         except Exception as e:
-                            logger.error(f"error loading subtitle file {val.get('filepath')}: {e}")
+                            logger.error(f"Error loading subtitle file {val.get('filepath')}: {e}")
                 result.add_media(new_media)
             except Exception as e:
-                logger.error(f"error processing entry {entry}: {e}")
+                logger.error(f"Error processing entry {entry}: {e}")
         if not len(result.media):
-            logger.info(f"no media found for entry {entry}, skipping.")
+            logger.info(f"No media found for entry {entry}, skipping.")
             return False
 
         return self.add_metadata(data, info_extractor, url, result)
@@ -470,14 +470,14 @@ class GenericExtractor(Extractor):
 
         def _helper_for_successful_extract_info(data, info_extractor, url, ydl):
             if data.get("is_live", False) and not self.livestreams:
-                logger.warning("livestream detected, skipping due to 'livestreams' configuration setting")
+                logger.warning("Livestream detected, skipping due to 'livestreams' configuration setting")
                 return False
             # it's a valid video, that the youtubdedl can download out of the box
             return self.get_metadata_for_video(data, info_extractor, url, ydl)
 
         try:
             if dropin_submodule and dropin_submodule.skip_ytdlp_download(url, info_extractor):
-                logger.debug(f"skipping using ytdlp to download files for {info_extractor.ie_key()}")
+                logger.debug(f"Skipping using ytdlp to download files for {info_extractor.ie_key()}")
                 raise SkipYtdlp()
 
             # don't download since it can be a live stream
@@ -496,17 +496,17 @@ class GenericExtractor(Extractor):
 
             if not isinstance(e, SkipYtdlp):
                 logger.debug(
-                    f'issue using "{info_extractor.IE_NAME}" extractor to download video (error: {repr(e)}), attempting to use dropin to get post data instead'
+                    f'Issue using "{info_extractor.IE_NAME}" extractor to download video (error: {repr(e)}), attempting to use dropin to get post data instead'
                 )
 
             try:
                 result = self.get_metadata_for_post(info_extractor, url, ydl)
             except (yt_dlp.utils.DownloadError, yt_dlp.utils.ExtractorError) as post_e:
-                logger.error("error downloading metadata for post: {error}", error=str(post_e))
+                logger.error("Error downloading metadata for post: {error}", error=str(post_e))
                 return False
             except Exception as generic_e:
                 logger.debug(
-                    'attempt to extract using ytdlp extractor "{name}" failed:  \n  {error}',
+                    'Attempt to extract using ytdlp extractor "{name}" failed:  \n  {error}',
                     name=info_extractor.IE_NAME,
                     error=str(generic_e),
                     exc_info=True,
@@ -559,17 +559,17 @@ class GenericExtractor(Extractor):
         # order of importance: username/password -> api_key -> cookie -> cookies_from_browser -> cookies_file
         if auth:
             if "username" in auth and "password" in auth:
-                logger.debug("using provided auth username and password")
+                logger.debug("Using provided auth username and password")
                 ydl_options.extend(("--username", auth["username"]))
                 ydl_options.extend(("--password", auth["password"]))
             elif "cookie" in auth:
-                logger.debug("using provided auth cookie")
+                logger.debug("Using provided auth cookie")
                 yt_dlp.utils.std_headers["cookie"] = auth["cookie"]
             elif "cookies_from_browser" in auth:
-                logger.debug(f"using extracted cookies from browser {auth['cookies_from_browser']}")
+                logger.debug(f"Using extracted cookies from browser {auth['cookies_from_browser']}")
                 ydl_options.extend(("--cookies-from-browser", auth["cookies_from_browser"]))
             elif "cookies_file" in auth:
-                logger.debug(f"using cookies from file {auth['cookies_file']}")
+                logger.debug(f"Using cookies from file {auth['cookies_file']}")
                 ydl_options.extend(("--cookies", auth["cookies_file"]))
 
         # Applying user-defined extractor_args
@@ -579,11 +579,11 @@ class GenericExtractor(Extractor):
                     arg_str = ";".join(f"{k}={v}" for k, v in args.items())
                 else:
                     arg_str = str(args)
-                logger.debug(f"setting extractor_args: {key}:{arg_str}")
+                logger.debug(f"Setting extractor_args: {key}:{arg_str}")
                 ydl_options.extend(["--extractor-args", f"{key}:{arg_str}"])
 
         if self.ytdlp_args:
-            logger.debug(f"adding additional ytdlp arguments: {self.ytdlp_args}")
+            logger.debug(f"Adding additional ytdlp arguments: {self.ytdlp_args}")
             ydl_options += self.ytdlp_args.split(" ")
 
         *_, validated_options = yt_dlp.parse_options(ydl_options)

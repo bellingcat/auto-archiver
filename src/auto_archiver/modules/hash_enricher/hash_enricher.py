@@ -22,7 +22,7 @@ class HashEnricher(Enricher):
     """
 
     def enrich(self, to_enrich: Metadata) -> None:
-        logger.debug(f"calculating media hashes with algo={self.algorithm}")
+        logger.debug(f"Calculating media hashes with algo={self.algorithm}")
 
         for i, m in enumerate(to_enrich.media):
             if len(hd := self.calculate_hash(m.filename)):

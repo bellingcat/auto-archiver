@@ -25,7 +25,7 @@ class WhisperEnricher(Enricher):
 
     def enrich(self, to_enrich: Metadata) -> None:
         url = to_enrich.get_url()
-        logger.debug(f"WHISPER[{self.action}]: iterating media items for {url=}.")
+        logger.debug(f"WHISPER[{self.action}]: iterating media items")
 
         job_results = {}
         for i, m in enumerate(to_enrich.media):
@@ -35,7 +35,7 @@ class WhisperEnricher(Enricher):
                 try:
                     job_id = self.submit_job(m)
                     job_results[job_id] = False
-                    logger.debug(f"JOB SUBMITTED: {job_id=} for {m.key=}")
+                    logger.debug(f"Job submitted: {job_id=} for {m.key=}")
                     to_enrich.media[i].set("whisper_model", {"job_id": job_id})
                 except Exception as e:
                     logger.error(
@@ -72,14 +72,14 @@ class WhisperEnricher(Enricher):
             "type": self.action,
             # "language": "string" # may be a config
         }
-        logger.debug(f"calling API with {payload=}")
+        logger.debug(f"Calling API with {payload=}")
         response = requests.post(
             f"{self.api_endpoint}/jobs", json=payload, headers={"Authorization": f"Bearer {self.api_key}"}
         )
         assert response.status_code == 201, (
             f"calling the whisper api {self.api_endpoint} returned a non-success code: {response.status_code}"
         )
-        logger.debug(response.json())
+        logger.debug(f"Response from whisper API: {response.json()}")
         return response.json()["id"]
 
     def check_jobs(self, job_results: dict):
@@ -115,7 +115,7 @@ class WhisperEnricher(Enricher):
             assert r_res.status_code == 200, (
                 f"Job artifacts did not respond with 200, instead with: {r_res.status_code}"
             )
-            logger.success(r_res.json())
+            logger.info(f"Job {job_id} completed successfully:{r_res.json()}")
             result = {}
             for art_id, artifact in enumerate(r_res.json()):
                 subtitle = []

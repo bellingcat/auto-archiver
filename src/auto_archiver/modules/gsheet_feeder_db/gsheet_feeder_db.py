@@ -42,19 +42,19 @@ class GsheetsFeederDB(Feeder, Database):
         sh = self.open_sheet()
         for ii, worksheet in enumerate(sh.worksheets()):
             if not self.should_process_sheet(worksheet.title):
-                logger.debug(f"skipped worksheet '{worksheet.title}' due to allow/block rules")
+                logger.debug(f"Skipped worksheet '{worksheet.title}' due to allow/block rules")
                 continue
-            logger.info(f"opening worksheet {ii=}: {worksheet.title=} header={self.header}")
+            logger.info(f"Opening worksheet {ii=}: {worksheet.title=} header={self.header}")
             gw = GWorksheet(worksheet, header_row=self.header, columns=self.columns)
             if len(missing_cols := self.missing_required_columns(gw)):
                 logger.debug(
-                    f"skipped worksheet '{worksheet.title}' due to missing required column(s) for {missing_cols}"
+                    f"Skipped worksheet '{worksheet.title}' due to missing required column(s) for {missing_cols}"
                 )
                 continue
             with logger.contextualize(worksheet=f"{sh.title}:{worksheet.title}"):
                 # process and yield metadata here:
                 yield from self._process_rows(gw)
-            logger.info(f"finished worksheet {worksheet.title}")
+            logger.info(f"Finished worksheet {worksheet.title}")
 
     def _process_rows(self, gw: GWorksheet):
         for row in range(1 + self.header, gw.count_rows() + 1):
@@ -133,7 +133,7 @@ class GsheetsFeederDB(Feeder, Database):
                 if val and gw.col_exists(col) and gw.get_cell(row_values, col) == "":
                     cell_updates.append((row, col, final_value))
             except Exception as e:
-                logger.error(f"unable to batch {col}={final_value} due to {e}")
+                logger.error(f"Unable to batch {col}={final_value} due to {e}")
 
         status_message = item.status
         if cached:
@@ -193,13 +193,13 @@ class GsheetsFeederDB(Feeder, Database):
             gw, row = self._retrieve_gsheet(item)
             gw.set_cell(row, "status", new_status)
         except Exception as e:
-            logger.debug(f"unable to update sheet: {e}: {traceback.format_exc()}")
+            logger.debug(f"Unable to update sheet: {e}: {traceback.format_exc()}")
 
     def _retrieve_gsheet(self, item: Metadata) -> Tuple[GWorksheet, int]:
         if gsheet := item.get_context("gsheet"):
             gw: GWorksheet = gsheet.get("worksheet")
             row: int = gsheet.get("row")
         elif self.sheet_id:
-            logger.error("unable to retrieve Gsheet, GsheetDB must be used alongside GsheetFeeder.")
+            logger.error("Unable to retrieve Gsheet, GsheetDB must be used alongside GsheetFeeder.")
 
         return gw, row

@@ -23,10 +23,10 @@ class GDriveStorage(Storage):
     def _setup_google_drive_service(self):
         """Initialize Google Drive service based on provided credentials."""
         if self.oauth_token:
-            logger.debug(f"using Google Drive OAuth token: {self.oauth_token}")
+            logger.debug(f"Using Google Drive OAuth token: {self.oauth_token}")
             self.service = self._initialize_with_oauth_token()
         elif self.service_account:
-            logger.debug(f"using Google Drive service account: {self.service_account}")
+            logger.debug(f"Using Google Drive service account: {self.service_account}")
             self.service = self._initialize_with_service_account()
         else:
             raise ValueError("Missing credentials: either `oauth_token` or `service_account` must be provided.")
@@ -41,7 +41,7 @@ class GDriveStorage(Storage):
         if not creds.valid and creds.expired and creds.refresh_token:
             creds.refresh(Request())
             with open(self.oauth_token, "w") as token_file:
-                logger.debug("saving refreshed OAuth token.")
+                logger.debug("Saving refreshed OAuth token.")
                 token_file.write(creds.to_json())
         elif not creds.valid:
             raise ValueError("Invalid OAuth token. Please regenerate the token.")
@@ -62,7 +62,7 @@ class GDriveStorage(Storage):
         parent_id, folder_id = self.root_folder_id, None
         path_parts = media.key.split(os.path.sep)
         filename = path_parts[-1]
-        logger.info(f"looking for folders for {path_parts[0:-1]} before getting url for {filename=}")
+        logger.info(f"Looking for folders for {path_parts[0:-1]} before getting url for {filename=}")
         for folder in path_parts[0:-1]:
             folder_id = self._get_id_from_parent_and_name(parent_id, folder, use_mime_type=True, raise_on_missing=True)
             parent_id = folder_id
@@ -70,7 +70,7 @@ class GDriveStorage(Storage):
         file_id = self._get_id_from_parent_and_name(folder_id, filename, raise_on_missing=True)
         if not file_id:
             #
-            logger.info(f"file {filename} not found in folder {folder_id}")
+            logger.info(f"File {filename} not found in folder {folder_id}")
             return None
         return f"https://drive.google.com/file/d/{file_id}/view?usp=sharing"
 
@@ -83,7 +83,7 @@ class GDriveStorage(Storage):
         parent_id, upload_to = self.root_folder_id, None
         path_parts = media.key.split(os.path.sep)
         filename = path_parts[-1]
-        logger.info(f"checking folders {path_parts[0:-1]} exist (or creating) before uploading {filename=}")
+        logger.info(f"Checking folders {path_parts[0:-1]} exist (or creating) before uploading {filename=}")
         for folder in path_parts[0:-1]:
             upload_to = self._get_id_from_parent_and_name(parent_id, folder, use_mime_type=True, raise_on_missing=False)
             if upload_to is None:
@@ -91,7 +91,7 @@ class GDriveStorage(Storage):
             parent_id = upload_to
 
         # upload file to gd
-        logger.debug(f"uploading {filename=} to folder id {upload_to}")
+        logger.debug(f"Uploading {filename=} to folder id {upload_to}")
         file_metadata = {"name": [filename], "parents": [upload_to]}
         try:
             media = MediaFileUpload(media.filename, resumable=True)
@@ -100,11 +100,11 @@ class GDriveStorage(Storage):
                 .create(supportsAllDrives=True, body=file_metadata, media_body=media, fields="id")
                 .execute()
             )
-            logger.debug(f"uploadf: uploaded file {gd_file['id']} successfully in folder={upload_to}")
+            logger.debug(f"Uploadf: uploaded file {gd_file['id']} successfully in folder={upload_to}")
         except FileNotFoundError as e:
-            logger.error(f"gd uploadf: file not found {media.filename=} - {e}")
+            logger.error(f"GD uploadf: file not found {media.filename=} - {e}")
         except Exception as e:
-            logger.error(f"gd uploadf: error uploading {media.filename=} to {upload_to} - {e}")
+            logger.error(f"GD uploadf: error uploading {media.filename=} to {upload_to} - {e}")
 
     # must be implemented even if unused
     def uploadf(self, file: IO[bytes], key: str, **kwargs: dict) -> bool:
@@ -133,7 +133,7 @@ class GDriveStorage(Storage):
             self.api_cache = getattr(self, "api_cache", {})
             cache_key = f"{parent_id}_{name}_{use_mime_type}"
             if cache_key in self.api_cache:
-                logger.debug(f"cache hit for {cache_key=}")
+                logger.debug(f"Cache hit for {cache_key=}")
                 return self.api_cache[cache_key]
 
         # API logic
@@ -168,7 +168,7 @@ class GDriveStorage(Storage):
             else:
                 logger.debug(f"{debug_header} not found, attempt {attempt + 1}/{retries}.")
                 if attempt < retries - 1:
-                    logger.debug(f"sleeping for {sleep_seconds} second(s)")
+                    logger.debug(f"Sleeping for {sleep_seconds} second(s)")
                     time.sleep(sleep_seconds)
 
         if raise_on_missing:
@@ -180,7 +180,7 @@ class GDriveStorage(Storage):
         Creates a new GDrive folder @name inside folder @parent_id
         Returns id of the created folder
         """
-        logger.debug(f"creating new folder with {name=} inside {parent_id=}")
+        logger.debug(f"Creating new folder with {name=} inside {parent_id=}")
         file_metadata = {"name": [name], "mimeType": "application/vnd.google-apps.folder", "parents": [parent_id]}
         gd_folder = self.service.files().create(supportsAllDrives=True, body=file_metadata, fields="id").execute()
         return gd_folder.get("id")

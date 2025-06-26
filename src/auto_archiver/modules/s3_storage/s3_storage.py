@@ -56,7 +56,7 @@ class S3Storage(Storage):
             if existing_key := self.file_in_folder(path):
                 media._key = existing_key
                 media.set("previously archived", True)
-                logger.debug(f"skipping upload of {media.filename} because it already exists in {media.key}")
+                logger.debug(f"Skipping upload of {media.filename} because it already exists in {media.key}")
                 return False
 
             _, ext = os.path.splitext(media.key)

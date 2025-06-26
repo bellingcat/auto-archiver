@@ -40,7 +40,7 @@ class Twitter(GenericDropin):
                 raise ValueError("Error retreiving post. Are you sure it exists?")
             timestamp = get_datetime_from_str(tweet["created_at"], "%a %b %d %H:%M:%S %z %Y")
         except (ValueError, KeyError) as ex:
-            logger.warning(f"unable to parse tweet: {str(ex)}\nRetreived tweet data: {tweet}")
+            logger.warning(f"Unable to parse tweet: {str(ex)}\nRetreived tweet data: {tweet}")
             return False
 
         full_text = tweet.pop("full_text", "")
@@ -49,7 +49,7 @@ class Twitter(GenericDropin):
 
         result.set_title(f"{author} - {full_text}").set_content(full_text).set_timestamp(timestamp)
         if not tweet.get("entities", {}).get("media"):
-            logger.debug("no media found, archiving tweet text only")
+            logger.debug("No media found, archiving tweet text only")
             result.status = "twitter-ytdl"
             return result
         for i, tw_media in enumerate(tweet["entities"]["media"]):

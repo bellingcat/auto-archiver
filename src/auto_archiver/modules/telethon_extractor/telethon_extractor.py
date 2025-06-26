@@ -65,7 +65,7 @@ class TelethonExtractor(Extractor):
                 # get currently joined channels
                 # https://docs.telethon.dev/en/stable/modules/custom.html#module-telethon.tl.custom.dialog
                 joined_channel_ids = [c.id for c in self.client.get_dialogs() if c.is_channel]
-                logger.info(f"already part of {len(joined_channel_ids)} channels")
+                logger.info(f"Already part of {len(joined_channel_ids)} channels")
 
                 i = 0
                 pbar = tqdm(desc=f"joining {len(self.channel_invites)} invite links", total=len(self.channel_invites))
@@ -80,22 +80,22 @@ class TelethonExtractor(Extractor):
                             else:
                                 ent = self.client.get_entity(invite)  # fails if not a member
                                 logger.warning(
-                                    f"please add the property id='{ent.id}' to the 'channel_invites' configuration where {invite=}, not doing so can lead to a minutes-long setup time due to telegram's rate limiting."
+                                    f"Please add the property id='{ent.id}' to the 'channel_invites' configuration where {invite=}, not doing so can lead to a minutes-long setup time due to telegram's rate limiting."
                                 )
                         except ValueError:
-                            logger.info(f"joining new channel {invite=}")
+                            logger.info(f"Joining new channel {invite=}")
                             try:
                                 self.client(ImportChatInviteRequest(match.group(2)))
                             except UserAlreadyParticipantError:
-                                logger.info(f"already joined {invite=}")
+                                logger.info(f"Already joined {invite=}")
                             except InviteRequestSentError:
-                                logger.warning(f"already sent a join request with {invite} still no answer")
+                                logger.warning(f"Already sent a join request with {invite} still no answer")
                             except InviteHashExpiredError:
                                 logger.warning(f"{invite=} has expired please find a more recent one")
                             except Exception as e:
-                                logger.error(f"could not join channel with {invite=} due to {e}")
+                                logger.error(f"Could not join channel with {invite=} due to {e}")
                         except FloodWaitError as e:
-                            logger.warning(f"got a flood error, need to wait {e.seconds} seconds")
+                            logger.warning(f"Got a flood error, need to wait {e.seconds} seconds")
                             time.sleep(e.seconds)
                             continue
                     else:
@@ -117,7 +117,7 @@ class TelethonExtractor(Extractor):
         url = item.get_url()
         # detect URLs that we definitely cannot handle
         match = self.valid_url.search(url)
-        logger.debug(f"TELETHON: {match=}")
+        logger.debug(f"Found telethon url {match=}")
         if not match:
             return False
 
@@ -135,10 +135,10 @@ class TelethonExtractor(Extractor):
                 try:
                     stories = self.client(functions.stories.GetStoriesByIDRequest(peer=chat, id=[post_id]))
                     if not stories.stories:
-                        logger.info(f"No stories found for {url}, possibly it's private or the story has expired.")
+                        logger.info("No stories found, possibly it's private or the story has expired.")
                         return False
                     story = stories.stories[0]
-                    logger.debug(f"TELETHON got story {story.id=} {story.date=} {story.expire_date=}")
+                    logger.debug(f"Got story {story.id=} {story.date=} {story.expire_date=}")
                     result.set_timestamp(story.date).set("views", story.views.to_dict()).set(
                         "expire_date", story.expire_date
                     )
@@ -154,20 +154,20 @@ class TelethonExtractor(Extractor):
                 try:
                     post = self.client.get_messages(chat, ids=post_id)
                 except ValueError as e:
-                    logger.error(f"Could not fetch telegram {url} possibly it's private: {e}")
+                    logger.error(f"Could not fetch telegram URL possibly it's private: {e}")
                     return False
                 except ChannelInvalidError as e:
                     logger.error(
-                        f"Could not fetch telegram {url}. This error may be fixed if you setup a bot_token in addition to api_id and api_hash (but then private channels will not be archived, we need to update this logic to handle both): {e}"
+                        f"Could not fetch telegram URL. This error may be fixed if you setup a bot_token in addition to api_id and api_hash (but then private channels will not be archived, we need to update this logic to handle both): {e}"
                     )
                     return False
 
-                logger.debug(f"TELETHON got post {post=}")
+                logger.debug(f"Got post {post=}")
                 if post is None:
                     return False
 
                 media_posts = self._get_media_posts_in_group(chat, post)
-                logger.debug(f"got {len(media_posts)=} for {url=}")
+                logger.debug(f"Got {len(media_posts)=}")
 
                 group_id = post.grouped_id if post.grouped_id is not None else post.id
                 title = post.message

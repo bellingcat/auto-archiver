@@ -43,7 +43,7 @@ def test_enrich_skip_non_image(metadata_with_images, mocker):
 def test_enrich_handles_corrupted_image(metadata_with_images, mocker):
     mocker.patch("PIL.Image.open", side_effect=UnidentifiedImageError("Corrupted image"))
     mock_pdq = mocker.patch("pdqhash.compute")
-    mock_logger = mocker.patch("loguru.logger.error")
+    mock_logger = mocker.patch("auto_archiver.utils.custom_logger.logger.error")
     enricher = PdqHashEnricher()
     enricher.enrich(metadata_with_images)
 

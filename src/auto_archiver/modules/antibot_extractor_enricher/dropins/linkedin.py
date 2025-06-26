@@ -62,7 +62,7 @@ class LinkedinDropin(Dropin):
             self.sb.wait_for_ready_state_complete()
 
         username, password = self._get_username_password("linkedin.com")
-        logger.debug("logging in to Linkedin with username: {}", username)
+        logger.debug("Logging in to Linkedin with username: {}", username)
         self.sb.type("#username", username)
         self.sb.type("#password", password)
         self.sb.click_if_visible("#password-visibility-toggle", timeout=0.5)

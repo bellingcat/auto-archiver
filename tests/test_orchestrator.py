@@ -118,8 +118,7 @@ def test_check_required_values(orchestrator, caplog, test_args):
 
     with pytest.raises(SystemExit):
         orchestrator.setup_config(test_args)
-
-    assert caplog.records[1].message == "the following arguments are required: --example_module.required_field"
+    assert "the following arguments are required: --example_module.required_field" in caplog.records[0].message
 
 
 def test_get_required_values_from_config(orchestrator, test_args, tmp_path):

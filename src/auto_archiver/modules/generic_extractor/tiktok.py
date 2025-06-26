@@ -22,7 +22,7 @@ class Tiktok(GenericDropin):
         return any(extractor().suitable(url) for extractor in (TikTokIE, TikTokLiveIE, TikTokVMIE, TikTokUserIE))
 
     def extract_post(self, url: str, ie_instance):
-        logger.debug(f"using Tikwm API to attempt to download tiktok video from {url=}")
+        logger.debug("Using Tikwm API to attempt to download tiktok video")
 
         endpoint = self.TIKWM_ENDPOINT.format(url=url)
 
@@ -62,7 +62,7 @@ class Tiktok(GenericDropin):
         # get the video or fail
         video_downloaded = archiver.download_from_url(video_url, f"vid_{post.get('id', '')}")
         if not video_downloaded:
-            logger.error(f"failed to download video from {video_url}")
+            logger.error("Failed to download video")
             return False
         video_media = Media(video_downloaded)
         if duration := post.get("duration", None):

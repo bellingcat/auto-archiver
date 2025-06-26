@@ -33,7 +33,6 @@ def test_enrich_skips_empty_metadata(meta_enricher, mock_metadata):
     """Test that enrich() does nothing when Metadata is empty."""
     mock_metadata.is_empty.return_value = True
     meta_enricher.enrich(mock_metadata)
-    mock_metadata.get_url.assert_called_once()
 
 
 def test_enrich_file_sizes(meta_enricher, metadata, tmp_path):

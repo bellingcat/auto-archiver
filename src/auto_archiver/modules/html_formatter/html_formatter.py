@@ -35,7 +35,7 @@ class HtmlFormatter(Formatter):
     def format(self, item: Metadata) -> Media:
         url = item.get_url()
         if item.is_empty():
-            logger.debug("nothing to format, skipping")
+            logger.debug("Nothing to format, skipping")
             return
 
         content = self.template.render(

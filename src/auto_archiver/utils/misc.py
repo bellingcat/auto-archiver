@@ -6,25 +6,12 @@ import uuid
 from datetime import datetime, timezone
 from dateutil.parser import parse as parse_dt
 
-import requests
 from auto_archiver.utils.custom_logger import logger
 
 
 def mkdir_if_not_exists(folder):
     if not os.path.exists(folder):
         os.makedirs(folder)
-
-
-def expand_url(url):
-    # expand short URL links
-    if "https://t.co/" in url:
-        try:
-            r = requests.get(url)
-            logger.debug(f"Expanded url {url} to {r.url}")
-            return r.url
-        except Exception:
-            logger.error(f"Failed to expand url {url}")
-    return url
 
 
 def getattr_or(o: object, prop: str, default=None):

@@ -57,7 +57,7 @@ class AntibotExtractorEnricher(Extractor, Enricher):
                     continue  # Skip imported modules/classes/functions
                 if isinstance(obj, type) and issubclass(obj, Dropin):
                     dropins.append(obj)
-        logger.debug(f"loaded drop-in classes: {', '.join([d.__name__ for d in dropins])}")
+        logger.debug(f"Loaded drop-in classes: {', '.join([d.__name__ for d in dropins])}")
         return dropins
 
     def sanitize_url(self, url: str) -> str:
@@ -86,10 +86,10 @@ class AntibotExtractorEnricher(Extractor, Enricher):
 
         try:
             with SB(uc=True, agent=self.agent, headed=None, user_data_dir=using_user_data_dir, proxy=self.proxy) as sb:
-                logger.info(f"selenium browser is up with agent {self.agent}, opening url...")
+                logger.info(f"Selenium browser is up with agent {self.agent}, opening url...")
                 sb.uc_open_with_reconnect(url, 4)
 
-                logger.debug("handling CAPTCHAs for...")
+                logger.debug("Handling CAPTCHAs for...")
                 sb.uc_gui_handle_cf()
                 sb.uc_gui_click_rc()  # NB: using handle instead of click breaks some sites like reddit, for now we separate here but can have dropins deciding this in the future
 
@@ -97,7 +97,7 @@ class AntibotExtractorEnricher(Extractor, Enricher):
                 dropin.open_page(url)
 
                 if self.detect_auth_wall and self._hit_auth_wall(sb):
-                    logger.warning("skipping since auth wall or CAPTCHA was detected")
+                    logger.warning("Skipping since auth wall or CAPTCHA was detected")
                     return False
 
                 sb.wait_for_ready_state_complete()
@@ -124,18 +124,18 @@ class AntibotExtractorEnricher(Extractor, Enricher):
                     js_css_selector=dropin.js_for_video_css_selectors(),
                     max_media=self.max_download_videos - downloaded_videos,
                 )
-                logger.info("completed")
+                logger.info("Completed")
 
             return to_enrich
         except selenium.common.exceptions.SessionNotCreatedException as e:
             if custom_data_dir:  # the retry logic only works once
                 logger.error(
-                    f"session not created error: {e}. Please remove the user_data_dir {self.user_data_dir} and try again, will retry without user data dir though."
+                    f"Session not created error: {e}. Please remove the user_data_dir {self.user_data_dir} and try again, will retry without user data dir though."
                 )
                 return self.enrich(to_enrich, custom_data_dir=False)
             raise e  # re-raise
         except Exception as e:
-            logger.error(f"runtime error: {e}: {traceback.format_exc()}")
+            logger.error(f"Runtime error: {e}: {traceback.format_exc()}")
             return False
 
     def _get_suitable_dropin(self, url: str, sb: SB):
@@ -145,7 +145,7 @@ class AntibotExtractorEnricher(Extractor, Enricher):
         """
         for dropin in self.dropins:
             if dropin.suitable(url):
-                logger.debug(f"using drop-in {dropin.__name__}")
+                logger.debug(f"Using drop-in {dropin.__name__}")
                 return dropin(sb, self)
 
         return DefaultDropin(sb, self)
@@ -240,7 +240,7 @@ class AntibotExtractorEnricher(Extractor, Enricher):
 
         x = max(sb.execute_script("return document.documentElement.scrollWidth"), w)
         y = min(max(sb.execute_script("return document.documentElement.scrollHeight"), h), 25_000)
-        logger.debug(f"setting window size to {x}x{y} for full page screenshot.")
+        logger.debug(f"Setting window size to {x}x{y} for full page screenshot.")
         sb.set_window_size(x, y)
 
         screen_filename = os.path.join(self.tmp_dir, f"screenshot{random_str(6)}.png")
@@ -279,7 +279,7 @@ class AntibotExtractorEnricher(Extractor, Enricher):
         # js_for_css_selectors
         for src in sources:
             if len(all_urls) >= max_media:
-                logger.debug(f"reached max download limit of {max_media} images/videos.")
+                logger.debug(f"Reached max download limit of {max_media} images/videos.")
                 break
             if not is_relevant_url(src):
                 continue

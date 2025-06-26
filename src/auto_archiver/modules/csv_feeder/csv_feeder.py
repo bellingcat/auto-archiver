@@ -20,19 +20,19 @@ class CSVFeeder(Feeder):
                         url_column = first_row.index(url_column)
                     except ValueError:
                         logger.error(
-                            f"column {url_column} not found in header row: {first_row}. Did you set the 'column' config correctly?"
+                            f"Column {url_column} not found in header row: {first_row}. Did you set the 'column' config correctly?"
                         )
                         return
                 elif not (url_or_none(first_row[url_column])):
                     # it's a header row, but we've been given a column number already
-                    logger.debug(f"skipping header row: {first_row}")
+                    logger.debug(f"Skipping header row: {first_row}")
                 else:
                     # first row isn't a header row, rewind the file
                     f.seek(0)
 
                 for row in reader:
                     if not url_or_none(row[url_column]):
-                        logger.warning(f"not a valid URL in row: {row}, skipping")
+                        logger.warning(f"Not a valid URL in row: {row}, skipping")
                         continue
                     url = row[url_column]
                     yield Metadata().set_url(url)

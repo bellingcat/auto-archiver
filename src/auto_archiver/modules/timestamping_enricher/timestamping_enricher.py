@@ -49,8 +49,7 @@ class TimestampingEnricher(Enricher):
             self.session.close()
 
     def enrich(self, to_enrich: Metadata) -> None:
-        url = to_enrich.get_url()
-        logger.debug(f"RFC3161 timestamping existing files for {url=}")
+        logger.debug(f"RFC3161 timestamping existing files")
 
         # create a new text file with the existing media hashes
         hashes = [
@@ -58,7 +57,7 @@ class TimestampingEnricher(Enricher):
         ]
 
         if not len(hashes):
-            logger.debug(f"No hashes found in {url=}")
+            logger.debug(f"No hashes found")
             return
 
         
@@ -74,7 +73,7 @@ class TimestampingEnricher(Enricher):
             try:
                 message = bytes(data_to_sign, encoding='utf8')
 
-                logger.debug(f"Timestamping {url=} with {tsa_url=}")
+                logger.debug(f"Timestamping with {tsa_url=}")
                 signed: TimeStampResponse = self.sign_data(tsa_url, message)
                 
                 # fail if there's any issue with the certificates, uses certifi list of trusted CAs or the user-defined `cert_authorities`
@@ -92,7 +91,7 @@ class TimestampingEnricher(Enricher):
                 timestamp_token_path = self.save_timestamp_token(signed.time_stamp_token(), tsa_url)
                 timestamp_tokens.append(Media(filename=timestamp_token_path).set("tsa", tsa_url).set("cert_chain", cert_chain))
             except Exception as e:
-                logger.warning(f"Error while timestamping {url=} with {tsa_url=}: {e}")
+                logger.warning(f"Error while timestamping with {tsa_url=}: {e}")
 
         if len(timestamp_tokens):
             hashes_media.set("timestamp_authority_files", timestamp_tokens)
@@ -101,9 +100,9 @@ class TimestampingEnricher(Enricher):
             hashes_media.set("cryptography v", version("cryptography"))
             to_enrich.add_media(hashes_media, id="timestamped_hashes")
             to_enrich.set("timestamped", True)
-            logger.info(f"{len(timestamp_tokens)} timestamp tokens created for {url=}")
+            logger.info(f"{len(timestamp_tokens)} timestamp tokens created")
         else:
-            logger.warning(f"No successful timestamps for {url=}")
+            logger.warning(f"No successful timestamps found")
 
     def save_timestamp_token(self, timestamp_token: bytes, tsa_url: str) -> str:
         """

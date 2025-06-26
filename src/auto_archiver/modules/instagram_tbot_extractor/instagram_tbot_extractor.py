@@ -32,7 +32,7 @@ class InstagramTbotExtractor(Extractor):
         1. makes a copy of session_file that is removed in cleanup
         2. checks if the session file is valid
         """
-        logger.info(f"SETUP {self.name} checking login...")
+        logger.debug(f"SETUP {self.name} checking login...")
         self._prepare_session_file()
         self._initialize_telegram_client()
 
@@ -58,10 +58,10 @@ class InstagramTbotExtractor(Extractor):
                 "If you do, disable at least one of the archivers for the first-time setup of the telethon session: {e}"
             )
         with self.client.start():
-            logger.info(f"SETUP {self.name} login works.")
+            logger.debug(f"SETUP {self.name} login works.")
 
     def cleanup(self) -> None:
-        logger.info(f"CLEANUP {self.name}.")
+        logger.debug(f"CLEANUP {self.name}.")
         session_file_name = self.session_file + ".session"
         if os.path.exists(session_file_name):
             os.remove(session_file_name)
@@ -79,17 +79,17 @@ class InstagramTbotExtractor(Extractor):
 
             # This may be outdated and replaced by the below message, but keeping until confirmed
             if "You must enter a URL to a post" in message:
-                logger.debug(f"invalid link {url=} for {self.name}: {message}")
+                logger.debug(f"Invalid link for {self.name}: {message}")
                 return False
 
             if "Media not found or unavailable" in message:
-                logger.debug(f"No media found for link {url=} for {self.name}: {message}")
+                logger.debug(f"No media found for {self.name}: {message}")
                 return False
 
             if message:
                 result.set_content(message).set_title(message[:128])
             elif result.is_empty():
-                logger.debug(f"No media found for link {url=} for {self.name}: {message}")
+                logger.debug(f"No media found for {self.name}: {message}")
                 return False
             return result.success("insta-via-bot")
 

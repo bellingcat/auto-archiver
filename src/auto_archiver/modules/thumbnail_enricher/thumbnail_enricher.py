@@ -27,12 +27,12 @@ class ThumbnailEnricher(Enricher):
         Calculates how many thumbnails to generate and at which timestamps based on the video duration, the number of thumbnails per minute and the max number of thumbnails.
         Thumbnails are equally distributed across the video duration.
         """
-        logger.debug(f"generating thumbnails for {to_enrich.get_url()}")
+        logger.debug("Generating thumbnails")
         for m_id, m in enumerate(to_enrich.media[::]):
             if m.is_video():
                 folder = os.path.join(self.tmp_dir, random_str(24))
                 os.makedirs(folder, exist_ok=True)
-                logger.debug(f"generating thumbnails for {m.filename}")
+                logger.debug(f"Generating thumbnails for {m.filename}")
                 duration = m.get("duration")
 
                 try:
@@ -42,10 +42,10 @@ class ThumbnailEnricher(Enricher):
                     )
                     to_enrich.media[m_id].set("duration", duration)
                 except Exception as e:
-                    logger.warning(f"failed to get duration with FFMPEG from {m.filename}: {e}")
+                    logger.warning(f"Failed to get duration with FFMPEG from {m.filename}: {e}")
 
                 if not duration or type(duration) not in [float, int] or duration <= 0:
-                    logger.warning(f"cannot generate thumbnails for {m.filename} without valid duration")
+                    logger.warning(f"Cannot generate thumbnails for {m.filename} without valid duration")
                     continue
 
                 num_thumbs = int(min(max(1, (duration / 60) * self.thumbnails_per_minute), self.max_thumbnails))

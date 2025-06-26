@@ -539,11 +539,11 @@ Here's how that would look: \n\nsteps:\n  extractors:\n  - [your_extractor_name_
         for feeder in self.feeders:
             for item in feeder:
                 with logger.contextualize(url=item.get_url(), trace=random_str(12)):
-                    logger.info("started processing")
+                    logger.info("Started processing")
                     yield self.feed_item(item)
                     url_count += 1
 
-        logger.info(f"processed {url_count} URL(s)")
+        logger.info(f"Processed {url_count} URL(s)")
         self.cleanup()
 
     def feed_item(self, item: Metadata) -> Metadata:
@@ -561,7 +561,7 @@ Here's how that would look: \n\nsteps:\n  extractors:\n  - [your_extractor_name_
             return self.archive(item)
         except KeyboardInterrupt:
             # catches keyboard interruptions to do a clean exit
-            logger.warning("caught interrupt")
+            logger.warning("Caught interrupt")
             for d in self.databases:
                 d.aborted(item)
             self.cleanup()
@@ -620,25 +620,25 @@ Here's how that would look: \n\nsteps:\n  extractors:\n  - [your_extractor_name_
                 try:
                     d.done(cached_result, cached=True)
                 except Exception as e:
-                    logger.error(f"database {d.name}: {e}: {traceback.format_exc()}")
+                    logger.error(f"Database {d.name}: {e}: {traceback.format_exc()}")
             return cached_result
 
         # 3 - call extractors until one succeeds
         for a in self.extractors:
-            logger.info(f"trying extractor {a.name}")
+            logger.info(f"Trying extractor {a.name}")
             try:
                 result.merge(a.download(result))
                 if result.is_success():
                     break
             except Exception as e:
-                logger.error(f"archiver {a.name}: {e}: {traceback.format_exc()}")
+                logger.error(f"Extractor {a.name}: {e}: {traceback.format_exc()}")
 
         # 4 - call enrichers to work with archived content
         for e in self.enrichers:
             try:
                 e.enrich(result)
             except Exception as exc:
-                logger.error(f"enricher {e.name}: {exc}: {traceback.format_exc()}")
+                logger.error(f"Enricher {e.name}: {exc}: {traceback.format_exc()}")
 
         # 5 - store all downloaded/generated media
         result.store(storages=self.storages)
@@ -657,7 +657,7 @@ Here's how that would look: \n\nsteps:\n  extractors:\n  - [your_extractor_name_
             try:
                 d.done(result)
             except Exception as e:
-                logger.error(f"database {d.name}: {e}: {traceback.format_exc()}")
+                logger.error(f"Database {d.name}: {e}: {traceback.format_exc()}")
 
         return result
 

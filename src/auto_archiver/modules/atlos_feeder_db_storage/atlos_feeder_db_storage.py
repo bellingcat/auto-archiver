@@ -72,7 +72,7 @@ class AtlosFeederDbStorage(Feeder, Database, Storage):
             f"/api/v2/source_material/metadata/{atlos_id}/auto_archiver",
             json={"metadata": {"processed": True, "status": "error", "error": reason}},
         )
-        logger.info(f"stored failure ID {atlos_id} on Atlos: {reason}")
+        logger.info(f"Stored failure ID {atlos_id} on Atlos: {reason}")
 
     def fetch(self, item: Metadata) -> Union[Metadata, bool]:
         """check and fetch if the given item has been archived already, each
@@ -88,7 +88,7 @@ class AtlosFeederDbStorage(Feeder, Database, Storage):
         """Mark an item as successfully archived in Atlos."""
         atlos_id = item.metadata.get("atlos_id")
         if not atlos_id:
-            logger.info("item has no Atlos ID, skipping")
+            logger.info("Item has no Atlos ID, skipping")
             return
         self._post(
             f"/api/v2/source_material/metadata/{atlos_id}/auto_archiver",
@@ -100,7 +100,7 @@ class AtlosFeederDbStorage(Feeder, Database, Storage):
                 }
             },
         )
-        logger.info(f"stored success  ID {atlos_id} on Atlos")
+        logger.info(f"Stored success ID {atlos_id} on Atlos")
 
     # ! Atlos Module - Storage Methods
 
@@ -111,12 +111,12 @@ class AtlosFeederDbStorage(Feeder, Database, Storage):
     def upload(self, media: Media, metadata: Optional[Metadata] = None, **_kwargs) -> bool:
         """Upload a media file to Atlos if it has not been uploaded already."""
         if metadata is None:
-            logger.error(f"no metadata provided for {media.filename}")
+            logger.error(f"No metadata provided for {media.filename}")
             return False
 
         atlos_id = metadata.get("atlos_id")
         if not atlos_id:
-            logger.error(f"no Atlos ID found in metadata; can't store {media.filename} in Atlos.")
+            logger.error(f"No Atlos ID found in metadata; can't store {media.filename} in Atlos.")
             return False
 
         media_hash = calculate_file_hash(media.filename, hash_algo=hashlib.sha256, chunksize=4096)
@@ -135,7 +135,7 @@ class AtlosFeederDbStorage(Feeder, Database, Storage):
                 params={"title": media.properties},
                 files={"file": (os.path.basename(media.filename), file_obj)},
             )
-        logger.info(f"uploaded {media.filename} to Atlos with ID {atlos_id} and title {media.key}")
+        logger.info(f"Uploaded {media.filename} to Atlos with ID {atlos_id} and title {media.key}")
         return True
 
     def uploadf(self, file: IO[bytes], key: str, **kwargs: dict) -> bool:

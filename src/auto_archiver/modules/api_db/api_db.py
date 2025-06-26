@@ -36,9 +36,9 @@ class AAApiDb(Database):
         if not self.store_results:
             return
         if cached:
-            logger.debug("skipping saving archive to AA API because it was cached")
+            logger.debug("Skipping saving archive to AA API because it was cached")
             return
-        logger.debug("saving archive to the AA API.")
+        logger.debug("Saving archive to the AA API.")
 
         payload = {
             "author_id": self.author_id,

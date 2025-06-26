@@ -12,8 +12,7 @@ class MetadataEnricher(Enricher):
     """
 
     def enrich(self, to_enrich: Metadata) -> None:
-        url = to_enrich.get_url()
-        logger.debug(f"extracting EXIF metadata for {url=}")
+        logger.debug("Extracting EXIF metadata")
 
         for i, m in enumerate(to_enrich.media):
             if len(md := self.get_metadata(m.filename)):
@@ -31,8 +30,8 @@ class MetadataEnricher(Enricher):
                 field, value = line.strip().split(":", 1)
                 metadata[field.strip()] = value.strip()
             return metadata
-        except FileNotFoundError:
-            logger.error("[exif_enricher] ExifTool not found. Make sure ExifTool is installed and added to PATH.")
+        except FileNotFoundError as e:
+            logger.error(f"ExifTool not found. Make sure ExifTool is installed and added to PATH. {e}")
         except Exception as e:
             logger.error(f"Error occurred: {e}: {traceback.format_exc()}")
         return {}

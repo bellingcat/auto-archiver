@@ -38,7 +38,7 @@ class TelegramExtractor(Extractor):
 
         video = s.find("video")
         if video is None:
-            logger.warning("could not find video")
+            logger.warning("Could not find video")
             image_tags = s.find_all(class_="tgme_widget_message_photo_wrap")
 
             image_urls = []

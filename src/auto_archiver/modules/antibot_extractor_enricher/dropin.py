@@ -144,7 +144,7 @@ class Dropin:
         with yt_dlp.YoutubeDL(validated_options) as ydl:
             for url in video_urls:
                 try:
-                    logger.debug("downloading video from url")
+                    logger.debug(f"Downloading video from url: {url}")
                     info = ydl.extract_info(url, download=True)
                     filename = ydl_entry_to_filename(ydl, info)
                     if not filename:  # Failed to download video.
@@ -156,5 +156,5 @@ class Dropin:
                     to_enrich.add_media(media)
                     downloaded += 1
                 except Exception as e:
-                    logger.error(f"download failed: {e} {traceback.format_exc()}")
+                    logger.error(f"Download failed: {e} {traceback.format_exc()}")
         return downloaded

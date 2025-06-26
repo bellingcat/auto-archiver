@@ -19,10 +19,10 @@ class SSLEnricher(Enricher):
 
         url = to_enrich.get_url()
         parsed = urlparse(url)
-        assert parsed.scheme in ["https"], f"Invalid URL scheme {url=}"
+        assert parsed.scheme in ["https"], "Invalid URL scheme"
 
         domain = parsed.netloc
-        logger.debug(f"fetching SSL certificate for {domain=} in {url=}")
+        logger.debug(f"Fetching SSL certificate for {domain=}")
 
         cert = ssl.get_server_certificate((domain, 443))
         cert_fn = os.path.join(self.tmp_dir, f"{slugify(domain)}.pem")
