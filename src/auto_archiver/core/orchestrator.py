@@ -15,7 +15,7 @@ import traceback
 from copy import copy
 
 from rich_argparse import RichHelpFormatter
-from auto_archiver.utils.custom_logger import logger
+from auto_archiver.utils.custom_logger import format_for_human_readable_console, logger
 import requests
 
 from auto_archiver.utils.misc import random_str
@@ -348,7 +348,9 @@ Here's how that would look: \n\nsteps:\n  extractors:\n  - [your_extractor_name_
                 sys.stderr,
                 level=use_level,
                 catch=True,
-                format="<level>{level}</level>: <fg #64FFDA>{message}</fg #64FFDA> {extra[serialize_no_message]}",
+                format="<level>{extra[serialized]}</level>"
+                if logging_config.get("format", "").lower() == "json"
+                else format_for_human_readable_console(),
             )
 
             rotation = logging_config["rotation"]
