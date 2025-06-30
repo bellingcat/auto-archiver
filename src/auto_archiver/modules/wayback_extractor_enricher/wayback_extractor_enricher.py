@@ -1,5 +1,5 @@
 import json
-from loguru import logger
+from auto_archiver.utils.custom_logger import logger
 import time
 import requests
 
@@ -31,14 +31,14 @@ class WaybackExtractorEnricher(Enricher, Extractor):
 
         url = to_enrich.get_url()
         if UrlUtil.is_auth_wall(url):
-            logger.debug(f"[SKIP] WAYBACK since url is behind AUTH WALL: {url=}")
+            logger.debug("[SKIP] WAYBACK since url is behind AUTH WALL")
             return
-
-        logger.debug(f"calling wayback for {url=}")
 
         if to_enrich.get("wayback"):
             logger.info(f"Wayback enricher had already been executed: {to_enrich.get('wayback')}")
             return True
+
+        logger.debug("Calling Wayback")
 
         ia_headers = {"Accept": "application/json", "Authorization": f"LOW {self.key}:{self.secret}"}
         post_data = {"url": url}
@@ -68,7 +68,7 @@ class WaybackExtractorEnricher(Enricher, Extractor):
         attempt = 1
         while not wayback_url and time.time() - start_time <= self.timeout:
             try:
-                logger.debug(f"GETting status for {job_id=} on {url=} ({attempt=})")
+                logger.debug(f"GETting status for {job_id=} ({attempt=})")
                 r_status = requests.get(
                     f"https://web.archive.org/save/status/{job_id}", headers=ia_headers, proxies=proxies
                 )
@@ -79,13 +79,13 @@ class WaybackExtractorEnricher(Enricher, Extractor):
                     logger.error(f"Wayback failed with {r_json}")
                     return False
             except requests.exceptions.RequestException as e:
-                logger.warning(f"RequestException: fetching status for {url=} due to: {e}")
+                logger.warning(f"RequestException: fetching status due to: {e}")
                 break
             except json.decoder.JSONDecodeError:
-                logger.error(f"Expected a JSON from Wayback and got {r.text} for {url=}")
+                logger.error(f"Expected a JSON from Wayback and got {r.text}")
                 break
             except Exception as e:
-                logger.warning(f"error fetching status for {url=} due to: {e}")
+                logger.warning(f"error fetching status due to: {e}")
             if not wayback_url:
                 attempt += 1
                 time.sleep(1)  # TODO: can be improved with exponential backoff

@@ -6,7 +6,6 @@ import pytest
 
 from auto_archiver.utils.misc import (
     mkdir_if_not_exists,
-    expand_url,
     getattr_or,
     DateTimeEncoder,
     dump_payload,
@@ -37,26 +36,6 @@ class TestDirectoryUtils:
         existing_dir.mkdir()
         mkdir_if_not_exists(existing_dir)
         assert existing_dir.exists()
-
-
-class TestURLExpansion:
-    @pytest.mark.parametrize(
-        "input_url,expected",
-        [("https://example.com", "https://example.com"), ("https://t.co/test", "https://expanded.url")],
-    )
-    def test_expand_url(self, input_url, expected, mocker):
-        mock_response = mocker.Mock()
-        mock_response.url = "https://expanded.url"
-        mocker.patch("requests.get", return_value=mock_response)
-        result = expand_url(input_url)
-        assert result == expected
-
-    def test_expand_url_handles_errors(self, caplog, mocker):
-        mocker.patch("requests.get", side_effect=Exception("Connection error"))
-        url = "https://t.co/error"
-        result = expand_url(url)
-        assert result == url
-        assert f"Failed to expand url {url}" in caplog.text
 
 
 class TestAttributeHandling:

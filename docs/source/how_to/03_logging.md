@@ -24,7 +24,7 @@ This will disable all logs from Auto Archiver, but it does not disable logs for 
 
 #### Logging Level
 
-There are 7 logging levels in total, with 5 of them used in this tool. They are: `DEBUG`, `INFO`, `SUCCESS`, `WARNING` and `ERROR`.
+There are 7 logging levels in total, with 5 of them used in this tool. They are: `DEBUG`, `INFO`, `SUCCESS`, `WARNING` and `ERROR`. If you select a level, only that and higher (more serious) levels will be included. `DEBUG` is the most verbose, while `ERROR` is the least verbose. 
 
 Change the warning level by setting the value in your orchestration config file:
 
@@ -41,6 +41,20 @@ For normal usage, it is recommended to use the `INFO` level, or if you prefer qu
 
 ```{note} To learn about all logging levels, see the [loguru documentation](https://loguru.readthedocs.io/en/stable/api/logger.html)
 ```
+
+### Logging Format
+By default, the console logs are formatted in a human-readable way and the file logs are formatted in JSON. This is new from version 1.1.1. If you want to change the format of the console logs to JSON too you can set the `format:` option in your logging settings. 
+
+```{code} yaml
+:caption: orchestration.yaml
+
+logging:
+    format: json
+```
+
+When the Auto Archiver is writing logs it will include context about specific tasks, so if you are archiving a URL from a Google Sheet, both the URL (and a unique `trace_id` for that URL's archiving attempt) and the Spreadsheet name and row will be included in the logs. This is useful for debugging and understanding what the Auto Archiver is doing.
+
+Using JSON allows you to easily parse the logs and extract specific information, tools like [`jq`](https://jqlang.org/) can be used to filter and search through the logs.
 
 ### Logging to a file
 
@@ -84,6 +98,7 @@ The below example logs only `DEBUG` logs to the console and to the file `/my/fil
 
 logging:
     level: DEBUG
+    format: json
     file: /my/file.log
     rotation: 1 week
 ```

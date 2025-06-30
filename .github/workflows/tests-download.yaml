@@ -47,4 +47,4 @@ jobs:
       - name: Run Download Tests
         run: poetry run pytest -ra -v -x -m "download"
         env:
-          TWITTER_BEARER_TOKEN: ${{ secrets.TWITTER_BEARER_TOKEN }}
+          TWITTER_BEARER_TOKEN: ${{ secrets.TWITTER_BEARER_TOKEN || '' }}

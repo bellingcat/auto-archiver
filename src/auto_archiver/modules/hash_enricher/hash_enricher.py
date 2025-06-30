@@ -9,7 +9,7 @@ making it suitable for handling large files efficiently.
 """
 
 import hashlib
-from loguru import logger
+from auto_archiver.utils.custom_logger import logger
 
 from auto_archiver.core import Enricher
 from auto_archiver.core import Metadata
@@ -22,8 +22,7 @@ class HashEnricher(Enricher):
     """
 
     def enrich(self, to_enrich: Metadata) -> None:
-        url = to_enrich.get_url()
-        logger.debug(f"calculating media hashes for {url=} (using {self.algorithm})")
+        logger.debug(f"Calculating media hashes with algo={self.algorithm}")
 
         for i, m in enumerate(to_enrich.media):
             if len(hd := self.calculate_hash(m.filename)):

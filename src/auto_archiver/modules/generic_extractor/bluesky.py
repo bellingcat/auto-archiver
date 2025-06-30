@@ -1,4 +1,4 @@
-from loguru import logger
+from auto_archiver.utils.custom_logger import logger
 
 from auto_archiver.core.extractor import Extractor
 from auto_archiver.core.metadata import Metadata, Media

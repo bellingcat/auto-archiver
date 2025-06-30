@@ -75,12 +75,12 @@ def test_enrich_thumbnail_limits(
 def test_enrich_handles_probe_failure(thumbnail_enricher, metadata_with_video, mocker):
     mocker.patch("ffmpeg.probe", side_effect=Exception("Probe error"))
     mocker.patch("os.makedirs")
-    mock_logger = mocker.patch("loguru.logger.warning")
+    mock_logger = mocker.patch("auto_archiver.utils.custom_logger.logger.warning")
     mocker.patch.object(Media, "is_video", return_value=True)
 
     thumbnail_enricher.enrich(metadata_with_video)
     # Ensure error was logged
-    mock_logger.assert_called_with("cannot generate thumbnails for video.mp4 without valid duration")
+    mock_logger.assert_called_with("Cannot generate thumbnails for video.mp4 without valid duration")
     # Ensure no thumbnails were created
     thumbnails = metadata_with_video.media[0].get("thumbnails")
     assert thumbnails is None
@@ -128,12 +128,12 @@ def test_enrich_handles_short_video(
 
 
 def test_uses_existing_duration_on_exception(thumbnail_enricher, metadata_with_video, mock_ffmpeg_environment, mocker):
-    mock_logger = mocker.patch("loguru.logger.warning")
+    mock_logger = mocker.patch("auto_archiver.utils.custom_logger.logger.warning")
     mock_probe = mocker.patch("ffmpeg.probe", side_effect=Exception("New probe error"))
     metadata_with_video.media[0].set("duration", 3)
     thumbnail_enricher.enrich(metadata_with_video)
     mock_probe.assert_called_once()
-    mock_logger.assert_called_with("failed to get duration with FFMPEG from video.mp4: New probe error")
+    mock_logger.assert_called_with("Failed to get duration with FFMPEG from video.mp4: New probe error")
     assert mock_ffmpeg_environment["mock_output"].run.call_count == 3
 
 

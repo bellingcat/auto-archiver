@@ -2,7 +2,7 @@ import requests
 import re
 import html
 from bs4 import BeautifulSoup
-from loguru import logger
+from auto_archiver.utils.custom_logger import logger
 
 from auto_archiver.core import Extractor
 from auto_archiver.core import Metadata, Media
@@ -38,7 +38,7 @@ class TelegramExtractor(Extractor):
 
         video = s.find("video")
         if video is None:
-            logger.warning("could not find video")
+            logger.warning("Could not find video")
             image_tags = s.find_all(class_="tgme_widget_message_photo_wrap")
 
             image_urls = []

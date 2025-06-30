@@ -4,7 +4,7 @@ from typing import Mapping
 from auto_archiver.core.metadata import Metadata
 from auto_archiver.modules.antibot_extractor_enricher.dropin import Dropin
 
-from loguru import logger
+from auto_archiver.utils.custom_logger import logger
 
 
 class VkDropin(Dropin):

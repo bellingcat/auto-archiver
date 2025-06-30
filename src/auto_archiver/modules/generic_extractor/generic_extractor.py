@@ -14,7 +14,7 @@ from yt_dlp.extractor.common import InfoExtractor
 from yt_dlp.utils import MaxDownloadsReached
 import pysubs2
 
-from loguru import logger
+from auto_archiver.utils.custom_logger import logger
 
 from auto_archiver.core.extractor import Extractor
 from auto_archiver.core import Metadata, Media
@@ -63,8 +63,7 @@ class GenericExtractor(Extractor):
             if os.environ.get("AUTO_ARCHIVER_ALLOW_RESTART", "1") != "1":
                 logger.warning("yt-dlp or plugin was updated — please restart auto-archiver manually")
             else:
-                logger.warning("yt-dlp or plugin was updated — restarting auto-archiver")
-                logger.warning(" ======= RESTARTING ======= ")
+                logger.warning("yt-dlp or plugin was updated — restarting auto-archiver\n ======= RESTARTING ======= ")
                 os.execv(sys.executable, [sys.executable] + sys.argv)
 
     def update_package(self, package_name: str) -> bool:
@@ -80,7 +79,7 @@ class GenericExtractor(Extractor):
                 return True
             logger.info(f"{package_name} already up to date")
         except Exception as e:
-            logger.error(f"Error updating {package_name}: {e}")
+            logger.error(f"Failed to update {package_name}: {e}")
         return False
 
     def setup_po_tokens(self) -> None:
@@ -206,7 +205,7 @@ class GenericExtractor(Extractor):
                 media = Media(cover_image_path)
                 metadata.add_media(media, id="cover")
             except Exception as e:
-                logger.error(f"Error downloading cover image {thumbnail_url}: {e}")
+                logger.error(f"Could not download cover image {thumbnail_url}: {e}")
 
         dropin = self.dropin_for_name(info_extractor.ie_key())
         if dropin:
@@ -375,7 +374,7 @@ class GenericExtractor(Extractor):
         if "entries" in data:
             entries = data.get("entries", [])
             if not len(entries):
-                logger.info("YoutubeDLArchiver could not find any video")
+                logger.info("GenericExtractor could not find any video")
                 return False
         else:
             entries = [data]
@@ -560,17 +559,17 @@ class GenericExtractor(Extractor):
         # order of importance: username/password -> api_key -> cookie -> cookies_from_browser -> cookies_file
         if auth:
             if "username" in auth and "password" in auth:
-                logger.debug(f"Using provided auth username and password for {url}")
+                logger.debug("Using provided auth username and password")
                 ydl_options.extend(("--username", auth["username"]))
                 ydl_options.extend(("--password", auth["password"]))
             elif "cookie" in auth:
-                logger.debug(f"Using provided auth cookie for {url}")
+                logger.debug("Using provided auth cookie")
                 yt_dlp.utils.std_headers["cookie"] = auth["cookie"]
             elif "cookies_from_browser" in auth:
-                logger.debug(f"Using extracted cookies from browser {auth['cookies_from_browser']} for {url}")
+                logger.debug(f"Using extracted cookies from browser {auth['cookies_from_browser']}")
                 ydl_options.extend(("--cookies-from-browser", auth["cookies_from_browser"]))
             elif "cookies_file" in auth:
-                logger.debug(f"Using cookies from file {auth['cookies_file']} for {url}")
+                logger.debug(f"Using cookies from file {auth['cookies_file']}")
                 ydl_options.extend(("--cookies", auth["cookies_file"]))
 
         # Applying user-defined extractor_args
@@ -584,7 +583,7 @@ class GenericExtractor(Extractor):
                 ydl_options.extend(["--extractor-args", f"{key}:{arg_str}"])
 
         if self.ytdlp_args:
-            logger.debug("Adding additional ytdlp arguments: {self.ytdlp_args}")
+            logger.debug(f"Adding additional ytdlp arguments: {self.ytdlp_args}")
             ydl_options += self.ytdlp_args.split(" ")
 
         *_, validated_options = yt_dlp.parse_options(ydl_options)

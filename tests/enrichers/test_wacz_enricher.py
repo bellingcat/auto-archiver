@@ -46,7 +46,7 @@ def test_setup_with_docker(wacz_enricher, mocker):
 
 def test_already_ran(wacz_enricher, metadata, mocker):
     metadata.add_media(Media("test.wacz"), id="browsertrix")
-    mock_log = mocker.patch("loguru.logger.info")
+    mock_log = mocker.patch("auto_archiver.utils.custom_logger.logger.info")
     assert wacz_enricher.enrich(metadata) is True
     assert "WACZ enricher had already been executed" in mock_log.call_args[0][0]
 
@@ -73,7 +73,7 @@ def test_download_success(wacz_enricher, mocker) -> None:
 
 def test_enrich_already_executed(wacz_enricher, mocker) -> None:
     """Test enrich  if already executed."""
-    mock_log = mocker.patch("loguru.logger.info")
+    mock_log = mocker.patch("auto_archiver.utils.custom_logger.logger.info")
     metadata = Metadata().set_url("https://example.com")
     media = Media(filename="some_file.wacz")
     metadata.add_media(media, id="browsertrix")

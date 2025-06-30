@@ -8,7 +8,7 @@ from google.oauth2 import service_account
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
-from loguru import logger
+from auto_archiver.utils.custom_logger import logger
 
 from auto_archiver.core import Media
 from auto_archiver.core import Storage
@@ -62,7 +62,7 @@ class GDriveStorage(Storage):
         parent_id, folder_id = self.root_folder_id, None
         path_parts = media.key.split(os.path.sep)
         filename = path_parts[-1]
-        logger.info(f"looking for folders for {path_parts[0:-1]} before getting url for {filename=}")
+        logger.info(f"Looking for folders for {path_parts[0:-1]} before getting url for {filename=}")
         for folder in path_parts[0:-1]:
             folder_id = self._get_id_from_parent_and_name(parent_id, folder, use_mime_type=True, raise_on_missing=True)
             parent_id = folder_id
@@ -70,7 +70,7 @@ class GDriveStorage(Storage):
         file_id = self._get_id_from_parent_and_name(folder_id, filename, raise_on_missing=True)
         if not file_id:
             #
-            logger.info(f"file {filename} not found in folder {folder_id}")
+            logger.info(f"File {filename} not found in folder {folder_id}")
             return None
         return f"https://drive.google.com/file/d/{file_id}/view?usp=sharing"
 
@@ -83,7 +83,7 @@ class GDriveStorage(Storage):
         parent_id, upload_to = self.root_folder_id, None
         path_parts = media.key.split(os.path.sep)
         filename = path_parts[-1]
-        logger.info(f"checking folders {path_parts[0:-1]} exist (or creating) before uploading {filename=}")
+        logger.info(f"Checking folders {path_parts[0:-1]} exist (or creating) before uploading {filename=}")
         for folder in path_parts[0:-1]:
             upload_to = self._get_id_from_parent_and_name(parent_id, folder, use_mime_type=True, raise_on_missing=False)
             if upload_to is None:
@@ -91,7 +91,7 @@ class GDriveStorage(Storage):
             parent_id = upload_to
 
         # upload file to gd
-        logger.debug(f"uploading {filename=} to folder id {upload_to}")
+        logger.debug(f"Uploading {filename=} to folder id {upload_to}")
         file_metadata = {"name": [filename], "parents": [upload_to]}
         try:
             media = MediaFileUpload(media.filename, resumable=True)
@@ -100,11 +100,11 @@ class GDriveStorage(Storage):
                 .create(supportsAllDrives=True, body=file_metadata, media_body=media, fields="id")
                 .execute()
             )
-            logger.debug(f"uploadf: uploaded file {gd_file['id']} successfully in folder={upload_to}")
+            logger.debug(f"Uploadf: uploaded file {gd_file['id']} successfully in folder={upload_to}")
         except FileNotFoundError as e:
-            logger.error(f"gd uploadf: file not found {media.filename=} - {e}")
+            logger.error(f"GD uploadf: file not found {media.filename=} - {e}")
         except Exception as e:
-            logger.error(f"gd uploadf: error uploading {media.filename=} to {upload_to} - {e}")
+            logger.error(f"GD uploadf: error uploading {media.filename=} to {upload_to} - {e}")
 
     # must be implemented even if unused
     def uploadf(self, file: IO[bytes], key: str, **kwargs: dict) -> bool:
@@ -133,7 +133,7 @@ class GDriveStorage(Storage):
             self.api_cache = getattr(self, "api_cache", {})
             cache_key = f"{parent_id}_{name}_{use_mime_type}"
             if cache_key in self.api_cache:
-                logger.debug(f"cache hit for {cache_key=}")
+                logger.debug(f"Cache hit for {cache_key=}")
                 return self.api_cache[cache_key]
 
         # API logic
@@ -168,7 +168,7 @@ class GDriveStorage(Storage):
             else:
                 logger.debug(f"{debug_header} not found, attempt {attempt + 1}/{retries}.")
                 if attempt < retries - 1:
-                    logger.debug(f"sleeping for {sleep_seconds} second(s)")
+                    logger.debug(f"Sleeping for {sleep_seconds} second(s)")
                     time.sleep(sleep_seconds)
 
         if raise_on_missing:

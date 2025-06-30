@@ -24,7 +24,7 @@ from abc import abstractmethod
 from typing import IO
 import os
 
-from loguru import logger
+from auto_archiver.utils.custom_logger import logger
 from slugify import slugify
 
 from auto_archiver.utils.misc import random_str

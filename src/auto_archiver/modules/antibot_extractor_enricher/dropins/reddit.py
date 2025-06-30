@@ -3,7 +3,7 @@ from typing import Mapping
 from auto_archiver.core.metadata import Metadata
 from auto_archiver.modules.antibot_extractor_enricher.dropin import Dropin
 
-from loguru import logger
+from auto_archiver.utils.custom_logger import logger
 
 
 class RedditDropin(Dropin):
@@ -50,7 +50,7 @@ class RedditDropin(Dropin):
         self._close_cookies_banner()
 
         username, password = self._get_username_password("reddit.com")
-        logger.debug("RedditDropin Logging in to Reddit with username: {}", username)
+        logger.debug("Logging in to Reddit with username: {}", username)
 
         self.sb.type("#login-username", username)
         self.sb.type("#login-password", password)
@@ -68,7 +68,7 @@ class RedditDropin(Dropin):
             self.sb.click_link_text("Log in")
             self.sb.wait_for_ready_state_complete()
             if self.sb.is_text_visible("Welcome back"):
-                logger.debug("RedditDropin Login successful")
+                logger.debug("Login successful")
                 self.sb.click_if_visible("this link")
 
     def _close_cookies_banner(self):
@@ -88,5 +88,5 @@ class RedditDropin(Dropin):
             .map(el => el.src || el.href)
             .filter(url => url && /\.(m3u8|mpd|ism)$/.test(url));
         """)
-        logger.debug("RedditDropin Found {} video URLs", len(filtered_urls))
+        logger.debug("Found {} video URLs", len(filtered_urls))
         return 0, self._download_videos_with_ytdlp(filtered_urls, to_enrich)

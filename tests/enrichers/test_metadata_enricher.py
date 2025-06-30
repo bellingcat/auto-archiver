@@ -65,7 +65,7 @@ def test_enrich_empty_media(enricher, mocker):
 
 def test_get_metadata_error_handling(enricher, mocker):
     mocker.patch("subprocess.run", side_effect=Exception("Test error"))
-    mock_log = mocker.patch("loguru.logger.error")
+    mock_log = mocker.patch("auto_archiver.utils.custom_logger.logger.error")
     result = enricher.get_metadata("test.jpg")
     assert result == {}
     assert "Error occurred: " in mock_log.call_args[0][0]

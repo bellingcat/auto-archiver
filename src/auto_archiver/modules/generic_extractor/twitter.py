@@ -1,7 +1,7 @@
 import re
 import mimetypes
 
-from loguru import logger
+from auto_archiver.utils.custom_logger import logger
 from slugify import slugify
 
 from auto_archiver.core.metadata import Metadata, Media

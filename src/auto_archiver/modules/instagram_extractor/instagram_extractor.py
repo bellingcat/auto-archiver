@@ -7,8 +7,9 @@ highlights, and tagged posts. Authentication is required via username/password o
 import re
 import os
 import shutil
+import traceback
 import instaloader
-from loguru import logger
+from auto_archiver.utils.custom_logger import logger
 
 from auto_archiver.core import Extractor
 from auto_archiver.core import Metadata
@@ -29,8 +30,9 @@ class InstagramExtractor(Extractor):
     # TODO: links to stories
 
     def setup(self) -> None:
-        logger.warning("Instagram Extractor is not actively maintained, and may not work as expected.")
-        logger.warning("Please consider using the Instagram Tbot Extractor or Instagram API Extractor instead.")
+        logger.warning(
+            "Instagram Extractor is not actively maintained, and may not work as expected.\nPlease consider using the Instagram Tbot Extractor or Instagram API Extractor instead."
+        )
 
         self.insta = instaloader.Instaloader(
             download_geotags=True,
@@ -43,8 +45,7 @@ class InstagramExtractor(Extractor):
             self.insta.load_session_from_file(self.username, self.session_file)
         except Exception:
             try:
-                logger.debug("Session file failed", exc_info=True)
-                logger.info("No valid session file found - Attempting login with use and password.")
+                logger.info("No valid session file found - Attempting login with username and password.")
                 self.insta.login(self.username, self.password)
                 self.insta.save_session_to_file(self.session_file)
             except Exception as e:
@@ -79,7 +80,7 @@ class InstagramExtractor(Extractor):
         return result
 
     def download_post(self, url: str, post_id: str) -> Metadata:
-        logger.debug(f"Instagram {post_id=} detected in {url=}")
+        logger.debug(f"Instagram {post_id=} detected")
 
         post = instaloader.Post.from_shortcode(self.insta.context, post_id)
         if self.insta.download_post(post, target=post.owner_username):
@@ -87,7 +88,7 @@ class InstagramExtractor(Extractor):
 
     def download_profile(self, url: str, username: str) -> Metadata:
         # gets posts, posts where username is tagged, igtv postss, stories, and highlights
-        logger.debug(f"Instagram {username=} detected in {url=}")
+        logger.debug(f"Instagram {username=} detected")
 
         profile = instaloader.Profile.from_username(self.insta.context, username)
         try:
@@ -95,27 +96,27 @@ class InstagramExtractor(Extractor):
                 try:
                     self.insta.download_post(post, target=f"profile_post_{post.owner_username}")
                 except Exception as e:
-                    logger.error(f"Failed to download post: {post.shortcode}: {e}")
+                    logger.error(f"Failed to download post: {post.shortcode}: {e} {traceback.format_exc()}")
         except Exception as e:
-            logger.error(f"Failed profile.get_posts: {e}")
+            logger.error(f"Failed profile.get_posts: {e}: {traceback.format_exc()}")
 
         try:
             for post in profile.get_tagged_posts():
                 try:
                     self.insta.download_post(post, target=f"tagged_post_{post.owner_username}")
                 except Exception as e:
-                    logger.error(f"Failed to download tagged post: {post.shortcode}: {e}")
+                    logger.error(f"Failed to download tagged post: {post.shortcode}: {e} {traceback.format_exc()}")
         except Exception as e:
-            logger.error(f"Failed profile.get_tagged_posts: {e}")
+            logger.error(f"Failed profile.get_tagged_posts: {e} {traceback.format_exc()}")
 
         try:
             for post in profile.get_igtv_posts():
                 try:
                     self.insta.download_post(post, target=f"igtv_post_{post.owner_username}")
                 except Exception as e:
-                    logger.error(f"Failed to download igtv post: {post.shortcode}: {e}")
+                    logger.error(f"Failed to download igtv post: {post.shortcode}: {e} {traceback.format_exc()}")
         except Exception as e:
-            logger.error(f"Failed profile.get_igtv_posts: {e}")
+            logger.error(f"Failed profile.get_igtv_posts: {e} {traceback.format_exc()}")
 
         try:
             for story in self.insta.get_stories([profile.userid]):
@@ -123,9 +124,9 @@ class InstagramExtractor(Extractor):
                     try:
                         self.insta.download_storyitem(item, target=f"story_item_{story.owner_username}")
                     except Exception as e:
-                        logger.error(f"Failed to download story item: {item}: {e}")
+                        logger.error(f"Failed to download story item: {item}: {e} {traceback.format_exc()}")
         except Exception as e:
-            logger.error(f"Failed get_stories: {e}")
+            logger.error(f"Failed get_stories: {e} {traceback.format_exc()}")
 
         try:
             for highlight in self.insta.get_highlights(profile.userid):
@@ -133,9 +134,9 @@ class InstagramExtractor(Extractor):
                     try:
                         self.insta.download_storyitem(item, target=f"highlight_item_{highlight.owner_username}")
                     except Exception as e:
-                        logger.error(f"Failed to download highlight item: {item}: {e}")
+                        logger.error(f"Failed to download highlight item: {item}: {e} {traceback.format_exc()}")
         except Exception as e:
-            logger.error(f"Failed get_highlights: {e}")
+            logger.error(f"Failed get_highlights: {e} {traceback.format_exc()}")
 
         return self.process_downloads(url, f"@{username}", profile._asdict(), None)
 
@@ -158,4 +159,4 @@ class InstagramExtractor(Extractor):
 
             return result.success("instagram")
         except Exception as e:
-            logger.error(f"Could not fetch instagram post {url} due to: {e}")
+            logger.error(f"Could not fetch instagram post due to: {e} {traceback.format_exc()}")

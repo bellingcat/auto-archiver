@@ -13,7 +13,7 @@ class TestTwitterApiExtractor(TestExtractorBase):
 
     config = {
         "bearer_tokens": [],
-        "bearer_token": os.environ.get("TWITTER_BEARER_TOKEN", "TEST_KEY"),
+        "bearer_token": os.environ.get("TWITTER_BEARER_TOKEN") or "TEST_KEY",
         "consumer_key": os.environ.get("TWITTER_CONSUMER_KEY"),
         "consumer_secret": os.environ.get("TWITTER_CONSUMER_SECRET"),
         "access_token": os.environ.get("TWITTER_ACCESS_TOKEN"),

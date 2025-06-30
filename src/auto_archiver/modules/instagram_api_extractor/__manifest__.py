@@ -22,7 +22,7 @@
         "full_profile_max_posts": {
             "default": 0,
             "type": "int",
-            "help": "Use to limit the number of posts to download when full_profile is true. 0 means no limit. limit is applied softly since posts are fetched in batch, once to: posts, tagged posts, and highlights",
+            "help": "Use to limit the number of posts to download when full_profile is true or when a URL for multiple posts is passed (like /stories /highlights ...). 0 means no limit. when full_profile is true the order of downloaded content is stories -> posts -> tagged posts -> highlights, so a value of 10 could download 2 stories, 7 posts, 1 tagged posts, and 0 highlights.",
         },
         "minimize_json_output": {
             "default": True,

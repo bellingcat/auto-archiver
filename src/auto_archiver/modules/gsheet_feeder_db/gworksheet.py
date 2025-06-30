@@ -1,4 +1,5 @@
 from gspread import utils
+from retrying import retry
 
 
 class GWorksheet:
@@ -26,6 +27,10 @@ class GWorksheet:
         "replaywebpage": "replaywebpage",
     }
 
+    @retry(
+        wait_exponential_multiplier=1,
+        stop_max_attempt_number=6,
+    )
     def __init__(self, worksheet, columns=COLUMN_NAMES, header_row=1):
         self.wks = worksheet
         self.columns = columns

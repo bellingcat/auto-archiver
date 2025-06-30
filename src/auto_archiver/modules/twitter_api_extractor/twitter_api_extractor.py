@@ -4,7 +4,7 @@ import re
 import mimetypes
 import requests
 
-from loguru import logger
+from auto_archiver.utils.custom_logger import logger
 from pytwitter import Api
 from slugify import slugify
 
@@ -45,10 +45,9 @@ class TwitterApiExtractor(Extractor):
         if "https://t.co/" in url:
             try:
                 r = requests.get(url, timeout=30)
-                logger.debug(f"Expanded url {url} to {r.url}")
                 url = r.url
-            except Exception:
-                logger.error(f"Failed to expand url {url}")
+            except Exception as e:
+                logger.error(f"Failed to expand Twitter URL: {e}")
         return url
 
     def download(self, item: Metadata) -> Metadata:
@@ -67,7 +66,7 @@ class TwitterApiExtractor(Extractor):
             return False, False
 
         username, tweet_id = matches[0]  # only one URL supported
-        logger.debug(f"Found {username=} and {tweet_id=} in {url=}")
+        logger.debug(f"Found {username=} and {tweet_id=}")
 
         return username, tweet_id
 
@@ -85,7 +84,7 @@ class TwitterApiExtractor(Extractor):
                 media_fields=["type", "duration_ms", "url", "variants"],
                 tweet_fields=["attachments", "author_id", "created_at", "entities", "id", "text", "possibly_sensitive"],
             )
-            logger.debug(tweet)
+            logger.debug(f"Got {tweet=}")
         except Exception as e:
             logger.error(f"Could not get tweet: {e}")
             return False

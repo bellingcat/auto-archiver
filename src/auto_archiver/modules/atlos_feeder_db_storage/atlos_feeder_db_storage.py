@@ -3,7 +3,7 @@ import os
 from typing import IO, Iterator, Optional, Union
 
 import requests
-from loguru import logger
+from auto_archiver.utils.custom_logger import logger
 
 from auto_archiver.core import Database, Feeder, Media, Metadata, Storage
 from auto_archiver.utils import calculate_file_hash
@@ -66,13 +66,13 @@ class AtlosFeederDbStorage(Feeder, Database, Storage):
         """Mark an item as failed in Atlos, if the ID exists."""
         atlos_id = item.metadata.get("atlos_id")
         if not atlos_id:
-            logger.info(f"Item {item.get_url()} has no Atlos ID, skipping")
+            logger.info("No Atlos ID available, skipping")
             return
         self._post(
             f"/api/v2/source_material/metadata/{atlos_id}/auto_archiver",
             json={"metadata": {"processed": True, "status": "error", "error": reason}},
         )
-        logger.info(f"Stored failure for {item.get_url()} (ID {atlos_id}) on Atlos: {reason}")
+        logger.info(f"Stored failure ID {atlos_id} on Atlos: {reason}")
 
     def fetch(self, item: Metadata) -> Union[Metadata, bool]:
         """check and fetch if the given item has been archived already, each
@@ -88,7 +88,7 @@ class AtlosFeederDbStorage(Feeder, Database, Storage):
         """Mark an item as successfully archived in Atlos."""
         atlos_id = item.metadata.get("atlos_id")
         if not atlos_id:
-            logger.info(f"Item {item.get_url()} has no Atlos ID, skipping")
+            logger.info("Item has no Atlos ID, skipping")
             return
         self._post(
             f"/api/v2/source_material/metadata/{atlos_id}/auto_archiver",
@@ -100,7 +100,7 @@ class AtlosFeederDbStorage(Feeder, Database, Storage):
                 }
             },
         )
-        logger.info(f"Stored success for {item.get_url()} (ID {atlos_id}) on Atlos")
+        logger.info(f"Stored success ID {atlos_id} on Atlos")
 
     # ! Atlos Module - Storage Methods
 

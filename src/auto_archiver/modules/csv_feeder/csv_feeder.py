@@ -1,4 +1,4 @@
-from loguru import logger
+from auto_archiver.utils.custom_logger import logger
 import csv
 
 from auto_archiver.core import Feeder
@@ -35,5 +35,4 @@ class CSVFeeder(Feeder):
                         logger.warning(f"Not a valid URL in row: {row}, skipping")
                         continue
                     url = row[url_column]
-                    logger.debug(f"Processing {url}")
                     yield Metadata().set_url(url)

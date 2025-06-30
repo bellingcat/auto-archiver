@@ -29,7 +29,7 @@ def test_fetch_fail_status(api_db, metadata, mocker):
     mock_get = mocker.patch("auto_archiver.modules.api_db.api_db.requests.get")
     mock_get.return_value.status_code = 400
     mock_get.return_value.json.return_value = {}
-    mock_error = mocker.patch("loguru.logger.error")
+    mock_error = mocker.patch("auto_archiver.utils.custom_logger.logger.error")
     assert api_db.fetch(metadata) is False
     mock_error.assert_called_once_with("AA API FAIL (400): {}")
 

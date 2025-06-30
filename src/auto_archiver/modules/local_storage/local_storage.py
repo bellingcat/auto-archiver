@@ -1,7 +1,7 @@
 import shutil
 from typing import IO
 import os
-from loguru import logger
+from auto_archiver.utils.custom_logger import logger
 
 from auto_archiver.core import Media
 from auto_archiver.core import Storage
@@ -38,8 +38,7 @@ class LocalStorage(Storage):
         os.makedirs(os.path.dirname(dest), exist_ok=True)
         logger.debug(f"[{self.__class__.__name__}] storing file {media.filename} with key {media.key} to {dest}")
 
-        res = shutil.copy2(media.filename, dest)
-        logger.info(res)
+        shutil.copy2(media.filename, dest)
         return True
 
     # must be implemented even if unused

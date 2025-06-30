@@ -14,7 +14,7 @@ You will need to provide your phone number and a 2FA code the first time you run
 
 import os
 from telethon.sync import TelegramClient
-from loguru import logger
+from auto_archiver.utils.custom_logger import logger
 
 
 # Create a
@@ -24,4 +24,4 @@ SESSION_FILE = "secrets/anon-insta"
 
 os.makedirs("secrets", exist_ok=True)
 with TelegramClient(SESSION_FILE, API_ID, API_HASH) as client:
-    logger.success(f"New session file created: {SESSION_FILE}.session")
+    logger.success(f"new session file created: {SESSION_FILE}.session")

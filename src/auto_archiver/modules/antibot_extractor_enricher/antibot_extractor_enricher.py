@@ -7,7 +7,7 @@ from urllib.parse import urljoin
 import glob
 import importlib.util
 
-from loguru import logger
+from auto_archiver.utils.custom_logger import logger
 import selenium
 from seleniumbase import SB
 
@@ -57,7 +57,7 @@ class AntibotExtractorEnricher(Extractor, Enricher):
                     continue  # Skip imported modules/classes/functions
                 if isinstance(obj, type) and issubclass(obj, Dropin):
                     dropins.append(obj)
-        logger.debug(f"ANTIBOT loaded drop-in classes: {', '.join([d.__name__ for d in dropins])}")
+        logger.debug(f"Loaded drop-in classes: {', '.join([d.__name__ for d in dropins])}")
         return dropins
 
     def sanitize_url(self, url: str) -> str:
@@ -83,14 +83,13 @@ class AntibotExtractorEnricher(Extractor, Enricher):
     def enrich(self, to_enrich: Metadata, custom_data_dir: bool = True) -> bool:
         using_user_data_dir = self.user_data_dir if custom_data_dir else None
         url = to_enrich.get_url()
-        url_sample = url[:75]
 
         try:
             with SB(uc=True, agent=self.agent, headed=None, user_data_dir=using_user_data_dir, proxy=self.proxy) as sb:
-                logger.info(f"ANTIBOT selenium browser is up with agent {self.agent}, opening {url_sample}...")
+                logger.info(f"Selenium browser is up with agent {self.agent}, opening url...")
                 sb.uc_open_with_reconnect(url, 4)
 
-                logger.debug(f"ANTIBOT handling CAPTCHAs for {url_sample}...")
+                logger.debug("Handling CAPTCHAs for...")
                 sb.uc_gui_handle_cf()
                 sb.uc_gui_click_rc()  # NB: using handle instead of click breaks some sites like reddit, for now we separate here but can have dropins deciding this in the future
 
@@ -98,7 +97,7 @@ class AntibotExtractorEnricher(Extractor, Enricher):
                 dropin.open_page(url)
 
                 if self.detect_auth_wall and self._hit_auth_wall(sb):
-                    logger.warning(f"ANTIBOT SKIP since auth wall or CAPTCHA was detected for {url_sample}")
+                    logger.warning("Skipping since auth wall or CAPTCHA was detected")
                     return False
 
                 sb.wait_for_ready_state_complete()
@@ -125,18 +124,18 @@ class AntibotExtractorEnricher(Extractor, Enricher):
                     js_css_selector=dropin.js_for_video_css_selectors(),
                     max_media=self.max_download_videos - downloaded_videos,
                 )
-                logger.info(f"ANTIBOT completed for {url_sample}")
+                logger.info("Completed")
 
             return to_enrich
         except selenium.common.exceptions.SessionNotCreatedException as e:
             if custom_data_dir:  # the retry logic only works once
                 logger.error(
-                    f"ANTIBOT session not created error: {e}. Please remove the user_data_dir {self.user_data_dir} and try again, will retry without user data dir though."
+                    f"Session not created error: {e}. Please remove the user_data_dir {self.user_data_dir} and try again, will retry without user data dir though."
                 )
                 return self.enrich(to_enrich, custom_data_dir=False)
             raise e  # re-raise
         except Exception as e:
-            logger.error(f"ANTIBOT runtime error: {e}: {traceback.format_exc()}")
+            logger.error(f"Runtime error: {e}: {traceback.format_exc()}")
             return False
 
     def _get_suitable_dropin(self, url: str, sb: SB):
@@ -146,7 +145,7 @@ class AntibotExtractorEnricher(Extractor, Enricher):
         """
         for dropin in self.dropins:
             if dropin.suitable(url):
-                logger.debug(f"ANTIBOT using drop-in {dropin.__name__} for {url}")
+                logger.debug(f"Using drop-in {dropin.__name__}")
                 return dropin(sb, self)
 
         return DefaultDropin(sb, self)

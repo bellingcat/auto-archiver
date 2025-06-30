@@ -1,6 +1,7 @@
 import os
+import traceback
 
-from loguru import logger
+from auto_archiver.utils.custom_logger import logger
 import opentimestamps
 from opentimestamps.calendar import RemoteCalendar, DEFAULT_CALENDAR_WHITELIST
 from opentimestamps.core.timestamp import Timestamp, DetachedTimestampFile
@@ -14,13 +15,12 @@ from auto_archiver.utils.misc import get_current_timestamp
 
 class OpentimestampsEnricher(Enricher):
     def enrich(self, to_enrich: Metadata) -> None:
-        url = to_enrich.get_url()
-        logger.debug(f"OpenTimestamps timestamping files for {url=}")
+        logger.debug("OpenTimestamps timestamping files")
 
         # Get the media files to timestamp
         media_files = [m for m in to_enrich.media if m.filename and not m.get("opentimestamps")]
         if not media_files:
-            logger.debug(f"No files found to timestamp in {url=}")
+            logger.debug("No files found to timestamp")
             return
 
         timestamp_files = []
@@ -94,7 +94,7 @@ class OpentimestampsEnricher(Enricher):
                         detached_timestamp.serialize(ctx)
                         f.write(ctx.getbytes())
                 except Exception as e:
-                    logger.warning(f"Failed to serialize timestamp file: {e}")
+                    logger.warning(f"Failed to serialize timestamp file: {e} {traceback.format_exc()}")
                     continue
 
                 # Create media for the timestamp file
@@ -113,16 +113,16 @@ class OpentimestampsEnricher(Enricher):
                 media.set("opentimestamps", True)
 
             except Exception as e:
-                logger.warning(f"Error while timestamping {media.filename}: {e}")
+                logger.warning(f"Error while timestamping {media.filename}: {e} {traceback.format_exc()}")
 
         # Add timestamp files to the metadata
         if timestamp_files:
             to_enrich.set("opentimestamped", True)
             to_enrich.set("opentimestamps_count", len(timestamp_files))
-            logger.info(f"{len(timestamp_files)} OpenTimestamps proofs created for {url=}")
+            logger.info(f"{len(timestamp_files)} OpenTimestamps proofs created")
         else:
             to_enrich.set("opentimestamped", False)
-            logger.warning(f"No successful timestamps created for {url=}")
+            logger.warning("No successful timestamps created")
 
     def verify_timestamp(self, detached_timestamp):
         """

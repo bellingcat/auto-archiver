@@ -4,7 +4,7 @@ import os
 import shutil
 import subprocess
 from zipfile import ZipFile
-from loguru import logger
+from auto_archiver.utils.custom_logger import logger
 from warcio.archiveiterator import ArchiveIterator
 
 from auto_archiver.core import Media, Metadata
@@ -94,7 +94,7 @@ class WaczExtractorEnricher(Enricher, Extractor):
 
         # call docker if explicitly enabled or we are running on the host (not in docker)
         if self.use_docker:
-            logger.debug(f"generating WACZ in Docker for {url=}")
+            logger.debug("Generating WACZ in Docker")
             logger.debug(f"{browsertrix_home_host=} {browsertrix_home_container=}")
             if self.docker_commands:
                 cmd = self.docker_commands + cmd
@@ -111,12 +111,12 @@ class WaczExtractorEnricher(Enricher, Extractor):
             if self.profile:
                 profile_file = f"profile-{self.crawl_id}.tar.gz"
                 profile_fn = os.path.join(browsertrix_home_container, profile_file)
-                logger.debug(f"copying {self.profile} to {profile_fn}")
+                logger.debug(f"Copying {self.profile} to {profile_fn}")
                 shutil.copyfile(self.profile, profile_fn)
                 cmd.extend(["--profile", os.path.join("/crawls", profile_file)])
 
         else:
-            logger.debug(f"generating WACZ without Docker for {url=}")
+            logger.debug("Generating WACZ without Docker")
 
             if self.profile:
                 cmd.extend(["--profile", os.path.join("/app", str(self.profile))])
