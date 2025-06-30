@@ -28,10 +28,8 @@ class GWorksheet:
     }
 
     @retry(
-        wait_incrementing_start=1000,
-        wait_incrementing_increment=3000,
-        wait_incrementing_max=20_000,
-        stop_max_attempt_number=5,
+        wait_exponential_multiplier=1,
+        stop_max_attempt_number=6,
     )
     def __init__(self, worksheet, columns=COLUMN_NAMES, header_row=1):
         self.wks = worksheet

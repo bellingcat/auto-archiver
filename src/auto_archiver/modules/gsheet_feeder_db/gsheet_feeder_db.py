@@ -178,9 +178,7 @@ class GsheetsFeederDB(Feeder, Database):
             )
 
         @retry(
-            wait_incrementing_start=1000,
-            wait_incrementing_increment=3000,
-            wait_incrementing_max=20_000,
+            wait_exponential_multiplier=1,
             stop_max_attempt_number=5,
         )
         def batch_set_cell_with_retry(gw, cell_updates: list):
