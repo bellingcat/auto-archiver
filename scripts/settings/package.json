@@ -13,7 +13,7 @@
     "@dnd-kit/sortable": "^10.0.0",
     "@emotion/react": "latest",
     "@emotion/styled": "latest",
-    "@mui/icons-material": "^7.1.1",
+    "@mui/icons-material": "^7.2.0",
     "@mui/material": "^7.1.1",
     "react": "19.1.0",
     "react-dom": "19.1.0",
