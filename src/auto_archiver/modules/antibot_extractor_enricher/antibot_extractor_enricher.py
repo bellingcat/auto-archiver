@@ -99,7 +99,7 @@ class AntibotExtractorEnricher(Extractor, Enricher):
                 dropin = self._get_suitable_dropin(url, sb)
                 dropin.open_page(url)
 
-                if self.detect_auth_wall and self._hit_auth_wall(sb):
+                if self.detect_auth_wall and (dropin.hit_auth_wall() and self._hit_auth_wall(sb)):
                     logger.warning("Skipping since auth wall or CAPTCHA was detected")
                     return False
 
@@ -277,8 +277,14 @@ class AntibotExtractorEnricher(Extractor, Enricher):
             return
         url = to_enrich.get_url()
         all_urls = set()
+        logger.debug(f"Extracting media for {js_css_selector=}")
 
-        sources = sb.execute_script(js_css_selector)
+        try:
+            sources = sb.execute_script(js_css_selector)
+        except selenium.common.exceptions.JavascriptException as e:
+            logger.error(f"Error executing JavaScript selector {js_css_selector}: {e}")
+            return
+
         # js_for_css_selectors
         for src in sources:
             if len(all_urls) >= max_media:
