@@ -88,6 +88,13 @@ class TestAntibotExtractorEnricher(TestExtractorBase):
                 5,
                 0,
             ),
+            (
+                "https://www.tiktok.com/@tracy_2424/photo/7418200173953830162",
+                "TikTok",
+                "Dito ko lang",
+                1,
+                0,
+            ),
         ],
     )
     def test_download_pages_with_media(self, setup_module, make_item, url, in_title, in_text, image_count, video_count):

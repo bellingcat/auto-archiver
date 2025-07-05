@@ -32,26 +32,37 @@ class GsheetsFeederDB(Feeder, Database):
         if not self.sheet and not self.sheet_id:
             raise ValueError("You need to define either a 'sheet' name or a 'sheet_id' in your manifest.")
 
-    def open_sheet(self):
+    @retry(
+        wait_exponential_multiplier=1,
+        stop_max_attempt_number=6,
+    )
+    def open_sheet(self) -> gspread.Spreadsheet:
         if self.sheet:
             return self.gsheets_client.open(self.sheet)
         else:
             return self.gsheets_client.open_by_key(self.sheet_id)
 
+    @retry(
+        wait_exponential_multiplier=1,
+        stop_max_attempt_number=6,
+    )
+    def enumerate_sheets(self, sheet) -> Iterator[gspread.Worksheet]:
+        for worksheet in sheet.worksheets():
+            yield worksheet
+
     def __iter__(self) -> Iterator[Metadata]:
-        sh = self.open_sheet()
-        for ii, worksheet in enumerate(sh.worksheets()):
-            if not self.should_process_sheet(worksheet.title):
-                logger.debug(f"Skipped worksheet '{worksheet.title}' due to allow/block rules")
-                continue
-            logger.info(f"Opening worksheet {ii=}: {worksheet.title=} header={self.header}")
-            gw = GWorksheet(worksheet, header_row=self.header, columns=self.columns)
-            if len(missing_cols := self.missing_required_columns(gw)):
-                logger.debug(
-                    f"Skipped worksheet '{worksheet.title}' due to missing required column(s) for {missing_cols}"
-                )
-                continue
-            with logger.contextualize(worksheet=f"{sh.title}:{worksheet.title}"):
+        spreadsheet = self.open_sheet()
+        for worksheet in self.enumerate_sheets(spreadsheet):
+            with logger.contextualize(worksheet=f"{spreadsheet.title}:{worksheet.title}"):
+                if not self.should_process_sheet(worksheet.title):
+                    logger.debug("Skipped worksheet due to allow/block rules")
+                    continue
+                logger.info(f"Opening worksheet header={self.header}")
+                gw = GWorksheet(worksheet, header_row=self.header, columns=self.columns)
+                if len(missing_cols := self.missing_required_columns(gw)):
+                    logger.debug(f"Skipped worksheet due to missing required column(s) for {missing_cols}")
+                    continue
+
                 # process and yield metadata here:
                 yield from self._process_rows(gw)
             logger.info(f"Finished worksheet {worksheet.title}")

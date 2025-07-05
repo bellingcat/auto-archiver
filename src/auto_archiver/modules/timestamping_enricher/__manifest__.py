@@ -20,7 +20,7 @@
                     # "http://tsa.sinpe.fi.cr/tsaHttp/", # self-signed
                     # "http://tsa.cra.ge/signserver/tsa?workerName=qtsa", # self-signed
                     "http://tss.cnbs.gob.hn/TSS/HttpTspServer",
-                    "http://dss.nowina.lu/pki-factory/tsa/good-tsa",
+                    # "http://dss.nowina.lu/pki-factory/tsa/good-tsa",
                     # "https://freetsa.org/tsr", # self-signed
                 ],
             "help": "List of RFC3161 Time Stamp Authorities to use, separate with commas if passed via the command line.",

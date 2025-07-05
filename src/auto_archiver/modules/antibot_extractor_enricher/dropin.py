@@ -1,3 +1,4 @@
+import json
 import os
 import traceback
 from typing import Mapping
@@ -74,8 +75,11 @@ class Dropin:
 
         You can overwrite this instead of `images_selector` for more control over scraped images.
         """
+        if not self.images_selectors():
+            return "return [];"
+        safe_selector = json.dumps(self.images_selectors())
         return f"""
-            return Array.from(document.querySelectorAll("{self.images_selectors()}")).map(el => el.src || el.href).filter(Boolean);
+            return Array.from(document.querySelectorAll({safe_selector})).map(el => el.src || el.href).filter(Boolean);
         """
 
     def js_for_video_css_selectors(self) -> str:
@@ -84,8 +88,11 @@ class Dropin:
 
         You can overwrite this instead of `video_selector` for more control over scraped videos.
         """
+        if not self.video_selectors():
+            return "return [];"
+        safe_selector = json.dumps(self.video_selectors())
         return f"""
-            return Array.from(document.querySelectorAll("{self.video_selectors()}")).map(el => el.src || el.href).filter(Boolean);
+            return Array.from(document.querySelectorAll({safe_selector})).map(el => el.src || el.href).filter(Boolean);
         """
 
     def open_page(self, url) -> bool:
@@ -102,6 +109,12 @@ class Dropin:
         :return: A tuple (number of Images added, number of Videos added).
         """
         return 0, 0
+
+    def hit_auth_wall(self) -> bool:
+        """
+        Custom check to see if the current page is behind an authentication wall, if True is returned the default global auth wall detector is used instead. If false, no auth wall is detected and the page is considered open.
+        """
+        return True
 
     def _get_username_password(self, site) -> tuple[str, str]:
         """

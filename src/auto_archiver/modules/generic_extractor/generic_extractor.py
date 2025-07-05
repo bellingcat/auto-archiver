@@ -502,6 +502,9 @@ class GenericExtractor(Extractor):
             try:
                 result = self.get_metadata_for_post(info_extractor, url, ydl)
             except (yt_dlp.utils.DownloadError, yt_dlp.utils.ExtractorError) as post_e:
+                if "NSFW tweet requires authentication." in str(post_e):
+                    logger.warning(str(post_e))
+                    return False
                 logger.error("Error downloading metadata for post: {error}", error=str(post_e))
                 return False
             except Exception as generic_e:
@@ -525,13 +528,24 @@ class GenericExtractor(Extractor):
 
         return result
 
-    def download(self, item: Metadata) -> Metadata:
+    def download(self, item: Metadata, skip_proxy: bool = False) -> Metadata:
         url = item.get_url()
 
         # TODO: this is a temporary hack until this issue is closed: https://github.com/yt-dlp/yt-dlp/issues/11025
         if url.startswith("https://ya.ru"):
             url = url.replace("https://ya.ru", "https://yandex.ru")
             item.set("replaced_url", url)
+        logger.debug(f"{skip_proxy=}, {self.proxy_on_failure_only=}, {self.proxy=}")
+
+        # proxy_on_failure_only logic
+        if self.proxy and self.proxy_on_failure_only and not skip_proxy:
+            # when proxy_on_failure_only is True, we first try to download without a proxy and only continue with execution if that fails
+            try:
+                if without_proxy := self.download(item, skip_proxy=True):
+                    logger.info("Downloaded successfully without proxy.")
+                    return without_proxy
+            except Exception:
+                logger.debug("Download without proxy failed, trying with proxy...")
 
         ydl_options = [
             "-o",
@@ -546,7 +560,7 @@ class GenericExtractor(Extractor):
         ]
 
         # proxy handling
-        if self.proxy:
+        if self.proxy and not skip_proxy:
             ydl_options.extend(["--proxy", self.proxy])
 
         # max_downloads handling
