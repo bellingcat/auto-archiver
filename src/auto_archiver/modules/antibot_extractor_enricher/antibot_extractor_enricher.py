@@ -81,6 +81,9 @@ class AntibotExtractorEnricher(Extractor, Enricher):
             os.makedirs(self.user_data_dir, exist_ok=True)
 
     def enrich(self, to_enrich: Metadata, custom_data_dir: bool = True) -> bool:
+        if to_enrich.get_media_by_id("html_source_code"):
+            logger.info("Antibot has already been executed, skipping.")
+            return True
         using_user_data_dir = self.user_data_dir if custom_data_dir else None
         url = to_enrich.get_url()
 
