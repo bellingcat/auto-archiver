@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [project]
 name = "auto-archiver"
-version = "1.1.1"
+version = "1.1.2"
 description = "Automatically archive links to videos, images, and social media content from Google Sheets (and more)."
 
 requires-python = ">=3.10,<3.13"
@@ -58,6 +58,7 @@ dependencies = [
     "secretstorage (>=3.3.3,<4.0.0)",
     "seleniumbase (>=4.36.4,<5.0.0)",
     "pyautogui (>=0.9.54,<0.10.0)",
+    "pyperclip (==1.8.2)", 
 ]
 
 [tool.poetry.group.dev.dependencies]
