@@ -32,6 +32,10 @@ class GsheetsFeederDB(Feeder, Database):
         if not self.sheet and not self.sheet_id:
             raise ValueError("You need to define either a 'sheet' name or a 'sheet_id' in your manifest.")
 
+    @retry(
+        wait_exponential_multiplier=1,
+        stop_max_attempt_number=6,
+    )
     def open_sheet(self) -> gspread.Spreadsheet:
         if self.sheet:
             return self.gsheets_client.open(self.sheet)
@@ -40,7 +44,7 @@ class GsheetsFeederDB(Feeder, Database):
 
     @retry(
         wait_exponential_multiplier=1,
-        stop_max_attempt_number=5,
+        stop_max_attempt_number=6,
     )
     def enumerate_sheets(self, sheet) -> Iterator[gspread.Worksheet]:
         for worksheet in sheet.worksheets():
