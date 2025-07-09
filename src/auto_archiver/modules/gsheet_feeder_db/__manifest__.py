@@ -51,6 +51,11 @@
             "help": "if True the stored files path will include 'workbook_name/worksheet_name/...'",
             "type": "bool",
         },
+        "allow_overwrite_of_spreadsheet_cells": {
+            "default": False,
+            "help": "If True, the spreadsheet cells will be overwritten with the new values",
+            "type": "bool",
+        },
     },
     "description": """
     GsheetsFeederDatabase
