@@ -13,12 +13,12 @@
     "@dnd-kit/sortable": "^10.0.0",
     "@emotion/react": "latest",
     "@emotion/styled": "latest",
-    "@mui/icons-material": "^7.1.1",
+    "@mui/icons-material": "^7.3.4",
     "@mui/material": "^7.1.1",
-    "react": "19.1.0",
-    "react-dom": "19.1.0",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
     "react-markdown": "^10.0.0",
-    "yaml": "^2.7.0"
+    "yaml": "^2.8.1"
   },
   "devDependencies": {
     "@types/react": "latest",
@@ -26,6 +26,6 @@
     "@vitejs/plugin-react": "latest",
     "typescript": "latest",
     "vite": "latest",
-    "vite-plugin-singlefile": "^2.1.0"
+    "vite-plugin-singlefile": "^2.3.0"
   }
 }
