@@ -1,0 +1,129 @@
+--- a/src/auto_archiver/modules/antibot_extractor_enricher/antibot_extractor_enricher.py
++++ b/src/auto_archiver/modules/antibot_extractor_enricher/antibot_extractor_enricher.py
+@@ -15,6 +15,7 @@ from auto_archiver.core import Extractor, Enricher, Metadata, Media
+ from auto_archiver.modules.antibot_extractor_enricher.dropin import Dropin
+ from auto_archiver.modules.antibot_extractor_enricher.dropins.default import DefaultDropin
+ from auto_archiver.utils.misc import random_str
+ from auto_archiver.utils.url import is_relevant_url
++from auto_archiver.utils.deletion_detection import detect_deletion, flag_as_deleted
+
+
+ class AntibotExtractorEnricher(Extractor, Enricher):
+@@ -97,9 +98,18 @@ class AntibotExtractorEnricher(Extractor, Enricher):
+                 sb.uc_gui_click_rc()  # NB: using handle instead of click breaks some sites like reddit, for now we separate here but can have dropins deciding this in the future
+
+                 dropin = self._get_suitable_dropin(url, sb)
+                 if not dropin.open_page(url):
+-                    # TODO: could we detect deleted videos?
+-                    logger.warning("Failed to open drop-in page")
++                    # Check for deletion indicators
++                    page_title = sb.get_title()
++                    html_source = sb.get_page_source()
++                    deletion_info = detect_deletion(
++                        html_content=html_source,
++                        page_title=page_title,
++                        url=url
++                    )
++                    if deletion_info:
++                        flag_as_deleted(to_enrich, deletion_info)
++                        return to_enrich
++                    logger.warning("Failed to open drop-in page (not detected as deleted)")
+                     return False
+
+                 if self.detect_auth_wall and (dropin.hit_auth_wall() and self._hit_auth_wall(sb)):
+@@ -109,7 +119,18 @@ class AntibotExtractorEnricher(Extractor, Enricher):
+                 sb.wait_for_ready_state_complete()
+                 sb.sleep(1)  # margin for the page to load completely
+
+-                to_enrich.set_title(sb.get_title())
++                page_title = sb.get_title()
++                html_source = sb.get_page_source()
++
++                # Check if the page indicates content was deleted
++                deletion_info = detect_deletion(
++                    html_content=html_source,
++                    page_title=page_title,
++                    url=url
++                )
++                if deletion_info:
++                    flag_as_deleted(to_enrich, deletion_info)
++
++                to_enrich.set_title(page_title)
+                 self._enrich_html_source_code(sb, to_enrich)
+
+                 self._enrich_full_page_screenshot(sb, to_enrich)
+--- a/src/auto_archiver/modules/generic_extractor/generic_extractor.py
++++ b/src/auto_archiver/modules/generic_extractor/generic_extractor.py
+@@ -19,6 +19,7 @@ from auto_archiver.utils.custom_logger import logger
+
+ from auto_archiver.core.extractor import Extractor
+ from auto_archiver.core import Metadata, Media
+ from auto_archiver.utils import get_datetime_from_str
+ from auto_archiver.utils.misc import ydl_entry_to_filename
++from auto_archiver.utils.deletion_detection import detect_deletion, flag_as_deleted
+ from .dropin import GenericDropin
+
+
+@@ -481,6 +482,15 @@ class GenericExtractor(Extractor):
+                 raise SkipYtdlp()
+
+             # don't download since it can be a live stream
+             data = ydl.extract_info(url, ie_key=info_extractor.ie_key(), download=False)
++
++            # Check for deletion indicators in video data
++            deletion_info = detect_deletion(
++                video_data=data,
++                url=url
++            )
++            if deletion_info:
++                result = Metadata()
++                flag_as_deleted(result, deletion_info)
++                return result
+
+             result = _helper_for_successful_extract_info(data, info_extractor, url, ydl)
+
+@@ -505,6 +515,12 @@ class GenericExtractor(Extractor):
+             try:
+                 result = self.get_metadata_for_post(info_extractor, url, ydl)
+             except (yt_dlp.utils.DownloadError, yt_dlp.utils.ExtractorError) as post_e:
++                # Check if the error indicates deletion
++                deletion_info = detect_deletion(error_message=str(post_e), url=url)
++                if deletion_info:
++                    result = Metadata()
++                    flag_as_deleted(result, deletion_info)
++                    return result
++
+                 if "NSFW tweet requires authentication." in str(post_e):
+                     logger.warning(str(post_e))
+                     return False
+--- a/src/auto_archiver/modules/generic_extractor/twitter.py
++++ b/src/auto_archiver/modules/generic_extractor/twitter.py
+@@ -7,6 +7,7 @@ from slugify import slugify
+
+ from auto_archiver.core.metadata import Metadata, Media
+ from auto_archiver.utils import url as UrlUtil, get_datetime_from_str
+ from auto_archiver.core.extractor import Extractor
++from auto_archiver.utils.deletion_detection import detect_deletion, flag_as_deleted
+ from auto_archiver.modules.generic_extractor.dropin import GenericDropin, InfoExtractor
+
+
+@@ -36,9 +37,18 @@ class Twitter(GenericDropin):
+     def create_metadata(self, tweet: dict, ie_instance: InfoExtractor, archiver: Extractor, url: str) -> Metadata:
+         result = Metadata()
+         try:
+             if not tweet.get("user") or not tweet.get("created_at"):
+-                raise ValueError("Error retreiving post. Are you sure it exists?")
++                # Check for deletion indicators
++                deletion_info = detect_deletion(
++                    video_data=tweet,
++                    url=url,
++                    error_message="Missing user or created_at fields"
++                )
++                if deletion_info:
++                    flag_as_deleted(result, deletion_info)
++                    return result
++
++                raise ValueError("Error retrieving post. Are you sure it exists?")
+             timestamp = get_datetime_from_str(tweet["created_at"], "%a %b %d %H:%M:%S %z %Y")
+         except (ValueError, KeyError) as ex:
+             logger.warning(f"Unable to parse tweet: {str(ex)}\nRetreived tweet data: {tweet}")
