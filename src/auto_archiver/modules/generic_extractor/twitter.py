@@ -40,9 +40,7 @@ class Twitter(GenericDropin):
             if not tweet.get("user") or not tweet.get("created_at"):
                 # Check for deletion indicators
                 deletion_info = detect_deletion(
-                    video_data=tweet,
-                    url=url,
-                    error_message="Missing user or created_at fields"
+                    video_data=tweet, url=url, error_message="Missing user or created_at fields"
                 )
                 if deletion_info:
                     flag_as_deleted(result, deletion_info)

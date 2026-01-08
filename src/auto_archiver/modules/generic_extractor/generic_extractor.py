@@ -486,10 +486,7 @@ class GenericExtractor(Extractor):
             data = ydl.extract_info(url, ie_key=info_extractor.ie_key(), download=False)
 
             # Check for deletion indicators in video data
-            deletion_info = detect_deletion(
-                video_data=data,
-                url=url
-            )
+            deletion_info = detect_deletion(video_data=data, url=url)
             if deletion_info:
                 result = Metadata()
                 flag_as_deleted(result, deletion_info)

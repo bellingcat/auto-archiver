@@ -102,11 +102,7 @@ class AntibotExtractorEnricher(Extractor, Enricher):
                     # Check for deletion indicators
                     page_title = sb.get_title()
                     html_source = sb.get_page_source()
-                    deletion_info = detect_deletion(
-                        html_content=html_source,
-                        page_title=page_title,
-                        url=url
-                    )
+                    deletion_info = detect_deletion(html_content=html_source, page_title=page_title, url=url)
                     if deletion_info:
                         flag_as_deleted(to_enrich, deletion_info)
                         return to_enrich
@@ -124,11 +120,7 @@ class AntibotExtractorEnricher(Extractor, Enricher):
                 html_source = sb.get_page_source()
 
                 # Check if the page indicates content was deleted
-                deletion_info = detect_deletion(
-                    html_content=html_source,
-                    page_title=page_title,
-                    url=url
-                )
+                deletion_info = detect_deletion(html_content=html_source, page_title=page_title, url=url)
                 if deletion_info:
                     flag_as_deleted(to_enrich, deletion_info)
 
