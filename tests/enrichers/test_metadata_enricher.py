@@ -119,7 +119,7 @@ def test_metadata_specify_datetime_and_metapixels(enricher, unpickle, mocker):
     mock_run.return_value = unpickle("metadata_enricher_exif.pickle")
     metadata = unpickle("metadata_enricher_ytshort_input.pickle")
 
-    enricher.look_for_keys = ["datetime", "megapixels"]
+    enricher.look_for_keys = ["datetime", "megapixels", "image height"]
     enricher.enrich(metadata)
     actual_media = metadata.media
 
@@ -128,4 +128,5 @@ def test_metadata_specify_datetime_and_metapixels(enricher, unpickle, mocker):
         "File Access Date/Time": "2025:02:18 19:42:50+00:00",
         "File Inode Change Date/Time": "2025:02:18 19:42:50+00:00",
         "Megapixels": "0.922",
+        "Image Height": "720",
     }
