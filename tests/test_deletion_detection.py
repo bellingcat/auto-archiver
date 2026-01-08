@@ -1,17 +1,12 @@
 """
 Tests for deletion detection utilities.
 
-These tests verify that the auto-archiver can detect when content
-has been deleted or is unavailable across various platforms.
-Critical for evidence preservation in conflict documentation.
+These tests verify the current best-effort by the auto-archiver
+to detect when content has been deleted or is unavailable across
+various platforms.
 """
 
-import pytest
-from auto_archiver.utils.deletion_detection import (
-    detect_deletion,
-    flag_as_deleted,
-    DeletionIndicators
-)
+from auto_archiver.utils.deletion_detection import detect_deletion, flag_as_deleted, DeletionIndicators
 from auto_archiver.core.metadata import Metadata
 
 
@@ -74,10 +69,7 @@ class TestDetectDeletion:
 
     def test_detect_deletion_in_video_metadata(self):
         """Test detection via yt-dlp video metadata."""
-        video_data = {
-            "availability": "unavailable",
-            "title": "Private video"
-        }
+        video_data = {"availability": "unavailable", "title": "Private video"}
         url = "https://youtube.com/watch?v=test123"
 
         result = detect_deletion(video_data=video_data, url=url)
@@ -93,11 +85,7 @@ class TestDetectDeletion:
         title = "My Normal Page"
         url = "https://example.com/page"
 
-        result = detect_deletion(
-            html_content=html,
-            page_title=title,
-            url=url
-        )
+        result = detect_deletion(html_content=html, page_title=title, url=url)
 
         assert result is None
 
@@ -133,7 +121,7 @@ class TestFlagAsDeleted:
             "is_deleted": True,
             "indicator": "This Tweet is unavailable",
             "source": "html_content",
-            "platform": "twitter"
+            "platform": "twitter",
         }
 
         flag_as_deleted(metadata, deletion_info)
@@ -151,19 +139,9 @@ class TestFlagAsDeleted:
             "is_deleted": True,
             "indicator": "Video has been removed by the uploader",
             "source": "error_message",
-            "platform": "youtube"
+            "platform": "youtube",
         }
 
         flag_as_deleted(metadata, deletion_info)
-
-        # This metadata can now be stored so investigators know:
-        # - The content existed but was deleted
-        # - Exactly what message indicated deletion
-        # - Which platform it was from
-        # - When it was checked (via _processed_at)
         assert "deletion_indicator" in metadata.metadata
         assert "uploader" in metadata.get("deletion_indicator")
-
-
-if __name__ == "__main__":
-    pytest.main([__file__, "-v"])

@@ -1,28 +1,23 @@
 """
 Deletion Detection Utilities
 
-Provides comprehensive detection of deleted, missing, or unavailable content
-across various social media platforms. Critical for evidence preservation in
-conflict documentation and human rights investigations.
+Provides a best-effort detection of deleted, missing, or unavailable content
+across various social media platforms based on presence of expected keywords.
 
-This module helps investigators identify when content has been removed,
-allowing them to:
-- Document that evidence existed but was deleted
+This module helps identify removed content, helps to:
+- Document content that existed but was deleted
 - Track patterns of content removal
 - Preserve metadata about missing content
 """
 
 from typing import Optional, Dict, List
 from auto_archiver.utils.custom_logger import logger
+from urllib.parse import urlparse
 
 
 class DeletionIndicators:
     """
-    Platform-specific indicators that content has been deleted or is unavailable.
-
-    Covers multiple platforms including Twitter/X, Facebook, Instagram, TikTok,
-    YouTube, Reddit, and VK. Used by conflict investigators to detect when
-    evidence has been removed.
+    Platform-specific indicators that content has been deleted or is unavailable, alongside generic indicators.
     """
 
     # Twitter/X deletion indicators
@@ -104,10 +99,6 @@ class DeletionIndicators:
 
     # Generic indicators (work across platforms)
     GENERIC = [
-        "404",
-        "not found",
-        "unavailable",
-        "doesn't exist",
         "has been removed",
         "no longer available",
         "content removed",
@@ -119,33 +110,33 @@ class DeletionIndicators:
     def all_indicators(cls) -> List[str]:
         """Returns all deletion indicators from all platforms."""
         return (
-            cls.TWITTER + cls.FACEBOOK + cls.INSTAGRAM + cls.TIKTOK +
-            cls.YOUTUBE + cls.REDDIT + cls.VK + cls.TELEGRAM + cls.GENERIC
+            cls.TWITTER
+            + cls.FACEBOOK
+            + cls.INSTAGRAM
+            + cls.TIKTOK
+            + cls.YOUTUBE
+            + cls.REDDIT
+            + cls.VK
+            + cls.TELEGRAM
+            + cls.GENERIC
         )
 
     @classmethod
     def for_url(cls, url: str) -> List[str]:
         """Returns platform-specific indicators based on URL domain."""
-        url_lower = url.lower()
+        platform = _extract_platform(url)
 
-        if "twitter.com" in url_lower or "x.com" in url_lower:
-            return cls.TWITTER + cls.GENERIC
-        elif "facebook.com" in url_lower or "fb.com" in url_lower:
-            return cls.FACEBOOK + cls.GENERIC
-        elif "instagram.com" in url_lower:
-            return cls.INSTAGRAM + cls.GENERIC
-        elif "tiktok.com" in url_lower:
-            return cls.TIKTOK + cls.GENERIC
-        elif "youtube.com" in url_lower or "youtu.be" in url_lower:
-            return cls.YOUTUBE + cls.GENERIC
-        elif "reddit.com" in url_lower:
-            return cls.REDDIT + cls.GENERIC
-        elif "vk.com" in url_lower:
-            return cls.VK + cls.GENERIC
-        elif "t.me" in url_lower:
-            return cls.TELEGRAM + cls.GENERIC
-        else:
-            return cls.GENERIC
+        indicators_map = {
+            "twitter": cls.TWITTER + cls.GENERIC,
+            "facebook": cls.FACEBOOK + cls.GENERIC,
+            "instagram": cls.INSTAGRAM + cls.GENERIC,
+            "tiktok": cls.TIKTOK + cls.GENERIC,
+            "youtube": cls.YOUTUBE + cls.GENERIC,
+            "reddit": cls.REDDIT + cls.GENERIC,
+            "vk": cls.VK + cls.GENERIC,
+            "telegram": cls.TELEGRAM + cls.GENERIC,
+        }
+        return indicators_map.get(platform, cls.GENERIC)
 
 
 def detect_deletion(
@@ -153,10 +144,10 @@ def detect_deletion(
     page_title: str = None,
     error_message: str = None,
     url: str = None,
-    video_data: dict = None
+    video_data: dict = None,
 ) -> Optional[Dict[str, any]]:
     """
-    Comprehensive deletion detection across multiple signals.
+    Best-effort deletion detection across multiple signals.
 
     Checks HTML content, page titles, error messages, and video metadata for
     indicators that content has been deleted or is unavailable.
@@ -191,36 +182,21 @@ def detect_deletion(
         for indicator in indicators:
             if indicator.lower() in html_content.lower():
                 logger.info(f"Deletion detected in HTML: '{indicator}' found for {url}")
-                return {
-                    "is_deleted": True,
-                    "indicator": indicator,
-                    "source": "html_content",
-                    "platform": platform
-                }
+                return {"is_deleted": True, "indicator": indicator, "source": "html_content", "platform": platform}
 
     # Check page title
     if page_title:
         for indicator in indicators:
             if indicator.lower() in page_title.lower():
                 logger.info(f"Deletion detected in page title: '{indicator}' found for {url}")
-                return {
-                    "is_deleted": True,
-                    "indicator": indicator,
-                    "source": "page_title",
-                    "platform": platform
-                }
+                return {"is_deleted": True, "indicator": indicator, "source": "page_title", "platform": platform}
 
     # Check error messages
     if error_message:
         for indicator in indicators:
             if indicator.lower() in str(error_message).lower():
                 logger.info(f"Deletion detected in error: '{indicator}' found for {url}")
-                return {
-                    "is_deleted": True,
-                    "indicator": indicator,
-                    "source": "error_message",
-                    "platform": platform
-                }
+                return {"is_deleted": True, "indicator": indicator, "source": "error_message", "platform": platform}
 
     # Check video metadata (from yt-dlp)
     if video_data:
@@ -231,7 +207,7 @@ def detect_deletion(
                 "is_deleted": True,
                 "indicator": f"availability: {video_data.get('availability')}",
                 "source": "video_metadata",
-                "platform": platform
+                "platform": platform,
             }
 
         # Check description/title for deletion indicators
@@ -244,7 +220,7 @@ def detect_deletion(
                             "is_deleted": True,
                             "indicator": indicator,
                             "source": f"video_metadata_{key}",
-                            "platform": platform
+                            "platform": platform,
                         }
 
     return None
@@ -252,34 +228,32 @@ def detect_deletion(
 
 def _extract_platform(url: str) -> str:
     """Extracts platform name from URL."""
-    url_lower = url.lower()
+    parsed = urlparse(url)
+    domain = parsed.netloc
 
-    if "twitter.com" in url_lower or "x.com" in url_lower:
+    if "twitter.com" in domain or "x.com" in domain:
         return "twitter"
-    elif "facebook.com" in url_lower or "fb.com" in url_lower:
+    elif "facebook.com" in domain or "fb.com" in domain:
         return "facebook"
-    elif "instagram.com" in url_lower:
+    elif "instagram.com" in domain:
         return "instagram"
-    elif "tiktok.com" in url_lower:
+    elif "tiktok.com" in domain:
         return "tiktok"
-    elif "youtube.com" in url_lower or "youtu.be" in url_lower:
+    elif "youtube.com" in domain or "youtu.be" in domain:
         return "youtube"
-    elif "reddit.com" in url_lower:
+    elif "reddit.com" in domain:
         return "reddit"
-    elif "vk.com" in url_lower:
+    elif "vk.com" in domain:
         return "vk"
-    elif "t.me" in url_lower:
+    elif "t.me" in domain:
         return "telegram"
-    else:
-        return "unknown"
+    return "unknown"
 
 
 def flag_as_deleted(metadata, deletion_info: Dict[str, any]) -> None:
     """
     Flags metadata object as deleted/unavailable.
-
-    Adds detailed deletion information to the metadata object so investigators
-    know exactly why and how the deletion was detected.
+    Adds tentative deletion information to the metadata object.
 
     Args:
         metadata: Metadata object to update
@@ -291,7 +265,7 @@ def flag_as_deleted(metadata, deletion_info: Dict[str, any]) -> None:
     metadata.set("deletion_platform", deletion_info.get("platform"))
     metadata.status = "deleted_or_unavailable"
 
-    logger.warning(
+    logger.debug(
         f"Content marked as deleted/unavailable: "
         f"platform={deletion_info.get('platform')}, "
         f"indicator='{deletion_info.get('indicator')}', "
