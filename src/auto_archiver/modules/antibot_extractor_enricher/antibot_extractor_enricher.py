@@ -16,6 +16,7 @@ from auto_archiver.modules.antibot_extractor_enricher.dropin import Dropin
 from auto_archiver.modules.antibot_extractor_enricher.dropins.default import DefaultDropin
 from auto_archiver.utils.misc import random_str
 from auto_archiver.utils.url import is_relevant_url
+from auto_archiver.utils.deletion_detection import detect_deletion, flag_as_deleted
 
 
 class AntibotExtractorEnricher(Extractor, Enricher):
@@ -98,8 +99,14 @@ class AntibotExtractorEnricher(Extractor, Enricher):
 
                 dropin = self._get_suitable_dropin(url, sb)
                 if not dropin.open_page(url):
-                    # TODO: could we detect deleted videos?
-                    logger.warning("Failed to open drop-in page")
+                    # Check for deletion indicators
+                    page_title = sb.get_title()
+                    html_source = sb.get_page_source()
+                    deletion_info = detect_deletion(html_content=html_source, page_title=page_title, url=url)
+                    if deletion_info:
+                        flag_as_deleted(to_enrich, deletion_info)
+                        return to_enrich
+                    logger.warning("Failed to open drop-in page (not detected as deleted)")
                     return False
 
                 if self.detect_auth_wall and (dropin.hit_auth_wall() and self._hit_auth_wall(sb)):
@@ -109,7 +116,15 @@ class AntibotExtractorEnricher(Extractor, Enricher):
                 sb.wait_for_ready_state_complete()
                 sb.sleep(1)  # margin for the page to load completely
 
-                to_enrich.set_title(sb.get_title())
+                page_title = sb.get_title()
+                html_source = sb.get_page_source()
+
+                # Check if the page indicates content was deleted
+                deletion_info = detect_deletion(html_content=html_source, page_title=page_title, url=url)
+                if deletion_info:
+                    flag_as_deleted(to_enrich, deletion_info)
+
+                to_enrich.set_title(page_title)
                 self._enrich_html_source_code(sb, to_enrich)
 
                 self._enrich_full_page_screenshot(sb, to_enrich)

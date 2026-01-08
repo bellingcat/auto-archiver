@@ -7,6 +7,7 @@ from slugify import slugify
 from auto_archiver.core.metadata import Metadata, Media
 from auto_archiver.utils import url as UrlUtil, get_datetime_from_str
 from auto_archiver.core.extractor import Extractor
+from auto_archiver.utils.deletion_detection import detect_deletion, flag_as_deleted
 from auto_archiver.modules.generic_extractor.dropin import GenericDropin, InfoExtractor
 
 
@@ -37,7 +38,15 @@ class Twitter(GenericDropin):
         result = Metadata()
         try:
             if not tweet.get("user") or not tweet.get("created_at"):
-                raise ValueError("Error retreiving post. Are you sure it exists?")
+                # Check for deletion indicators
+                deletion_info = detect_deletion(
+                    video_data=tweet, url=url, error_message="Missing user or created_at fields"
+                )
+                if deletion_info:
+                    flag_as_deleted(result, deletion_info)
+                    return result
+
+                raise ValueError("Error retrieving post. Are you sure it exists?")
             timestamp = get_datetime_from_str(tweet["created_at"], "%a %b %d %H:%M:%S %z %Y")
         except (ValueError, KeyError) as ex:
             logger.warning(f"Unable to parse tweet: {str(ex)}\nRetreived tweet data: {tweet}")

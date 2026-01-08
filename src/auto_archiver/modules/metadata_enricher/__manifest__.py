@@ -3,6 +3,13 @@
     "type": ["enricher"],
     "requires_setup": True,
     "dependencies": {"python": ["loguru"], "bin": ["exiftool"]},
+    "configs": {
+        "look_for_keys": {
+            "default": [],
+            "help": "list of lowercased metadata keys that will be included in the enriched metadata. Special keys: 'author', 'datetimes', 'location' to include related metadata fields. The default empty list `[]` means all metadata will be included.",
+            "type": "list",
+        },
+    },
     "description": """
     Extracts metadata information from files using ExifTool.
 

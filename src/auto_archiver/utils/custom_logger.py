@@ -2,6 +2,13 @@ from loguru import logger
 import json
 
 
+def type_serializer(obj):
+    """Fallback function for objects json can't handle."""
+    if isinstance(obj, type):
+        return obj.__name__
+    return str(obj)
+
+
 def extract_location(record, short=False):
     """Extracts the file name, function name, and line number from the log record."""
     if short:
@@ -35,11 +42,11 @@ def serialize_for_console(record):
     subset.pop("time", None)
     if not subset:
         return ""
-    return json.dumps(subset, ensure_ascii=False)
+    return json.dumps(subset, ensure_ascii=False, default=type_serializer)
 
 
 def serialize(record):
-    return json.dumps(extract_log_data(record), ensure_ascii=False)
+    return json.dumps(extract_log_data(record), ensure_ascii=False, default=type_serializer)
 
 
 def patching(record):
