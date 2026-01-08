@@ -274,14 +274,6 @@ Here's how that would look: \n\nsteps:\n  extractors:\n  - [your_extractor_name_
             default=False,
         )
 
-        parser.add_argument(
-            "--metadata",
-            dest="requested_metadata",
-            help="An array of specific metadata fields to select from the collected content.",
-            default=[],
-            nargs="?",
-        )
-
     def add_individual_module_args(
         self, modules: list[LazyBaseModule] = None, parser: argparse.ArgumentParser = None
     ) -> None:

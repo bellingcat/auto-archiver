@@ -49,7 +49,7 @@ def test_enrich_sets_metadata(enricher, mocker):
     metadata.media = [media1, media2]
     enricher.get_metadata = lambda f: {"key": "value"} if f == "img1.jpg" else {}
 
-    enricher.enrich(metadata, ["key"])
+    enricher.enrich(metadata)
 
     media1.set.assert_called_once_with("metadata", {"key": "value"})
     media2.set.assert_not_called()
@@ -62,6 +62,7 @@ def test_enrich_no_metadata_selection(enricher, mocker):
     metadata = mocker.Mock()
     metadata.media = [media1, media2]
     enricher.get_metadata = lambda f: {"key": "value"} if f == "img1.jpg" else {}
+    enricher.look_for_keys = ["no-key"]
     enricher.enrich(metadata)
     media1.set.assert_called_once_with("metadata", {})
     media2.set.assert_not_called()
@@ -106,7 +107,8 @@ def test_metadata_pickle_megapixel(enricher, unpickle, mocker):
     mock_run.return_value = unpickle("metadata_enricher_exif.pickle")
     metadata = unpickle("metadata_enricher_ytshort_input.pickle")
 
-    enricher.enrich(metadata, ["megapixels"])
+    enricher.look_for_keys = ["megapixels"]
+    enricher.enrich(metadata)
     actual_media = metadata.media
 
     assert actual_media[0].properties.get("metadata") == {"Megapixels": "0.922"}
@@ -116,9 +118,9 @@ def test_metadata_specify_datetime_and_metapixels(enricher, unpickle, mocker):
     mock_run = mocker.patch("subprocess.run")
     mock_run.return_value = unpickle("metadata_enricher_exif.pickle")
     metadata = unpickle("metadata_enricher_ytshort_input.pickle")
-    # expected_md = {"Metapixels":"0.922", "File Inode Change Date/Time":"2025:02:18 19:42:50+00:00"}
 
-    enricher.enrich(metadata, ["datetime", "megapixels"])
+    enricher.look_for_keys = ["datetime", "megapixels"]
+    enricher.enrich(metadata)
     actual_media = metadata.media
 
     assert actual_media[0].properties.get("metadata") == {

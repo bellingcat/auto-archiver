@@ -11,15 +11,14 @@ class MetadataEnricher(Enricher):
     Extracts metadata information from files using exiftool.
     """
 
-    def enrich(self, to_enrich: Metadata, md_grocery_list=["author", "datetimes", "location"]) -> None:
+    def enrich(self, to_enrich: Metadata) -> None:
         logger.debug("Extracting EXIF metadata")
 
         for i, m in enumerate(to_enrich.media):
             if len(md := self.get_metadata(m.filename)):
-                # feature flag has this currently turned on
-                specified_md = self.select_metadata(md, md_grocery_list)
-                to_enrich.media[i].set("metadata", specified_md)
-                # to_enrich.media[i].set("metadata", md)
+                if self.look_for_keys != []:
+                    md = self.select_metadata(md, self.look_for_keys)
+                to_enrich.media[i].set("metadata", md)
 
     def get_metadata(self, filename: str) -> dict:
         try:
@@ -38,7 +37,7 @@ class MetadataEnricher(Enricher):
             logger.error(f"Error occurred: {e}: {traceback.format_exc()}")
         return {}
 
-    def select_metadata(self, all_md, md_grocery_list):
+    def select_metadata(self, all_md, requested_metadata_keys):
         """
         coordinates the selection of metadata from the general exiftool output to the user-specified grocery list
         """
@@ -51,19 +50,19 @@ class MetadataEnricher(Enricher):
         for md_key in all_md.keys():
             md_key_lower = md_key.lower()
             # checking for special baskets within the grocery list of requested metadata
-            if ("author" in md_grocery_list) and any(
+            if ("author" in requested_metadata_keys) and any(
                 term in md_key_lower and len(all_md[md_key]) for term in author_key_terms
             ):
                 specified_md[md_key] = all_md[md_key]
-            if ("datetime" in md_grocery_list) and any(
+            if ("datetime" in requested_metadata_keys) and any(
                 term in md_key_lower and len(all_md[md_key]) for term in datetime_key_terms
             ):
                 specified_md[md_key] = all_md[md_key]
-            if ("location" in md_grocery_list) and any(
+            if ("location" in requested_metadata_keys) and any(
                 term in md_key_lower and len(all_md[md_key]) for term in location_key_terms
             ):
                 specified_md[md_key] = all_md[md_key]
             # if the metadata value is requested directly
-            if md_key_lower in md_grocery_list or md_key in md_grocery_list and len(all_md[md_key]):
+            if md_key_lower in requested_metadata_keys or md_key in requested_metadata_keys and len(all_md[md_key]):
                 specified_md[md_key] = all_md[md_key]
         return specified_md
