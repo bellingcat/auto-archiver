@@ -60,7 +60,7 @@ class TestAntibotExtractorEnricher(TestExtractorBase):
                 "https://en.wikipedia.org/wiki/Western_barn_owl",
                 "western barn owl",
                 "Tyto alba",
-                4,
+                5,
                 0,
                 False,
             ),
