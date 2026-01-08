@@ -50,7 +50,7 @@ Note not all warnings can be fixed automatically.
 
 Most fixes are safe, but some non-standard practices such as dynamic loading are not picked up by linters. Ensure you check any modifications by this before committing them.
 ```shell
-make ruff-fix
+make ruff-clean
 ```
 
 **Changing Configurations ⚙️**

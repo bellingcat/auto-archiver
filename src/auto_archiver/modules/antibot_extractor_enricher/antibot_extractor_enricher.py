@@ -97,7 +97,10 @@ class AntibotExtractorEnricher(Extractor, Enricher):
                 sb.uc_gui_click_rc()  # NB: using handle instead of click breaks some sites like reddit, for now we separate here but can have dropins deciding this in the future
 
                 dropin = self._get_suitable_dropin(url, sb)
-                dropin.open_page(url)
+                if not dropin.open_page(url):
+                    # TODO: could we detect deleted videos?
+                    logger.warning("Failed to open drop-in page")
+                    return False
 
                 if self.detect_auth_wall and (dropin.hit_auth_wall() and self._hit_auth_wall(sb)):
                     logger.warning("Skipping since auth wall or CAPTCHA was detected")

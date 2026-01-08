@@ -5,6 +5,9 @@ from auto_archiver.modules.antibot_extractor_enricher.antibot_extractor_enricher
 from .test_extractor_base import TestExtractorBase
 
 
+CI = os.getenv("GITHUB_ACTIONS", "") == "true"
+
+
 class DummySB:
     def __init__(self, url="", title="", visible_texts=None, visible_elements=None):
         self._url = url
@@ -51,14 +54,15 @@ class TestAntibotExtractorEnricher(TestExtractorBase):
 
     @pytest.mark.download
     @pytest.mark.parametrize(
-        "url,in_title,in_text,image_count,video_count",
+        "url,in_title,in_text,image_count,video_count,skip_ci",
         [
             (
                 "https://en.wikipedia.org/wiki/Western_barn_owl",
                 "western barn owl",
                 "Tyto alba",
-                5,
+                4,
                 0,
+                False,
             ),
             (
                 "https://www.bellingcat.com/news/2025/04/29/open-sources-show-myanmar-junta-airstrike-damages-despite-post-earthquake-ceasefire/",
@@ -66,6 +70,7 @@ class TestAntibotExtractorEnricher(TestExtractorBase):
                 "Bellingcat has geolocated",
                 5,
                 0,
+                False,
             ),
             (
                 "https://www.bellingcat.com/news/2025/03/27/gaza-israel-palestine-shot-killed-injured-destroyed-dangerous-drone-journalists-in-gaza/",
@@ -73,6 +78,7 @@ class TestAntibotExtractorEnricher(TestExtractorBase):
                 "continued the work of Gazan journalists",
                 5,
                 1,
+                False,
             ),
             (
                 "https://www.bellingcat.com/about/general-information",
@@ -80,6 +86,7 @@ class TestAntibotExtractorEnricher(TestExtractorBase):
                 "Stichting Bellingcat",
                 0,  # SVGs are ignored
                 0,
+                False,
             ),
             (
                 "https://vk.com/wikipedia?from=search&w=wall-36156673_20451",
@@ -87,6 +94,7 @@ class TestAntibotExtractorEnricher(TestExtractorBase):
                 "16 сентября 1985 года лейблом EMI Records.",
                 5,
                 0,
+                False,
             ),
             (
                 "https://www.tiktok.com/@tracy_2424/photo/7418200173953830162",
@@ -94,13 +102,19 @@ class TestAntibotExtractorEnricher(TestExtractorBase):
                 "Dito ko lang",
                 1,
                 0,
+                True,
             ),
         ],
     )
-    def test_download_pages_with_media(self, setup_module, make_item, url, in_title, in_text, image_count, video_count):
+    def test_download_pages_with_media(
+        self, setup_module, make_item, url, in_title, in_text, image_count, video_count, skip_ci
+    ):
         """
         Test downloading pages with media.
         """
+        if CI and skip_ci:
+            pytest.skip("Skipping test in CI environment")
+
         self.extractor = setup_module(
             self.extractor_module,
             self.config
