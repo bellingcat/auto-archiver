@@ -355,7 +355,7 @@ class GenericExtractor(Extractor):
         if not dropin:
             # TODO: add a proper link to 'how to create your own dropin'
             logger.debug(f"""Could not find valid dropin for {info_extractor.ie_key()}.
-                     Why not try creating your own, and make sure it has a valid function called 'create_metadata'. Learn more: https://auto-archiver.readthedocs.io/en/latest/user_guidelines.html#""")
+                     Why not try creating your own, and make sure it has a valid function called 'create_metadata'. Learn more: https://auto-archiver.readthedocs.io/en/latest/modules/autogen/extractor/generic_extractor.html#dropins""")
             return False
 
         post_data = dropin.extract_post(url, ie_instance)
