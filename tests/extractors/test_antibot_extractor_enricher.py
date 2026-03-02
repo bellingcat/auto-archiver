@@ -53,6 +53,7 @@ class TestAntibotExtractorEnricher(TestExtractorBase):
     }
 
     @pytest.mark.download
+    @pytest.mark.flaky(reruns=2, reruns_delay=5)
     @pytest.mark.parametrize(
         "url,in_title,in_text,image_count,video_count,skip_ci",
         [
@@ -128,6 +129,7 @@ class TestAntibotExtractorEnricher(TestExtractorBase):
         item = make_item(url)
         result = self.extractor.download(item)
 
+        assert result, f"download() returned {result!r} — Selenium may have failed (e.g., window close timeout)"
         assert result.status == "antibot", "Expected status to be 'antibot'"
 
         # Check title contains all required words (case-insensitive)
