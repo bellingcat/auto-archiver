@@ -73,6 +73,7 @@ class AntibotExtractorEnricher(Extractor, Enricher):
         if self.enrich(result):
             result.status = "antibot"
             return result
+        return False
 
     def _prepare_user_data_dir(self):
         if self.user_data_dir:

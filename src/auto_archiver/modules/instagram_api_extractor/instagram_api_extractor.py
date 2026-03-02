@@ -99,7 +99,10 @@ class InstagramAPIExtractor(Extractor):
         result.set_title(user.get("full_name", username)).set("data", user)
         if pic_url := user.get("profile_pic_url_hd", user.get("profile_pic_url")):
             filename = self.download_from_url(pic_url)
-            result.add_media(Media(filename=filename), id="profile_picture")
+            if filename:
+                result.add_media(Media(filename=filename), id="profile_picture")
+            else:
+                logger.warning(f"Failed to download profile picture from {pic_url}")
 
         count_posts = 0
         if self.full_profile:
@@ -202,7 +205,10 @@ class InstagramAPIExtractor(Extractor):
 
         if cover_media := h_info.get("cover_media", {}).get("cropped_image_version", {}).get("url"):
             filename = self.download_from_url(cover_media)
-            result.add_media(Media(filename=filename), id=f"cover_media highlight {id}")
+            if filename:
+                result.add_media(Media(filename=filename), id=f"cover_media highlight {id}")
+            else:
+                logger.warning(f"Failed to download cover media from {cover_media}")
 
         items = h_info.get("items", [])[::-1]  # newest to oldest
         items = items[: min(max_to_download, len(items))]
@@ -345,7 +351,10 @@ class InstagramAPIExtractor(Extractor):
         image_media = None
         if image_url := item.get("thumbnail_url"):
             filename = self.download_from_url(image_url, verbose=False)
-            image_media = Media(filename=filename)
+            if filename:
+                image_media = Media(filename=filename)
+            else:
+                logger.warning(f"Failed to download thumbnail from {image_url}")
 
         # retrieve video info
         best_id = item.get("id", item.get("pk"))
@@ -357,16 +366,19 @@ class InstagramAPIExtractor(Extractor):
 
         if video_url := item.get("video_url"):
             filename = self.download_from_url(video_url, verbose=False)
-            video_media = Media(filename=filename)
-            if taken_at:
-                video_media.set("date", taken_at)
-            if code:
-                video_media.set("url", f"https://www.instagram.com/p/{code}")
-            if caption_text:
-                video_media.set("text", caption_text)
-            video_media.set("preview", [image_media])
-            video_media.set("data", [item])
-            return item, video_media, f"{context or 'video'} {best_id}"
+            if filename:
+                video_media = Media(filename=filename)
+                if taken_at:
+                    video_media.set("date", taken_at)
+                if code:
+                    video_media.set("url", f"https://www.instagram.com/p/{code}")
+                if caption_text:
+                    video_media.set("text", caption_text)
+                video_media.set("preview", [image_media])
+                video_media.set("data", [item])
+                return item, video_media, f"{context or 'video'} {best_id}"
+            else:
+                logger.warning(f"Failed to download video from {video_url}")
         elif image_media:
             if taken_at:
                 image_media.set("date", taken_at)

@@ -1,6 +1,7 @@
 from typing import Type
 
 from auto_archiver.utils import traverse_obj
+from auto_archiver.utils.custom_logger import logger
 from auto_archiver.core.metadata import Metadata, Media
 from auto_archiver.core.extractor import Extractor
 from yt_dlp.extractor.common import InfoExtractor
@@ -58,6 +59,9 @@ class Truth(GenericDropin):
         # add the media
         for media in post.get("media_attachments", []):
             filename = archiver.download_from_url(media["url"])
+            if not filename:
+                logger.warning(f"Failed to download media from {media['url']}")
+                continue
             result.add_media(Media(filename), id=media.get("id"))
 
         return result
