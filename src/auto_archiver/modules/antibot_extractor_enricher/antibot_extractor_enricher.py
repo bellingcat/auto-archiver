@@ -88,8 +88,18 @@ class AntibotExtractorEnricher(Extractor, Enricher):
         using_user_data_dir = self.user_data_dir if custom_data_dir else None
         url = to_enrich.get_url()
 
+        # Use xvfb in Docker environments where no display is available
+        use_xvfb = bool(os.environ.get("RUNNING_IN_DOCKER"))
+
         try:
-            with SB(uc=True, agent=self.agent, headed=None, user_data_dir=using_user_data_dir, proxy=self.proxy) as sb:
+            with SB(
+                uc=True,
+                agent=self.agent,
+                headed=None,
+                user_data_dir=using_user_data_dir,
+                proxy=self.proxy,
+                xvfb=use_xvfb,
+            ) as sb:
                 logger.info(f"Selenium browser is up with agent {self.agent}, opening url...")
                 sb.uc_open_with_reconnect(url, 4)
 
