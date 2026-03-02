@@ -181,6 +181,9 @@ class Metadata:
         media_hashes = set()
         new_media = []
         for m in self.media:
+            if not m.filename:
+                new_media.append(m)
+                continue
             h = m.get("hash")
             if not h:
                 h = calculate_hash_in_chunks(hashlib.sha256(), int(1.6e7), m.filename)

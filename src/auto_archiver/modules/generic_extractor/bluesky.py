@@ -39,12 +39,18 @@ class Bluesky(GenericDropin):
         media_url = "https://bsky.social/xrpc/com.atproto.sync.getBlob?cid={}&did={}"
         for image_media in image_medias:
             url = media_url.format(image_media["image"]["ref"]["$link"], post["author"]["did"])
-            image_media = archiver.download_from_url(url)
-            media.append(Media(image_media))
+            filename = archiver.download_from_url(url)
+            if filename:
+                media.append(Media(filename))
+            else:
+                logger.warning(f"Failed to download Bluesky image from {url}")
         for video_media in video_medias:
             url = media_url.format(video_media["ref"]["$link"], post["author"]["did"])
-            video_media = archiver.download_from_url(url)
-            media.append(Media(video_media))
+            filename = archiver.download_from_url(url)
+            if filename:
+                media.append(Media(filename))
+            else:
+                logger.warning(f"Failed to download Bluesky video from {url}")
         return media
 
     def _get_post_data(self, post: dict) -> dict:

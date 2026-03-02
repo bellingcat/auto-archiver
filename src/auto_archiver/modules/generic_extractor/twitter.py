@@ -157,5 +157,8 @@ class Twitter(GenericDropin):
                 mimetype = variant["content_type"]
             ext = mimetypes.guess_extension(mimetype)
             media.filename = archiver.download_from_url(media.get("src"), f"{slugify(url)}_{i}{ext}")
+            if not media.filename:
+                logger.warning(f"Failed to download media from {media.get('src')}")
+                continue
             result.add_media(media)
         return result

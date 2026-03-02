@@ -25,6 +25,9 @@ class HashEnricher(Enricher):
         logger.debug(f"Calculating media hashes with algo={self.algorithm}")
 
         for i, m in enumerate(to_enrich.media):
+            if not m.filename:
+                logger.warning(f"Skipping hash for media without filename: {m}")
+                continue
             if len(hd := self.calculate_hash(m.filename)):
                 to_enrich.media[i].set("hash", f"{self.algorithm}:{hd}")
 

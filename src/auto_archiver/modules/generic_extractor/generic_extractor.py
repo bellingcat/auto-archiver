@@ -204,8 +204,11 @@ class GenericExtractor(Extractor):
         if thumbnail_url:
             try:
                 cover_image_path = self.download_from_url(thumbnail_url)
-                media = Media(cover_image_path)
-                metadata.add_media(media, id="cover")
+                if cover_image_path:
+                    media = Media(cover_image_path)
+                    metadata.add_media(media, id="cover")
+                else:
+                    logger.warning(f"Failed to download cover image from {thumbnail_url}")
             except Exception as e:
                 logger.error(f"Could not download cover image {thumbnail_url}: {e}")
 

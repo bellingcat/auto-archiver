@@ -49,10 +49,18 @@ class TelegramExtractor(Extractor):
             if not len(image_urls):
                 return False
             for img_url in image_urls:
-                result.add_media(Media(self.download_from_url(img_url)))
+                filename = self.download_from_url(img_url)
+                if not filename:
+                    logger.warning(f"Failed to download image from {img_url}")
+                    continue
+                result.add_media(Media(filename))
         else:
             video_url = video.get("src")
-            m_video = Media(self.download_from_url(video_url))
+            video_filename = self.download_from_url(video_url)
+            if not video_filename:
+                logger.warning(f"Failed to download video from {video_url}")
+                return False
+            m_video = Media(video_filename)
             # extract duration from HTML
             try:
                 duration = s.find_all("time")[0].contents[0]

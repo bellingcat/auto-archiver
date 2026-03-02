@@ -25,6 +25,9 @@ class MetaEnricher(Enricher):
         logger.debug(f"Calculating archive file sizes for {len(to_enrich.media)} media files")
         total_size = 0
         for media in to_enrich.get_all_media():
+            if not media.filename:
+                logger.warning(f"Skipping file size for media without filename: {media}")
+                continue
             file_stats = os.stat(media.filename)
             media.set("bytes", file_stats.st_size)
             media.set("size", self.human_readable_bytes(file_stats.st_size))
