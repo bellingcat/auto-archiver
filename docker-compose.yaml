@@ -6,6 +6,9 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: auto-archiver
+    # Override user to match host UID/GID and avoid permission issues on volumes.
+    # Set USER_ID and GROUP_ID env vars, or defaults to 1000:1000.
+    user: "${USER_ID:-1000}:${GROUP_ID:-1000}"
     volumes:
       - ./secrets:/app/secrets
       - ./local_archive:/app/local_archive
