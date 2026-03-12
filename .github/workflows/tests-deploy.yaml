@@ -1,0 +1,29 @@
+name: Deploy Tests
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - deploy/**
+  pull_request:
+    paths:
+      - deploy/**
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install pytest fastapi httpx python-multipart pyyaml
+
+      - name: Run Deploy Tests
+        working-directory: deploy
+        run: python -m pytest tests/ -v
