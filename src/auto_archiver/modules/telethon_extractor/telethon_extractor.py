@@ -1,3 +1,4 @@
+import asyncio
 import os
 import shutil
 import re
@@ -52,6 +53,16 @@ class TelethonExtractor(Extractor):
         )
         logger.debug(f"Making a copy of the session file {base_session_filepath} to {self.session_file}.session")
         shutil.copy(base_session_filepath, f"{self.session_file}.session")
+
+        # ensure a running event loop exists (Needed when used by Celery workers which may close the default one)
+        try:
+            loop = asyncio.get_event_loop()
+            if loop.is_closed():
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
 
         # initiate the client
         self.client = TelegramClient(self.session_file, self.api_id, self.api_hash)
