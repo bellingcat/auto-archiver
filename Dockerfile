@@ -1,4 +1,4 @@
-FROM webrecorder/browsertrix-crawler:1.11.4 AS base
+FROM webrecorder/browsertrix-crawler:1.12.4 AS base
 
 ENV RUNNING_IN_DOCKER=1 \
     LANG=C.UTF-8 \
@@ -12,7 +12,7 @@ ARG TARGETARCH
 
 # Installing system dependencies
 RUN	apt-get update && \
-    apt-get install -y --no-install-recommends gcc ffmpeg fonts-noto exiftool python3-tk 
+    apt-get install -y --no-install-recommends gcc ffmpeg fonts-noto exiftool python3-tk curl unzip 
 
 # Poetry and runtime
 FROM base AS runtime
@@ -26,6 +26,9 @@ ENV POETRY_NO_INTERACTION=1 \
 RUN python3 -m venv /poetry-venv && \
     /poetry-venv/bin/python -m pip install --upgrade pip && \
     /poetry-venv/bin/python -m pip install "poetry>=2.0.0,<3.0.0"
+
+# Add Deno for solving YT JS challenges
+RUN curl -fsSL https://deno.land/install.sh | DENO_INSTALL=/usr sh
 
 WORKDIR /app
 
