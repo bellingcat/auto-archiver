@@ -4,8 +4,7 @@ ENV RUNNING_IN_DOCKER=1 \
     LANG=C.UTF-8 \
     LC_ALL=C.UTF-8 \
     PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONFAULTHANDLER=1 \
-    PATH="/root/.local/bin:$PATH"
+    PYTHONFAULTHANDLER=1
 
 
 ARG TARGETARCH
@@ -26,9 +25,6 @@ ENV POETRY_NO_INTERACTION=1 \
 RUN python3 -m venv /poetry-venv && \
     /poetry-venv/bin/python -m pip install --upgrade pip && \
     /poetry-venv/bin/python -m pip install "poetry>=2.0.0,<3.0.0"
-
-# Add Deno for solving YT JS challenges
-RUN curl -fsSL https://deno.land/install.sh | DENO_INSTALL=/usr sh
 
 WORKDIR /app
 
