@@ -11,6 +11,7 @@ Key Functionalities:
 
 from __future__ import annotations
 import hashlib
+import os
 from typing import Any, List, Union, Dict
 from dataclasses import dataclass, field
 from dataclasses_json import dataclass_json
@@ -186,6 +187,9 @@ class Metadata:
                 continue
             h = m.get("hash")
             if not h:
+                if not os.path.exists(m.filename):
+                    logger.warning(f"Skipping missing media file: {m.filename}")
+                    continue
                 h = calculate_hash_in_chunks(hashlib.sha256(), int(1.6e7), m.filename)
             if len(h) and h in media_hashes:
                 continue

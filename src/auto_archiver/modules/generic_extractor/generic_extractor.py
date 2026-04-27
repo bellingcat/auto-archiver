@@ -575,6 +575,8 @@ class GenericExtractor(Extractor):
             "--live-from-start" if self.live_from_start else "--no-live-from-start",
             "--postprocessor-args",
             "ffmpeg:-bitexact",  # ensure bitexact output to avoid mismatching hashes for same video
+            "--js-runtimes",
+            "node",  # yt-dlp defaults to deno-only; node is available in the base image
         ]
 
         # proxy handling
