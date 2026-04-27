@@ -86,6 +86,22 @@ def test_media_management(basic_metadata, media_file):
     assert basic_metadata.get_media_by_id("m1") == media1
 
 
+def test_remove_duplicate_skips_missing_files(basic_metadata, media_file, tmp_path):
+    """Missing files should be dropped instead of crashing with FileNotFoundError."""
+    real_file = tmp_path / "exists.txt"
+    real_file.write_text("content")
+    valid = media_file(filename=str(real_file), hash_value="abc")
+    missing = media_file(filename="/nonexistent/path/gone.mp4")
+
+    basic_metadata.add_media(valid, "valid")
+    basic_metadata.add_media(missing, "missing")
+
+    assert len(basic_metadata.media) == 2
+    basic_metadata.remove_duplicate_media_by_hash()
+    assert len(basic_metadata.media) == 1
+    assert basic_metadata.get_media_by_id("valid") == valid
+
+
 def test_success():
     m = Metadata()
     assert not m.is_success()

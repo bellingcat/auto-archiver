@@ -14,6 +14,7 @@ from auto_archiver.utils.misc import (
     calculate_file_hash,
     random_str,
     get_timestamp,
+    ydl_entry_to_filename,
 )
 
 
@@ -139,3 +140,47 @@ class TestMiscUtils:
 
     def test_invalid_timestamp_returns_none(self):
         assert get_timestamp("invalid-date") is None
+
+
+class TestYdlEntryToFilename:
+    """Tests for ydl_entry_to_filename, especially .part file filtering."""
+
+    def _make_mock_ydl(self, prepared_filename):
+        class MockYDL:
+            def prepare_filename(self, entry):
+                return prepared_filename
+
+        return MockYDL()
+
+    def test_returns_exact_file_if_exists(self, tmp_path):
+        video = tmp_path / "video.mp4"
+        video.write_bytes(b"data")
+        ydl = self._make_mock_ydl(str(video))
+        assert ydl_entry_to_filename(ydl, {}) == str(video)
+
+    def test_skips_part_file_returns_complete(self, tmp_path):
+        """Simulates yt-dlp leaving a .part file from a failed format
+        while a complete .webm exists."""
+        (tmp_path / "f5U3IKfoSYs.f399.mp4.part").write_bytes(b"incomplete")
+        webm = tmp_path / "f5U3IKfoSYs.webm"
+        webm.write_bytes(b"complete video")
+
+        # ydl.prepare_filename returns the expected .mp4 which doesn't exist
+        ydl = self._make_mock_ydl(str(tmp_path / "f5U3IKfoSYs.mp4"))
+        result = ydl_entry_to_filename(ydl, {})
+
+        assert result == str(webm)
+        assert not result.endswith(".part")
+
+    def test_skips_part_file_returns_false_if_no_other_match(self, tmp_path):
+        """Only a .part file exists — should return False."""
+        (tmp_path / "video.f399.mp4.part").write_bytes(b"incomplete")
+
+        ydl = self._make_mock_ydl(str(tmp_path / "video.mp4"))
+        assert ydl_entry_to_filename(ydl, {}) is False
+
+    def test_returns_false_when_no_files_match(self, tmp_path):
+        (tmp_path / "unrelated.txt").write_bytes(b"data")
+
+        ydl = self._make_mock_ydl(str(tmp_path / "video.mp4"))
+        assert ydl_entry_to_filename(ydl, {}) is False
