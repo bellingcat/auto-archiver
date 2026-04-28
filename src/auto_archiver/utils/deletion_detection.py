@@ -64,7 +64,6 @@ class DeletionIndicators:
     # YouTube deletion indicators
     YOUTUBE = [
         "This video isn't available anymore",
-        "Video unavailable",
         "This video has been removed",
         "This video is no longer available",
         "This video is private",
