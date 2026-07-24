@@ -467,7 +467,11 @@ Here's how that would look: \n\nsteps:\n  extractors:\n  - [your_extractor_name_
         return self.setup_complete_parser(basic_config, yaml_config, unused_args)
 
     def check_for_updates(self):
-        response = requests.get("https://pypi.org/pypi/auto-archiver/json").json()
+        try:
+            response = requests.get("https://pypi.org/pypi/auto-archiver/json", timeout=10).json()
+        except Exception as e:
+            logger.debug(f"Unable to check for updates: {e}")
+            return
         latest_version = version.parse(response["info"]["version"])
         current_version = version.parse(__version__)
         # check version compared to current version
