@@ -61,4 +61,4 @@ class PlatformStatus:
 
     def to_json(self, *, indent: int | None = None) -> str:
         """Returns a JSON string representation of this status record."""
-        return json.dumps(self.to_record(), ensure_ascii=False, indent=indent)
+        return json.dumps(self.to_record(), ensure_ascii=False, indent=indent, default=str)

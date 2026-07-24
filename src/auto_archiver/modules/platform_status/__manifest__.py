@@ -1,17 +1,17 @@
 {
     # per https://github.com/bellingcat/auto-archiver/issues/340
-    "name": "Platform Status",
+    "name": "Local Testing for Platform Status",
     "version": 0.1,
-    # default settings for recorder module beneath this
-    "type": ["extractor", "feeder", "formatter", "storage", "enricher", "database"],
+    "type": [],
     "requires_setup": False,
-    "dependencies": {
-        "python": ["loguru"],
-        "bin": ["bash"],
-    },
-    "configs": {
-        "csv_file": {"default": "db.csv", "help": "CSV file name"},
-        "required_field": {"required": True, "help": "required field in the CSV file"},
-    },
-    "description": "This is an example module",
+    "dependencies": {},
+    "configs": {},
+    "description": """
+        Defines the `PlatformStatus` record schema and the status-check runner used to track
+        which platforms and content types (e.g. Twitter video, Instagram photo) can currently be archived
+        successfully, producing a standardized JSON report of results. 
+
+        Runnable locally via `auto-archiver --status-check`, or programmatically via
+        `auto_archiver.modules.platform_status.status_runner.run_status_checks()`.
+""",
 }
