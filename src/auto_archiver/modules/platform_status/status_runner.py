@@ -35,6 +35,8 @@ def iter_cases(urls_by_platform: dict[str, list[dict[str, Any]]], platforms: lis
 def _build_cli_args(urls: list[str], config_path: str, save_to: str) -> list[str]:
     """Builds a minimal CLI-style args list that runs the given URLs through the real
     pipeline: cli_feeder -> generic_extractor -> console_db (log-only) -> local_storage.
+    When config_path points to a real orchestration.yaml, module-specific settings
+    (e.g. proxy) are inherited but steps are overridden.
     """
     return [
         "--config",
@@ -68,7 +70,9 @@ def _media_is_sane(media) -> bool:
     return all(os.path.exists(u) and os.path.getsize(u) > 0 for u in media.urls)
 
 
-def evaluate_result(metadata: Metadata, case: dict[str, Any], platform_name: str) -> PlatformStatus:
+def evaluate_result(
+    metadata: Metadata, case: dict[str, Any], platform_name: str, config_label: str = "barebones"
+) -> PlatformStatus:
     """Applies coarse pass/sanity checks to a pipeline result: media presence (when
     expected) and a non-trivial title/description.
     """
@@ -77,6 +81,7 @@ def evaluate_result(metadata: Metadata, case: dict[str, Any], platform_name: str
         platform_name=platform_name,
         archive_url=case["url"],
         content_type=case["content_type"],
+        config_label=config_label,
     )
 
     status.content_accessible(metadata.is_success() and not metadata.is_empty())
@@ -105,9 +110,14 @@ def _resolve_url(metadata: Metadata) -> str:
 def run_status_checks(
     urls_path: str | None = None,
     platforms: list[str] | None = None,
+    config_path: str | None = None,
+    config_label: str = "barebones",
 ) -> list[PlatformStatus]:
     """Runs every configured status-check URL through the real archiving pipeline and
     returns one PlatformStatus per URL.
+
+    When config_path is provided, module-specific settings (proxy, cookies, etc.)
+    are inherited from that file while steps are overridden for status checking.
     """
     urls_by_platform = load_status_urls(urls_path)
     cases = list(iter_cases(urls_by_platform, platforms))
@@ -117,12 +127,14 @@ def run_status_checks(
     cases_by_url = {case["url"]: (platform_name, case) for platform_name, case in cases}
 
     with TemporaryDirectory() as tmpdir:
-        config_path = os.path.join(tmpdir, "orchestration.yaml")
-        with open(config_path, "w", encoding="utf-8") as f:
-            f.write("steps: {}\n")
+        effective_config = config_path
+        if not effective_config:
+            effective_config = os.path.join(tmpdir, "orchestration.yaml")
+            with open(effective_config, "w", encoding="utf-8") as f:
+                f.write("steps: {}\n")
         save_to = os.path.join(tmpdir, "archived")
 
-        args = _build_cli_args(list(cases_by_url.keys()), config_path, save_to)
+        args = _build_cli_args(list(cases_by_url.keys()), effective_config, save_to)
         orchestrator = ArchivingOrchestrator()
         orchestrator.setup(args)
 
@@ -135,7 +147,30 @@ def run_status_checks(
                 logger.warning(f"Status check: URL '{url}' not found in cases (possibly rewritten by extractor)")
                 continue
             platform_name, case = cases_by_url[url]
-            results.append(evaluate_result(metadata, case, platform_name))
+            results.append(evaluate_result(metadata, case, platform_name, config_label))
+
+    return results
+
+
+def run_all_status_checks(
+    urls_path: str | None = None,
+    platforms: list[str] | None = None,
+    config_path: str | None = None,
+) -> list[PlatformStatus]:
+    """Runs status checks in barebones mode, and optionally also with a custom
+    config (proxy, auth, etc.), returning results from both runs.
+    """
+    logger.info("Running barebones status checks...")
+    results = run_status_checks(urls_path=urls_path, platforms=platforms, config_label="barebones")
+
+    if config_path:
+        logger.info(f"Running custom-config status checks with {config_path}...")
+        results += run_status_checks(
+            urls_path=urls_path,
+            platforms=platforms,
+            config_path=config_path,
+            config_label="custom",
+        )
 
     return results
 

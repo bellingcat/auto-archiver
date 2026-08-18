@@ -8,6 +8,7 @@ from auto_archiver.modules.platform_status.status_runner import (
     evaluate_result,
     iter_cases,
     load_status_urls,
+    run_all_status_checks,
     run_status_checks,
     write_report,
 )
@@ -73,6 +74,16 @@ class TestEvaluateResult:
         assert status.is_content_archived
         assert status.platform_name == "exampleplatform"
         assert status.content_type == "video"
+        assert status.config_label == "barebones"
+
+    def test_config_label_is_set(self, tmp_path):
+        media = make_media(tmp_path)
+        metadata = make_metadata("https://example.com/video-post", title="A real title", media=[media])
+        case = {"url": "https://example.com/video-post", "content_type": "video", "expect_media": True}
+
+        status = evaluate_result(metadata, case, "exampleplatform", config_label="custom")
+
+        assert status.config_label == "custom"
 
     def test_missing_media_when_expected_fails(self):
         metadata = make_metadata("https://example.com/video-post", title="A real title", media=[])
@@ -139,6 +150,7 @@ class TestWriteReport:
             "platform_name",
             "archive_url",
             "content_type",
+            "config_label",
             "is_content_accessible",
             "is_content_archived",
             "current_metadata",
@@ -169,3 +181,10 @@ class TestRunStatusChecksLive:
         assert len(results) == 1
         assert results[0].is_content_accessible
         assert results[0].is_content_archived
+        assert results[0].config_label == "barebones"
+
+    def test_run_all_barebones_only(self):
+        results = run_all_status_checks(platforms=["tiktok"])
+
+        assert len(results) == 1
+        assert all(r.config_label == "barebones" for r in results)

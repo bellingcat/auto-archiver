@@ -23,6 +23,7 @@ class PlatformStatus:
     platform_name: str
     archive_url: str
     content_type: str
+    config_label: str = "barebones"
     is_content_accessible: bool = False
     is_content_archived: bool = False
     current_metadata: dict[str, Any] = field(default_factory=dict)
@@ -34,15 +35,17 @@ class PlatformStatus:
         platform_name: str,
         archive_url: str,
         content_type: str,
+        config_label: str = "barebones",
     ) -> PlatformStatus:
         ts = _utcnow_iso()
         return cls(
-            id=f"{ts}_{platform_name}_{content_type}",
+            id=f"{ts}_{platform_name}_{content_type}_{config_label}",
             run_datetime=ts,
             aa_version=__version__,
             platform_name=platform_name,
             archive_url=archive_url,
             content_type=content_type,
+            config_label=config_label,
             current_metadata=dict(metadata.metadata),
         )
 
