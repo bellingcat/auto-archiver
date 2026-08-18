@@ -13,10 +13,6 @@ def _utcnow_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
-def _make_id(platform_name: str, content_type: str) -> str:
-    return f"{_utcnow_iso()}_{platform_name}_{content_type}"
-
-
 @dataclass
 class PlatformStatus:
     """Serializable status record for a platform/url trial."""
@@ -39,9 +35,10 @@ class PlatformStatus:
         archive_url: str,
         content_type: str,
     ) -> PlatformStatus:
+        ts = _utcnow_iso()
         return cls(
-            id=_make_id(platform_name, content_type),
-            run_datetime=_utcnow_iso(),
+            id=f"{ts}_{platform_name}_{content_type}",
+            run_datetime=ts,
             aa_version=__version__,
             platform_name=platform_name,
             archive_url=archive_url,

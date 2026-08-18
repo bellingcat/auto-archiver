@@ -3,12 +3,13 @@ from __future__ import annotations
 import json
 import os
 from tempfile import TemporaryDirectory
-from typing import Any, Optional
+from typing import Any
 
 import yaml
 
 from auto_archiver.core import Metadata
 from auto_archiver.core.orchestrator import ArchivingOrchestrator
+from auto_archiver.utils.custom_logger import logger
 
 from .platform_status import PlatformStatus
 
@@ -17,13 +18,13 @@ DEFAULT_URLS_PATH = os.path.join(os.path.dirname(__file__), "status_urls.yaml")
 MIN_TITLE_LENGTH = 3
 
 
-def load_status_urls(path: Optional[str] = None) -> dict[str, list[dict[str, Any]]]:
+def load_status_urls(path: str | None = None) -> dict[str, list[dict[str, Any]]]:
     """Loads the platform -> [case, ...] mapping used to drive status checks."""
     with open(path or DEFAULT_URLS_PATH, "r", encoding="utf-8") as f:
         return yaml.safe_load(f) or {}
 
 
-def iter_cases(urls_by_platform: dict[str, list[dict[str, Any]]], platforms: Optional[list[str]] = None):
+def iter_cases(urls_by_platform: dict[str, list[dict[str, Any]]], platforms: list[str] | None = None):
     for platform_name, cases in urls_by_platform.items():
         if platforms and platform_name not in platforms:
             continue
@@ -31,7 +32,7 @@ def iter_cases(urls_by_platform: dict[str, list[dict[str, Any]]], platforms: Opt
             yield platform_name, case
 
 
-def build_status_config(urls: list[str], config_path: str, save_to: str) -> list[str]:
+def _build_cli_args(urls: list[str], config_path: str, save_to: str) -> list[str]:
     """Builds a minimal CLI-style args list that runs the given URLs through the real
     pipeline: cli_feeder -> generic_extractor -> console_db (log-only) -> local_storage.
     """
@@ -42,9 +43,10 @@ def build_status_config(urls: list[str], config_path: str, save_to: str) -> list
         "cli_feeder",
         "--extractors",
         "generic_extractor",
-        # avoid the yt-dlp self-update/os.execv restart mid status-check run
         "--generic_extractor.ytdlp_update_interval",
         "-1",
+        "--generic_extractor.end_means_success",
+        "true",
         "--enrichers",
         "meta_enricher",
         "--databases",
@@ -93,12 +95,19 @@ def evaluate_result(metadata: Metadata, case: dict[str, Any], platform_name: str
     return status
 
 
+def _resolve_url(metadata: Metadata) -> str:
+    """Return the original input URL for a metadata result, falling back to the
+    (possibly sanitized) current URL.
+    """
+    return metadata.metadata.get("original_url", metadata.get_url())
+
+
 def run_status_checks(
-    urls_path: Optional[str] = None,
-    platforms: Optional[list[str]] = None,
+    urls_path: str | None = None,
+    platforms: list[str] | None = None,
 ) -> list[PlatformStatus]:
     """Runs every configured status-check URL through the real archiving pipeline and
-    returns one PlatformStatus per URL. 
+    returns one PlatformStatus per URL.
     """
     urls_by_platform = load_status_urls(urls_path)
     cases = list(iter_cases(urls_by_platform, platforms))
@@ -113,13 +122,19 @@ def run_status_checks(
             f.write("steps: {}\n")
         save_to = os.path.join(tmpdir, "archived")
 
-        args = build_status_config(list(cases_by_url.keys()), config_path, save_to)
+        args = _build_cli_args(list(cases_by_url.keys()), config_path, save_to)
         orchestrator = ArchivingOrchestrator()
         orchestrator.setup(args)
 
         results = []
         for metadata in orchestrator.feed():
-            platform_name, case = cases_by_url[metadata.get_url()]
+            if metadata is None:
+                continue
+            url = _resolve_url(metadata)
+            if url not in cases_by_url:
+                logger.warning(f"Status check: URL '{url}' not found in cases (possibly rewritten by extractor)")
+                continue
+            platform_name, case = cases_by_url[url]
             results.append(evaluate_result(metadata, case, platform_name))
 
     return results

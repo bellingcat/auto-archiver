@@ -39,23 +39,24 @@ truthsocial:
   - content_type: video
     url: https://truthsocial.com/@DaynaTrueman/posts/110602446619561579
     expect_media: true
-  - content_type : text_only 
+  - content_type: text_only
     url: https://truthsocial.com/@bbcnewa/posts/109598702184774628
-    expect_media: false 
+    expect_media: false
   - content_type: image
     url: https://truthsocial.com/@mariabartiromo/posts/113861116433335006
-    expect_media: true 
-  - content_type: multi_image 
+    expect_media: true
+  - content_type: multi_image
     url: https://truthsocial.com/@trrth/posts/113861302149349135
     expect_media: true
 
-facebook: 
-  - content_type: video 
+facebook:
+  - content_type: video
     url: https://www.facebook.com/bellingcat/videos/588371253839133
-    expect_media: true 
+    expect_media: true
   - content_type: image
     url: https://www.facebook.com/BylineFest/photos/t.100057299682816/927879487315946/
-    expect_media: true 
-  - content_type: text_only 
+    expect_media: true
+  - content_type: text_only
     url: https://www.facebook.com/bellingcat/posts/pfbid02rzpwZxAZ8bLkAX8NvHv4DWAidFaqAUfJMbo9vWkpwxL7uMUWzWMiizXLWRSjwihVl
-    expect_media: false 
+    expect_media: false
+

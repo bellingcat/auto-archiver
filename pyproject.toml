@@ -82,6 +82,7 @@ linkify-it-py = "^2.0.3"
 
 [project.scripts]
 auto-archiver = "auto_archiver.__main__:main"
+auto-archiver-status = "auto_archiver.modules.platform_status.status_cli:main"
 
 [project.urls]
 homepage = "https://github.com/bellingcat/auto-archiver"
