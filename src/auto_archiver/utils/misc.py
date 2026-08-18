@@ -120,6 +120,9 @@ def ydl_entry_to_filename(ydl, entry: dict) -> str:
     directory = os.path.dirname(base_filename)  # '/get/path/to'
     basename = os.path.basename(base_filename)  # 'file'
     for f in os.listdir(directory):
+        # skip incomplete downloads left behind by yt-dlp
+        if f.endswith(".part"):
+            continue
         if (
             f.startswith(basename)
             or (entry_url and os.path.splitext(f)[0] in entry_url)

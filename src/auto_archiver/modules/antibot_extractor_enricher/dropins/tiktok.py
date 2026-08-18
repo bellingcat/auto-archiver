@@ -1,17 +1,20 @@
 from contextlib import suppress
 from typing import Mapping
+
+from auto_archiver.utils.custom_logger import logger
 from auto_archiver.modules.antibot_extractor_enricher.dropin import Dropin
 
 
 class TikTokDropin(Dropin):
     """
     A class to handle TikTok drop-in functionality for the antibot extractor enricher module.
+
     """
 
     def documentation() -> Mapping[str, str]:
         return {
             "name": "TikTok Dropin",
-            "description": "Handles TikTok posts and works without authentication.",
+            "description": "Handles TikTok posts and works without authentication.\nNOTE: This dropin is highly susceptible to TikTok's bot detection mechanisms and may not work reliably if you reuse the same IP. The GenericExtractor is recommended for TikTok posts, as it handles video/image download more reliable. In the future we plan to implement better anti captcha measures for this dropin.",
             "site": "tiktok.com",
         }
 
@@ -32,6 +35,9 @@ class TikTokDropin(Dropin):
         self._close_cookies_banner()
         # TODO: implement login logic
         if url != self.sb.get_current_url():
+            return False
+        if self.sb.is_text_visible("Video currently unavailable"):
+            logger.debug("Video may have been removed or is private.")
             return False
         return True
 

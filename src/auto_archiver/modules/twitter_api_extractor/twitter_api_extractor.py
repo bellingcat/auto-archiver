@@ -114,6 +114,9 @@ class TwitterApiExtractor(Extractor):
                 logger.info(f"Found media {media}")
                 ext = mimetypes.guess_extension(mimetype)
                 media.filename = self.download_from_url(media.get("src"), f"{slugify(url)}_{i}{ext}")
+                if not media.filename:
+                    logger.warning(f"Failed to download media from {media.get('src')}")
+                    continue
                 result.add_media(media)
 
         result.set_content(

@@ -4,6 +4,7 @@ import datetime
 import os
 import importlib
 import subprocess
+import traceback
 import zipfile
 
 from typing import Generator, Type
@@ -20,6 +21,7 @@ from auto_archiver.core.extractor import Extractor
 from auto_archiver.core import Metadata, Media
 from auto_archiver.utils import get_datetime_from_str
 from auto_archiver.utils.misc import ydl_entry_to_filename
+from auto_archiver.utils.deletion_detection import detect_deletion, flag_as_deleted
 from .dropin import GenericDropin
 
 
@@ -202,8 +204,11 @@ class GenericExtractor(Extractor):
         if thumbnail_url:
             try:
                 cover_image_path = self.download_from_url(thumbnail_url)
-                media = Media(cover_image_path)
-                metadata.add_media(media, id="cover")
+                if cover_image_path:
+                    media = Media(cover_image_path)
+                    metadata.add_media(media, id="cover")
+                else:
+                    logger.warning(f"Failed to download cover image from {thumbnail_url}")
             except Exception as e:
                 logger.error(f"Could not download cover image {thumbnail_url}: {e}")
 
@@ -305,9 +310,9 @@ class GenericExtractor(Extractor):
             result.set_url(url)
 
         if "description" in video_data and not result.get("content"):
-            result.set_content(video_data.get("description"))
+            result.set_content(video_data.pop("description"))
         # extract comments if enabled
-        if self.comments and video_data.get("comments", []) is not None:
+        if self.comments and video_data.get("comments", None) is not None:
             result.set(
                 "comments",
                 [
@@ -353,7 +358,7 @@ class GenericExtractor(Extractor):
         if not dropin:
             # TODO: add a proper link to 'how to create your own dropin'
             logger.debug(f"""Could not find valid dropin for {info_extractor.ie_key()}.
-                     Why not try creating your own, and make sure it has a valid function called 'create_metadata'. Learn more: https://auto-archiver.readthedocs.io/en/latest/user_guidelines.html#""")
+                     Why not try creating your own, and make sure it has a valid function called 'create_metadata'. Learn more: https://auto-archiver.readthedocs.io/en/latest/modules/autogen/extractor/generic_extractor.html#dropins""")
             return False
 
         post_data = dropin.extract_post(url, ie_instance)
@@ -406,9 +411,9 @@ class GenericExtractor(Extractor):
                             logger.error(f"Error loading subtitle file {val.get('filepath')}: {e}")
                 result.add_media(new_media)
             except Exception as e:
-                logger.error(f"Error processing entry {entry}: {e}")
+                logger.error(f"Error processing entry {str(entry)[:256]}: {e} {traceback.format_exc()}")
         if not len(result.media):
-            logger.info(f"No media found for entry {entry}, skipping.")
+            logger.info(f"No media found for entry {str(entry)[:256]}, skipping.")
             return False
 
         return self.add_metadata(data, info_extractor, url, result)
@@ -483,6 +488,13 @@ class GenericExtractor(Extractor):
             # don't download since it can be a live stream
             data = ydl.extract_info(url, ie_key=info_extractor.ie_key(), download=False)
 
+            # Check for deletion indicators in video data
+            deletion_info = detect_deletion(video_data=data, url=url)
+            if deletion_info:
+                result = Metadata()
+                flag_as_deleted(result, deletion_info)
+                return result
+
             result = _helper_for_successful_extract_info(data, info_extractor, url, ydl)
 
         except MaxDownloadsReached:
@@ -502,6 +514,13 @@ class GenericExtractor(Extractor):
             try:
                 result = self.get_metadata_for_post(info_extractor, url, ydl)
             except (yt_dlp.utils.DownloadError, yt_dlp.utils.ExtractorError) as post_e:
+                # Check if the error indicates deletion
+                deletion_info = detect_deletion(error_message=str(post_e), url=url)
+                if deletion_info:
+                    result = Metadata()
+                    flag_as_deleted(result, deletion_info)
+                    return result
+
                 if "NSFW tweet requires authentication." in str(post_e):
                     logger.warning(str(post_e))
                     return False
@@ -516,7 +535,7 @@ class GenericExtractor(Extractor):
                 )
                 return False
 
-        if result:
+        if result and not result.is_success():
             extractor_name = "yt-dlp"
             if info_extractor:
                 extractor_name += f"_{info_extractor.ie_key()}"
@@ -535,7 +554,6 @@ class GenericExtractor(Extractor):
         if url.startswith("https://ya.ru"):
             url = url.replace("https://ya.ru", "https://yandex.ru")
             item.set("replaced_url", url)
-        logger.debug(f"{skip_proxy=}, {self.proxy_on_failure_only=}, {self.proxy=}")
 
         # proxy_on_failure_only logic
         if self.proxy and self.proxy_on_failure_only and not skip_proxy:
@@ -557,6 +575,8 @@ class GenericExtractor(Extractor):
             "--live-from-start" if self.live_from_start else "--no-live-from-start",
             "--postprocessor-args",
             "ffmpeg:-bitexact",  # ensure bitexact output to avoid mismatching hashes for same video
+            "--js-runtimes",
+            "node",  # yt-dlp defaults to deno-only; node is available in the base image
         ]
 
         # proxy handling
@@ -605,9 +625,9 @@ class GenericExtractor(Extractor):
             validated_options
         )  # allsubtitles and subtitleslangs not working as expected, so default lang is always "en"
 
+        result: Metadata = None
         for info_extractor in self.suitable_extractors(url):
-            result = self.download_for_extractor(info_extractor, url, ydl)
-            if result:
-                return result
-
-        return False
+            local_result: Metadata = self.download_for_extractor(info_extractor, url, ydl)
+            if local_result:
+                result = result.merge(local_result) if result else local_result
+        return result if result else False

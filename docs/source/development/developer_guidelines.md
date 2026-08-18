@@ -21,7 +21,7 @@ This allows you to run the auto-archiver without the `poetry run` prefix.
 ### Optional Development Packages
 
 Install development packages (used for unit tests etc.) using:
-`poetry install -with dev`
+`poetry install --with dev`
 
 
 ```{toctree}

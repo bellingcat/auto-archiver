@@ -1,18 +1,17 @@
-FROM webrecorder/browsertrix-crawler:1.6.3 AS base
+FROM webrecorder/browsertrix-crawler:1.12.4 AS base
 
 ENV RUNNING_IN_DOCKER=1 \
     LANG=C.UTF-8 \
     LC_ALL=C.UTF-8 \
     PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONFAULTHANDLER=1 \
-    PATH="/root/.local/bin:$PATH"
+    PYTHONFAULTHANDLER=1
 
 
 ARG TARGETARCH
 
 # Installing system dependencies
 RUN	apt-get update && \
-    apt-get install -y --no-install-recommends gcc ffmpeg fonts-noto exiftool python3-tk 
+    apt-get install -y --no-install-recommends gcc ffmpeg fonts-noto exiftool python3-tk
 
 # Poetry and runtime
 FROM base AS runtime
@@ -41,10 +40,20 @@ COPY ./src/ .
 RUN /poetry-venv/bin/poetry install --only main --no-cache
 
 
+# Run as non-root user to avoid permission issues with mounted volumes (see #342)
+# The base image already has an 'ubuntu' user at UID/GID 1000.
+# Ensure directories that need write access at runtime are writable.
+RUN chown 1000:1000 /app && \
+    chown -R 1000:1000 /app/.venv/lib/python3.12/site-packages/seleniumbase/drivers/ && \
+    mkdir -p /app/local_archive /app/secrets /tmp/archive && \
+    chown -R 1000:1000 /app/local_archive /app/secrets /tmp/archive
+
 # Update PATH to include virtual environment binaries
 # Allowing entry point to run the application directly with Python
 ENV VIRTUAL_ENV=/app/.venv \
     PATH="/app/.venv/bin:$PATH"
+
+USER 1000
 
 ENTRYPOINT ["python3", "-m", "auto_archiver"]
 

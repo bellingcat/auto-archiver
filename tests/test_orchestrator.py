@@ -1,5 +1,6 @@
 import pytest
 from argparse import ArgumentParser, ArgumentTypeError
+from requests.exceptions import SSLError
 from auto_archiver.core.orchestrator import ArchivingOrchestrator
 from auto_archiver.version import __version__
 from auto_archiver.core.config import read_yaml, store_yaml
@@ -256,3 +257,34 @@ def test_load_failed_extractor_cleanup(test_args, mocker, caplog):
     assert "Error during setup of modules: Test exception" in caplog.text
     # make sure the 'cleanup' is called
     assert "cleanup" in caplog.text
+
+
+def test_check_for_updates_ssl_error(orchestrator, mocker):
+    """check_for_updates should not raise when the HTTP request fails."""
+    mocker.patch(
+        "auto_archiver.core.orchestrator.requests.get",
+        side_effect=SSLError("SSL handshake failed"),
+    )
+    # should not raise
+    orchestrator.check_for_updates()
+
+
+def test_check_for_updates_timeout(orchestrator, mocker):
+    """check_for_updates should not raise on connection timeout."""
+    from requests.exceptions import ConnectionError
+
+    mocker.patch(
+        "auto_archiver.core.orchestrator.requests.get",
+        side_effect=ConnectionError("Connection refused"),
+    )
+    orchestrator.check_for_updates()
+
+
+def test_check_for_updates_new_version_available(orchestrator, mocker):
+    """check_for_updates should not raise when a newer version exists."""
+    mocker.patch(
+        "auto_archiver.core.orchestrator.requests.get",
+        return_value=mocker.Mock(json=lambda: {"info": {"version": "99.0.0"}}),
+    )
+    # should complete without error
+    orchestrator.check_for_updates()

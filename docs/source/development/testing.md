@@ -8,7 +8,7 @@
 
 ## Running Tests 
 
-1. Make sure you've installed the dev dependencies with `pytest install --with dev`
+1. Make sure you've installed the dev dependencies with `poetry install --with dev`
 2. Tests can be run as follows:
 ```{code} bash
 #### Command prefix of 'poetry run' removed here for simplicity
@@ -26,7 +26,7 @@ pytest -ra -v tests/test_file.py
 pytest -ra -v tests/test_file.py::test_function_name
 ```
 
-3. Some tests require environment variables to be set. You can use the example `.env.test.example` file as a template. Copy it to `.env.test` and fill in the required values. This file will be loaded automatically by `pytest`.
+3. Some tests require environment variables to be set. You can use the example `tests/.env.test.example` file as a template. Copy it to `tests/.env.test` and fill in the required values. This file will be loaded automatically by `pytest`.
 ```{code} bash
-cp .env.test.example .env.test
+cp tests/.env.test.example tests/.env.test
 ```

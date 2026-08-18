@@ -16,6 +16,7 @@ from auto_archiver.modules.antibot_extractor_enricher.dropin import Dropin
 from auto_archiver.modules.antibot_extractor_enricher.dropins.default import DefaultDropin
 from auto_archiver.utils.misc import random_str
 from auto_archiver.utils.url import is_relevant_url
+from auto_archiver.utils.deletion_detection import detect_deletion, flag_as_deleted
 
 
 class AntibotExtractorEnricher(Extractor, Enricher):
@@ -72,6 +73,7 @@ class AntibotExtractorEnricher(Extractor, Enricher):
         if self.enrich(result):
             result.status = "antibot"
             return result
+        return False
 
     def _prepare_user_data_dir(self):
         if self.user_data_dir:
@@ -87,8 +89,18 @@ class AntibotExtractorEnricher(Extractor, Enricher):
         using_user_data_dir = self.user_data_dir if custom_data_dir else None
         url = to_enrich.get_url()
 
+        # Use xvfb in Docker environments where no display is available
+        use_xvfb = bool(os.environ.get("RUNNING_IN_DOCKER"))
+
         try:
-            with SB(uc=True, agent=self.agent, headed=None, user_data_dir=using_user_data_dir, proxy=self.proxy) as sb:
+            with SB(
+                uc=True,
+                agent=self.agent,
+                headed=None,
+                user_data_dir=using_user_data_dir,
+                proxy=self.proxy,
+                xvfb=use_xvfb,
+            ) as sb:
                 logger.info(f"Selenium browser is up with agent {self.agent}, opening url...")
                 sb.uc_open_with_reconnect(url, 4)
 
@@ -97,7 +109,16 @@ class AntibotExtractorEnricher(Extractor, Enricher):
                 sb.uc_gui_click_rc()  # NB: using handle instead of click breaks some sites like reddit, for now we separate here but can have dropins deciding this in the future
 
                 dropin = self._get_suitable_dropin(url, sb)
-                dropin.open_page(url)
+                if not dropin.open_page(url):
+                    # Check for deletion indicators
+                    page_title = sb.get_title()
+                    html_source = sb.get_page_source()
+                    deletion_info = detect_deletion(html_content=html_source, page_title=page_title, url=url)
+                    if deletion_info:
+                        flag_as_deleted(to_enrich, deletion_info)
+                        return to_enrich
+                    logger.warning("Failed to open drop-in page (not detected as deleted)")
+                    return False
 
                 if self.detect_auth_wall and (dropin.hit_auth_wall() and self._hit_auth_wall(sb)):
                     logger.warning("Skipping since auth wall or CAPTCHA was detected")
@@ -106,7 +127,15 @@ class AntibotExtractorEnricher(Extractor, Enricher):
                 sb.wait_for_ready_state_complete()
                 sb.sleep(1)  # margin for the page to load completely
 
-                to_enrich.set_title(sb.get_title())
+                page_title = sb.get_title()
+                html_source = sb.get_page_source()
+
+                # Check if the page indicates content was deleted
+                deletion_info = detect_deletion(html_content=html_source, page_title=page_title, url=url)
+                if deletion_info:
+                    flag_as_deleted(to_enrich, deletion_info)
+
+                to_enrich.set_title(page_title)
                 self._enrich_html_source_code(sb, to_enrich)
 
                 self._enrich_full_page_screenshot(sb, to_enrich)

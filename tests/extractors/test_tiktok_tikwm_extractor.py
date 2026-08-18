@@ -55,6 +55,7 @@ class TestTiktokTikwmExtractor(TestExtractorBase):
             ("https://www.tiktok.com/@ggs68taiwan.official/video/7441821351142362375", True),
             ("https://www.tiktok.com/t/ZP8YQ8e5j/", True),
             ("https://vt.tiktok.com/ZSMTJeqRP/", True),
+            ("https://tiktok.com/@user/photo/123?lang=en", True),
         ],
     )
     def test_is_suitable(self, url, is_suitable, tiktok_dropin):
@@ -68,10 +69,7 @@ class TestTiktokTikwmExtractor(TestExtractorBase):
             mock_get.assert_called_once()
             mock_get.return_value.json.assert_called_once()
             # first message is just the 'Skipping using ytdlp to download files for TikTok' message
-            assert (
-                "failed to parse JSON response from tikwm.com for url='https://www.tiktok.com/@example/video/1234'"
-                in caplog.text
-            )
+            assert "Failed to parse JSON response from tikwm.com" in caplog.text
 
         mock_get.return_value.json.side_effect = Exception
         with caplog.at_level("ERROR"):
@@ -79,10 +77,7 @@ class TestTiktokTikwmExtractor(TestExtractorBase):
             mock_get.assert_called()
             assert mock_get.call_count == 2
             assert mock_get.return_value.json.call_count == 2
-            assert (
-                "failed to parse JSON response from tikwm.com for url='https://www.tiktok.com/@example/video/1234'"
-                in caplog.text
-            )
+            assert "Failed to parse JSON response from tikwm.com" in caplog.text
 
     @pytest.mark.parametrize(
         "response",
@@ -98,27 +93,30 @@ class TestTiktokTikwmExtractor(TestExtractorBase):
             assert self.extractor.download(make_item(self.VALID_EXAMPLE_URL)) is False
             mock_get.assert_called_once()
             mock_get.return_value.json.assert_called_once()
-            assert "failed to get a valid response from tikwm.com" in caplog.text
+            assert "Unable to download with tikwm.com: " in caplog.text
 
     @pytest.mark.parametrize(
-        "response,has_vid",
+        "response,is_success",
         [
-            ({"data": {"id": 123}}, False),
-            ({"data": {"wmplay": "url"}}, True),
-            ({"data": {"play": "url"}}, True),
+            ({"data": {"id": 123, "images": []}}, False),
+            ({"data": {"wmplay": "url", "images": ["img1.jpg"]}}, True),
+            ({"data": {"play": "url", "images": ["img1.jpg"]}}, True),
+            ({"data": {"images": ["img1.jpg"]}}, True),
         ],
     )
-    def test_correct_extraction(self, mock_get, make_item, response, has_vid, mocker):
+    def test_correct_extraction(self, mock_get, make_item, response, is_success, mocker):
+        data = {k: v for k, v in response.get("data", {}).items()}
         mock_get.return_value.status_code = 200
         mock_get.return_value.json.return_value = {"msg": "success", **response}
         result = self.extractor.download(make_item(self.VALID_EXAMPLE_URL))
-        if not has_vid:
-            assert result is False
-        else:
+        total_media = len(data.get("images", [])) + (1 if data.get("wmplay", data.get("play")) else 0)
+        if is_success:
             assert result.is_success()
-            assert len(result.media) == 1
+            assert len(result.media) == total_media
+        else:
+            assert result is False
         mock_get.assert_called()
-        assert mock_get.call_count == 1 + int(has_vid)
+        assert mock_get.call_count == 1 + total_media
         mock_get.return_value.json.assert_called_once()
 
     def test_correct_data_extracted(self, mock_get, make_item):
@@ -142,7 +140,9 @@ class TestTiktokTikwmExtractor(TestExtractorBase):
         assert len(result.media) == 2
         assert result.get_title() == "Title"
         assert result.get("author") == "Author"
-        assert result.get("api_data") == {"other": "data", "id": 123}
+        assert result.get("other") == "data"
+        assert result.get("comments") is None
+        assert result.get("api_data") == {"id": 123, "other": "data"}
         assert result.media[1].get("duration") == 60
         assert result.get("timestamp") == datetime.fromtimestamp(1736301699, tz=timezone.utc)
 

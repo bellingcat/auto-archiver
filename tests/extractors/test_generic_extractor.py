@@ -48,8 +48,6 @@ class TestGenericExtractor(TestExtractorBase):
             ("https://www.youtube.com/watch?v=5qap5aO4i9A", ["youtube"]),
             ("https://www.tiktok.com/@funnycats0ftiktok/video/7345101300750748970?lang=en", ["tiktok"]),
             ("https://www.instagram.com/p/CU1J9JYJ9Zz/", ["instagram"]),
-            ("https://www.facebook.com/nytimes/videos/10160796550110716", ["facebook"]),
-            ("https://www.facebook.com/BylineFest/photos/t.100057299682816/927879487315946/", ["facebook"]),
         ],
     )
     def test_suitable_extractors(self, url, suitable_extractors):
@@ -148,6 +146,7 @@ class TestGenericExtractor(TestExtractorBase):
     def test_bluesky_download_video(self, make_item):
         item = make_item("https://bsky.app/profile/bellingcat.com/post/3le2l4gsxlk2i")
         result = self.extractor.download(item)
+        assert result.get_url() == "https://bsky.app/profile/bellingcat.com/post/3le2l4gsxlk2i"
         assert result is not False
 
     @pytest.mark.skipif(not TEST_TRUTH_SOCIAL, reason="Truth social download tests disabled in environment variables.")

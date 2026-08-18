@@ -34,7 +34,7 @@ def _extract_metadata(self, webpage, video_id):
             ...,
             "attachments",
             ...,
-            lambda k, v: (k == "media" and str(v["id"]) == video_id and v["__typename"] == "Video"),
+            lambda k, v: k == "media" and str(v["id"]) == video_id and v["__typename"] == "Video",
         ),
         expected_type=dict,
     )

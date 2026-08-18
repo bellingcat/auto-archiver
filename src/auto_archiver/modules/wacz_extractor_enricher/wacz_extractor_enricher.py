@@ -24,8 +24,7 @@ class WaczExtractorEnricher(Enricher, Extractor):
         self.use_docker = os.environ.get("WACZ_ENABLE_DOCKER") or not os.environ.get("RUNNING_IN_DOCKER")
         self.docker_in_docker = os.environ.get("WACZ_ENABLE_DOCKER") and os.environ.get("RUNNING_IN_DOCKER")
 
-        self.crawl_id = random_str(8)
-        self.cwd_dind = f"/crawls/crawls{self.crawl_id}"
+        self.cwd_dind = f"/crawls/crawls{random_str(8)}"
         self.browsertrix_home_host = os.environ.get("BROWSERTRIX_HOME_HOST")
         self.browsertrix_home_container = os.environ.get("BROWSERTRIX_HOME_CONTAINER") or self.browsertrix_home_host
         # create crawls folder if not exists, so it can be safely removed in cleanup
@@ -51,7 +50,8 @@ class WaczExtractorEnricher(Enricher, Extractor):
 
         url = to_enrich.get_url()
 
-        collection = self.crawl_id
+        crawl_id = random_str(8)
+        collection = crawl_id
         browsertrix_home_host = self.browsertrix_home_host or os.path.abspath(self.tmp_dir)
         browsertrix_home_container = self.browsertrix_home_container or browsertrix_home_host
 
@@ -83,8 +83,10 @@ class WaczExtractorEnricher(Enricher, Extractor):
             # "--blockAds" # note: this has been known to cause issues on cloudflare protected sites
         ]
 
+        crawl_cwd_dind = os.path.join(self.cwd_dind, crawl_id)
         if self.docker_in_docker:
-            cmd.extend(["--cwd", self.cwd_dind])
+            os.makedirs(crawl_cwd_dind, exist_ok=True)
+            cmd.extend(["--cwd", crawl_cwd_dind])
 
         if self.auth_for_site(url):
             # there's an auth for this site, but browsertrix only supports username/password auth
@@ -109,7 +111,7 @@ class WaczExtractorEnricher(Enricher, Extractor):
                 ] + cmd
 
             if self.profile:
-                profile_file = f"profile-{self.crawl_id}.tar.gz"
+                profile_file = f"profile-{crawl_id}.tar.gz"
                 profile_fn = os.path.join(browsertrix_home_container, profile_file)
                 logger.debug(f"Copying {self.profile} to {profile_fn}")
                 shutil.copyfile(self.profile, profile_fn)
@@ -137,7 +139,7 @@ class WaczExtractorEnricher(Enricher, Extractor):
             return False
 
         if self.docker_in_docker:
-            wacz_fn = os.path.join(self.cwd_dind, "collections", collection, f"{collection}.wacz")
+            wacz_fn = os.path.join(crawl_cwd_dind, "collections", collection, f"{collection}.wacz")
         elif self.use_docker:
             wacz_fn = os.path.join(browsertrix_home_container, "collections", collection, f"{collection}.wacz")
         else:
@@ -152,7 +154,7 @@ class WaczExtractorEnricher(Enricher, Extractor):
             self.extract_media_from_wacz(to_enrich, wacz_fn)
 
         if self.docker_in_docker:
-            jsonl_fn = os.path.join(self.cwd_dind, "collections", collection, "pages", "pages.jsonl")
+            jsonl_fn = os.path.join(crawl_cwd_dind, "collections", collection, "pages", "pages.jsonl")
         elif self.use_docker:
             jsonl_fn = os.path.join(browsertrix_home_container, "collections", collection, "pages", "pages.jsonl")
         else:
