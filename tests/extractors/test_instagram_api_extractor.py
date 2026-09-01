@@ -100,6 +100,16 @@ class TestInstagramAPIExtractor(TestExtractorBase):
     def test_initialize(self):
         assert self.extractor.api_endpoint[-1] != "/"
 
+    def test_call_api_sends_access_token_header(self, mocker):
+        """The configured access_token must be sent as the x-access-key header the API server authenticates."""
+        mock_get = mocker.patch("auto_archiver.modules.instagram_api_extractor.instagram_api_extractor.requests.get")
+        self.extractor.call_api("v2/user/by/username", {"username": "test_user"})
+        mock_get.assert_called_once_with(
+            f"{self.extractor.api_endpoint}/v2/user/by/username",
+            headers={"accept": "application/json", "x-access-key": "test_access_token"},
+            params={"username": "test_user"},
+        )
+
     @pytest.mark.parametrize(
         "input_dict,expected",
         [
