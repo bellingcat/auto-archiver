@@ -1,0 +1,62 @@
+# Curated URLs used by the platform status-check runner (see status_runner.py).
+
+youtube:
+  - content_type: video
+    url: https://www.youtube.com/watch?v=J---aiyznGQ
+    expect_media: true
+
+tiktok:
+  - content_type: video
+    url: https://www.tiktok.com/@funnycats0ftiktok/video/7345101300750748970
+    expect_media: true
+
+bluesky:
+  - content_type: video
+    url: https://bsky.app/profile/bellingcat.com/post/3le2l4gsxlk2i
+    expect_media: true
+  - content_type: multi_image
+    url: https://bsky.app/profile/bellingcat.com/post/3lffjoxcu7k2w
+    expect_media: true
+  - content_type: single_image
+    url: https://bsky.app/profile/bellingcat.com/post/3lfn3hbcxgc2q
+    expect_media: true
+  - content_type: text_only
+    url: https://bsky.app/profile/bellingcat.com/post/3lfphwmcs4c2z
+    expect_media: false
+
+twitter:
+  - content_type: video
+    url: https://x.com/bellingcat/status/1871552600346415571
+    expect_media: true
+  - content_type: sensitive_photo
+    url: https://x.com/SozinhoRamalho/status/1876710769913450647
+    expect_media: true
+  - content_type: text_only
+    url: https://x.com/MeCookieMonster/status/1617921633456640001
+    expect_media: false
+
+truthsocial:
+  - content_type: video
+    url: https://truthsocial.com/@DaynaTrueman/posts/110602446619561579
+    expect_media: true
+  - content_type: text_only
+    url: https://truthsocial.com/@bbcnewa/posts/109598702184774628
+    expect_media: false
+  - content_type: image
+    url: https://truthsocial.com/@mariabartiromo/posts/113861116433335006
+    expect_media: true
+  - content_type: multi_image
+    url: https://truthsocial.com/@trrth/posts/113861302149349135
+    expect_media: true
+
+facebook:
+  - content_type: video
+    url: https://www.facebook.com/bellingcat/videos/588371253839133
+    expect_media: true
+  - content_type: image
+    url: https://www.facebook.com/BylineFest/photos/t.100057299682816/927879487315946/
+    expect_media: true
+  - content_type: text_only
+    url: https://www.facebook.com/bellingcat/posts/pfbid02rzpwZxAZ8bLkAX8NvHv4DWAidFaqAUfJMbo9vWkpwxL7uMUWzWMiizXLWRSjwihVl
+    expect_media: false
+
