@@ -1,0 +1,98 @@
+{
+  "last_run": "2026-08-31T12:35:50.578848+00:00",
+  "aa_version": "1.2.7",
+  "platforms": {
+    "youtube": {
+      "video": {
+        "config": "barebones",
+        "accessible": false,
+        "archived": false
+      }
+    },
+    "tiktok": {
+      "video": {
+        "config": "barebones",
+        "accessible": true,
+        "archived": true
+      }
+    },
+    "bluesky": {
+      "video": {
+        "config": "barebones",
+        "accessible": true,
+        "archived": true
+      },
+      "multi_image": {
+        "config": "barebones",
+        "accessible": true,
+        "archived": true
+      },
+      "single_image": {
+        "config": "barebones",
+        "accessible": true,
+        "archived": true
+      },
+      "text_only": {
+        "config": "barebones",
+        "accessible": true,
+        "archived": true
+      }
+    },
+    "twitter": {
+      "video": {
+        "config": "barebones",
+        "accessible": true,
+        "archived": true
+      },
+      "sensitive_photo": {
+        "config": "barebones",
+        "accessible": true,
+        "archived": true
+      },
+      "text_only": {
+        "config": "barebones",
+        "accessible": true,
+        "archived": true
+      }
+    },
+    "truthsocial": {
+      "video": {
+        "config": "barebones",
+        "accessible": false,
+        "archived": false
+      },
+      "text_only": {
+        "config": "barebones",
+        "accessible": false,
+        "archived": false
+      },
+      "image": {
+        "config": "barebones",
+        "accessible": false,
+        "archived": false
+      },
+      "multi_image": {
+        "config": "barebones",
+        "accessible": false,
+        "archived": false
+      }
+    },
+    "facebook": {
+      "video": {
+        "config": "barebones",
+        "accessible": true,
+        "archived": true
+      },
+      "image": {
+        "config": "barebones",
+        "accessible": true,
+        "archived": true
+      },
+      "text_only": {
+        "config": "barebones",
+        "accessible": true,
+        "archived": true
+      }
+    }
+  }
+}

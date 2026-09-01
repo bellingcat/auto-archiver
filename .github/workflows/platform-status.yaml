@@ -1,0 +1,103 @@
+name: Platform Status Check
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'  # every Monday at 06:00 UTC
+  workflow_dispatch:       # allow manual runs
+
+permissions:
+  contents: write
+
+jobs:
+  status-check:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install ffmpeg
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install latest Poetry
+        run: pipx install poetry
+
+      - name: Cache Poetry and pip artifacts
+        uses: actions/cache@v5
+        with:
+          path: |
+            ~/.cache/pypoetry
+            ~/.cache/pip
+          key: poetry-status-${{ hashFiles('**/poetry.lock') }}
+
+      - name: Install dependencies
+        run: poetry install --no-interaction --with dev
+
+      - name: Run barebones status check
+        run: |
+          poetry run auto-archiver-status \
+            --output status_report.json
+        continue-on-error: true
+
+      - name: Generate summary
+        run: |
+          python3 -c "
+          import json, datetime
+          with open('status_report.json') as f:
+              records = json.load(f)
+          summary = {
+              'last_run': datetime.datetime.now(datetime.timezone.utc).isoformat(),
+              'aa_version': records[0]['aa_version'] if records else 'unknown',
+              'platforms': {}
+          }
+          for r in records:
+              key = r['platform_name']
+              if key not in summary['platforms']:
+                  summary['platforms'][key] = {}
+              summary['platforms'][key][r['content_type']] = {
+                  'config': r['config_label'],
+                  'accessible': r['is_content_accessible'],
+                  'archived': r['is_content_archived'],
+              }
+          with open('platform_status.json', 'w') as f:
+              json.dump(summary, f, indent=2)
+          lines = [
+              '# Platform Status',
+              '',
+              f'Last run: {summary[\"last_run\"]}  ',
+              f'Auto Archiver version: {summary[\"aa_version\"]}',
+              '',
+              '| Platform | Content Type | Config | Accessible | Archived |',
+              '|----------|-------------|--------|------------|----------|',
+          ]
+          for r in records:
+              ok_a = ':white_check_mark:' if r['is_content_accessible'] else ':x:'
+              ok_b = ':white_check_mark:' if r['is_content_archived'] else ':x:'
+              lines.append(f'| {r[\"platform_name\"]} | {r[\"content_type\"]} | {r[\"config_label\"]} | {ok_a} | {ok_b} |')
+          md = '\n'.join(lines) + '\n'
+          with open('PLATFORM_STATUS.md', 'w') as f:
+              f.write(md)
+          print(md)
+          " | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload full report as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: platform-status-report
+          path: status_report.json
+          retention-days: 90
+
+      - name: Commit status files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add platform_status.json PLATFORM_STATUS.md
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "chore: update platform status report [skip ci]"
+            git push
+          fi

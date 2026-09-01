@@ -6,6 +6,8 @@ We have a lightweight script with the endpoints required for our Instagram API E
 
 
 ⚠️ Warning: Remember that it's best not to use your own personal account for archiving. [Here's why](../installation/authentication.md#recommendations-for-authentication).
+
+🔐 Security: the server logs into your Instagram account, so every request it serves acts as that account. All routes require an API key: set `INSTAGRAPI_API_KEY` in `secrets/.env` (the Docker script generates one for you) and pass the same value as `access_token` in your orchestration file. Keep the server bound to localhost (the default) — if you must expose it remotely, put it behind an authenticated reverse proxy over HTTPS.
 ## Quick Start: Using Docker
 
 We've provided a convenient shell script (`run_instagrapi_server.sh`) that simplifies the process of setting up and running the Instagrapi server in Docker. This script handles building the Docker image, setting up credentials, and starting the container.
@@ -20,9 +22,10 @@ Run this script either from the repository root or from within the `scripts/inst
 
 This script will:
 - Prompt for your Instagram username and password.
-- Create the necessary `.env` file.
+- Create the necessary `.env` file, including a randomly generated `INSTAGRAPI_API_KEY`.
 - Build the Docker image.
-- Start the Docker container and authenticate with Instagram, creating a session automatically.
+- Start the Docker container (published on `127.0.0.1:8000`, localhost only) and authenticate with Instagram, creating a session automatically.
+- Print the generated API key, which you must set as `access_token` in your orchestration file (see below).
 
 ### ⏱ To run the server again later:
 ```bash
@@ -59,11 +62,13 @@ If you'd prefer to run the server manually (without Docker), you can follow thes
    mkdir -p secrets
    ```
 
-3. **Create a `.env` file** inside `secrets/` with your Instagram credentials:
+3. **Create a `.env` file** inside `secrets/` with your Instagram credentials and an API key (any long random secret, e.g. the output of `openssl rand -hex 32`):
    ```dotenv
    INSTAGRAM_USERNAME="your_username"
    INSTAGRAM_PASSWORD="your_password"
+   INSTAGRAPI_API_KEY="a_long_random_secret"
    ```
+   Restrict its permissions: `chmod 600 secrets/.env`
 
 4. **Install dependencies** using the pyproject.toml file:
   
@@ -94,10 +99,11 @@ poetry run uvicorn src.instaserver:app --port 8000
 
 The server should now be running within that session, and accessible at  http://127.0.0.1:8000 
 
-You can set this in the Auto Archiver orchestration.yaml file like this:
+You can set this in the Auto Archiver orchestration.yaml file like this (the `access_token` must match the `INSTAGRAPI_API_KEY` from `secrets/.env`):
 ```yaml
 instagram_api_extractor:
   api_endpoint: http://127.0.0.1:8000
+  access_token: a_long_random_secret
 ```
 
 
@@ -109,7 +115,7 @@ Once the session file is created, you should be able to run the server without l
 
 ### To run it locally (from scripts/instagrapi_server):
 ```bash
-poetry run uvicorn src.instgrapinstance.instaserver:app --port 8000
+poetry run uvicorn src.instaserver:app --port 8000
 ```
 
 ---
@@ -128,12 +134,12 @@ docker build -t instagrapi-server .
 docker run -d \
   --env-file secrets/.env \
   -v "$(pwd)/secrets:/app/secrets" \
-  -p 8000:8000 \
+  -p 127.0.0.1:8000:8000 \
   --name ig-instasrv \
   instagrapi-server
 ```
 
-This passes the /secrets/ directory to docker as well as the environment variables from the `.env` file.
+This passes the /secrets/ directory to docker as well as the environment variables from the `.env` file. Publishing with `127.0.0.1:8000:8000` keeps the server reachable from this machine only — do not publish it on all interfaces (`-p 8000:8000`), as anyone who can reach the port could query Instagram through your account.
 
 
 

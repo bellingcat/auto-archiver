@@ -143,7 +143,7 @@ generic_extractor:
 
 **PyPi/ Local**:
 
-When using the Auto Archiver PyPI package, or running locally, you will need additional system requirements to run the token generation script, namely either Docker, or Node.js and Yarn.
+When using the Auto Archiver PyPI package, or running locally, you will need additional system requirements to run the token generation script, namely either Docker, or Node.js and npm (>=9).
 
 See the [bgutil-ytdlp-pot-provider](https://github.com/Brainicism/bgutil-ytdlp-pot-provider?tab=readme-ov-file#a-http-server-option) documentation for more details.
 

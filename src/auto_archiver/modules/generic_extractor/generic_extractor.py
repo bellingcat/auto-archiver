@@ -109,7 +109,7 @@ class GenericExtractor(Extractor):
     def setup_token_generation_script(self) -> None:
         """This function sets up the Proof of Origin Token generation script method for
         bgutil-ytdlp-pot-provider if enabled or in Docker."""
-        missing_tools = [tool for tool in ("node", "yarn", "npx") if shutil.which(tool) is None]
+        missing_tools = [tool for tool in ("node", "npm", "npx") if shutil.which(tool) is None]
         if missing_tools:
             logger.error(
                 f"Cannot set up PO Token script; missing required tools: {', '.join(missing_tools)}. "
@@ -151,7 +151,7 @@ class GenericExtractor(Extractor):
                 shutil.move(os.path.join(extracted_root, "server"), server_dir)
                 shutil.rmtree(extracted_root)
                 logger.info("Installing dependencies and transpiling PoT Generator script...")
-                subprocess.run(["yarn", "install", "--frozen-lockfile"], cwd=server_dir, check=True)
+                subprocess.run(["npm", "ci"], cwd=server_dir, check=True)
                 subprocess.run(["npx", "tsc"], cwd=server_dir, check=True)
 
                 with open(version_file, "w") as vf:

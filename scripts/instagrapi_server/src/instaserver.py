@@ -1,15 +1,17 @@
 """https://subzeroid.github.io/instagrapi/
 
 Run using the following command:
- uvicorn src.instgrapinstance.instaserver:app --host 0.0.0.0 --port 8000 --reload
+ uvicorn src.instaserver:app --port 8000 --reload
 """
 
 import logging
 import os
+import secrets
 import sys
 from dotenv import load_dotenv
 
-from fastapi import FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, Security
+from fastapi.security import APIKeyHeader
 from instagrapi import Client
 from instagrapi.exceptions import LoginRequired, BadCredentials
 
@@ -18,15 +20,33 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(me
 
 INSTAGRAM_USERNAME = os.getenv("INSTAGRAM_USERNAME")
 INSTAGRAM_PASSWORD = os.getenv("INSTAGRAM_PASSWORD")
+INSTAGRAPI_API_KEY = os.getenv("INSTAGRAPI_API_KEY")
 SESSION_FILE = "secrets/instagrapi_session.json"
 
-app = FastAPI()
+# The auto-archiver instagram_api_extractor sends its access_token in this header.
+api_key_header = APIKeyHeader(name="x-access-key", auto_error=False)
+
+
+def verify_access_key(provided_key: str = Security(api_key_header)):
+    """Rejects any request that does not carry the configured API key."""
+    if not INSTAGRAPI_API_KEY or not provided_key or not secrets.compare_digest(provided_key, INSTAGRAPI_API_KEY):
+        raise HTTPException(status_code=401, detail="Invalid or missing API key (x-access-key header)")
+
+
+app = FastAPI(dependencies=[Depends(verify_access_key)])
 cl = Client()
 
 
 @app.on_event("startup")
 def startup_event():
     """Login automatically when server starts"""
+    if not INSTAGRAPI_API_KEY:
+        logging.error(
+            "INSTAGRAPI_API_KEY is not set. Refusing to start an unauthenticated server: "
+            "add INSTAGRAPI_API_KEY=<random secret> to secrets/.env and use the same value "
+            "as the instagram_api_extractor 'access_token' in your orchestration file."
+        )
+        sys.exit(1)
     try:
         login_instagram()
     except RuntimeError as e:
@@ -51,6 +71,7 @@ def login_instagram():
     try:
         cl.login(INSTAGRAM_USERNAME, INSTAGRAM_PASSWORD)
         cl.dump_settings(SESSION_FILE)
+        os.chmod(SESSION_FILE, 0o600)
         logging.info("Login successful, session saved.")
     except BadCredentials as bc:
         raise RuntimeError("Incorrect Instagram username or password.") from bc
@@ -154,4 +175,6 @@ def get_user_medias(user_id: str, end_cursor: str = None):
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    # Bind to localhost by default; set HOST=0.0.0.0 explicitly (e.g. inside Docker,
+    # where the port mapping controls external exposure) to listen on all interfaces.
+    uvicorn.run(app, host=os.getenv("HOST", "127.0.0.1"), port=8000)

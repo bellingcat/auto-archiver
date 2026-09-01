@@ -12,7 +12,10 @@
     },
     "requires_setup": True,
     "configs": {
-        "access_token": {"default": None, "help": "a valid instagrapi-api token"},
+        "access_token": {
+            "default": None,
+            "help": "a valid instagrapi-api token, sent to the API as the x-access-key header; if you use the self-hosted instagrapi server this must match its INSTAGRAPI_API_KEY",
+        },
         "api_endpoint": {"required": True, "help": "API endpoint to use"},
         "full_profile": {
             "default": False,
