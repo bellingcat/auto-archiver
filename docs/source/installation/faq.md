@@ -3,7 +3,7 @@
 
 ### Q: What websites does the Auto Archiver support?
 **A:** The Auto Archiver works for a large variety of sites. Firstly, the Auto Archiver can download
-and archive any video website supported by YT-DLP, a powerful video-downloading tool ([full list of of
+and archive any video website supported by YT-DLP, a powerful video-downloading tool ([full list of
 sites here](https://github.com/yt-dlp/yt-dlp/blob/master/supportedsites.md)). Aside from these sites,
 there are various different 'Extractors' for specific websites. See the full list of extractors that 
 are available on the [extractors](../modules/extractor.md) page. Some sites supported include:
@@ -14,11 +14,11 @@ are available on the [extractors](../modules/extractor.md) page. Some sites supp
 * Tiktok
 * Bluesky
 
-```{note} What websites the Auto Archiver can archie depends on what extractors you have enabled in
+```{note} What websites the Auto Archiver can archive depends on what extractors you have enabled in
 your configuration. See [configuration](./configurations.md) for more info.
 ```
 
-### Q: Does the Auto Archiver only work for social media posts ?
+### Q: Does the Auto Archiver only work for social media posts?
 **A:** No, the Auto Archiver can archive any web page on the internet, not just social media posts.
 However, for social media posts Auto Archiver can extract more relevant/useful information (such as 
 post comments, likes, author etc.) which may not be available for a generic website. If you are looking
@@ -44,7 +44,7 @@ on Google Drive.
 You can choose to store your data in multiple places, for example your local drive **and** an S3 bucket for redundancy.
 ```
 
-### Q: What should I do is something doesn't work?
+### Q: What should I do if something doesn't work?
 **A:** First, read through the log files to see if you can find a specific reason why something isn't working. Learn more about logging
 and how to enable debug logging in the [Logging Howto](../how_to/logging.md).
 
