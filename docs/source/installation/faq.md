@@ -14,7 +14,7 @@ are available on the [extractors](../modules/extractor.md) page. Some sites supp
 * Tiktok
 * Bluesky
 
-```{note} What websites the Auto Archiver can archie depends on what extractors you have enabled in
+```{note} What websites the Auto Archiver can archive depends on what extractors you have enabled in
 your configuration. See [configuration](./configurations.md) for more info.
 ```
 
@@ -44,7 +44,7 @@ on Google Drive.
 You can choose to store your data in multiple places, for example your local drive **and** an S3 bucket for redundancy.
 ```
 
-### Q: What should I do is something doesn't work?
+### Q: What should I do if something doesn't work?
 **A:** First, read through the log files to see if you can find a specific reason why something isn't working. Learn more about logging
 and how to enable debug logging in the [Logging Howto](../how_to/logging.md).
 
