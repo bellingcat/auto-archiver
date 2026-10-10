@@ -12,7 +12,7 @@ The Authentication framework currently only works with the following modules:
 * [Generic Extractor](../modules/autogen/extractor/generic_extractor.md) - the main module for extracting content from websites
 * [Antibot Extractor/Enricher](../modules/autogen/extractor/antibot_extractor_enricher.md)
 
-To authenticate for WACZ archiving, see the instructions on the [](../modules/autogen/enricher/wacz_extractor_enricher.md) page.
+To authenticate for WACZ archiving, see the instructions on the [WACZ Enricher](../modules/autogen/enricher/wacz_extractor_enricher.md) page.
 ```
 
 ## The Authentication Config

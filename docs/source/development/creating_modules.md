@@ -8,7 +8,7 @@ Modules are what's used to extend Auto Archiver to process different websites or
 
 ## Setting up the folder structure
 
-1. First, decide what type of module you wish to create. Check the types of modules on the [](../core_modules.md) page to decide what type you need. (Note: a module can be more than one type, more on that below)
+1. First, decide what type of module you wish to create. Check the types of modules on the [Core Modules](../core_modules.md) page to decide what type you need. (Note: a module can be more than one type, more on that below)
 2. Create a new python package (a folder) with the name of your module (in this tutorial, we'll call it `awesome_extractor`).
 3. Create the `__manifest__.py` and an the `awesome_extractor.py` files in this folder.
 
