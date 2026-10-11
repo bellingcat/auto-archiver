@@ -68,7 +68,7 @@ class ArchivingOrchestrator:
             add_help=False,
             description="""
                 Auto Archiver is a CLI tool to archive media/metadata from online URLs;
-                it can read URLs from many sources (Google Sheets, Command Line, ...); and write results to many destinations too (CSV, Google Sheets, MongoDB, ...)!
+                it can read URLs from many sources (Google Sheets, Command Line, ...); and write results to many destinations too (CSV, Google Sheets, ...)!
                 """,
             epilog="Check the code at https://github.com/bellingcat/auto-archiver",
             formatter_class=RichHelpFormatter,
@@ -526,7 +526,7 @@ Here's how that would look: \n\nsteps:\n  extractors:\n  - [your_extractor_name_
 
         This method sets up the configuration, loads the modules, and runs the feed.
         If you wish to make code invocations yourself, you should use the 'setup' and 'feed' methods separately.
-        To test configurations, without loading any modules you can also first call 'setup_configs'
+        To test configurations, without loading any modules you can also first call 'setup_config'
         """
         try:
             self.setup(args)
