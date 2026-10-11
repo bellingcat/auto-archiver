@@ -1,9 +1,5 @@
 """The `extractor` module defines the base functionality for implementing extractors in the media archiving framework.
 This class provides common utility methods and a standard interface for extractors.
-
-Factory method to initialize an extractor instance based on its name.
-
-
 """
 
 from __future__ import annotations
