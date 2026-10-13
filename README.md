@@ -36,6 +36,10 @@ Or pip:
 
 `pip install auto-archiver && auto-archiver --help`
 
+Or, on Linux, with [OTinstaller](https://github.com/OSINTVerseHQ/OTinstaller), a third-party tool manager that installs the PyPI release into its own virtualenv (please report problems with it [on the OTinstaller tracker](https://github.com/OSINTVerseHQ/OTinstaller/issues)):
+
+`pipx install otinstaller && otinstaller init && otinstaller install auto-archiver && otinstaller run auto-archiver -- --config secrets/orchestration.yaml`
+
 ## Contributing
 
 We welcome contributions to the Auto Archiver project! See the [Contributing Guide](https://auto-archiver.readthedocs.io/en/latest/contributing.html) for how to get involved!
