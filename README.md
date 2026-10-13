@@ -38,7 +38,7 @@ Or pip:
 
 Or, on Linux, with [OTinstaller](https://github.com/OSINTVerseHQ/OTinstaller), a third-party tool manager that installs the PyPI release into its own virtualenv (please report problems with it [on the OTinstaller tracker](https://github.com/OSINTVerseHQ/OTinstaller/issues)):
 
-`pipx install otinstaller && otinstaller install auto-archiver && otinstaller run auto-archiver -- --config secrets/orchestration.yaml`
+`pipx install otinstaller && otinstaller init && otinstaller install auto-archiver && otinstaller run auto-archiver -- --config secrets/orchestration.yaml`
 
 ## Contributing
 
