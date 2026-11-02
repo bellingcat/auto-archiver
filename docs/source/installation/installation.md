@@ -8,9 +8,9 @@ upgrading.md
 
 There are 3 main ways to use the auto-archiver. We recommend the 'docker' method for most uses. This installs all the requirements in one command.
 
-1. Easiest (recommended): [via docker](#installing-with-docker)
-2. Local Install: [using pip](#installing-locally-with-pip)
-3. Developer Install: [see the developer guidelines](../development/developer_guidelines)
+1. Easiest (recommended): [via docker](#1-installing-with-docker)
+2. Local Install: [using pip](#2-installing-locally-with-pip)
+3. Developer Install: [see the developer guidelines](../development/developer_guidelines.md)
 
 ## 1. Installing with Docker
 
@@ -62,4 +62,4 @@ If using the local installation method, you will also need to install the follow
 
 ## Developer Install
 
-[See the developer guidelines](../development/developer_guidelines)
+[See the developer guidelines](../development/developer_guidelines.md)
