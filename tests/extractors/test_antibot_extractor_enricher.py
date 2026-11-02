@@ -63,7 +63,7 @@ class TestAntibotExtractorEnricher(TestExtractorBase):
                 "Tyto alba",
                 3,  # Reduced due to Wikipedia rate limiting (429 errors)
                 0,
-                False,
+                True,  # Wikimedia blocks CI runners ("Wikimedia Error" page)
             ),
             (
                 "https://www.bellingcat.com/news/2025/04/29/open-sources-show-myanmar-junta-airstrike-damages-despite-post-earthquake-ceasefire/",
