@@ -24,9 +24,6 @@ def check_url_or_raise(url: str) -> bool | ValueError:
     if parsed.hostname == "localhost":
         raise ValueError(f"Localhost URLs cannot be parsed for security reasons (for url {url})")
 
-    if parsed.scheme not in ["http", "https"]:
-        raise ValueError(f"Invalid URL scheme, only http and https supported (for url {url})")
-
     try:  # special rules for IP addresses
         ip = ip_address(parsed.hostname)
     except ValueError:

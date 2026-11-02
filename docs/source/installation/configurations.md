@@ -42,7 +42,7 @@ auto-archiver --instagram_extractor.api_key=123 --other_module.setting --store
 
 ## Seeing all Configuration Options
 
-View the configurable settings for the core modules on the individual doc pages for each [](../core_modules.md).
+View the configurable settings for the core modules on the individual doc pages for each [core module](../core_modules.md).
 You can also view all settings available for the modules you have on your system using the `--help` flag in auto-archiver.
 
 ```{code-block} console

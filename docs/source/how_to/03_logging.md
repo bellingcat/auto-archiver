@@ -4,7 +4,7 @@ Auto Archiver's logs can be helpful for debugging problematic archiving processe
 
 ## Setting up logging
 
-Logging settings can be set on the command line or using the orchestration config file ([learn more](../installation/configuration)). A special `logging` section defines the logging options.
+Logging settings can be set on the command line or using the orchestration config file ([learn more](../installation/configurations.md)). A special `logging` section defines the logging options.
 
 #### Enabling or Disabling Logging
 

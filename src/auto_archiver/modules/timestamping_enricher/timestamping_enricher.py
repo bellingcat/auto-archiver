@@ -8,7 +8,7 @@ from retrying import retry
 import requests
 from auto_archiver.utils.custom_logger import logger
 
-from rfc3161_client import (decode_timestamp_response, TimestampRequestBuilder, TimeStampResponse, VerifierBuilder)
+from rfc3161_client import decode_timestamp_response, TimestampRequestBuilder, TimeStampResponse, VerifierBuilder
 from rfc3161_client import VerificationError as Rfc3161VerificationError
 from rfc3161_client.tsp import SignedData
 from cryptography import x509
@@ -49,7 +49,7 @@ class TimestampingEnricher(Enricher):
             self.session.close()
 
     def enrich(self, to_enrich: Metadata) -> None:
-        logger.debug(f"RFC3161 timestamping existing files")
+        logger.debug("RFC3161 timestamping existing files")
 
         # create a new text file with the existing media hashes
         hashes = [
@@ -57,7 +57,7 @@ class TimestampingEnricher(Enricher):
         ]
 
         if not len(hashes):
-            logger.debug(f"No hashes found")
+            logger.debug("No hashes found")
             return
 
         hashes_fn = os.path.join(self.tmp_dir, "hashes.txt")
@@ -70,7 +70,7 @@ class TimestampingEnricher(Enricher):
         timestamp_tokens = []
         for tsa_url in self.tsa_urls:
             try:
-                message = bytes(data_to_sign, encoding='utf8')
+                message = bytes(data_to_sign, encoding="utf8")
 
                 logger.debug(f"Timestamping with {tsa_url=}")
                 signed: TimeStampResponse = self.sign_data(tsa_url, message)
@@ -82,13 +82,17 @@ class TimestampingEnricher(Enricher):
                     if self.allow_selfsigned:
                         logger.warning(f"Allowing self-signed certificat from TSA {tsa_url=}")
                     else:
-                        raise ValueError(f"No valid root certificate found for {tsa_url=}. Are you sure it's a trusted TSA? Or define an alternative trusted root with `cert_authorities`. (tried: {self.cert_authorities or certifi.where()})")
+                        raise ValueError(
+                            f"No valid root certificate found for {tsa_url=}. Are you sure it's a trusted TSA? Or define an alternative trusted root with `cert_authorities`. (tried: {self.cert_authorities or certifi.where()})"
+                        )
 
                 # save the timestamping certificate
                 cert_chain = self.save_certificate(signed, root_cert)
 
                 timestamp_token_path = self.save_timestamp_token(signed.time_stamp_token(), tsa_url)
-                timestamp_tokens.append(Media(filename=timestamp_token_path).set("tsa", tsa_url).set("cert_chain", cert_chain))
+                timestamp_tokens.append(
+                    Media(filename=timestamp_token_path).set("tsa", tsa_url).set("cert_chain", cert_chain)
+                )
             except Exception as e:
                 logger.warning(f"Error while timestamping with {tsa_url=}: {e}")
 
@@ -101,7 +105,7 @@ class TimestampingEnricher(Enricher):
             to_enrich.set("timestamped", True)
             logger.info(f"{len(timestamp_tokens)} timestamp tokens created")
         else:
-            logger.warning(f"No successful timestamps found")
+            logger.warning("No successful timestamps found")
 
     def save_timestamp_token(self, timestamp_token: bytes, tsa_url: str) -> str:
         """
@@ -130,7 +134,7 @@ class TimestampingEnricher(Enricher):
         trusted_root_path = self.cert_authorities or certifi.where()
         cert_authorities = []
 
-        with open(trusted_root_path, 'rb') as f:
+        with open(trusted_root_path, "rb") as f:
             cert_authorities = x509.load_pem_x509_certificates(f.read())
 
         if not cert_authorities:
@@ -168,9 +172,7 @@ class TimestampingEnricher(Enricher):
     def sign_data(self, tsa_url: str, bytes_data: bytes) -> TimeStampResponse:
         # see https://github.com/sigstore/sigstore-python/blob/99948d5b80525a5a104e904ffea58169dc6e0629/sigstore/_internal/timestamp.py#L84-L121
 
-        timestamp_request = (
-            TimestampRequestBuilder().data(bytes_data).nonce(nonce=True).build()
-        )
+        timestamp_request = TimestampRequestBuilder().data(bytes_data).nonce(nonce=True).build()
 
         @retry(
             wait_exponential_multiplier=1,
@@ -193,6 +195,7 @@ class TimestampingEnricher(Enricher):
         )
         def decode_with_retry(response):
             return decode_timestamp_response(response.content)
+
         # Check that we can parse the response but do not *verify* it
         try:
             timestamp_response = decode_with_retry(response)
@@ -209,7 +212,7 @@ class TimestampingEnricher(Enricher):
         if len(certs) == 1:
             return certs
 
-        while (len(ordered_certs) < len(certs)):
+        while len(ordered_certs) < len(certs):
             if len(ordered_certs) == 0:
                 for cert in certs:
                     if not [c for c in certs if cert.subject == c.issuer]:
@@ -236,6 +239,10 @@ class TimestampingEnricher(Enricher):
             cert_fn = os.path.join(self.tmp_dir, f"{i + 1} – {str(cert.serial_number)[:20]}.crt")
             with open(cert_fn, "wb") as f:
                 f.write(cert.public_bytes(encoding=serialization.Encoding.PEM))
-            cert_chain.append(Media(filename=cert_fn).set("subject", cert.subject.get_attributes_for_oid(x509.NameOID.COMMON_NAME)[0].value))
+            cert_chain.append(
+                Media(filename=cert_fn).set(
+                    "subject", cert.subject.get_attributes_for_oid(x509.NameOID.COMMON_NAME)[0].value
+                )
+            )
 
         return cert_chain

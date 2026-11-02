@@ -4,7 +4,7 @@
 ```
 ### Update the project version
 
-Update the version number in the project file: [pyproject.toml](../../pyproject.toml) following SemVer:
+Update the version number in the project file: [pyproject.toml](../../../pyproject.toml) following SemVer:
 ```toml
 [project]
 name = "auto-archiver"
@@ -12,8 +12,8 @@ version = "0.1.1"
 ```
 Then commit and push the changes.
 
-* The package version is automatically updated in PyPi using the workflow [python-publish.yml](../../.github/workflows/python-publish.yml)
-* A Docker image is automatically pushed with the git tag to dockerhub using the workflow [docker-publish.yml](../../.github/workflows/docker-publish.yml)
+* The package version is automatically updated in PyPi using the workflow [python-publish.yaml](../../../.github/workflows/python-publish.yaml)
+* A Docker image is automatically pushed with the git tag to dockerhub using the workflow [docker-publish.yaml](../../../.github/workflows/docker-publish.yaml)
 
 ### Create the release on Git
 

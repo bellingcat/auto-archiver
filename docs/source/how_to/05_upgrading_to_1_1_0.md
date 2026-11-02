@@ -42,7 +42,7 @@ It comes with Dropins that we will be adding and maintaining.
 
 > Dropin: A module with site-specific behaviours that is loaded automatically. You don't need to add them to your configuration steps for them to run. Sometimes they need `authentication` configurations though.
 
-One such Dropin is the VkDropin which uses this automated browser to access VKontakte (VK) pages. You should add a username/password to the configuration file if you get authentication blocks from VK, to do so use the [authentication settings](authentication_how_to.md):
+One such Dropin is the VkDropin which uses this automated browser to access VKontakte (VK) pages. You should add a username/password to the configuration file if you get authentication blocks from VK, to do so use the [authentication settings](01_authentication_how_to.md):
 
 ```{code} yaml
 authentication:

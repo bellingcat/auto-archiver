@@ -8,9 +8,9 @@ upgrading.md
 
 There are 3 main ways to use the auto-archiver. We recommend the 'docker' method for most uses. This installs all the requirements in one command.
 
-1. Easiest (recommended): [via docker](#installing-with-docker)
-2. Local Install: [using pip](#installing-locally-with-pip)
-3. Developer Install: [see the developer guidelines](../development/developer_guidelines)
+1. Easiest (recommended): [via docker](#1-installing-with-docker)
+2. Local Install: [using pip](#2-installing-locally-with-pip)
+3. Developer Install: [see the developer guidelines](../development/developer_guidelines.md)
 
 ## 1. Installing with Docker
 
@@ -39,7 +39,7 @@ That's it, all done! You're now ready to set up [your configuration file](config
 
 ## 2. Installing Locally with Pip
 
-1. Make sure you have python 3.10 or higher installed
+1. Make sure you have python 3.11 or higher installed
 2. Install the package with your preferred package manager: `pip/pipenv/conda install auto-archiver` or `poetry add auto-archiver`
 3. Test it's installed with `auto-archiver --help`
 4. Install other local dependency requirements (for example `ffmpeg`, `firefox`)
@@ -62,4 +62,4 @@ If using the local installation method, you will also need to install the follow
 
 ## Developer Install
 
-[See the developer guidelines](../development/developer_guidelines)
+[See the developer guidelines](../development/developer_guidelines.md)

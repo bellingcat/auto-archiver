@@ -11,7 +11,7 @@ If you encounter a bug, please create an issue on GitHub with the following deta
 * Expected behavior: Describe what you expected to happen.
 * Actual behavior: Explain what actually happened.
 * Screenshots/logs: If applicable, attach screenshots or logs to help diagnose the problem.
-* Environment: Mention the OS, Ruby version, and any other relevant details.
+* Environment: Mention the OS, Python version, and any other relevant details.
 
 ### 2. Writing a Patch/Fix and Submitting Pull Requests
 

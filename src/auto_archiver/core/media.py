@@ -8,7 +8,7 @@ import os
 import traceback
 from typing import Any, List, Iterator
 from dataclasses import dataclass, field
-from dataclasses_json import dataclass_json, config
+from dataclasses_json import dataclass_json
 import mimetypes
 
 from auto_archiver.utils.custom_logger import logger
@@ -32,7 +32,6 @@ class Media:
     urls: List[str] = field(default_factory=list)
     properties: dict = field(default_factory=dict)
     _mimetype: str = None  # eg: image/jpeg
-    _stored: bool = field(default=False, repr=False, metadata=config(exclude=lambda _: True))  # always exclude
 
     def store(self: Media, metadata: Any, url: str = "url-not-available", storages: List[Any] = None) -> None:
         # 'Any' typing for metadata to avoid circular imports. Stores the media

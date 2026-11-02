@@ -46,7 +46,7 @@ RUN /poetry-venv/bin/poetry install --only main --no-cache
 RUN chown 1000:1000 /app && \
     chown -R 1000:1000 /app/.venv/lib/python3.12/site-packages/seleniumbase/drivers/ && \
     mkdir -p /app/local_archive /app/secrets /tmp/archive && \
-    chown -R 1000:1000 /app/local_archive /app/secrets /tmp/archive
+    chown -R 1000:1000 /app/local_archive /app/secrets /tmp/archive /app/.venv
 
 # Update PATH to include virtual environment binaries
 # Allowing entry point to run the application directly with Python

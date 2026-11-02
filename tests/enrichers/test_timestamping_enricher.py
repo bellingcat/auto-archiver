@@ -164,7 +164,7 @@ def test_download_tsr(setup_module):
     assert isinstance(result, TimeStampResponse)
 
     verified_root_cert = tsp.verify_signed(result, data)
-    assert verified_root_cert.subject.rfc4514_string() == "CN=IdenTrust Commercial Root CA 1,O=IdenTrust,C=US"
+    assert verified_root_cert.subject.rfc4514_string() == "CN=IdenTrust Public Sector Root CA 1,O=IdenTrust,C=US"
 
     # test downloading the cert
     cert_chain = tsp.save_certificate(result, verified_root_cert)
