@@ -10,19 +10,19 @@
             "default": [
                 # See https://github.com/trailofbits/rfc3161-client/issues/46 for a list of valid TSAs
                 # Full list of TSAs: https://gist.github.com/Manouchehri/fd754e402d98430243455713efada710
-                    "http://timestamp.identrust.com",
-                    "http://timestamp.ssl.trustwave.com",
-                    "http://zeitstempel.dfn.de",
-                    "http://ts.ssl.com",
-                    # "http://tsa.izenpe.com", # self-signed
-                    "http://tsa.lex-persona.com/tsa",
-                    # "http://ca.signfiles.com/TSAServer.aspx", # self-signed
-                    # "http://tsa.sinpe.fi.cr/tsaHttp/", # self-signed
-                    # "http://tsa.cra.ge/signserver/tsa?workerName=qtsa", # self-signed
-                    "http://tss.cnbs.gob.hn/TSS/HttpTspServer",
-                    # "http://dss.nowina.lu/pki-factory/tsa/good-tsa",
-                    # "https://freetsa.org/tsr", # self-signed
-                ],
+                "http://timestamp.identrust.com",
+                "http://timestamp.ssl.trustwave.com",
+                "http://zeitstempel.dfn.de",
+                "http://ts.ssl.com",
+                # "http://tsa.izenpe.com", # self-signed
+                "http://tsa.lex-persona.com/tsa",
+                # "http://ca.signfiles.com/TSAServer.aspx", # self-signed
+                # "http://tsa.sinpe.fi.cr/tsaHttp/", # self-signed
+                # "http://tsa.cra.ge/signserver/tsa?workerName=qtsa", # self-signed
+                "http://tss.cnbs.gob.hn/TSS/HttpTspServer",
+                # "http://dss.nowina.lu/pki-factory/tsa/good-tsa",
+                # "https://freetsa.org/tsr", # self-signed
+            ],
             "help": "List of RFC3161 Time Stamp Authorities to use, separate with commas if passed via the command line.",
         },
         "cert_authorities": {
@@ -34,8 +34,8 @@
             "default": False,
             "help": "Whether or not to allow and save self-signed Timestamping certificates. This allows for a greater range of timestamping servers to be used, \
 but they are not trusted authorities",
-            "type": "bool"
-        }
+            "type": "bool",
+        },
     },
     "description": """
     Generates RFC3161-compliant timestamp tokens using Time Stamp Authorities (TSA) for archived files.

@@ -101,8 +101,6 @@ markers = [
 line-length = 120
 # Remove this for a more detailed lint report
 output-format = "concise"
-# TODO: temp ignore rule for timestamping_enricher to allow for open PR
-exclude = ["src/auto_archiver/modules/timestamping_enricher/*"]
 
 
 [tool.ruff.lint]

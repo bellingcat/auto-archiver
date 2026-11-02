@@ -10,15 +10,15 @@ Key Functionalities:
 """
 
 from __future__ import annotations
-import hashlib
 import os
-from typing import Any, List, Union, Dict
+from typing import Any, List, Dict
 from dataclasses import dataclass, field
 from dataclasses_json import dataclass_json
 import datetime
 from urllib.parse import urlparse
 from dateutil.parser import parse as parse_dt
 from auto_archiver.utils.custom_logger import logger
+from auto_archiver.utils.misc import calculate_file_hash
 
 from .media import Media
 
@@ -79,8 +79,8 @@ class Metadata:
         self.metadata[key] = val
         return self
 
-    def get(self, key: str, default: Any = None, create_if_missing=False) -> Union[Metadata, str]:
-        # goes through metadata and returns the Metadata available
+    def get(self, key: str, default: Any = None, create_if_missing=False) -> Any:
+        # returns the value stored under this key, or the default if it is not present
         if create_if_missing and key not in self.metadata:
             self.metadata[key] = default
         return self.metadata.get(key, default)
@@ -169,16 +169,6 @@ class Metadata:
 
     def remove_duplicate_media_by_hash(self) -> None:
         # iterates all media, calculates a hash if it's missing and deletes duplicates
-        def calculate_hash_in_chunks(hash_algo, chunksize, filename) -> str:
-            # taken from hash_enricher, cannot be isolated to misc due to circular imports
-            with open(filename, "rb") as f:
-                while True:
-                    buf = f.read(chunksize)
-                    if not buf:
-                        break
-                    hash_algo.update(buf)
-            return hash_algo.hexdigest()
-
         media_hashes = set()
         new_media = []
         for m in self.media:
@@ -190,7 +180,7 @@ class Metadata:
                 if not os.path.exists(m.filename):
                     logger.warning(f"Skipping missing media file: {m.filename}")
                     continue
-                h = calculate_hash_in_chunks(hashlib.sha256(), int(1.6e7), m.filename)
+                h = calculate_file_hash(m.filename)
             if len(h) and h in media_hashes:
                 continue
             media_hashes.add(h)
