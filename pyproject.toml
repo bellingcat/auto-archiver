@@ -7,7 +7,7 @@ name = "auto-archiver"
 version = "1.2.9"
 description = "Automatically archive links to videos, images, and social media content from Google Sheets (and more)."
 
-requires-python = ">=3.10,<3.13"
+requires-python = ">=3.11,<3.13"
 license = "MIT"
 authors = [
     { name = "Bellingcat", email = "tech@bellingcat.com" },
