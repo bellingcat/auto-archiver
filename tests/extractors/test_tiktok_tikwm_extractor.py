@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+import os
 import time
 import pytest
 import yt_dlp
@@ -7,6 +8,8 @@ from auto_archiver.modules.generic_extractor.generic_extractor import GenericExt
 from auto_archiver.modules.generic_extractor.tiktok import Tiktok, TikTokIE
 
 from .test_extractor_base import TestExtractorBase
+
+CI = os.getenv("GITHUB_ACTIONS", "") == "true"
 
 
 @pytest.fixture(autouse=True)
@@ -146,6 +149,7 @@ class TestTiktokTikwmExtractor(TestExtractorBase):
         assert result.media[1].get("duration") == 60
         assert result.get("timestamp") == datetime.fromtimestamp(1736301699, tz=timezone.utc)
 
+    @pytest.mark.skipif(CI, reason="tikwm.com blocks CI runners (HTTP 403).")
     @pytest.mark.download
     def test_download_video(self, make_item):
         url = "https://www.tiktok.com/@bbcnews/video/7478038212070411542"
@@ -162,6 +166,7 @@ class TestTiktokTikwmExtractor(TestExtractorBase):
         assert result.media[1].get("duration") == 59
         assert result.get("timestamp") == datetime.fromtimestamp(1741122000, tz=timezone.utc)
 
+    @pytest.mark.skipif(CI, reason="tikwm.com blocks CI runners (HTTP 403).")
     @pytest.mark.download
     def test_download_sensitive_video(self, make_item):
         url = "https://www.tiktok.com/@ggs68taiwan.official/video/7441821351142362375"

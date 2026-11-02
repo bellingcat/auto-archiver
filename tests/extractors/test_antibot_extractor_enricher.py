@@ -197,6 +197,7 @@ class TestAntibotExtractorEnricher(TestExtractorBase):
     ):
         self.test_download_pages_with_media(setup_module, make_item, url, in_title, in_text, image_count, video_count)
 
+    @pytest.mark.skipif(CI, reason="Cloudflare challenges CI runners and Turnstile is not overcome there.")
     @pytest.mark.download
     @pytest.mark.parametrize(
         "url,in_html",
