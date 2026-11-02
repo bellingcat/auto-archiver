@@ -5,7 +5,7 @@ Using the Auto Archiver is very simple, but ideally you have some familiarity wi
 ### System Requirements
 
 * Auto Archiver works on any Windows, macOS and Linux computer
-* If you're using the **local install** method, then you should make sure to have python3.10+ installed
+* If you're using the **local install** method, then you should make sure to have python3.11+ installed
 
 ### Storage Requirements
 

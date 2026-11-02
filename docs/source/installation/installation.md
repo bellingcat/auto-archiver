@@ -39,7 +39,7 @@ That's it, all done! You're now ready to set up [your configuration file](config
 
 ## 2. Installing Locally with Pip
 
-1. Make sure you have python 3.10 or higher installed
+1. Make sure you have python 3.11 or higher installed
 2. Install the package with your preferred package manager: `pip/pipenv/conda install auto-archiver` or `poetry add auto-archiver`
 3. Test it's installed with `auto-archiver --help`
 4. Install other local dependency requirements (for example `ffmpeg`, `firefox`)
