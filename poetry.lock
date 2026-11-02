@@ -166,14 +166,14 @@ docs = ["sphinx (>=1.6)", "sphinx-bootstrap-theme (>=0.6)"]
 
 [[package]]
 name = "bgutil-ytdlp-pot-provider"
-version = "1.3.1"
+version = "2.0.2"
 description = ""
 optional = false
 python-versions = ">=3.8"
 groups = ["main"]
 files = [
-    {file = "bgutil_ytdlp_pot_provider-1.3.1-py3-none-any.whl", hash = "sha256:e62b21f9b2e4479d59af87a8900387c34892e8d7fdb223f266749a90e0be22de"},
-    {file = "bgutil_ytdlp_pot_provider-1.3.1.tar.gz", hash = "sha256:130635912e2450757438f72068b900076ac1a62d9f26a00afbe6f2ab258e8b25"},
+    {file = "bgutil_ytdlp_pot_provider-2.0.2-py3-none-any.whl", hash = "sha256:4f488008d25a715837df79472aad06ea052d20e14ad3a02609bbb0fbd746b8be"},
+    {file = "bgutil_ytdlp_pot_provider-2.0.2.tar.gz", hash = "sha256:a127b20c4757edb33f88061afb01220829d1b340638cf638a293065577a000b4"},
 ]
 
 [[package]]
@@ -4260,4 +4260,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11,<3.13"
-content-hash = "f34f4c2097a57617f0a3e06ae04bb6a5f7aa0b0c5ad537b317dbfa7ec6e93e28"
+content-hash = "bc7f5d11dc10f3dfe882ac097f517ca0a14693558759b4ae5bc5a765f851d761"
