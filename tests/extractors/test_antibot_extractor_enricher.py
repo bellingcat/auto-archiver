@@ -286,3 +286,27 @@ class TestAntibotExtractorEnricher(TestExtractorBase):
 
         assert result is False
         mock_logger.error.assert_called()
+
+    @pytest.mark.parametrize("lock_host,removed", [("other-container-host", True), (None, False)])
+    def test_remove_stale_profile_lock(self, tmp_path, mocker, lock_host, removed):
+        """A profile lock left by a previous container (different hostname) blocks the browser and must be removed."""
+        mocker.patch("socket.gethostname", return_value="this-host")
+        self.extractor.user_data_dir = str(tmp_path)
+        os.symlink(f"{lock_host or 'this-host'}-1046804", tmp_path / "SingletonLock")
+        os.symlink("7500863552944695015", tmp_path / "SingletonCookie")
+        os.symlink("/tmp/org.chromium.Chromium.x/SingletonSocket", tmp_path / "SingletonSocket")
+
+        self.extractor._remove_stale_profile_lock()
+
+        for f in ["SingletonLock", "SingletonCookie", "SingletonSocket"]:
+            assert os.path.lexists(tmp_path / f) is not removed
+
+    def test_remove_stale_profile_lock_without_lock(self, tmp_path):
+        self.extractor.user_data_dir = str(tmp_path)
+        self.extractor._remove_stale_profile_lock()  # no-op, does not raise
+
+    def test_enrich_passes_brave_origin_switch(self, make_item, mocker):
+        mock_sb = mocker.patch("auto_archiver.modules.antibot_extractor_enricher.antibot_extractor_enricher.SB")
+        mock_sb.side_effect = Exception("stop here")
+        self.extractor.enrich(make_item("https://example.com/"))
+        assert "--skip-origin-startup-dialog" in mock_sb.call_args.kwargs["chromium_arg"]
