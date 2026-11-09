@@ -1,6 +1,7 @@
 import base64
 import math
 import os
+import socket
 import sys
 import traceback
 from urllib.parse import urljoin
@@ -17,6 +18,12 @@ from auto_archiver.modules.antibot_extractor_enricher.dropins.default import Def
 from auto_archiver.utils.misc import random_str
 from auto_archiver.utils.url import is_relevant_url
 from auto_archiver.utils.deletion_detection import detect_deletion, flag_as_deleted
+
+
+# Brave Origin (the browser in the browsertrix-crawler base image) opens a startup/purchase dialog that breaks
+# seleniumbase's uc_open_with_reconnect ("failed to close window"), other Chromium browsers ignore this switch
+CHROMIUM_ARGS = "--skip-origin-startup-dialog"
+SINGLETON_FILES = ("SingletonLock", "SingletonCookie", "SingletonSocket")
 
 
 class AntibotExtractorEnricher(Extractor, Enricher):
@@ -82,6 +89,26 @@ class AntibotExtractorEnricher(Extractor, Enricher):
                 self.user_data_dir = self.user_data_dir.rstrip(os.path.sep) + "_docker"
             os.makedirs(self.user_data_dir, exist_ok=True)
 
+    def _remove_stale_profile_lock(self):
+        """
+        Chromium refuses to open a profile locked by another host ("cannot connect to chrome"), which happens to the
+        persisted user_data_dir whenever the docker container is recreated (new hostname), so remove such stale locks.
+        Locks held by this host are left alone, Chromium itself handles those.
+        """
+        lock = os.path.join(self.user_data_dir, "SingletonLock")
+        try:
+            lock_host = os.readlink(lock).rsplit("-", 1)[0]
+        except OSError:
+            return  # no lock (or not a symlink)
+        if lock_host == socket.gethostname():
+            return
+        logger.warning(f"Removing stale browser profile lock from host {lock_host} in {self.user_data_dir}")
+        for f in SINGLETON_FILES:
+            try:
+                os.remove(os.path.join(self.user_data_dir, f))
+            except FileNotFoundError:
+                pass
+
     def enrich(self, to_enrich: Metadata, custom_data_dir: bool = True) -> bool:
         if to_enrich.get_media_by_id("html_source_code"):
             logger.info("Antibot has already been executed, skipping.")
@@ -92,6 +119,9 @@ class AntibotExtractorEnricher(Extractor, Enricher):
         # Use xvfb in Docker environments where no display is available
         use_xvfb = bool(os.environ.get("RUNNING_IN_DOCKER"))
 
+        if using_user_data_dir:
+            self._remove_stale_profile_lock()
+
         try:
             with SB(
                 uc=True,
@@ -100,6 +130,7 @@ class AntibotExtractorEnricher(Extractor, Enricher):
                 user_data_dir=using_user_data_dir,
                 proxy=self.proxy,
                 xvfb=use_xvfb,
+                chromium_arg=CHROMIUM_ARGS,
             ) as sb:
                 logger.info(f"Selenium browser is up with agent {self.agent}, opening url...")
                 sb.uc_open_with_reconnect(url, 4)

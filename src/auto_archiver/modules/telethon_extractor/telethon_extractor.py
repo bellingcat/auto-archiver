@@ -63,6 +63,7 @@ class TelethonExtractor(Extractor):
         except RuntimeError:
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
+        self.loop = loop
 
         # initiate the client
         self.client = TelegramClient(self.session_file, self.api_id, self.api_hash)
@@ -138,6 +139,10 @@ class TelethonExtractor(Extractor):
         post_id = int(match.group(4))
 
         result = Metadata()
+
+        # other modules may replace and close the current event loop (eg. seleniumbase in antibot_extractor_enricher)
+        # but telethon is bound to the loop from setup, so make sure that one is the current one again
+        asyncio.set_event_loop(self.loop)
 
         # NB: not using bot_token since then private channels cannot be archived: self.client.start(bot_token=self.bot_token)
         with self.client.start():

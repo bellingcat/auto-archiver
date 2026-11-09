@@ -39,7 +39,8 @@ def test_ssl_enrich(metadata, enricher, mocker):
     media_len_before = len(metadata.media)
     enricher.enrich(metadata)
 
-    ssl.get_server_certificate.assert_called_once_with(("example.com", 443))
+    ssl.get_server_certificate.assert_called_once_with(("example.com", 443), timeout=enricher.timeout)
+    assert enricher.timeout == 30
     mock_file.assert_called_once_with(f"{enricher.tmp_dir}/example-com.pem", "w")
     mock_file().write.assert_called_once_with("TEST_CERT")
     assert len(metadata.media) == media_len_before + 1

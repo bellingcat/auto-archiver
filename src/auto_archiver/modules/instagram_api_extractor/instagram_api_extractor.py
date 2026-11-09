@@ -334,7 +334,30 @@ class InstagramAPIExtractor(Extractor):
         result.add_media(media, id=media_id)
         return item
 
+    @staticmethod
+    def _largest_url(versions: list[dict]) -> str | None:
+        versions = [v for v in versions or [] if isinstance(v, dict) and v.get("url")]
+        if not versions:
+            return None
+        return max(versions, key=lambda v: (v.get("width") or 0) * (v.get("height") or 0))["url"]
+
+    def normalize_v2_item(self, item: dict) -> dict:
+        """
+        v2 endpoints (tagged posts, highlights) return Instagram's raw format, which has no thumbnail_url/video_url/caption_text
+        """
+        if not item.get("thumbnail_url"):
+            if image_url := self._largest_url((item.get("image_versions2") or {}).get("candidates")):
+                item["thumbnail_url"] = image_url
+        if not item.get("video_url"):
+            if video_url := self._largest_url(item.get("video_versions")):
+                item["video_url"] = video_url
+        if not item.get("caption_text") and isinstance(item.get("caption"), dict):
+            if caption_text := item["caption"].get("text"):
+                item["caption_text"] = caption_text
+        return item
+
     def scrape_media(self, item: dict, context: str) -> tuple[dict, Media, str]:
+        item = self.normalize_v2_item(item)
         # remove unnecessary info
         if self.minimize_json_output:
             for k in [

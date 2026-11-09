@@ -194,3 +194,91 @@ class TestInstagramAPIExtractor(TestExtractorBase):
 
         assert result.is_success()
         assert "Error downloading stories for test_user" in result.metadata["errors"]
+
+    # v2 endpoints (tagged posts, highlights) return Instagram's raw format, structure taken from real API responses
+    @staticmethod
+    def _v2_image(n):
+        return {
+            "candidates": [
+                {"url": f"http://example.com/{n}_small.jpg", "width": 750, "height": 938},
+                {"url": f"http://example.com/{n}_large.jpg", "width": 1440, "height": 1800},
+            ]
+        }
+
+    def _v2_video_item(self):
+        return {
+            "id": "1_10",
+            "pk": 1,
+            "code": "vidcode",
+            "media_type": 2,
+            "taken_at": 1792603221,
+            "caption": {"text": "video caption"},
+            "image_versions2": self._v2_image("video_thumb"),
+            "video_versions": [
+                {"url": "http://example.com/video_low.mp4", "width": 480, "height": 854},
+                {"url": "http://example.com/video_high.mp4", "width": 720, "height": 1280},
+            ],
+        }
+
+    def _v2_carousel_item(self):
+        return {
+            "id": "2_10",
+            "pk": 2,
+            "code": "carouselcode",
+            "media_type": 8,
+            "taken_at": 1792603221,
+            "carousel_media": [
+                {"id": "21_10", "media_type": 1, "image_versions2": self._v2_image("c1")},
+                {"id": "22_10", "media_type": 1, "image_versions2": self._v2_image("c2")},
+            ],
+        }
+
+    def test_normalize_v2_item(self):
+        item = self.extractor.normalize_v2_item(self._v2_video_item())
+        assert item["thumbnail_url"] == "http://example.com/video_thumb_large.jpg"
+        assert item["video_url"] == "http://example.com/video_high.mp4"
+        assert item["caption_text"] == "video caption"
+
+    def test_normalize_v2_item_keeps_v1_fields(self, mock_post_response):
+        item = dict(mock_post_response, image_versions2=self._v2_image("other"))
+        item = self.extractor.normalize_v2_item(item)
+        assert item["thumbnail_url"] == mock_post_response["thumbnail_url"]
+        assert item["video_url"] == mock_post_response["video_url"]
+        assert item["caption_text"] == mock_post_response["caption_text"]
+
+    def test_download_all_tagged_v2_items(self, metadata, mocker):
+        mocker.patch.object(
+            self.extractor,
+            "call_api",
+            return_value={
+                "response": {"items": [self._v2_video_item(), self._v2_carousel_item()]},
+                "next_page_id": None,
+            },
+        )
+        download = mocker.patch.object(
+            self.extractor, "download_from_url", side_effect=lambda url, verbose=True: url.split("/")[-1]
+        )
+
+        assert self.extractor.download_all_tagged(metadata, "123", max_to_download=100) == 2
+        assert "errors" not in metadata.metadata
+        assert [m.filename for m in metadata.media] == ["video_high.mp4", "c1_large.jpg"]
+        assert metadata.media[0].get("text") == "video caption"
+        assert [m.filename for m in metadata.media[1].get("other media")] == ["c2_large.jpg"]
+        downloaded = [c.args[0] for c in download.call_args_list]
+        assert "http://example.com/video_low.mp4" not in downloaded
+
+    def test_download_highlights_v2_items(self, metadata, mocker):
+        mocker.patch.object(
+            self.extractor,
+            "call_api",
+            return_value={
+                "response": {"reels": {"highlight:123": {"id": "highlight:123", "items": [self._v2_video_item()]}}}
+            },
+        )
+        mocker.patch.object(
+            self.extractor, "download_from_url", side_effect=lambda url, verbose=True: url.split("/")[-1]
+        )
+
+        self.extractor._download_highlights_reusable(metadata, "123", max_to_download=10)
+        assert "errors" not in metadata.metadata
+        assert [m.filename for m in metadata.media] == ["video_high.mp4"]

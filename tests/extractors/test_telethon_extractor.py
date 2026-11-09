@@ -111,3 +111,32 @@ def test_setup_with_no_event_loop(get_lazy_module, tmp_path, mocker):
     # a new event loop should have been created and set
     asyncio.new_event_loop.assert_called_once()
     set_loop.assert_called_once_with(new_loop_mock)
+
+
+def test_download_after_event_loop_replaced_and_closed(get_lazy_module, tmp_path, make_item):
+    """
+    seleniumbase (antibot_extractor_enricher) replaces the current event loop with its own and closes it, telethon is
+    bound to the loop from setup so download must restore that one instead of failing with 'Event loop is closed'.
+    """
+    session_file = tmp_path / "test.session"
+    session_file.touch()
+    module = get_lazy_module("telethon_extractor").load(
+        {"telethon_extractor": {"session_file": str(session_file), "api_id": 123, "api_hash": "ABC"}}
+    )
+    setup_loop = asyncio.get_event_loop()
+
+    other_loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(other_loop)
+    other_loop.close()
+
+    loops_seen = []
+
+    def get_messages(*args, **kwargs):
+        loops_seen.append(asyncio.get_event_loop())
+        return None
+
+    module.client.get_messages = get_messages
+    assert module.download(make_item("https://t.me/channel/123")) is False
+
+    assert loops_seen == [setup_loop]
+    assert not setup_loop.is_closed()

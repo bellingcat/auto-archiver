@@ -376,6 +376,17 @@ class GenericExtractor(Extractor):
         except MaxDownloadsReached:  # proceed as normal once MaxDownloadsReached is raised
             pass
 
+        # yt-dlp returns None when the download fails, and a failed subtitle download (eg. YouTube 429s)
+        # fails the whole video, so retry without subtitles rather than losing the video
+        if data is None and self.subtitles:
+            logger.warning("Download failed with subtitles enabled, retrying without subtitles.")
+            ydl.params["writesubtitles"] = False
+            ydl.params["writeautomaticsub"] = False
+            try:
+                data = ydl.extract_info(url, ie_key=info_extractor.ie_key(), download=True)
+            except MaxDownloadsReached:
+                pass
+
         if "entries" in data:
             entries = data.get("entries", [])
             if not len(entries):

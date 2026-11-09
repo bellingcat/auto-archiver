@@ -337,3 +337,51 @@ class TestGenericExtractorPoToken:
         extractor.in_docker = True
         extractor.setup_po_tokens()
         extractor.setup_token_generation_script.assert_called_once()
+
+
+class TestGenericExtractorSubtitleFailure:
+    """yt-dlp (ignoreerrors='only_download') returns None from extract_info when a subtitle download fails
+    (eg. YouTube 429s), dropping the video too."""
+
+    @pytest.fixture
+    def extractor(self, mocker):
+        extractor = GenericExtractor()
+        extractor.subtitles = True
+        extractor.comments = False
+        mocker.patch.object(extractor, "add_metadata", side_effect=lambda data, ie, url, result: result)
+        return extractor
+
+    @pytest.fixture
+    def ydl(self, mocker, tmp_path):
+        video = tmp_path / "vid.mp4"
+        video.write_bytes(b"video")
+        mocker.patch(
+            "auto_archiver.modules.generic_extractor.generic_extractor.ydl_entry_to_filename",
+            return_value=str(video),
+        )
+        ydl = mocker.Mock()
+        ydl.params = {"writesubtitles": True, "writeautomaticsub": True}
+        return ydl
+
+    def test_failed_download_retries_without_subtitles(self, extractor, mocker, ydl):
+        ydl.extract_info.side_effect = [None, {"id": "vid"}]
+        result = extractor.get_metadata_for_video({}, mocker.Mock(), "https://example.com/v", ydl)
+
+        assert ydl.extract_info.call_count == 2
+        assert ydl.params["writesubtitles"] is False
+        assert ydl.params["writeautomaticsub"] is False
+        assert len(result.media) == 1
+
+    def test_no_retry_when_subtitles_disabled(self, extractor, mocker, ydl):
+        extractor.subtitles = False
+        ydl.extract_info.return_value = None
+        with pytest.raises(TypeError):  # pre-existing behaviour, handled by download_for_extractor
+            extractor.get_metadata_for_video({}, mocker.Mock(), "https://example.com/v", ydl)
+        assert ydl.extract_info.call_count == 1
+
+    def test_no_retry_on_success(self, extractor, mocker, ydl):
+        ydl.extract_info.return_value = {"id": "vid"}
+        result = extractor.get_metadata_for_video({}, mocker.Mock(), "https://example.com/v", ydl)
+        assert ydl.extract_info.call_count == 1
+        assert ydl.params["writesubtitles"] is True
+        assert len(result.media) == 1
