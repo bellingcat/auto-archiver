@@ -12,8 +12,9 @@
                 # Full list of TSAs: https://gist.github.com/Manouchehri/fd754e402d98430243455713efada710
                 "http://timestamp.identrust.com",
                 # "http://timestamp.ssl.trustwave.com", # unreachable
-                "http://zeitstempel.dfn.de",
+                # "http://zeitstempel.dfn.de", # root not trusted
                 "http://ts.ssl.com",
+                "http://ts.quovadisglobal.com/eu",
                 # "http://tsa.izenpe.com", # self-signed
                 "http://tsa.lex-persona.com/tsa",
                 # "http://ca.signfiles.com/TSAServer.aspx", # self-signed
