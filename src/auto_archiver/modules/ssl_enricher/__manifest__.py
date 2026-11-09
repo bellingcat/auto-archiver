@@ -12,6 +12,11 @@
             "type": "bool",
             "help": "if true, will skip enriching when no media is archived",
         },
+        "timeout": {
+            "default": 30,
+            "type": "int",
+            "help": "timeout in seconds for fetching the SSL certificate",
+        },
     },
     "description": """
     Retrieves SSL certificate information for a domain and stores it as a file.

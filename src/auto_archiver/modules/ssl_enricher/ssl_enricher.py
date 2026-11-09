@@ -24,7 +24,7 @@ class SSLEnricher(Enricher):
         domain = parsed.netloc
         logger.debug(f"Fetching SSL certificate for {domain=}")
 
-        cert = ssl.get_server_certificate((domain, 443))
+        cert = ssl.get_server_certificate((domain, 443), timeout=self.timeout)
         cert_fn = os.path.join(self.tmp_dir, f"{slugify(domain)}.pem")
         with open(cert_fn, "w") as f:
             f.write(cert)
