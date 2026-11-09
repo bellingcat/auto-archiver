@@ -35,6 +35,7 @@ SAVE_RESPONSE_HTML_WITH_LINK = """
 ENRICHER_CONFIG = {
     "timeout": 120,
     "check_existing": True,
+    "submit": True,
     "proxy_http": None,
     "proxy_https": None,
 }
@@ -253,6 +254,39 @@ class TestGhostarchiveEnricher:
 
         assert result is True
         mock_search.assert_not_called()
+
+    def test_enrich_does_not_submit_when_disabled(self, mocker, make_item):
+        """enrich() should only look up existing archives when submit is False."""
+        self.enricher.submit = False
+        mocker.patch.object(self.enricher, "_search_existing", return_value=None)
+        mock_submit = mocker.patch.object(self.enricher, "_submit_url")
+
+        item = make_item("https://example.com")
+        result = self.enricher.enrich(item)
+
+        assert result is False
+        assert item.get("ghostarchive") is None
+        mock_submit.assert_not_called()
+
+    def test_enrich_finds_existing_when_submit_disabled(self, mocker, make_item):
+        """enrich() should still record existing archives when submit is False."""
+        self.enricher.submit = False
+        mocker.patch.object(self.enricher, "_search_existing", return_value="https://ghostarchive.org/archive/Exist1")
+
+        item = make_item("https://example.com")
+        assert self.enricher.enrich(item) is True
+        assert item.get("ghostarchive") == "https://ghostarchive.org/archive/Exist1"
+
+    def test_submit_url_passes_brave_origin_switch(self, mocker):
+        """The submission browser should skip Brave Origin's startup dialog."""
+        mock_sb_cls = mocker.patch("auto_archiver.modules.ghostarchive_enricher.ghostarchive_enricher.SB")
+        mock_sb_cls.return_value.__enter__.return_value.get_current_url.return_value = (
+            "https://ghostarchive.org/archive/Abc1"
+        )
+
+        self.enricher._submit_url("https://example.com")
+
+        assert mock_sb_cls.call_args.kwargs["chromium_arg"] == "--skip-origin-startup-dialog"
 
     @pytest.mark.download
     def test_real_search_existing(self, setup_module):
