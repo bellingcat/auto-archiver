@@ -11,7 +11,7 @@
                 # See https://github.com/trailofbits/rfc3161-client/issues/46 for a list of valid TSAs
                 # Full list of TSAs: https://gist.github.com/Manouchehri/fd754e402d98430243455713efada710
                 "http://timestamp.identrust.com",
-                "http://timestamp.ssl.trustwave.com",
+                # "http://timestamp.ssl.trustwave.com", # unreachable
                 "http://zeitstempel.dfn.de",
                 "http://ts.ssl.com",
                 # "http://tsa.izenpe.com", # self-signed
@@ -19,7 +19,7 @@
                 # "http://ca.signfiles.com/TSAServer.aspx", # self-signed
                 # "http://tsa.sinpe.fi.cr/tsaHttp/", # self-signed
                 # "http://tsa.cra.ge/signserver/tsa?workerName=qtsa", # self-signed
-                "http://tss.cnbs.gob.hn/TSS/HttpTspServer",
+                # "http://tss.cnbs.gob.hn/TSS/HttpTspServer", # root not trusted
                 # "http://dss.nowina.lu/pki-factory/tsa/good-tsa",
                 # "https://freetsa.org/tsr", # self-signed
             ],
