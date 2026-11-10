@@ -13,7 +13,11 @@ class CSVFeeder(Feeder):
         for file in self.files:
             with open(file, "r") as f:
                 reader = csv.reader(f)
-                first_row = next(reader)
+                try:
+                    first_row = next(reader)
+                except StopIteration:
+                    logger.warning(f"Empty file, skipping: {file}")
+                    continue
                 url_column = self.column or 0
                 if isinstance(url_column, str):
                     try:
