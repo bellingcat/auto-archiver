@@ -59,3 +59,15 @@ def test_csv_feeder_column_by_name(header_csv_file, setup_module):
     assert len(urls) == 2
     assert urls[0].get_url() == "https://example.com/1/"
     assert urls[1].get_url() == "https://example.com/2/"
+
+
+def test_csv_feeder_empty_file(tmp_path, setup_module):
+    from auto_archiver.modules.csv_feeder.csv_feeder import CSVFeeder
+
+    empty_file = tmp_path / "empty.csv"
+    empty_file.write_text("")
+
+    feeder = setup_module(CSVFeeder, {"files": [str(empty_file)]})
+
+    # An empty file is skipped without crashing the whole feed.
+    assert list(feeder) == []
