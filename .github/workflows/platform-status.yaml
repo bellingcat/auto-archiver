@@ -12,13 +12,13 @@ jobs:
   status-check:
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Install ffmpeg
         run: sudo apt-get update && sudo apt-get install -y ffmpeg
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: "3.12"
 
@@ -26,7 +26,7 @@ jobs:
         run: pipx install poetry
 
       - name: Cache Poetry and pip artifacts
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: |
             ~/.cache/pypoetry
@@ -73,10 +73,18 @@ jobs:
               '| Platform | Content Type | Config | Accessible | Archived |',
               '|----------|-------------|--------|------------|----------|',
           ]
+          footnotes = {
+              'youtube': 'YouTube will normally only work when using an account (cookies) or a proxy, as it blocks anonymous requests from datacenter IPs such as GitHub runners.',
+          }
           for r in records:
               ok_a = ':white_check_mark:' if r['is_content_accessible'] else ':x:'
               ok_b = ':white_check_mark:' if r['is_content_archived'] else ':x:'
-              lines.append(f'| {r[\"platform_name\"]} | {r[\"content_type\"]} | {r[\"config_label\"]} | {ok_a} | {ok_b} |')
+              name = r['platform_name'] + ('\\\\*' if r['platform_name'] in footnotes else '')
+              lines.append(f'| {name} | {r[\"content_type\"]} | {r[\"config_label\"]} | {ok_a} | {ok_b} |')
+          used = sorted({r['platform_name'] for r in records} & footnotes.keys())
+          if used:
+              lines.append('')
+              lines.extend(f'\\\\* {footnotes[p]}' for p in used)
           md = '\n'.join(lines) + '\n'
           with open('PLATFORM_STATUS.md', 'w') as f:
               f.write(md)
@@ -84,20 +92,31 @@ jobs:
           " | tee -a "$GITHUB_STEP_SUMMARY"
 
       - name: Upload full report as artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: platform-status-report
           path: status_report.json
           retention-days: 90
 
-      - name: Commit status files
+      # main is protected, so results are published to the platform-status branch,
+      # whose README.md is always the latest report
+      - name: Publish to platform-status branch
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add platform_status.json PLATFORM_STATUS.md
+          dir="$RUNNER_TEMP/platform-status"
+          if git fetch --depth=1 origin platform-status; then
+            git worktree add -B platform-status "$dir" FETCH_HEAD
+          else
+            git worktree add --orphan -b platform-status "$dir"
+          fi
+          cp PLATFORM_STATUS.md "$dir/README.md"
+          cp platform_status.json status_report.json "$dir/"
+          cd "$dir"
+          git add README.md platform_status.json status_report.json
           if git diff --cached --quiet; then
             echo "No changes to commit"
           else
             git commit -m "chore: update platform status report [skip ci]"
-            git push
+            git push origin platform-status
           fi
