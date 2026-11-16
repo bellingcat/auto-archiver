@@ -101,11 +101,6 @@ bitchute:
     url: https://www.bitchute.com/video/UGlrF9o9b-Q/
     expect_media: true
 
-odysee:
-  - content_type: video
-    url: https://odysee.com/@Mantega:1/First-day-LBRY:1
-    expect_media: true
-
 soundcloud:
   - content_type: audio
     url: https://soundcloud.com/ethmusic/lostin-powers-she-so-heavy
