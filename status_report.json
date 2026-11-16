@@ -1,0 +1,1045 @@
+[
+  {
+    "id": "2026-11-16T14:35:35.385197+00:00_youtube_video_barebones",
+    "run_datetime": "2026-11-16T14:35:35.385197+00:00",
+    "aa_version": "1.3.1",
+    "platform_name": "youtube",
+    "archive_url": "https://www.youtube.com/watch?v=J---aiyznGQ",
+    "content_type": "video",
+    "config_label": "barebones",
+    "is_content_accessible": false,
+    "is_content_archived": false,
+    "current_metadata": {
+      "_processed_at": "2026-11-16 14:35:30.285719+00:00",
+      "url": "https://www.youtube.com/watch?v=J---aiyznGQ"
+    }
+  },
+  {
+    "id": "2026-11-16T14:35:39.487638+00:00_tiktok_video_barebones",
+    "run_datetime": "2026-11-16T14:35:39.487638+00:00",
+    "aa_version": "1.3.1",
+    "platform_name": "tiktok",
+    "archive_url": "https://www.tiktok.com/@funnycats0ftiktok/video/7345101300750748970",
+    "content_type": "video",
+    "config_label": "barebones",
+    "is_content_accessible": true,
+    "is_content_archived": true,
+    "current_metadata": {
+      "_processed_at": "2026-11-16 14:35:39.192154+00:00",
+      "url": "https://www.tiktok.com/@funnycats0ftiktok/video/7345101300750748970",
+      "title": "Part 39 | Funny cat videos #funnycats #funnyanimals #funnypets",
+      "content": "Part 39 | Funny cat videos #funnycats #funnyanimals #funnypets",
+      "timestamp": "2024-03-11 13:45:27+00:00",
+      "upload_date": "2024-03-11 00:00:00+00:00",
+      "id": "7345101300750748970",
+      "channel": "FunnyCatsofTiktok",
+      "uploader": "funnycats0ftiktok",
+      "uploader_id": "7283871012709123118",
+      "channel_url": "https://www.tiktok.com/@MS4wLjABAAAA489N74nNeAcsnac3ueQEgFQxDLFq-2KvrqZYPqfqA-ajbxKjoE3ok1JPXabEIkw1",
+      "uploader_url": "https://www.tiktok.com/@funnycats0ftiktok",
+      "track": "original sound",
+      "view_count": 90800000,
+      "like_count": 10500000,
+      "repost_count": 500200,
+      "save_count": 1199046,
+      "webpage_url": "https://www.tiktok.com/@funnycats0ftiktok/video/7345101300750748970",
+      "artist": "FunnyCatsofTiktok",
+      "width": 1080,
+      "height": 1920,
+      "total_bytes": 9508692,
+      "total_size": "9.1 MB",
+      "archive_duration_seconds": 0
+    }
+  },
+  {
+    "id": "2026-11-16T14:35:42.643618+00:00_bluesky_video_barebones",
+    "run_datetime": "2026-11-16T14:35:42.643618+00:00",
+    "aa_version": "1.3.1",
+    "platform_name": "bluesky",
+    "archive_url": "https://bsky.app/profile/bellingcat.com/post/3le2l4gsxlk2i",
+    "content_type": "video",
+    "config_label": "barebones",
+    "is_content_accessible": true,
+    "is_content_archived": true,
+    "current_metadata": {
+      "_processed_at": "2026-11-16 14:35:42.465708+00:00",
+      "url": "https://bsky.app/profile/bellingcat.com/post/3le2l4gsxlk2i",
+      "title": "Bellingcat (@bellingcat.com)",
+      "content": "This month's Bellingchat Premium is with @koltai.bsky.social, She reveals how she investigated a platform allowing users to create AI-generated child sexual abuse material and why it is crucial to investigate the people behind these services  https://www.patreon.com/posts/investigating-ai-118598321?utm_medium=clipboard_copy&utm_source=copyLink&utm_campaign=postshare_creator&utm_content=join_link",
+      "timestamp": "2024-12-24 13:41:24+00:00",
+      "upload_date": "2024-12-24 00:00:00+00:00",
+      "id": "playlist",
+      "uploader": "bsky.app",
+      "uploader_id": "bellingcat.com",
+      "uploader_url": "https://bsky.app/profile/bellingcat.com",
+      "channel_url": "https://bsky.app/profile/did:plc:sb54dpdfefflykmf5bcfvr7t",
+      "like_count": 166,
+      "repost_count": 36,
+      "comment_count": 4,
+      "webpage_url": "https://bsky.app/profile/bellingcat.com/post/3le2l4gsxlk2i",
+      "width": 1280,
+      "height": 720,
+      "duration": 34,
+      "manifest_url": "https://video.bsky.app/watch/did%3Aplc%3Asb54dpdfefflykmf5bcfvr7t/bafkreiaiskn2nt5cxjnxbgcqqcrnurvkr2ni3unekn6zvhvgr5nrqg6u2q/playlist.m3u8",
+      "total_bytes": 5935828,
+      "total_size": "5.7 MB",
+      "archive_duration_seconds": 0
+    }
+  },
+  {
+    "id": "2026-11-16T14:35:43.723691+00:00_bluesky_multi_image_barebones",
+    "run_datetime": "2026-11-16T14:35:43.723691+00:00",
+    "aa_version": "1.3.1",
+    "platform_name": "bluesky",
+    "archive_url": "https://bsky.app/profile/bellingcat.com/post/3lffjoxcu7k2w",
+    "content_type": "multi_image",
+    "config_label": "barebones",
+    "is_content_accessible": true,
+    "is_content_archived": true,
+    "current_metadata": {
+      "_processed_at": "2026-11-16 14:35:42.927960+00:00",
+      "url": "https://bsky.app/profile/bellingcat.com/post/3lffjoxcu7k2w",
+      "title": "The satellite images below show an area in West Kalimantan, Indonesia known to have a concentration of bauxite mines. Band ratios show areas of potential bauxite mining activity in yellow in the false colour image that are hard to spot in the true colour image.",
+      "timestamp": "2025-01-10 15:40:07.540000+00:00",
+      "author": {
+        "did": "did:plc:sb54dpdfefflykmf5bcfvr7t",
+        "handle": "bellingcat.com",
+        "displayName": "Bellingcat",
+        "avatar": "https://cdn.bsky.app/img/avatar/plain/did:plc:sb54dpdfefflykmf5bcfvr7t/bafkreick3tvuw6kxfcpjgnxf75dhigmll53w5jgvin4mw3hre344o4tmiu",
+        "createdAt": "2023-04-28T10:47:07.541Z",
+        "verification": {
+          "verifications": [
+            {
+              "issuer": "did:plc:z72i7hdynmk6r22z27h6tvur",
+              "issuerDisplayName": "Bluesky",
+              "issuerHandle": "bsky.app",
+              "uri": "at://did:plc:z72i7hdynmk6r22z27h6tvur/app.bsky.graph.verification/3lrugtgvf652n",
+              "isValid": true,
+              "createdAt": "2025-06-18T07:01:29.306Z"
+            }
+          ],
+          "verifiedStatus": "valid",
+          "trustedVerifierStatus": "none"
+        }
+      },
+      "uri": "at://did:plc:sb54dpdfefflykmf5bcfvr7t/app.bsky.feed.post/3lffjoxcu7k2w",
+      "cid": "bafyreif6brj22oqn7viwqopjlao6tkfwpegm3h5m6k3mgixmi42c2n543i",
+      "record": {
+        "$type": "app.bsky.feed.post",
+        "createdAt": "2025-01-10T15:40:07.540Z",
+        "embed": {
+          "$type": "app.bsky.embed.images",
+          "images": [
+            {
+              "alt": "ALT: Mining areas are hard to spot in the true colour image (left), but the false colour image using band ratios makes possible mining areas much more visible (right, in yellow). Credit: Agnes Cameron/Google Earth Engine .\n",
+              "aspectRatio": {
+                "height": 820,
+                "width": 1434
+              },
+              "image": {
+                "$type": "blob",
+                "ref": {
+                  "$link": "bafkreia26c3fww4gg6z52fmrh265qnwuztho7ixkottb7ljgzld6gog6de"
+                },
+                "mimeType": "image/jpeg",
+                "size": 278021
+              }
+            },
+            {
+              "alt": "ALT: Mining areas are hard to spot in the true colour image (left), but the false colour image using band ratios makes possible mining areas much more visible (right, in yellow). Credit: Agnes Cameron/Google Earth Engine .\n",
+              "aspectRatio": {
+                "height": 820,
+                "width": 1486
+              },
+              "image": {
+                "$type": "blob",
+                "ref": {
+                  "$link": "bafkreievuigfkayh2zx6tghjhsjrz5xly2plqug4cdlgh6hncteivomzwe"
+                },
+                "mimeType": "image/jpeg",
+                "size": 284287
+              }
+            }
+          ]
+        },
+        "langs": [
+          "en"
+        ],
+        "reply": {
+          "parent": {
+            "cid": "bafyreicmuo5i6gwfg6txk5tvkesxojn43hlpwkqw6ovblnbwlbyzrizt3e",
+            "uri": "at://did:plc:sb54dpdfefflykmf5bcfvr7t/app.bsky.feed.post/3lffjoxbrzs2w"
+          },
+          "root": {
+            "cid": "bafyreiej6u56bovpfoudjqxuxhb2u52hqz6qc7w6ckg4n2ow6wargr6dly",
+            "uri": "at://did:plc:sb54dpdfefflykmf5bcfvr7t/app.bsky.feed.post/3lffjogetic2w"
+          }
+        },
+        "text": "The satellite images below show an area in West Kalimantan, Indonesia known to have a concentration of bauxite mines. Band ratios show areas of potential bauxite mining activity in yellow in the false colour image that are hard to spot in the true colour image."
+      },
+      "embed": {
+        "images": [
+          {
+            "thumb": "https://cdn.bsky.app/img/feed_thumbnail/plain/did:plc:sb54dpdfefflykmf5bcfvr7t/bafkreia26c3fww4gg6z52fmrh265qnwuztho7ixkottb7ljgzld6gog6de",
+            "fullsize": "https://cdn.bsky.app/img/feed_fullsize/plain/did:plc:sb54dpdfefflykmf5bcfvr7t/bafkreia26c3fww4gg6z52fmrh265qnwuztho7ixkottb7ljgzld6gog6de",
+            "alt": "ALT: Mining areas are hard to spot in the true colour image (left), but the false colour image using band ratios makes possible mining areas much more visible (right, in yellow). Credit: Agnes Cameron/Google Earth Engine .\n",
+            "aspectRatio": {
+              "height": 820,
+              "width": 1434
+            }
+          },
+          {
+            "thumb": "https://cdn.bsky.app/img/feed_thumbnail/plain/did:plc:sb54dpdfefflykmf5bcfvr7t/bafkreievuigfkayh2zx6tghjhsjrz5xly2plqug4cdlgh6hncteivomzwe",
+            "fullsize": "https://cdn.bsky.app/img/feed_fullsize/plain/did:plc:sb54dpdfefflykmf5bcfvr7t/bafkreievuigfkayh2zx6tghjhsjrz5xly2plqug4cdlgh6hncteivomzwe",
+            "alt": "ALT: Mining areas are hard to spot in the true colour image (left), but the false colour image using band ratios makes possible mining areas much more visible (right, in yellow). Credit: Agnes Cameron/Google Earth Engine .\n",
+            "aspectRatio": {
+              "height": 820,
+              "width": 1486
+            }
+          }
+        ],
+        "$type": "app.bsky.embed.images#view"
+      },
+      "replyCount": 1,
+      "likeCount": 10,
+      "indexedAt": "2025-01-10T15:40:37.215Z",
+      "total_bytes": 568574,
+      "total_size": "555.2 KB",
+      "archive_duration_seconds": 0
+    }
+  },
+  {
+    "id": "2026-11-16T14:35:44.646652+00:00_bluesky_single_image_barebones",
+    "run_datetime": "2026-11-16T14:35:44.646652+00:00",
+    "aa_version": "1.3.1",
+    "platform_name": "bluesky",
+    "archive_url": "https://bsky.app/profile/bellingcat.com/post/3lfn3hbcxgc2q",
+    "content_type": "single_image",
+    "config_label": "barebones",
+    "is_content_accessible": true,
+    "is_content_archived": true,
+    "current_metadata": {
+      "_processed_at": "2026-11-16 14:35:44.005092+00:00",
+      "url": "https://bsky.app/profile/bellingcat.com/post/3lfn3hbcxgc2q",
+      "title": "How do you find a stolen piece of art? On Thursday 5pm CET/11am EST we explore the world of thieves, forgers and fraudsters with @sauterne.bsky.social, CEO of The Association for Research into Crimes against Art in the first Stage Talk of 2025. Join us: discord.gg/r88a4zcX?eve...",
+      "timestamp": "2025-01-13 15:46:52.867000+00:00",
+      "author": {
+        "did": "did:plc:sb54dpdfefflykmf5bcfvr7t",
+        "handle": "bellingcat.com",
+        "displayName": "Bellingcat",
+        "avatar": "https://cdn.bsky.app/img/avatar/plain/did:plc:sb54dpdfefflykmf5bcfvr7t/bafkreick3tvuw6kxfcpjgnxf75dhigmll53w5jgvin4mw3hre344o4tmiu",
+        "createdAt": "2023-04-28T10:47:07.541Z",
+        "verification": {
+          "verifications": [
+            {
+              "issuer": "did:plc:z72i7hdynmk6r22z27h6tvur",
+              "issuerDisplayName": "Bluesky",
+              "issuerHandle": "bsky.app",
+              "uri": "at://did:plc:z72i7hdynmk6r22z27h6tvur/app.bsky.graph.verification/3lrugtgvf652n",
+              "isValid": true,
+              "createdAt": "2025-06-18T07:01:29.306Z"
+            }
+          ],
+          "verifiedStatus": "valid",
+          "trustedVerifierStatus": "none"
+        }
+      },
+      "mentions": [
+        "did:plc:a32ubvuu2atmowfcvugm7uju"
+      ],
+      "links": [
+        "https://discord.gg/r88a4zcX?event=1318250313257324554"
+      ],
+      "uri": "at://did:plc:sb54dpdfefflykmf5bcfvr7t/app.bsky.feed.post/3lfn3hbcxgc2q",
+      "cid": "bafyreifk3rca7yt6ez6nww7p6r22tna2shuvinwasvcxibpgqbo2sf6sia",
+      "record": {
+        "$type": "app.bsky.feed.post",
+        "createdAt": "2025-01-13T15:46:52.867Z",
+        "embed": {
+          "$type": "app.bsky.embed.images",
+          "images": [
+            {
+              "alt": "Join us for our talk on Investigating Art Crime on Thursday in the Bellingcat Discord Server",
+              "aspectRatio": {
+                "height": 240,
+                "width": 600
+              },
+              "image": {
+                "$type": "blob",
+                "ref": {
+                  "$link": "bafkreiepvgxfz7i2sow5sy7bidflp3llgvwmvnvstm2ft3iqm7bwetxlxa"
+                },
+                "mimeType": "image/jpeg",
+                "size": 230377
+              }
+            }
+          ]
+        },
+        "facets": [
+          {
+            "$type": "app.bsky.richtext.facet",
+            "features": [
+              {
+                "$type": "app.bsky.richtext.facet#mention",
+                "did": "did:plc:a32ubvuu2atmowfcvugm7uju"
+              }
+            ],
+            "index": {
+              "byteEnd": 150,
+              "byteStart": 129
+            }
+          },
+          {
+            "features": [
+              {
+                "$type": "app.bsky.richtext.facet#link",
+                "uri": "https://discord.gg/r88a4zcX?event=1318250313257324554"
+              }
+            ],
+            "index": {
+              "byteEnd": 280,
+              "byteStart": 254
+            }
+          }
+        ],
+        "langs": [
+          "en"
+        ],
+        "text": "How do you find a stolen piece of art? On Thursday 5pm CET/11am EST we explore the world of thieves, forgers and fraudsters with @sauterne.bsky.social, CEO of The Association for Research into Crimes against Art in the first Stage Talk of 2025. Join us: discord.gg/r88a4zcX?eve..."
+      },
+      "embed": {
+        "images": [
+          {
+            "thumb": "https://cdn.bsky.app/img/feed_thumbnail/plain/did:plc:sb54dpdfefflykmf5bcfvr7t/bafkreiepvgxfz7i2sow5sy7bidflp3llgvwmvnvstm2ft3iqm7bwetxlxa",
+            "fullsize": "https://cdn.bsky.app/img/feed_fullsize/plain/did:plc:sb54dpdfefflykmf5bcfvr7t/bafkreiepvgxfz7i2sow5sy7bidflp3llgvwmvnvstm2ft3iqm7bwetxlxa",
+            "alt": "Join us for our talk on Investigating Art Crime on Thursday in the Bellingcat Discord Server",
+            "aspectRatio": {
+              "height": 240,
+              "width": 600
+            }
+          }
+        ],
+        "$type": "app.bsky.embed.images#view"
+      },
+      "replyCount": 5,
+      "repostCount": 41,
+      "likeCount": 192,
+      "quoteCount": 6,
+      "indexedAt": "2025-01-13T15:46:50.550Z",
+      "total_bytes": 230377,
+      "total_size": "225.0 KB",
+      "archive_duration_seconds": 0
+    }
+  },
+  {
+    "id": "2026-11-16T14:35:45.204700+00:00_bluesky_text_only_barebones",
+    "run_datetime": "2026-11-16T14:35:45.204700+00:00",
+    "aa_version": "1.3.1",
+    "platform_name": "bluesky",
+    "archive_url": "https://bsky.app/profile/bellingcat.com/post/3lfphwmcs4c2z",
+    "content_type": "text_only",
+    "config_label": "barebones",
+    "is_content_accessible": true,
+    "is_content_archived": true,
+    "current_metadata": {
+      "_processed_at": "2026-11-16 14:35:44.920851+00:00",
+      "url": "https://bsky.app/profile/bellingcat.com/post/3lfphwmcs4c2z",
+      "title": "Wildfires have been raging through Los Angeles, leaving behind widespread destruction across multiple neighbourhoods. At Bellingcat wanted to share some resources to help monitor the fires and the damage they leave behind. 🧵",
+      "timestamp": "2025-01-14 14:35:32.093000+00:00",
+      "author": {
+        "did": "did:plc:sb54dpdfefflykmf5bcfvr7t",
+        "handle": "bellingcat.com",
+        "displayName": "Bellingcat",
+        "avatar": "https://cdn.bsky.app/img/avatar/plain/did:plc:sb54dpdfefflykmf5bcfvr7t/bafkreick3tvuw6kxfcpjgnxf75dhigmll53w5jgvin4mw3hre344o4tmiu",
+        "createdAt": "2023-04-28T10:47:07.541Z",
+        "verification": {
+          "verifications": [
+            {
+              "issuer": "did:plc:z72i7hdynmk6r22z27h6tvur",
+              "issuerDisplayName": "Bluesky",
+              "issuerHandle": "bsky.app",
+              "uri": "at://did:plc:z72i7hdynmk6r22z27h6tvur/app.bsky.graph.verification/3lrugtgvf652n",
+              "isValid": true,
+              "createdAt": "2025-06-18T07:01:29.306Z"
+            }
+          ],
+          "verifiedStatus": "valid",
+          "trustedVerifierStatus": "none"
+        }
+      },
+      "uri": "at://did:plc:sb54dpdfefflykmf5bcfvr7t/app.bsky.feed.post/3lfphwmcs4c2z",
+      "cid": "bafyreig3kq4scslhwj7f6gteuhcx3bkzfjcyxx3g7br6xvxcxrsxi563gm",
+      "record": {
+        "$type": "app.bsky.feed.post",
+        "createdAt": "2025-01-14T14:35:32.093Z",
+        "langs": [
+          "en"
+        ],
+        "text": "Wildfires have been raging through Los Angeles, leaving behind widespread destruction across multiple neighbourhoods. At Bellingcat wanted to share some resources to help monitor the fires and the damage they leave behind. 🧵"
+      },
+      "bookmarkCount": 1,
+      "replyCount": 5,
+      "repostCount": 44,
+      "likeCount": 180,
+      "quoteCount": 8,
+      "indexedAt": "2025-01-14T14:35:48.654Z",
+      "total_bytes": 0,
+      "total_size": "0.0 bytes",
+      "archive_duration_seconds": 0
+    }
+  },
+  {
+    "id": "2026-11-16T14:35:46.804475+00:00_twitter_video_barebones",
+    "run_datetime": "2026-11-16T14:35:46.804475+00:00",
+    "aa_version": "1.3.1",
+    "platform_name": "twitter",
+    "archive_url": "https://x.com/bellingcat/status/1871552600346415571",
+    "content_type": "video",
+    "config_label": "barebones",
+    "is_content_accessible": true,
+    "is_content_archived": true,
+    "current_metadata": {
+      "_processed_at": "2026-11-16 14:35:46.445545+00:00",
+      "url": "https://x.com/bellingcat/status/1871552600346415571",
+      "title": "Bellingcat - This month's Bellingchat Premium is with @KolinaKoltai. She reveals h...",
+      "content": "This month's Bellingchat Premium is with @KolinaKoltai. She reveals how she investigated a platform allowing users to create AI-generated child sexual abuse material and explains why it's crucial to investigate the people behind these services https://t.co/SfBUq0hSD0 https://t.co/rIHx0WlKp8",
+      "timestamp": "2024-12-24 13:44:46+00:00",
+      "upload_date": "2024-12-24 00:00:00+00:00",
+      "id": "1871551993677852672",
+      "uploader": "Bellingcat",
+      "uploader_id": "bellingcat",
+      "uploader_url": "https://twitter.com/bellingcat",
+      "view_count": 43043,
+      "like_count": 36,
+      "repost_count": 18,
+      "comment_count": 4,
+      "duration": 33.99,
+      "_old_archive_ids": [
+        "twitter 1871552600346415571"
+      ],
+      "webpage_url": "https://x.com/bellingcat/status/1871552600346415571",
+      "width": 1280,
+      "height": 720,
+      "total_bytes": 1653248,
+      "total_size": "1.6 MB",
+      "archive_duration_seconds": 0
+    }
+  },
+  {
+    "id": "2026-11-16T14:35:47.886609+00:00_twitter_sensitive_photo_barebones",
+    "run_datetime": "2026-11-16T14:35:47.886609+00:00",
+    "aa_version": "1.3.1",
+    "platform_name": "twitter",
+    "archive_url": "https://x.com/SozinhoRamalho/status/1876710769913450647",
+    "content_type": "sensitive_photo",
+    "config_label": "barebones",
+    "is_content_accessible": true,
+    "is_content_archived": true,
+    "current_metadata": {
+      "_processed_at": "2026-11-16 14:35:47.459500+00:00",
+      "url": "https://x.com/SozinhoRamalho/status/1876710769913450647",
+      "author": "Miguel Sozinho Ramalho",
+      "title": "Miguel Sozinho Ramalho - ignore tweet, testing sensitivity warning nudity",
+      "content": "ignore tweet, testing sensitivity warning nudity",
+      "timestamp": "2025-01-07 19:21:29+00:00",
+      "total_bytes": 81860,
+      "total_size": "79.9 KB",
+      "archive_duration_seconds": 0
+    }
+  },
+  {
+    "id": "2026-11-16T14:35:48.754137+00:00_twitter_text_only_barebones",
+    "run_datetime": "2026-11-16T14:35:48.754137+00:00",
+    "aa_version": "1.3.1",
+    "platform_name": "twitter",
+    "archive_url": "https://x.com/MeCookieMonster/status/1617921633456640001",
+    "content_type": "text_only",
+    "config_label": "barebones",
+    "is_content_accessible": true,
+    "is_content_archived": true,
+    "current_metadata": {
+      "_processed_at": "2026-11-16 14:35:48.354706+00:00",
+      "url": "https://x.com/MeCookieMonster/status/1617921633456640001",
+      "author": "Cookie Monster",
+      "title": "Cookie Monster - Onion rings are just vegetable donuts.",
+      "content": "Onion rings are just vegetable donuts.",
+      "timestamp": "2023-01-24 16:25:51+00:00",
+      "bookmark_count": 119,
+      "conversation_id_str": "1617921633456640001",
+      "display_text_range": [
+        0,
+        38
+      ],
+      "favorite_count": 18441,
+      "id_str": "1617921633456640001",
+      "lang": "en",
+      "quote_count": 475,
+      "reply_count": 183,
+      "retweet_count": 3610,
+      "user_id_str": "2372164754",
+      "view_count": 1141360,
+      "total_bytes": 0,
+      "total_size": "0.0 bytes",
+      "archive_duration_seconds": 0
+    }
+  },
+  {
+    "id": "2026-11-16T14:35:49.067642+00:00_truthsocial_video_barebones",
+    "run_datetime": "2026-11-16T14:35:49.067642+00:00",
+    "aa_version": "1.3.1",
+    "platform_name": "truthsocial",
+    "archive_url": "https://truthsocial.com/@DaynaTrueman/posts/110602446619561579",
+    "content_type": "video",
+    "config_label": "barebones",
+    "is_content_accessible": false,
+    "is_content_archived": false,
+    "current_metadata": {
+      "_processed_at": "2026-11-16 14:35:48.754173+00:00",
+      "url": "https://truthsocial.com/@DaynaTrueman/posts/110602446619561579"
+    }
+  },
+  {
+    "id": "2026-11-16T14:35:54.422996+00:00_truthsocial_text_only_barebones",
+    "run_datetime": "2026-11-16T14:35:54.422996+00:00",
+    "aa_version": "1.3.1",
+    "platform_name": "truthsocial",
+    "archive_url": "https://truthsocial.com/@bbcnewa/posts/109598702184774628",
+    "content_type": "text_only",
+    "config_label": "barebones",
+    "is_content_accessible": false,
+    "is_content_archived": false,
+    "current_metadata": {
+      "_processed_at": "2026-11-16 14:35:49.067680+00:00",
+      "url": "https://truthsocial.com/@bbcnewa/posts/109598702184774628"
+    }
+  },
+  {
+    "id": "2026-11-16T14:35:54.745625+00:00_truthsocial_image_barebones",
+    "run_datetime": "2026-11-16T14:35:54.745625+00:00",
+    "aa_version": "1.3.1",
+    "platform_name": "truthsocial",
+    "archive_url": "https://truthsocial.com/@mariabartiromo/posts/113861116433335006",
+    "content_type": "image",
+    "config_label": "barebones",
+    "is_content_accessible": false,
+    "is_content_archived": false,
+    "current_metadata": {
+      "_processed_at": "2026-11-16 14:35:54.423027+00:00",
+      "url": "https://truthsocial.com/@mariabartiromo/posts/113861116433335006"
+    }
+  },
+  {
+    "id": "2026-11-16T14:35:55.022615+00:00_truthsocial_multi_image_barebones",
+    "run_datetime": "2026-11-16T14:35:55.022615+00:00",
+    "aa_version": "1.3.1",
+    "platform_name": "truthsocial",
+    "archive_url": "https://truthsocial.com/@trrth/posts/113861302149349135",
+    "content_type": "multi_image",
+    "config_label": "barebones",
+    "is_content_accessible": false,
+    "is_content_archived": false,
+    "current_metadata": {
+      "_processed_at": "2026-11-16 14:35:54.745657+00:00",
+      "url": "https://truthsocial.com/@trrth/posts/113861302149349135"
+    }
+  },
+  {
+    "id": "2026-11-16T14:35:57.549906+00:00_facebook_video_barebones",
+    "run_datetime": "2026-11-16T14:35:57.549906+00:00",
+    "aa_version": "1.3.1",
+    "platform_name": "facebook",
+    "archive_url": "https://www.facebook.com/bellingcat/videos/588371253839133",
+    "content_type": "video",
+    "config_label": "barebones",
+    "is_content_accessible": true,
+    "is_content_archived": true,
+    "current_metadata": {
+      "_processed_at": "2026-11-16 14:35:56.633287+00:00",
+      "url": "https://www.facebook.com/bellingcat/videos/588371253839133",
+      "title": "1.3K views · 16 reactions | This month's Bellingchat Premium is with Kolina Koltai. She reveals how she investigated a platform allowing users to create AI-generated child sexual abuse material and explains why it's crucial to investigate the people behind these services. https://www.patreon.com/posts/investigating-ai-118598321?utm_medium=clipboard_copy&utm_source=copyLink&utm_campaign=postshare_creator&utm_content=join_link | Bellingcat",
+      "content": "This month's Bellingchat Premium is with Kolina Koltai. She reveals how she investigated a platform allowing users to create AI-generated child sexual abuse material and explains why it's crucial to investigate the people behind these services. https://www.patreon.com/posts/investigating-ai-118598321?utm_medium=clipboard_copy&utm_source=copyLink&utm_campaign=postshare_creator&utm_content=join_link",
+      "timestamp": "2024-12-24 13:49:08+00:00",
+      "upload_date": "2024-12-24 00:00:00+00:00",
+      "uploader": "Bellingcat",
+      "uploader_id": "100057299682816",
+      "view_count": 428,
+      "duration": 33.99,
+      "id": "588371253839133",
+      "webpage_url": "https://www.facebook.com/bellingcat/videos/588371253839133",
+      "downloader_options": {
+        "http_chunk_size": 262144000
+      },
+      "total_bytes": 631249,
+      "total_size": "616.5 KB",
+      "archive_duration_seconds": 0
+    }
+  },
+  {
+    "id": "2026-11-16T14:35:59.265113+00:00_facebook_image_barebones",
+    "run_datetime": "2026-11-16T14:35:59.265113+00:00",
+    "aa_version": "1.3.1",
+    "platform_name": "facebook",
+    "archive_url": "https://www.facebook.com/BylineFest/photos/t.100057299682816/927879487315946/",
+    "content_type": "image",
+    "config_label": "barebones",
+    "is_content_accessible": true,
+    "is_content_archived": true,
+    "current_metadata": {
+      "_processed_at": "2026-11-16 14:35:58.169098+00:00",
+      "url": "https://www.facebook.com/BylineFest/photos/t.100057299682816/927879487315946/",
+      "content": "",
+      "title": "Facebook",
+      "author": "",
+      "total_bytes": 0,
+      "total_size": "0.0 bytes",
+      "archive_duration_seconds": 1
+    }
+  },
+  {
+    "id": "2026-11-16T14:36:01.539565+00:00_facebook_text_only_barebones",
+    "run_datetime": "2026-11-16T14:36:01.539565+00:00",
+    "aa_version": "1.3.1",
+    "platform_name": "facebook",
+    "archive_url": "https://www.facebook.com/bellingcat/posts/pfbid02rzpwZxAZ8bLkAX8NvHv4DWAidFaqAUfJMbo9vWkpwxL7uMUWzWMiizXLWRSjwihVl",
+    "content_type": "text_only",
+    "config_label": "barebones",
+    "is_content_accessible": true,
+    "is_content_archived": true,
+    "current_metadata": {
+      "_processed_at": "2026-11-16 14:36:00.726435+00:00",
+      "url": "https://www.facebook.com/bellingcat/posts/pfbid02rzpwZxAZ8bLkAX8NvHv4DWAidFaqAUfJMbo9vWkpwxL7uMUWzWMiizXLWRSjwihVl",
+      "content": "Bellingcat researcher Kolina Koltai delves deeper into Clothoff. The app notorious for generating non-consensual deepfake pornography now claims it is...",
+      "title": "Bellingcat",
+      "author": "Bellingcat",
+      "description": "Bellingcat researcher Kolina Koltai delves deeper into Clothoff. The app notorious for generating non-consensual deepfake pornography now claims it is...",
+      "uploader": "Bellingcat",
+      "total_bytes": 57769,
+      "total_size": "56.4 KB",
+      "archive_duration_seconds": 0
+    }
+  },
+  {
+    "id": "2026-11-16T14:36:04.645931+00:00_instagram_video_barebones",
+    "run_datetime": "2026-11-16T14:36:04.645931+00:00",
+    "aa_version": "1.3.1",
+    "platform_name": "instagram",
+    "archive_url": "https://www.instagram.com/reel/Chunk8-jurw/",
+    "content_type": "video",
+    "config_label": "barebones",
+    "is_content_accessible": true,
+    "is_content_archived": true,
+    "current_metadata": {
+      "_processed_at": "2026-11-16 14:36:03.741755+00:00",
+      "url": "https://www.instagram.com/reel/Chunk8-jurw/",
+      "title": "Video by instagram",
+      "content": "“Gingerton”\n\n@august_thegingercat (August) loves dressing up and posing for the camera. “Most of her clothes are made by her grandmother, who designs all her outfits,” says Imlinenla, August’s human. “We always try to get inspiration from movies or actresses, even though the designs are not that accurate.” 😸\n\n#WeeklyFluff\n\nReel by @august_thegingercat\nMusic by @amaria_bb",
+      "timestamp": "2022-08-26 15:53:51+00:00",
+      "upload_date": "2022-08-26 00:00:00+00:00",
+      "id": "Chunk8-jurw",
+      "channel": "instagram",
+      "uploader_id": "25025320",
+      "uploader": "Instagram",
+      "like_count": 973119,
+      "comment_count": 15718,
+      "comments": [
+        {
+          "author": "jeannette.vazquez.731",
+          "author_id": "54486906645",
+          "id": "18102822571970750",
+          "text": "🔥🔥🔥",
+          "timestamp": 1777854931,
+          "like_count": 1
+        },
+        {
+          "author": "ice.ice.ice.icee",
+          "author_id": "25507222318",
+          "id": "18123394012620235",
+          "text": "Im misery.fire",
+          "timestamp": 1777190865,
+          "like_count": 1
+        },
+        {
+          "author": "saulemarcenko",
+          "author_id": "33852425594",
+          "id": "17859057543594869",
+          "text": "😍",
+          "timestamp": 1777114465,
+          "like_count": 2
+        },
+        {
+          "author": "beverley42187",
+          "author_id": "80423349831",
+          "id": "18132988936506653",
+          "text": "Gingerton oh yes only problem is you he'll have us curtseying next",
+          "timestamp": 1771448100,
+          "like_count": 30
+        },
+        {
+          "author": "ester.l.jensen",
+          "author_id": "10486997242",
+          "id": "18309446392256878",
+          "text": "😢😢",
+          "timestamp": 1771397659,
+          "like_count": 30
+        },
+        {
+          "author": "maghsad_dai",
+          "author_id": "55000771382",
+          "id": "17920336382907805",
+          "text": "😂😂😂",
+          "timestamp": 1732730100,
+          "like_count": 34
+        },
+        {
+          "author": "mansi_jaswal20",
+          "author_id": "68996847124",
+          "id": "18010834889360053",
+          "text": "❤️❤️",
+          "timestamp": 1726635720,
+          "like_count": 1
+        },
+        {
+          "author": "vebjamongaligao",
+          "author_id": "53717772260",
+          "id": "18156845350310505",
+          "text": "👏",
+          "timestamp": 1719476134,
+          "like_count": 34
+        },
+        {
+          "author": "pantea.n7",
+          "author_id": "3250170697",
+          "id": "17865706455109392",
+          "text": "#Savetoomaj",
+          "timestamp": 1715195772,
+          "like_count": 34
+        },
+        {
+          "author": "pantea.n7",
+          "author_id": "3250170697",
+          "id": "18033194536937466",
+          "text": "😁",
+          "timestamp": 1715195753,
+          "like_count": 31
+        },
+        {
+          "author": "__sameer_editxx___",
+          "author_id": "58616120375",
+          "id": "18120669172339554",
+          "text": "❤️❤️❤️😮😮",
+          "timestamp": 1708053047,
+          "like_count": 36
+        },
+        {
+          "author": "az09kyawlaykaywlay",
+          "author_id": "54405472045",
+          "id": "17977767470495911",
+          "text": "🙌",
+          "timestamp": 1705638623,
+          "like_count": 34
+        }
+      ],
+      "webpage_url": "https://www.instagram.com/reel/Chunk8-jurw/",
+      "width": 720,
+      "height": 1280,
+      "container": "mp4_dash",
+      "is_dash_periods": true,
+      "total_bytes": 2159524,
+      "total_size": "2.1 MB",
+      "archive_duration_seconds": 0
+    }
+  },
+  {
+    "id": "2026-11-16T14:36:07.472579+00:00_telegram_video_barebones",
+    "run_datetime": "2026-11-16T14:36:07.472579+00:00",
+    "aa_version": "1.3.1",
+    "platform_name": "telegram",
+    "archive_url": "https://t.me/europa_press/613",
+    "content_type": "video",
+    "config_label": "barebones",
+    "is_content_accessible": true,
+    "is_content_archived": true,
+    "current_metadata": {
+      "_processed_at": "2026-11-16 14:36:06.694219+00:00",
+      "url": "https://t.me/europa_press/613",
+      "title": "Así de rápido fluye la lava en La Palma. Las autoridades destacan el \"importante\" avance de la colada sur (un kilómetro y medio en solo 24 horas), que va hacia la costa quemando invernaderos y viviendas bit.ly/3pRQv9J",
+      "content": "Así de rápido fluye la lava en La Palma. Las autoridades destacan el \"importante\" avance de la colada sur (un kilómetro y medio en solo 24 horas), que va hacia la costa quemando invernaderos y viviendas bit.ly/3pRQv9J",
+      "timestamp": "2021-10-30 22:00:03+00:00",
+      "upload_date": "2021-10-30 00:00:00+00:00",
+      "id": "613",
+      "webpage_url": "https://t.me/europa_press/613?single=True",
+      "duration": 61,
+      "channel": "Europa Press ✔",
+      "total_bytes": 5805562,
+      "total_size": "5.5 MB",
+      "archive_duration_seconds": 0
+    }
+  },
+  {
+    "id": "2026-11-16T14:36:18.817920+00:00_vk_video_barebones",
+    "run_datetime": "2026-11-16T14:36:18.817920+00:00",
+    "aa_version": "1.3.1",
+    "platform_name": "vk",
+    "archive_url": "https://vk.com/video205387401_165548505",
+    "content_type": "video",
+    "config_label": "barebones",
+    "is_content_accessible": true,
+    "is_content_archived": true,
+    "current_metadata": {
+      "_processed_at": "2026-11-16 14:36:18.268377+00:00",
+      "url": "https://vk.com/video205387401_165548505",
+      "title": "No name",
+      "timestamp": "2013-07-20 23:48:28+00:00",
+      "upload_date": "2013-07-20 00:00:00+00:00",
+      "id": "205387401_165548505",
+      "duration": 9,
+      "like_count": 1010,
+      "comment_count": 2,
+      "uploader": "Tom Cruise",
+      "uploader_id": "205387401",
+      "webpage_url": "https://vkvideo.ru/video205387401_165548505",
+      "source_preference": 1,
+      "height": 720,
+      "total_bytes": 5174216,
+      "total_size": "4.9 MB",
+      "archive_duration_seconds": 0
+    }
+  },
+  {
+    "id": "2026-11-16T14:36:20.049312+00:00_twitch_clip_barebones",
+    "run_datetime": "2026-11-16T14:36:20.049312+00:00",
+    "aa_version": "1.3.1",
+    "platform_name": "twitch",
+    "archive_url": "https://clips.twitch.tv/FaintLightGullWholeWheat",
+    "content_type": "clip",
+    "config_label": "barebones",
+    "is_content_accessible": true,
+    "is_content_archived": true,
+    "current_metadata": {
+      "_processed_at": "2026-11-16 14:36:19.752921+00:00",
+      "url": "https://clips.twitch.tv/FaintLightGullWholeWheat",
+      "title": "EA Play 2016 Live from the Novo Theatre",
+      "timestamp": "2016-06-12 21:36:33+00:00",
+      "upload_date": "2016-06-12 00:00:00+00:00",
+      "id": "396245304",
+      "duration": 32,
+      "view_count": 30494,
+      "creators": [
+        "EA"
+      ],
+      "channel": "EA",
+      "channel_follower_count": 443350,
+      "uploader": "stereotype_",
+      "uploader_id": "43566419",
+      "webpage_url": "https://clips.twitch.tv/FaintLightGullWholeWheat",
+      "creator": "EA",
+      "height": 1080,
+      "total_bytes": 16477432,
+      "total_size": "15.7 MB",
+      "archive_duration_seconds": 0
+    }
+  },
+  {
+    "id": "2026-11-16T14:36:22.867338+00:00_kick_clip_barebones",
+    "run_datetime": "2026-11-16T14:36:22.867338+00:00",
+    "aa_version": "1.3.1",
+    "platform_name": "kick",
+    "archive_url": "https://kick.com/mxddy?clip=clip_01GYXVB5Y8PWAPWCWMSBCFB05X",
+    "content_type": "clip",
+    "config_label": "barebones",
+    "is_content_accessible": true,
+    "is_content_archived": true,
+    "current_metadata": {
+      "_processed_at": "2026-11-16 14:36:22.693031+00:00",
+      "url": "https://kick.com/mxddy?clip=clip_01GYXVB5Y8PWAPWCWMSBCFB05X",
+      "title": "Maddy detains Abd D:",
+      "timestamp": "2023-04-26 03:57:33+00:00",
+      "upload_date": "2023-04-26 00:00:00+00:00",
+      "id": "clip_01GYXVB5Y8PWAPWCWMSBCFB05X",
+      "categories": [
+        "VALORANT",
+        "VALORANT"
+      ],
+      "duration": 35,
+      "view_count": 12858,
+      "channel": "Mxddy",
+      "uploader": "Mxddy",
+      "uploader_id": "mxddy",
+      "webpage_url": "https://kick.com/mxddy/clips/clip_01GYXVB5Y8PWAPWCWMSBCFB05X?clip=clip_01GYXVB5Y8PWAPWCWMSBCFB05X",
+      "total_bytes": 71801036,
+      "total_size": "68.5 MB",
+      "archive_duration_seconds": 0
+    }
+  },
+  {
+    "id": "2026-11-16T14:36:28.800709+00:00_dailymotion_video_barebones",
+    "run_datetime": "2026-11-16T14:36:28.800709+00:00",
+    "aa_version": "1.3.1",
+    "platform_name": "dailymotion",
+    "archive_url": "https://www.dailymotion.com/video/x3z49k",
+    "content_type": "video",
+    "config_label": "barebones",
+    "is_content_accessible": true,
+    "is_content_archived": true,
+    "current_metadata": {
+      "_processed_at": "2026-11-16 14:36:27.730019+00:00",
+      "url": "https://www.dailymotion.com/video/x3z49k",
+      "title": "Squash (Rémi Gaillard)",
+      "content": "Rémi qui aime beaucoup le sport s'essaye au squash...\nL'aventure continue sur www.nimportequi.com",
+      "timestamp": "2008-01-06 23:14:26+00:00",
+      "upload_date": "2008-01-06 00:00:00+00:00",
+      "id": "x3z49k",
+      "duration": 106,
+      "uploader": "Rémi Gaillard",
+      "uploader_id": "x4r137",
+      "tags": [
+        "rémi",
+        "remi",
+        "remy",
+        "rémy",
+        "gaillard",
+        "sport",
+        "squash",
+        "world",
+        "open",
+        "tennis"
+      ],
+      "view_count": 216,
+      "like_count": 320,
+      "webpage_url": "https://www.dailymotion.com/video/x3z49k",
+      "manifest_url": "https://cdndirector.dailymotion.com/cdn/manifest/video/x3z49k.m3u8?sec=HeX_8RK7vGyOhm_x1NpX2FWYw3Wx_9R8td6leESwi0_p5njmqH0JiIDlpxzAGfGqUYmCFkcJ8sTxli-lc9uI-w&dmTs=365411&dmV1st=75CF0186E42CC3EEF2D9469014AAC78B",
+      "width": 480,
+      "height": 384,
+      "total_bytes": 6826567,
+      "total_size": "6.5 MB",
+      "archive_duration_seconds": 1
+    }
+  },
+  {
+    "id": "2026-11-16T14:36:30.384041+00:00_streamable_video_barebones",
+    "run_datetime": "2026-11-16T14:36:30.384041+00:00",
+    "aa_version": "1.3.1",
+    "platform_name": "streamable",
+    "archive_url": "https://streamable.com/dnd1",
+    "content_type": "video",
+    "config_label": "barebones",
+    "is_content_accessible": true,
+    "is_content_archived": true,
+    "current_metadata": {
+      "_processed_at": "2026-11-16 14:36:30.205386+00:00",
+      "url": "https://streamable.com/dnd1",
+      "title": "Watch dnd1 | Streamable",
+      "content": "Watch this video on Streamable.",
+      "timestamp": "2016-02-08 20:42:37+00:00",
+      "upload_date": "2016-02-08 00:00:00+00:00",
+      "id": "dnd1",
+      "duration": 61.516,
+      "view_count": 2073,
+      "webpage_url": "https://streamable.com/dnd1",
+      "width": 1280,
+      "height": 720,
+      "direct": true,
+      "total_bytes": 38744892,
+      "total_size": "37.0 MB",
+      "archive_duration_seconds": 0
+    }
+  },
+  {
+    "id": "2026-11-16T14:36:33.124980+00:00_bitchute_video_barebones",
+    "run_datetime": "2026-11-16T14:36:33.124980+00:00",
+    "aa_version": "1.3.1",
+    "platform_name": "bitchute",
+    "archive_url": "https://www.bitchute.com/video/UGlrF9o9b-Q/",
+    "content_type": "video",
+    "config_label": "barebones",
+    "is_content_accessible": true,
+    "is_content_archived": true,
+    "current_metadata": {
+      "_processed_at": "2026-11-16 14:36:33.035806+00:00",
+      "url": "https://www.bitchute.com/video/UGlrF9o9b-Q/",
+      "title": "This is the first video on #BitChute !",
+      "content": "This is a sample video we are using for testing as we don't have any of our own (yet)Making sure editing video descriptions",
+      "timestamp": "2017-01-03 06:37:23+00:00",
+      "upload_date": "2017-01-03 00:00:00+00:00",
+      "channel": "BitChute",
+      "channel_url": "https://www.bitchute.com/channel/bitchute/",
+      "uploader_id": "I5NgtHZn9vPj",
+      "uploader_url": "https://www.bitchute.com/profile/I5NgtHZn9vPj/",
+      "duration": 16,
+      "view_count": 47183,
+      "uploader": "BitChute",
+      "id": "UGlrF9o9b-Q",
+      "webpage_url": "https://www.bitchute.com/embed/UGlrF9o9b-Q",
+      "total_bytes": 2376414,
+      "total_size": "2.3 MB",
+      "archive_duration_seconds": 0
+    }
+  },
+  {
+    "id": "2026-11-16T14:36:37.059867+00:00_soundcloud_audio_barebones",
+    "run_datetime": "2026-11-16T14:36:37.059867+00:00",
+    "aa_version": "1.3.1",
+    "platform_name": "soundcloud",
+    "archive_url": "https://soundcloud.com/ethmusic/lostin-powers-she-so-heavy",
+    "content_type": "audio",
+    "config_label": "barebones",
+    "is_content_accessible": true,
+    "is_content_archived": true,
+    "current_metadata": {
+      "_processed_at": "2026-11-16 14:36:37.030664+00:00",
+      "url": "https://soundcloud.com/ethmusic/lostin-powers-she-so-heavy",
+      "title": "Lostin Powers - She so Heavy (SneakPreview) Adrian Ackers Blueprint 1",
+      "content": "No Downloads untill we record the finished version this weekend, i was too pumped n i had to post it , earl is prolly gonna b hella p.o'd",
+      "timestamp": "2012-10-11 01:56:38+00:00",
+      "upload_date": "2012-10-11 00:00:00+00:00",
+      "uploader": "E.T. ExTerrestrial Music",
+      "uploader_id": "1571244",
+      "uploader_url": "https://soundcloud.com/ethmusic",
+      "track": "Lostin Powers - She so Heavy (SneakPreview) Adrian Ackers Blueprint 1",
+      "duration": 143.206,
+      "webpage_url": "https://soundcloud.com/ethmusic/lostin-powers-she-so-heavy",
+      "license": "all-rights-reserved",
+      "view_count": 36303,
+      "like_count": 2,
+      "comment_count": 1,
+      "modified_timestamp": 1350184468,
+      "tags": [
+        "thepineears",
+        "lostinpowers",
+        "dance",
+        "alunageorge",
+        "new",
+        "radio",
+        "northwest",
+        "buzz",
+        "LP",
+        "EP",
+        "rayoptik",
+        "konnecc",
+        "adrianackers",
+        "253inc",
+        "thepineears",
+        "lostinpowers",
+        "dance",
+        "alunageorge",
+        "new",
+        "radio",
+        "northwest",
+        "buzz",
+        "LP",
+        "EP",
+        "rayoptik",
+        "konnecc",
+        "adrianackers",
+        "253inc"
+      ],
+      "id": "62986583",
+      "modified_date": "20121014",
+      "container": "m4a_dash",
+      "filesize_approx": 1718471,
+      "total_bytes": 3593332,
+      "total_size": "3.4 MB",
+      "archive_duration_seconds": 0
+    }
+  }
+]
