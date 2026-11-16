@@ -60,3 +60,53 @@ facebook:
     url: https://www.facebook.com/bellingcat/posts/pfbid02rzpwZxAZ8bLkAX8NvHv4DWAidFaqAUfJMbo9vWkpwxL7uMUWzWMiizXLWRSjwihVl
     expect_media: false
 
+
+instagram:
+  - content_type: video
+    url: https://www.instagram.com/reel/Chunk8-jurw/
+    expect_media: true
+
+telegram:
+  - content_type: video
+    url: https://t.me/europa_press/613
+    expect_media: true
+
+vk:
+  - content_type: video
+    url: https://vk.com/video205387401_165548505
+    expect_media: true
+
+twitch:
+  - content_type: clip
+    url: https://clips.twitch.tv/FaintLightGullWholeWheat
+    expect_media: true
+
+kick:
+  - content_type: clip
+    url: https://kick.com/mxddy?clip=clip_01GYXVB5Y8PWAPWCWMSBCFB05X
+    expect_media: true
+
+dailymotion:
+  - content_type: video
+    url: https://www.dailymotion.com/video/x3z49k
+    expect_media: true
+
+streamable:
+  - content_type: video
+    url: https://streamable.com/dnd1
+    expect_media: true
+
+bitchute:
+  - content_type: video
+    url: https://www.bitchute.com/video/UGlrF9o9b-Q/
+    expect_media: true
+
+odysee:
+  - content_type: video
+    url: https://odysee.com/@Mantega:1/First-day-LBRY:1
+    expect_media: true
+
+soundcloud:
+  - content_type: audio
+    url: https://soundcloud.com/ethmusic/lostin-powers-she-so-heavy
+    expect_media: true
