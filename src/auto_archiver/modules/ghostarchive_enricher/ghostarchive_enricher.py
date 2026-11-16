@@ -90,7 +90,8 @@ class GhostarchiveEnricher(Enricher):
         Returns the archive URL if successful, otherwise None.
         """
         try:
-            with SB(uc=True, headless=True) as sb:
+            # skip-origin-startup-dialog: Brave Origin's startup dialog breaks window handling
+            with SB(uc=True, headless=True, chromium_arg="--skip-origin-startup-dialog") as sb:
                 logger.debug("Opening Ghost Archive homepage in headless browser")
                 sb.open(self.GHOSTARCHIVE_BASE)
 
@@ -141,13 +142,17 @@ class GhostarchiveEnricher(Enricher):
             logger.debug(f"Searching Ghost Archive for existing archive of {url}")
             archive_url = self._search_existing(url)
 
-        if not archive_url:
+        if not archive_url and self.submit:
             logger.debug(f"Submitting {url} to Ghost Archive")
             archive_url = self._submit_url(url)
 
         if archive_url:
             to_enrich.set("ghostarchive", archive_url)
             return True
+
+        if not self.submit:
+            logger.debug(f"No existing Ghost Archive found for {url} and submissions are disabled")
+            return False
 
         logger.warning(f"Ghost Archive failed to archive {url}")
         return False

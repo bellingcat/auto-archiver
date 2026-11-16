@@ -17,6 +17,11 @@
             "type": "bool",
             "help": "whether to search for an existing archive before submitting a new one.",
         },
+        "submit": {
+            "default": True,
+            "type": "bool",
+            "help": "whether to submit URLs that have no existing archive. Ghost Archive guards submissions with an interactive Cloudflare challenge, so automated submissions often fail; set to false to only look up existing archives.",
+        },
         "proxy_http": {
             "default": None,
             "help": "http proxy to use for requests, eg http://proxy-user:password@proxy-ip:port",
@@ -51,7 +56,8 @@
 
     ### Limitations
     - No official API — this module interacts with the Ghost Archive web interface.
-    - The submission endpoint is protected by Cloudflare, so a headless browser (SeleniumBase) is used for new submissions.
+    - The submission endpoint is protected by an interactive Cloudflare challenge, so a headless browser (SeleniumBase) is used for new submissions and these often fail. Set `submit: false` to only look up existing archives.
+    - Ghost Archive blocks many datacenter IPs, set `proxy_http`/`proxy_https` (eg. a residential proxy) for searches to work from servers.
     - Searching for existing archives uses plain HTTP requests and does not require a browser.
     - Rate limiting may apply; consider using a delay between requests if archiving many URLs.
     """,
