@@ -1,6 +1,5 @@
 import hashlib
 import json
-import mimetypes
 import os
 import uuid
 from datetime import datetime, timezone
@@ -107,10 +106,20 @@ def get_current_timestamp() -> str:
 
 
 def ydl_entry_to_filename(ydl, entry: dict) -> str:
+    """Returns the path of the media file yt-dlp downloaded for this entry, or False if none is found.
+
+    The predicted filename doesn't always exist (e.g. after a post-processor remux, or for playlist
+    entries with no 'ext'), so the download folder is then scanned for a matching video or audio file.
+    Sidecar files that share the basename, such as subtitles ('id.en.ttml') or 'id.info.json', are ignored.
+    """
     import yt_dlp
+    from yt_dlp.utils import MEDIA_EXTENSIONS
 
     ydl: yt_dlp.YoutubeDL
     entry_url = entry.get("url")
+    # yt-dlp's own list rather than mimetypes, whose results depend on the system's /etc/mime.types
+    # (e.g. .mkv and .m4a are unknown without it). 'ts' (MPEG-TS) isn't in yt-dlp's list.
+    media_extensions = {*MEDIA_EXTENSIONS.video, *MEDIA_EXTENSIONS.audio, "ts"}
 
     filename = ydl.prepare_filename(entry)
     if os.path.exists(filename):
@@ -123,10 +132,8 @@ def ydl_entry_to_filename(ydl, entry: dict) -> str:
         # skip incomplete downloads left behind by yt-dlp
         if f.endswith(".part"):
             continue
-        if (
-            f.startswith(basename)
-            or (entry_url and os.path.splitext(f)[0] in entry_url)
-            and "video/" in (mimetypes.guess_type(f)[0] or "")
-        ):
+        if os.path.splitext(f)[1].lstrip(".").lower() not in media_extensions:
+            continue
+        if f.startswith(basename) or (entry_url and os.path.splitext(f)[0] in entry_url):
             return os.path.join(directory, f)
     return False

@@ -179,6 +179,33 @@ class TestYdlEntryToFilename:
         ydl = self._make_mock_ydl(str(tmp_path / "video.mp4"))
         assert ydl_entry_to_filename(ydl, {}) is False
 
+    @pytest.mark.parametrize("sidecar", ["abc123.en.ttml", "abc123.en.vtt", "abc123.info.json"])
+    def test_skips_sidecar_if_no_media(self, tmp_path, sidecar):
+        """Only a sidecar file exists, so it must not be returned as the media file."""
+        (tmp_path / sidecar).write_bytes(b"sidecar")
+
+        ydl = self._make_mock_ydl(str(tmp_path / "abc123.NA"))
+        assert ydl_entry_to_filename(ydl, {}) is False
+
+    def test_returns_video_not_sidecar(self, tmp_path):
+        """Seen on BBC article pages: the predicted filename doesn't exist, so the folder is scanned,
+        and the subtitles must not be picked over the video."""
+        (tmp_path / "abc123.en.ttml").write_bytes(b"subtitles")
+        (tmp_path / "abc123.info.json").write_bytes(b"{}")
+        video = tmp_path / "abc123.mp4"
+        video.write_bytes(b"video")
+
+        ydl = self._make_mock_ydl(str(tmp_path / "abc123.NA"))
+        assert ydl_entry_to_filename(ydl, {}) == str(video)
+
+    @pytest.mark.parametrize("name", ["abc123.mkv", "abc123.m4a", "abc123.ts"])
+    def test_accepts_other_media_types(self, tmp_path, name):
+        media = tmp_path / name
+        media.write_bytes(b"media")
+
+        ydl = self._make_mock_ydl(str(tmp_path / "abc123.NA"))
+        assert ydl_entry_to_filename(ydl, {}) == str(media)
+
     def test_returns_false_when_no_files_match(self, tmp_path):
         (tmp_path / "unrelated.txt").write_bytes(b"data")
 

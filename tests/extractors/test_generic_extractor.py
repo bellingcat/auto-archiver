@@ -1,6 +1,7 @@
 from pathlib import Path
 import datetime
 import os
+from unittest.mock import patch
 
 from os.path import dirname
 
@@ -123,6 +124,43 @@ class TestGenericExtractor(TestExtractorBase):
         assert len(result.media) == 2
         assert "J---aiyznGQ" in Path(result.media[0].filename).name
         assert Path(result.media[1].filename).name == "hqdefault.jpg"
+
+    @pytest.mark.download
+    def test_bbc_article_archives_video_not_subtitles(self, make_item, monkeypatch):
+        """On BBC article pages yt-dlp writes both <id>.mp4 and <id>.en.ttml. When the predicted filename
+        isn't found (seen in production after the FixupM3u8 remux), the download folder is scanned and
+        the subtitles must not be archived instead of the video."""
+        from auto_archiver.modules.generic_extractor import generic_extractor
+        from auto_archiver.utils.misc import ydl_entry_to_filename
+
+        # force the folder-scan fallback, as the predicted filename exists in some environments
+        class PredictionMiss:
+            def __init__(self, ydl):
+                self._ydl = ydl
+
+            def prepare_filename(self, entry):
+                return os.path.splitext(self._ydl.prepare_filename(entry))[0] + ".NA"
+
+        # the folder listing order is filesystem dependent, so list the video last to make the test deterministic
+        real_listdir = os.listdir
+
+        def media_last_listdir(path):
+            return sorted(real_listdir(path), key=lambda f: f.endswith(".mp4"))
+
+        def entry_to_filename(ydl, entry):
+            with patch("auto_archiver.utils.misc.os.listdir", media_last_listdir):
+                return ydl_entry_to_filename(PredictionMiss(ydl), entry)
+
+        monkeypatch.setattr(generic_extractor, "ydl_entry_to_filename", entry_to_filename)
+
+        self.extractor.subtitles = True
+        url = "https://www.bbc.co.uk/news/articles/c8ryekj1m1do"
+        result = self.extractor.download(make_item(url))
+        assert result is not False
+        assert result.get_url() == url
+        video_exts = {".mp4", ".mkv", ".webm", ".mov", ".ts", ".m4v"}
+        assert any(Path(m.filename).suffix.lower() in video_exts for m in result.media)
+        assert not any(Path(m.filename).suffix.lower() in {".ttml", ".vtt", ".srt"} for m in result.media)
 
     @pytest.mark.download
     def test_bluesky_download_multiple_images(self, make_item):
