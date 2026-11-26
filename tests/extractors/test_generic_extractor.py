@@ -117,10 +117,10 @@ class TestGenericExtractor(TestExtractorBase):
         result = self.extractor.download(item)
         assert result.get_url() == "https://www.youtube.com/watch?v=J---aiyznGQ"
         assert result.get_title() == "Keyboard Cat! - THE ORIGINAL!"
-        assert (
-            result.get("description")
-            == "Buy NEW Keyboard Cat Merch! https://keyboardcat.creator-spring.com\n\nxo Keyboard Cat memes make your day better!\nhttp://www.keyboardcatstore.com/\nhttps://www.facebook.com/thekeyboardcat\nhttp://www.charlieschmidt.com/"
-        )
+        # the extractor moves yt-dlp's description into "content"; the uploader edits it, so only check a stable part
+        assert "keyboardcatstore.com" in result.get("content")
+        # the YouTube and generic yt-dlp extractors both download it; store() dedupes by hash, so do the same here
+        result.remove_duplicate_media_by_hash()
         assert len(result.media) == 2
         assert "J---aiyznGQ" in Path(result.media[0].filename).name
         assert Path(result.media[1].filename).name == "hqdefault.jpg"
